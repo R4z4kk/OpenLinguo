@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toDiacritic, toNumbered } from "./pinyin.ts";
-import { loadCedictRows } from "./testing/cedict-shards.ts";
+import { loadCedictRows } from "./testing/dataset-shards.ts";
 
 const NO_READING = "xx5";
 

@@ -1,6 +1,8 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
+import { err, ok } from "@openlinguo/core";
 import { ccCedict } from "./datasets/cc-cedict.ts";
+import { cfdict } from "./datasets/cfdict.ts";
 import { diffRows } from "./diff.ts";
 import {
   dataDir,
@@ -9,9 +11,12 @@ import {
   readManifest,
   serializeManifest,
 } from "./manifest.ts";
-import { fetchBytes, formatError, runDataset, type Dataset } from "./run.ts";
+import { fetchBytes, formatError, runDataset, type Dataset, type ShardReader } from "./run.ts";
 
-const datasets: ReadonlyMap<string, Dataset> = new Map([[ccCedict.id, ccCedict]]);
+const datasets: ReadonlyMap<string, Dataset> = new Map([
+  [ccCedict.id, ccCedict],
+  [cfdict.id, cfdict],
+]);
 
 const fail = (message: string): void => {
   console.error(message);
@@ -29,6 +34,14 @@ const readShards = async (dir: URL): Promise<string[]> => {
     throw error;
   }
   return Promise.all(names.filter(isShard).map((name) => readFile(new URL(name, dir), "utf8")));
+};
+
+const readBuiltShards: ShardReader = async (dataset) => {
+  try {
+    return ok(await readShards(new URL(`${dataset}/`, dataDir)));
+  } catch (error) {
+    return err(String(error));
+  }
 };
 
 const main = async (): Promise<void> => {
@@ -57,6 +70,7 @@ const main = async (): Promise<void> => {
       refresh: values.refresh,
       now: new Date(),
       fetchBytes,
+      readShards: readBuiltShards,
     });
     if (!result.ok) {
       fail(formatError(result.error));
@@ -64,7 +78,7 @@ const main = async (): Promise<void> => {
     }
     const outDir = new URL(`${id}/`, dataDir);
     const previous = await readShards(outDir);
-    const { files, entry } = result.value;
+    const { files, entry, summary } = result.value;
     const diff = diffRows(
       previous,
       [...files].filter(([name]) => isShard(name)).map(([, content]) => content),
@@ -78,7 +92,7 @@ const main = async (): Promise<void> => {
     await writeFile(manifestPath, serializeManifest(next), "utf8");
     const before = manifest.value[id]?.version ?? "none";
     console.log(
-      `${id}: version ${before} -> ${entry.version}, rows +${String(diff.added)} / -${String(diff.removed)}, ${String(files.size)} files`,
+      `${id}: version ${before} -> ${entry.version}, rows +${String(diff.added)} / -${String(diff.removed)}, ${String(files.size)} files, ${summary}`,
     );
   }
 };

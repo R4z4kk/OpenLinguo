@@ -5,14 +5,21 @@ import type { Manifest, ManifestEntry } from "./manifest.ts";
 export type DatasetBuild = {
   readonly version: string;
   readonly files: ReadonlyMap<string, string>;
+  readonly summary: string;
 };
+
+/** Shard contents of an already built dataset, read from `data/<dataset>/`. */
+export type ShardReader = (dataset: string) => Promise<Result<readonly string[], string>>;
 
 export type Dataset = {
   readonly id: string;
   readonly url: string;
   readonly license: string;
   readonly maxAgeDays: number;
-  readonly build: (raw: Uint8Array) => Result<DatasetBuild, string>;
+  readonly build: (
+    raw: Uint8Array,
+    readShards: ShardReader,
+  ) => Result<DatasetBuild, string> | Promise<Result<DatasetBuild, string>>;
 };
 
 export type PipelineError =
@@ -32,9 +39,14 @@ export type RunOptions = {
   readonly refresh: boolean;
   readonly now: Date;
   readonly fetchBytes: FetchBytes;
+  readonly readShards: ShardReader;
 };
 
-export type RunOutput = { readonly entry: ManifestEntry; readonly files: DatasetBuild["files"] };
+export type RunOutput = {
+  readonly entry: ManifestEntry;
+  readonly files: DatasetBuild["files"];
+  readonly summary: string;
+};
 
 export const sha256 = (bytes: Uint8Array): string =>
   createHash("sha256").update(bytes).digest("hex");
@@ -73,7 +85,7 @@ export const runDataset = async (
     }
   }
 
-  const built = dataset.build(raw.value);
+  const built = await dataset.build(raw.value, options.readShards);
   if (!built.ok) return err({ kind: "invalid-source", dataset: dataset.id, message: built.error });
 
   return ok({
@@ -87,6 +99,7 @@ export const runDataset = async (
       sha256: actual,
     },
     files: built.value.files,
+    summary: built.value.summary,
   });
 };
 

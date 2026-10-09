@@ -1,6 +1,10 @@
 import { gzipSync } from "node:zlib";
+import { ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
+import type { ShardReader } from "../run.ts";
 import { ccCedict, parseCedict } from "./cc-cedict.ts";
+
+const noShards: ShardReader = () => Promise.resolve(ok([]));
 
 const release = (entries: number, lines: readonly string[]): string =>
   [
@@ -48,8 +52,8 @@ describe("parseCedict", () => {
 });
 
 describe("ccCedict dataset", () => {
-  it("builds shards and an attribution readme from the gzip release", () => {
-    const built = ccCedict.build(gzipSync(release(2, sample)));
+  it("builds shards and an attribution readme from the gzip release", async () => {
+    const built = await ccCedict.build(gzipSync(release(2, sample)), noShards);
     expect(built.ok).toBe(true);
     if (!built.ok) return;
     expect(built.value.version).toBe("2026-10-09T09:12:50Z");
@@ -59,7 +63,7 @@ describe("ccCedict dataset", () => {
     );
   });
 
-  it("rejects bytes that are not gzip", () => {
-    expect(ccCedict.build(new TextEncoder().encode("plain")).ok).toBe(false);
+  it("rejects bytes that are not gzip", async () => {
+    expect((await ccCedict.build(new TextEncoder().encode("plain"), noShards)).ok).toBe(false);
   });
 });

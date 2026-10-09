@@ -49,6 +49,12 @@ export const formatNumbered = (tokens: readonly ReadingToken[]): string =>
     )
     .join(" ");
 
+/** Lowercase numbered reading with `u:` for ü, used to join datasets. */
+export const readingKey = (reading: string): Result<string, InvalidReading> => {
+  const tokens = parseNumbered(reading);
+  return tokens.ok ? ok(formatNumbered(tokens.value).toLowerCase()) : tokens;
+};
+
 const markIndex = (letters: string): number => {
   const lower = letters.toLowerCase();
   for (const vowel of ["a", "e", "ê"]) {
