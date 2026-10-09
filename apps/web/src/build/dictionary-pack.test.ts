@@ -20,10 +20,15 @@ const sources: DictionarySources = {
   ],
   hsk2025: [["俊", 6, [], ["jun4"]]],
   gf0025: [["华", 5, [], ["hua2"]]],
+  frequencies: [
+    ["华", 4.6],
+    ["俊", 3.9],
+    ["々", 2.1],
+  ],
 };
 
 describe("buildDictionary", () => {
-  it("merges readings, attaches French glosses and levels, and lists invalid rows", () => {
+  it("merges readings, attaches French glosses, levels and frequencies, and lists invalid rows", () => {
     const built = buildDictionary(sources);
     if (!built.ok) throw new Error(built.error);
     expect(built.value.entries).toEqual([
@@ -36,8 +41,9 @@ describe("buildDictionary", () => {
         6,
         null,
         true,
+        3.9,
       ],
-      ["华", "hua2", "hua2", ["華"], [["surname Hua", "magnificent"], [], []], null, 5, true],
+      ["华", "hua2", "hua2", ["華"], [["surname Hua", "magnificent"], [], []], null, 5, true, 4.6],
       [
         "天啊",
         "tian1 a5",
@@ -47,6 +53,7 @@ describe("buildDictionary", () => {
         null,
         null,
         false,
+        null,
       ],
     ]);
     expect(built.value.lexicon).toEqual(["俊", "华"]);
@@ -60,5 +67,8 @@ describe("buildDictionary", () => {
     expect(
       buildDictionary({ ...sources, frenchGlosses: [["cfdict", [["天啊", "tian1 a5", ["x"]]]]] }),
     ).toEqual(err("cfdict glosses 天啊 tian1 a5, absent from CC-CEDICT"));
+    expect(buildDictionary({ ...sources, frequencies: [["龘", 1.5]] })).toEqual(
+      err("wordfreq ranks 龘, absent from the dictionary"),
+    );
   });
 });

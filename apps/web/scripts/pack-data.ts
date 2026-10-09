@@ -17,6 +17,7 @@ const GradedWord = z.tuple([
   z.array(z.number().int()),
   z.array(z.string()),
 ]);
+const WordFrequency = z.tuple([z.string(), z.number()]);
 
 const readRows = async <Row extends z.ZodType>(
   dataset: string,
@@ -52,6 +53,7 @@ const main = async (): Promise<void> => {
     ],
     hsk2025: await readRows("hsk-2025-words", "words-", GradedWord),
     gf0025: await readRows("gf0025-2021-words", "words-", GradedWord),
+    frequencies: await readRows("wordfreq-zh", "words-", WordFrequency),
   });
   if (!dictionary.ok) throw new Error(dictionary.error);
   const characters = await readRows("makemeahanzi", "characters-", CharacterRow);

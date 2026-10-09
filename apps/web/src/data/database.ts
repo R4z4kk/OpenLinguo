@@ -1,4 +1,5 @@
 import { Dexie, type EntityTable } from "dexie";
+import type { SearchIndexRecord } from "./search-index.ts";
 
 export type StoredEntry = {
   /** `simplified \t reading key` */
@@ -12,6 +13,8 @@ export type StoredEntry = {
   readonly gf0025: number | null;
   /** CC-CEDICT headword, used for segmentation; French-only words are not. */
   readonly lexicon: boolean;
+  /** Zipf frequency of the simplified form (wordfreq). */
+  readonly frequency: number | null;
 };
 
 export type StoredCharacter = {
@@ -38,6 +41,7 @@ export type Database = Dexie & {
   characters: EntityTable<StoredCharacter, "character">;
   meta: EntityTable<MetaRecord, "key">;
   imports: EntityTable<ImportRecord, "sha256">;
+  searchIndex: EntityTable<SearchIndexRecord, "file">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -48,6 +52,10 @@ export const openDatabase = (name: string): Database => {
     meta: "key",
     imports: "sha256",
   });
+  // Entries imported without frequencies and search index are imported again.
+  db.version(2)
+    .stores({ searchIndex: "file" })
+    .upgrade((tx) => tx.table("meta").bulkDelete(["dataVersion", "importingVersion"]));
   return db;
 };
 

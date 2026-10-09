@@ -15,6 +15,13 @@ export {
   type ReadingToken,
   type Tone,
 } from "./pinyin.ts";
+export {
+  matchesPinyin,
+  parsePinyinQuery,
+  searchKey,
+  type PinyinQuery,
+  type ToneAt,
+} from "./pinyin-search.ts";
 export { applySandhi, type ReadingWord, type SandhiError } from "./sandhi.ts";
 export { createSegmenter } from "./segment.ts";
 

@@ -2,6 +2,7 @@ import { err, ok, parseWith, type Result } from "@openlinguo/core";
 import { z } from "zod";
 import type { Database, StoredCharacter, StoredEntry } from "./database.ts";
 import { CharacterRow, DataIndex, EntryRow, Lexicon, type DataFile } from "./format.ts";
+import { indexRecord } from "./search-index.ts";
 
 export type ImportProgress = { readonly rows: number; readonly total: number };
 
@@ -54,6 +55,7 @@ const toEntry = ([
   hsk2025,
   gf0025,
   lexicon,
+  frequency,
 ]: EntryRow): StoredEntry => ({
   id: `${simplified}\t${key}`,
   simplified,
@@ -63,6 +65,7 @@ const toEntry = ([
   hsk2025,
   gf0025,
   lexicon,
+  frequency,
 });
 
 const toCharacter = ([
@@ -82,12 +85,14 @@ const store = async (
   file: DataFile,
   bytes: Uint8Array,
 ): Promise<Result<null, ImportFailure>> => {
-  const tables = [db.entries, db.characters, db.meta, db.imports];
+  const tables = [db.entries, db.characters, db.meta, db.imports, db.searchIndex];
   if (file.kind === "entries") {
     const rows = readJson(bytes, z.array(EntryRow), file.name);
     if (!rows.ok) return rows;
+    const entries = rows.value.map(toEntry);
     await db.transaction("rw", tables, async () => {
-      await db.entries.bulkPut(rows.value.map(toEntry));
+      await db.entries.bulkPut(entries);
+      await db.searchIndex.put(indexRecord(file.sha256, entries));
       await db.imports.put({ sha256: file.sha256 });
     });
   } else if (file.kind === "characters") {
@@ -111,7 +116,7 @@ const store = async (
 /**
  * Imports `data/index.json` and its files into IndexedDB. Each file is checked against its
  * sha256 and stored in one transaction, so an interrupted import resumes where it stopped;
- * a new data version replaces the old one.
+ * a new data version replaces the old one. Offline, a complete import is used as it is.
  */
 export const importData = async (
   db: Database,
@@ -119,8 +124,18 @@ export const importData = async (
   onProgress: (progress: ImportProgress) => void,
 ): Promise<Result<null, ImportFailure>> => {
   const indexBytes = await fetchFile("index.json");
-  if (!indexBytes.ok)
-    return err({ kind: "network", file: "index.json", message: indexBytes.error });
+  if (!indexBytes.ok) {
+    const failure: ImportFailure = {
+      kind: "network",
+      file: "index.json",
+      message: indexBytes.error,
+    };
+    try {
+      return (await db.meta.get("dataVersion")) == null ? err(failure) : ok(null);
+    } catch {
+      return err(failure);
+    }
+  }
   const index = readJson(indexBytes.value, DataIndex, "index.json");
   if (!index.ok) return index;
   const total = index.value.files.reduce((sum, file) => sum + file.rows, 0);
@@ -134,13 +149,9 @@ export const importData = async (
     }
     const importing = await db.meta.get("importingVersion");
     if (importing?.value !== index.value.version) {
-      await db.transaction("rw", [db.entries, db.characters, db.meta, db.imports], async () => {
-        await Promise.all([
-          db.entries.clear(),
-          db.characters.clear(),
-          db.meta.clear(),
-          db.imports.clear(),
-        ]);
+      const tables = [db.entries, db.characters, db.meta, db.imports, db.searchIndex];
+      await db.transaction("rw", tables, async () => {
+        await Promise.all(tables.map((table) => table.clear()));
         await db.meta.put({ key: "importingVersion", value: index.value.version });
       });
     }

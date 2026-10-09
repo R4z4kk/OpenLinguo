@@ -18,6 +18,7 @@ const entry = (
     hsk2025: levels[0],
     gf0025: levels[1],
     lexicon: true,
+    frequency: null,
   };
 };
 
