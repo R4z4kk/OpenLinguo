@@ -1,0 +1,211 @@
+import { gunzipSync } from "node:zlib";
+import { err, ok, parseWith, type Result } from "@openlinguo/core";
+import { joinedToNumbered, type JoinedPinyinError } from "@openlinguo/lang-zh";
+import { z } from "zod";
+import { sha256, type Dataset } from "../run.ts";
+import { toShards } from "../shards.ts";
+import { joinFrenchEntries, loadCedictIndex, type FrenchEntry } from "./cedict-join.ts";
+import { decodeUtf8 } from "./graded.ts";
+
+const Tags = z.array(z.string()).default([]);
+
+/** The fields used from a wiktextract line; other fields are ignored. */
+const Line = z.object({
+  word: z.string(),
+  lang_code: z.literal("zh"),
+  pos: z.string(),
+  sounds: z.array(z.object({ zh_pron: z.string().default(""), tags: Tags })).default([]),
+  forms: z.array(z.object({ form: z.string(), tags: Tags })).default([]),
+  senses: z.array(z.object({ glosses: z.array(z.string()).default([]), tags: Tags })),
+});
+type Line = z.infer<typeof Line>;
+
+export type IssueKind =
+  | "non-han-title"
+  | "no-pinyin"
+  | "several-readings"
+  | "multiline-gloss"
+  | JoinedPinyinError["kind"];
+
+export type Issue = { readonly word: string; readonly kind: IssueKind; readonly detail: string };
+
+export type WiktionaryRelease = {
+  readonly entries: readonly FrenchEntry[];
+  readonly issues: readonly Issue[];
+  readonly sinograms: number;
+  readonly unglossed: number;
+};
+
+const HAN = /^\p{Script=Han}+$/u;
+const MAX_REPORTED = 10;
+
+/** `ǎn (an³)` and `dì (di⁴), de (de⁵)` hold a numbered annotation or several readings. */
+const readingsOf = (pinyin: string): readonly string[] =>
+  pinyin
+    .replace(/\([^)]*\)/gu, "")
+    .split(/[,;]/u)
+    .map((reading) => reading.trim())
+    .filter((reading) => reading !== "");
+
+const formsTagged = (line: Line, tag: string): readonly string[] => [
+  ...new Set(
+    line.forms
+      .filter((form) => form.tags.includes(tag) && form.form !== line.word && HAN.test(form.form))
+      .map((form) => form.form),
+  ),
+];
+
+const toEntry = (
+  line: Line,
+  glosses: readonly string[],
+): { readonly entry: FrenchEntry | null; readonly issues: readonly Issue[] } => {
+  const issue = (kind: IssueKind, detail: string): Issue => ({ word: line.word, kind, detail });
+  if (!HAN.test(line.word)) return { entry: null, issues: [issue("non-han-title", "")] };
+  const readings = line.sounds
+    .filter((sound) => sound.tags.includes("Pinyin"))
+    .flatMap((sound) => readingsOf(sound.zh_pron));
+  const [first] = readings;
+  if (first == null) return { entry: null, issues: [issue("no-pinyin", "")] };
+  const several =
+    new Set(readings.map((reading) => reading.toLowerCase())).size > 1
+      ? [issue("several-readings", [...new Set(readings)].join(" | "))]
+      : [];
+  const numbered = joinedToNumbered(first, Array.from(line.word).length);
+  if (!numbered.ok) return { entry: null, issues: [...several, issue(numbered.error.kind, first)] };
+
+  const simplifiedForms = formsTagged(line, "Simplified-Chinese");
+  const traditionalForms = formsTagged(line, "Traditional-Chinese");
+  const [simplifiedForm = line.word] = simplifiedForms;
+  const [traditionalForm = line.word] = traditionalForms;
+  const titleIsTraditional = simplifiedForms.length === 1 && traditionalForms.length === 0;
+  const titleIsSimplified = traditionalForms.length === 1 && simplifiedForms.length === 0;
+  return {
+    entry: {
+      id: line.word,
+      simplified: titleIsTraditional ? simplifiedForm : line.word,
+      traditional: titleIsSimplified ? traditionalForm : line.word,
+      reading: numbered.value,
+      glosses,
+    },
+    issues: several,
+  };
+};
+
+export const parseWiktionary = (text: string): Result<WiktionaryRelease, string> => {
+  const entries: FrenchEntry[] = [];
+  const issues: Issue[] = [];
+  const invalid: number[] = [];
+  let sinograms = 0;
+  let unglossed = 0;
+  for (const [index, raw] of text.split("\n").entries()) {
+    if (raw.trim() === "") continue;
+    let json: unknown;
+    try {
+      json = JSON.parse(raw);
+    } catch {
+      invalid.push(index + 1);
+      continue;
+    }
+    const parsed = parseWith(Line, json);
+    if (!parsed.ok) {
+      invalid.push(index + 1);
+      continue;
+    }
+    const line = parsed.value;
+    if (line.pos === "character") {
+      sinograms += 1;
+      continue;
+    }
+    const glosses = line.senses
+      .filter((sense) => !sense.tags.includes("no-gloss"))
+      .map((sense) => sense.glosses.map((gloss) => gloss.trim()).join(" "))
+      .filter((gloss) => gloss !== "");
+    if (glosses.length === 0) {
+      unglossed += 1;
+      continue;
+    }
+    for (const gloss of glosses.filter((gloss) => gloss.includes("\n"))) {
+      issues.push({ word: line.word, kind: "multiline-gloss", detail: gloss });
+    }
+    const kept = glosses.filter((gloss) => !gloss.includes("\n"));
+    if (kept.length === 0) continue;
+    const read = toEntry(line, kept);
+    issues.push(...read.issues);
+    if (read.entry) entries.push(read.entry);
+  }
+  if (invalid.length > 0) {
+    const shown = invalid.slice(0, MAX_REPORTED).join(", ");
+    return err(`${String(invalid.length)} malformed lines (${shown})`);
+  }
+  return ok({ entries, issues, sinograms, unglossed });
+};
+
+const SHARD_SIZE = 10_000;
+
+const tsv = (header: string, lines: readonly string[]): string =>
+  `${[header, ...lines].join("\n")}\n`;
+
+const readme = (version: string, summary: string): string => `# French Wiktionary — Chinese entries
+
+Generated by \`tools/data-pipeline\` from the kaikki.org extract ${version}. Do not edit by hand.
+
+- Source: Chinese entries of the French Wiktionary (https://fr.wiktionary.org), extracted by Wiktextract and published on https://kaikki.org/frwiktionary/Chinois/index.html
+- Authors: Wiktionary contributors; extraction: Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org
+- License: Creative Commons Attribution-ShareAlike 4.0 International, https://creativecommons.org/licenses/by-sa/4.0/
+- Changes: converted to JSON with the CFDICT layout. \`glosses-*.json\` holds \`[simplified, lowercase numbered pinyin, French glosses]\` attached to the CC-CEDICT entry with that key; \`entries-*.json\` holds \`[simplified, traditional, numbered pinyin, French glosses]\` for words CC-CEDICT does not have. One gloss per sense. The first pinyin reading of an entry is split into syllables and converted to numbered pinyin; a traditional title is stored under its simplified form when the entry gives exactly one. The join to CC-CEDICT follows the CFDICT policy (tone conflicts in \`tone-conflicts.tsv\`). Sinogram sections (character entries) are skipped. Entries without pinyin, with an invalid or ambiguous pinyin, or whose title is not only Chinese characters are left out, multi-line glosses (wiki examples) are dropped, entries with several readings keep the first one; all are listed in \`issues.tsv\`.
+- Result: ${summary}.
+`;
+
+const countBy = (issues: readonly Issue[]): string => {
+  const counts = new Map<IssueKind, number>();
+  for (const issue of issues) counts.set(issue.kind, (counts.get(issue.kind) ?? 0) + 1);
+  return [...counts].map(([kind, count]) => `${String(count)} ${kind}`).join(", ");
+};
+
+export const wiktionaryFrZh: Dataset = {
+  id: "wiktionary-fr-zh",
+  url: "https://kaikki.org/frwiktionary/Chinois/kaikki.org-dictionary-Chinois.jsonl.gz",
+  license: "CC-BY-SA-4.0",
+  maxAgeDays: 90,
+  build: async (raw, readShards) => {
+    let unzipped: Uint8Array;
+    try {
+      unzipped = gunzipSync(raw);
+    } catch (error) {
+      return err(`cannot decompress: ${String(error)}`);
+    }
+    const text = decodeUtf8(unzipped);
+    if (!text.ok) return text;
+    const release = parseWiktionary(text.value);
+    if (!release.ok) return release;
+    const index = await loadCedictIndex(readShards, "wiktionary-fr-zh");
+    if (!index.ok) return index;
+
+    const { entries, sinograms, unglossed } = release.value;
+    const join = joinFrenchEntries(index.value, entries);
+    const issues = [
+      ...release.value.issues,
+      ...join.rejected.map((entry): Issue => ({
+        word: entry.id,
+        kind: "invalid-reading",
+        detail: entry.reading,
+      })),
+    ];
+    const version = `sha256 ${sha256(raw).slice(0, 12)}`;
+    const summary = `${String(entries.length)} entries imported (${String(sinograms)} sinogram and ${String(unglossed)} unglossed entries skipped), ${join.summary}, issues: ${countBy(issues)}`;
+    const files = new Map([
+      ...toShards("glosses", join.glossRows, SHARD_SIZE),
+      ...toShards("entries", join.entryRows, SHARD_SIZE),
+    ]);
+    files.set("README.md", readme(version, summary));
+    files.set(
+      "tone-conflicts.tsv",
+      tsv("title\tsimplified\twiktionary_pinyin\tcc_cedict_pinyin", join.conflicts),
+    );
+    const issueLines = issues.map(
+      (issue) => `${issue.word}\t${issue.kind}\t${issue.detail.replace(/\s+/gu, " ")}`,
+    );
+    files.set("issues.tsv", tsv("title\tissue\tdetail", [...new Set(issueLines)]));
+    return ok({ version, files, summary });
+  },
+};

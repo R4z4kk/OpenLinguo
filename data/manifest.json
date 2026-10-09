@@ -46,5 +46,13 @@
     "retrievedAt": "2026-10-09T18:10:15.183Z",
     "maxAgeDays": 365,
     "sha256": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2"
+  },
+  "wiktionary-fr-zh": {
+    "source": "https://kaikki.org/frwiktionary/Chinois/kaikki.org-dictionary-Chinois.jsonl.gz",
+    "license": "CC-BY-SA-4.0",
+    "version": "sha256 b24060c79a90",
+    "retrievedAt": "2026-10-09T19:01:10.578Z",
+    "maxAgeDays": 90,
+    "sha256": "b24060c79a908fffd25fb94b269ccc4384bc98bbd30c834eba36526997b87eb4"
   }
 }

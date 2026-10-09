@@ -1,6 +1,6 @@
 import { ok } from "@openlinguo/core";
 import { beforeAll, describe, expect, it } from "vitest";
-import { loadCedictIndex, matchEntry, type CedictIndex } from "./cfdict-join.ts";
+import { joinFrenchEntries, loadCedictIndex, matchEntry, type CedictIndex } from "./cedict-join.ts";
 
 const rows = [
   ["位于", "位於", "wei4 yu2", ["to be located at"]],
@@ -16,7 +16,7 @@ const rows = [
 let index: CedictIndex;
 
 beforeAll(async () => {
-  const loaded = await loadCedictIndex(() => Promise.resolve(ok([JSON.stringify(rows)])));
+  const loaded = await loadCedictIndex(() => Promise.resolve(ok([JSON.stringify(rows)])), "test");
   if (!loaded.ok) throw new Error(loaded.error);
   index = loaded.value;
 });
@@ -37,6 +37,14 @@ describe("matchEntry", () => {
 
   it("joins the toneless erhua r of CFDICT", () => {
     expect(via("一会儿", "yi1 hui4 r")).toBe("exact 一会儿");
+  });
+
+  it("reads a toneless syllable as the neutral tone when each token is one character", () => {
+    expect(via("么", "ma")).toBe("exact 么");
+    expect(matchEntry(index, "A么", "A ma5")).toMatchObject({
+      kind: "french-only",
+      reading: "A ma5",
+    });
   });
 
   it("joins despite a neutral-tone difference", () => {
@@ -65,5 +73,18 @@ describe("matchEntry", () => {
 
   it("rejects an invalid reading", () => {
     expect(matchEntry(index, "丆", "xx5")).toEqual({ kind: "rejected" });
+  });
+});
+
+describe("joinFrenchEntries", () => {
+  it("rejects a headword containing a space", () => {
+    const entry = {
+      id: "1",
+      simplified: "上　面",
+      traditional: "上　面",
+      reading: "shang4 mian4",
+      glosses: ["x"],
+    };
+    expect(joinFrenchEntries(index, [entry]).rejected).toEqual([entry]);
   });
 });

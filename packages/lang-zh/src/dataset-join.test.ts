@@ -2,15 +2,18 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { readingKey, toDiacritic } from "./pinyin.ts";
 import {
   loadCedictRows,
-  loadCfdictEntries,
-  loadCfdictGlosses,
+  loadFrenchEntries,
+  loadFrenchGlosses,
   loadGf0025Characters,
   loadGf0025Words,
   loadHskCharacters,
   loadHskWords,
 } from "./testing/dataset-shards.ts";
 
-describe("CFDICT data", () => {
+describe.each([
+  ["cfdict", 40_000, 5_000],
+  ["wiktionary-fr-zh", 6_000, 1_000],
+])("%s data", (dataset, minGlosses, minEntries) => {
   const keys = new Set<string>();
 
   beforeAll(async () => {
@@ -21,16 +24,22 @@ describe("CFDICT data", () => {
   });
 
   it("glosses only existing CC-CEDICT entries", async () => {
-    const glosses = await loadCfdictGlosses();
-    expect(glosses.length).toBeGreaterThan(40_000);
+    const glosses = await loadFrenchGlosses(dataset);
+    expect(glosses.length).toBeGreaterThan(minGlosses);
     const orphans = glosses.filter(([simplified, key]) => !keys.has(`${simplified}\t${key}`));
     expect(orphans.slice(0, 10)).toEqual([]);
   });
 
   it("adds French-only entries with valid readings that CC-CEDICT does not have", async () => {
-    const entries = await loadCfdictEntries();
-    expect(entries.length).toBeGreaterThan(5_000);
-    const invalid = entries.filter(([, , reading]) => !toDiacritic(reading).ok);
+    const entries = await loadFrenchEntries(dataset);
+    expect(entries.length).toBeGreaterThan(minEntries);
+    const invalid = entries.filter(
+      (row) =>
+        /^$|\s/u.test(row[0]) ||
+        /^$|\s/u.test(row[1]) ||
+        !/\d/u.test(row[2]) ||
+        !toDiacritic(row[2]).ok,
+    );
     expect(invalid.slice(0, 10)).toEqual([]);
     const duplicates = entries.filter(([simplified, , reading]) => {
       const key = readingKey(reading);

@@ -7,7 +7,7 @@ export type CedictRow = readonly [
   glosses: readonly string[],
 ];
 
-export type CfdictGlossRow = readonly [
+export type FrenchGlossRow = readonly [
   simplified: string,
   readingKey: string,
   glosses: readonly string[],
@@ -34,11 +34,11 @@ const loadRows = async <Row>(dataset: string, prefix: string): Promise<readonly 
 export const loadCedictRows = (): Promise<readonly CedictRow[]> =>
   loadRows("cc-cedict", "entries-");
 
-export const loadCfdictGlosses = (): Promise<readonly CfdictGlossRow[]> =>
-  loadRows("cfdict", "glosses-");
+export const loadFrenchGlosses = (dataset: string): Promise<readonly FrenchGlossRow[]> =>
+  loadRows(dataset, "glosses-");
 
-export const loadCfdictEntries = (): Promise<readonly CedictRow[]> =>
-  loadRows("cfdict", "entries-");
+export const loadFrenchEntries = (dataset: string): Promise<readonly CedictRow[]> =>
+  loadRows(dataset, "entries-");
 
 export const loadHskWords = (): Promise<readonly HskWordRow[]> =>
   loadRows("hsk-2025-words", "words-");

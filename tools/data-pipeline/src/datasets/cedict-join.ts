@@ -24,6 +24,8 @@ export type JoinOutcome =
   | { readonly kind: "french-only"; readonly reading: string; readonly ambiguous: boolean }
   | { readonly kind: "rejected" };
 
+const HAN = /^\p{Script=Han}+$/u;
+
 const CedictShard = z.array(z.tuple([z.string(), z.string(), z.string(), z.array(z.string())]));
 
 const keyOf = (tokens: readonly ReadingToken[]): string => formatNumbered(tokens).toLowerCase();
@@ -36,10 +38,11 @@ const push = (map: Map<string, CedictEntry[]>, key: string, entry: CedictEntry):
 
 export const loadCedictIndex = async (
   readShards: ShardReader,
+  dataset: string,
 ): Promise<Result<CedictIndex, string>> => {
   const shards = await readShards("cc-cedict");
   if (!shards.ok) return err(`cannot read cc-cedict: ${shards.error}`);
-  if (shards.value.length === 0) return err("cc-cedict must be built before cfdict");
+  if (shards.value.length === 0) return err(`cc-cedict must be built before ${dataset}`);
   const bySimplified = new Map<string, CedictEntry[]>();
   const byTraditional = new Map<string, CedictEntry[]>();
   for (const shard of shards.value) {
@@ -86,19 +89,26 @@ const hasToneConflict = (a: readonly ReadingToken[], b: readonly ReadingToken[])
     );
   });
 
-/** CFDICT writes the erhua suffix as a toneless `r`, CC-CEDICT as `r5`. */
-const normalizeErhua = (reading: string): string =>
-  reading
-    .split(" ")
-    .map((token) => (token === "r" ? "r5" : token))
+/**
+ * CFDICT writes the neutral tone without a digit (`a`, erhua `r`), CC-CEDICT with 5. Other
+ * toneless tokens are syllables only when every token stands for one Chinese character.
+ */
+const normalizeNeutralTone = (simplified: string, reading: string): string => {
+  const tokens = reading.split(" ");
+  const aligned = HAN.test(simplified) && tokens.length === Array.from(simplified).length;
+  return tokens
+    .map((token) =>
+      token === "r" || (aligned && /^[A-Za-z:]+$/u.test(token)) ? `${token}5` : token,
+    )
     .join(" ");
+};
 
 export const matchEntry = (
   index: CedictIndex,
   simplified: string,
   reading: string,
 ): JoinOutcome => {
-  const tokens = parseNumbered(normalizeErhua(reading));
+  const tokens = parseNumbered(normalizeNeutralTone(simplified, reading));
   if (!tokens.ok) return { kind: "rejected" };
   const key = keyOf(tokens.value);
   const direct = index.bySimplified.get(simplified) ?? [];
@@ -124,4 +134,76 @@ export const matchEntry = (
     reading: formatNumbered(tokens.value),
     ambiguous: related.size > 1,
   };
+};
+
+export type FrenchEntry = {
+  readonly id: string;
+  readonly simplified: string;
+  readonly traditional: string;
+  readonly reading: string;
+  readonly glosses: readonly string[];
+};
+
+export type FrenchJoin = {
+  /** `[simplified, lowercase numbered pinyin, French glosses]` attached to CC-CEDICT entries. */
+  readonly glossRows: readonly (readonly [string, string, readonly string[]])[];
+  /** `[simplified, traditional, numbered pinyin, French glosses]` for words CC-CEDICT lacks. */
+  readonly entryRows: readonly (readonly [string, string, string, readonly string[]])[];
+  readonly conflicts: readonly string[];
+  readonly rejected: readonly FrenchEntry[];
+  readonly summary: string;
+};
+
+type Glossed<Row> = { readonly row: Row; readonly glosses: Set<string> };
+
+const addGlosses = <Row extends readonly string[]>(
+  map: Map<string, Glossed<Row>>,
+  row: Row,
+  glosses: readonly string[],
+): void => {
+  const key = JSON.stringify(row);
+  const merged = map.get(key) ?? { row, glosses: new Set<string>() };
+  for (const gloss of glosses) merged.glosses.add(gloss);
+  map.set(key, merged);
+};
+
+export const joinFrenchEntries = (
+  index: CedictIndex,
+  entries: readonly FrenchEntry[],
+): FrenchJoin => {
+  const joined = new Map<string, Glossed<readonly [string, string]>>();
+  const frenchOnly = new Map<string, Glossed<readonly [string, string, string]>>();
+  const counts = { exact: 0, "traditional-form": 0, "neutral-tone": 0, "tone-conflict": 0 };
+  const conflicts: string[] = [];
+  const rejected: FrenchEntry[] = [];
+  let ambiguous = 0;
+  for (const entry of entries) {
+    const outcome: JoinOutcome = /\s/u.test(`${entry.simplified}${entry.traditional}`)
+      ? { kind: "rejected" }
+      : matchEntry(index, entry.simplified, entry.reading);
+    if (outcome.kind === "rejected") {
+      rejected.push(entry);
+    } else if (outcome.kind === "joined") {
+      counts[outcome.via] += 1;
+      addGlosses(joined, [outcome.target.simplified, outcome.target.key], entry.glosses);
+      if (outcome.via === "tone-conflict") {
+        conflicts.push(
+          `${entry.id}\t${entry.simplified}\t${entry.reading}\t${outcome.target.reading}`,
+        );
+      }
+    } else {
+      if (outcome.ambiguous) ambiguous += 1;
+      addGlosses(frenchOnly, [entry.simplified, entry.traditional, outcome.reading], entry.glosses);
+    }
+  }
+  const glossRows = [...joined.values()].map(({ row, glosses }) => [...row, [...glosses]] as const);
+  const entryRows = [...frenchOnly.values()].map(
+    ({ row, glosses }) => [...row, [...glosses]] as const,
+  );
+  const summary = [
+    `${String(joined.size)} CC-CEDICT keys glossed (${String(counts.exact)} exact, ${String(counts["traditional-form"])} via traditional form, ${String(counts["neutral-tone"])} neutral-tone, ${String(counts["tone-conflict"])} tone conflicts)`,
+    `${String(frenchOnly.size)} French-only entries (${String(ambiguous)} ambiguous)`,
+    `${String(rejected.length)} rejected`,
+  ].join(", ");
+  return { glossRows, entryRows, conflicts, rejected, summary };
 };
