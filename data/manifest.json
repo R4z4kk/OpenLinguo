@@ -15,6 +15,22 @@
     "maxAgeDays": 90,
     "sha256": "9c408f08998fefdc898e10adbf16b315e4cd6a4d7fa08e8204791e6312a5e520"
   },
+  "gf0025-2021-chars": {
+    "source": "https://raw.githubusercontent.com/elkmovie/hsk30/7f3d4fdcfcb6e826001df062747c943d1fa8160e/charlist.txt",
+    "license": "MIT transcription (Pleco Inc.) of the GF0025-2021 standard",
+    "version": "GF0025-2021, elkmovie/hsk30@7f3d4fd",
+    "retrievedAt": "2026-10-09T18:36:03.640Z",
+    "maxAgeDays": 365,
+    "sha256": "63dc1900d81ab76f358ca3ed169a7c4a2f8f2faaeeed6c394d13a5642ccfb7a4"
+  },
+  "gf0025-2021-words": {
+    "source": "https://raw.githubusercontent.com/elkmovie/hsk30/7f3d4fdcfcb6e826001df062747c943d1fa8160e/wordlist.txt",
+    "license": "MIT transcription (Pleco Inc.) of the GF0025-2021 standard",
+    "version": "GF0025-2021, elkmovie/hsk30@7f3d4fd",
+    "retrievedAt": "2026-10-09T18:36:04.076Z",
+    "maxAgeDays": 365,
+    "sha256": "4a8cfdc3a8fa85ced837c71aa187454c4d0ee36a1f70765655a93acb6a463af3"
+  },
   "hsk-2025-chars": {
     "source": "https://raw.githubusercontent.com/harukicoder/hsk30/36c0d11347b5d4caea52917d1262404824ad58d5/corpus/syllabus2025/syllabus2025_chars.tsv",
     "license": "MIT transcription of CLEC/CTI syllabus facts",
