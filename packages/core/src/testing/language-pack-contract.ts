@@ -52,6 +52,13 @@ export const describeLanguagePackContract = (
       ).toBe(true);
     });
 
+    it("decomposes the known term from its own form, when the feature exists", async () => {
+      const { decomposition } = pack.features;
+      if (decomposition === null) return;
+      const tree = await decomposition.decompose(fixture.knownTerm);
+      expect(tree.ok && tree.value.form).toBe(fixture.knownTerm);
+    });
+
     it("returns an empty list for an unknown term", async () => {
       expect(await pack.lookup(fixture.unknownTerm)).toEqual({ ok: true, value: [] });
     });
