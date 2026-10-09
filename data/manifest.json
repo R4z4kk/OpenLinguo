@@ -1,0 +1,10 @@
+{
+  "cc-cedict": {
+    "source": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",
+    "license": "CC-BY-SA-4.0",
+    "version": "2026-10-09T09:12:50Z",
+    "retrievedAt": "2026-10-09T14:18:09.970Z",
+    "maxAgeDays": 90,
+    "sha256": "dd2307775fd21f5d350e6cb0e6a946bfe2eaedd79bb9ce524a67e7fccddf6a8f"
+  }
+}
