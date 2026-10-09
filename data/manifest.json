@@ -15,6 +15,30 @@
     "maxAgeDays": 90,
     "sha256": "9c408f08998fefdc898e10adbf16b315e4cd6a4d7fa08e8204791e6312a5e520"
   },
+  "font-lxgw-wenkai-gb": {
+    "source": "https://github.com/lxgw/LxgwWenkaiGB/releases/download/v1.522/LXGWWenKaiGB-Regular.ttf",
+    "license": "OFL-1.1",
+    "version": "LXGW WenKai GB v1.522",
+    "retrievedAt": "2026-10-09T20:48:58.450Z",
+    "maxAgeDays": 365,
+    "sha256": "295568c131648062107543aa159c97dd49564be791136c2abf74cad83eba3f7f"
+  },
+  "font-noto-sans-sc-400": {
+    "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf",
+    "license": "OFL-1.1",
+    "version": "notofonts/noto-cjk@f8d1575",
+    "retrievedAt": "2026-10-09T20:48:24.030Z",
+    "maxAgeDays": 365,
+    "sha256": "faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9"
+  },
+  "font-noto-sans-sc-700": {
+    "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/SC/NotoSansSC-Bold.otf",
+    "license": "OFL-1.1",
+    "version": "notofonts/noto-cjk@f8d1575",
+    "retrievedAt": "2026-10-09T20:48:40.887Z",
+    "maxAgeDays": 365,
+    "sha256": "c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0"
+  },
   "gf0025-2021-chars": {
     "source": "https://raw.githubusercontent.com/elkmovie/hsk30/7f3d4fdcfcb6e826001df062747c943d1fa8160e/charlist.txt",
     "license": "MIT transcription (Pleco Inc.) of the GF0025-2021 standard",
