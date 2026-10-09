@@ -1,7 +1,8 @@
 import { gunzipSync } from "node:zlib";
-import { err, ok, parseWith, type Result } from "@openlinguo/core";
+import { err, ok, type Result } from "@openlinguo/core";
 import { joinedToNumbered, type JoinedPinyinError } from "@openlinguo/lang-zh";
 import { z } from "zod";
+import { parseJsonLines } from "../jsonl.ts";
 import { sha256, type Dataset } from "../run.ts";
 import { toShards } from "../shards.ts";
 import { joinFrenchEntries, loadCedictIndex, type FrenchEntry } from "./cedict-join.ts";
@@ -37,7 +38,6 @@ export type WiktionaryRelease = {
 };
 
 const HAN = /^\p{Script=Han}+$/u;
-const MAX_REPORTED = 10;
 
 /** `ǎn (an³)` and `dì (di⁴), de (de⁵)` hold a numbered annotation or several readings. */
 const readingsOf = (pinyin: string): readonly string[] =>
@@ -92,26 +92,13 @@ const toEntry = (
 };
 
 export const parseWiktionary = (text: string): Result<WiktionaryRelease, string> => {
+  const lines = parseJsonLines(text, Line);
+  if (!lines.ok) return lines;
   const entries: FrenchEntry[] = [];
   const issues: Issue[] = [];
-  const invalid: number[] = [];
   let sinograms = 0;
   let unglossed = 0;
-  for (const [index, raw] of text.split("\n").entries()) {
-    if (raw.trim() === "") continue;
-    let json: unknown;
-    try {
-      json = JSON.parse(raw);
-    } catch {
-      invalid.push(index + 1);
-      continue;
-    }
-    const parsed = parseWith(Line, json);
-    if (!parsed.ok) {
-      invalid.push(index + 1);
-      continue;
-    }
-    const line = parsed.value;
+  for (const line of lines.value) {
     if (line.pos === "character") {
       sinograms += 1;
       continue;
@@ -132,10 +119,6 @@ export const parseWiktionary = (text: string): Result<WiktionaryRelease, string>
     const read = toEntry(line, kept);
     issues.push(...read.issues);
     if (read.entry) entries.push(read.entry);
-  }
-  if (invalid.length > 0) {
-    const shown = invalid.slice(0, MAX_REPORTED).join(", ");
-    return err(`${String(invalid.length)} malformed lines (${shown})`);
   }
   return ok({ entries, issues, sinograms, unglossed });
 };

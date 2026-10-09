@@ -12,8 +12,8 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | CFDICT | zh dictionary, FR glosses | CC BY-SA 3.0 | [chine.in](https://chine.in/chinois/open/CFDICT/) | Verified — official file (re-checked 2026-10-09): 56,300 entries, 101,235 French translations, version 2024-12-14 in the file header (the page's "240,487 translations" is not what the download contains) |
 | HSK 2025 exam syllabus (新版HSK考试大纲) | zh levels 1–6 and 7-9 | Official exam standard; word→level and char→level facts only | Official PDF on [chinesetest.cn](https://www.chinesetest.cn) (copy-protected); imported from the transcription [harukicoder/hsk30](https://github.com/harukicoder/hsk30) at a pinned commit | Verified with limits — see note below |
 | GF0025-2021 national standard (国际中文教育中文水平等级标准) | zh levels 1–6 and 7-9, free referential and fallback | Official standard of the Ministry of Education and State Language Commission; word→level and char→level facts only | Unrestricted official PDF on [moe.gov.cn](http://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202103/t20210329_523304.html) (scanned); imported from the OCR [elkmovie/hsk30](https://github.com/elkmovie/hsk30) (Pleco Inc., MIT) at a pinned commit | Verified — exact counts, see note below |
-| Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified |
-| hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — ship `ARPHICPL.TXT` with the data |
+| Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified — imported from commit `bddc96d` (9,574 characters), see note below |
+| hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — npm tarball 2.0.1, HSK 2025 + GF0025-2021 subset (3,143 characters), `ARPHICPL.TXT` shipped with the data, see note below |
 | French Wiktionary, Chinese entries (`wiktionary-fr-zh`) | zh dictionary, extra FR glosses | CC BY-SA 4.0 (fr.wiktionary footer checked 2026-10-09) | [kaikki.org](https://kaikki.org/frwiktionary/Chinois/index.html) | Verified — extraction 2026-10-02 from the 2026-10-01 dump, 33,650 entries, see note below |
 | Wiktionary extracts | en dictionary, FR translations, IPA (M9) | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/rawdata.html) | Verified — latest extraction 2026-10-03 from the 2026-09-02 dump |
 | wordfreq data | en/zh frequency ranking | CC BY-SA 4.0 (code Apache-2.0) | [rspeer/wordfreq](https://github.com/rspeer/wordfreq) | Verified — frozen project (see `SUNSET.md`), treated as a frozen dataset |
@@ -75,13 +75,18 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 - The extract has no date inside, so its version is the start of its sha256; `kaikki.org` only publishes a moving latest URL.
 - The first pinyin reading of each entry is used (1,327 entries have several, listed). Sinogram sections are skipped (61% of their glosses are wiki notes such as HSK levels or stroke counts). Entries without pinyin (889), with an invalid pinyin (85) or a title that is not only Chinese characters (44) are left out, and 27 multi-line glosses (wiki examples) are dropped; all are listed in `data/wiktionary-fr-zh/issues.tsv`, never guessed.
 
+### Make Me a Hanzi and hanzi-writer-data
+
+- `dictionary.txt` is LGPL-3.0-or-later and derived from Unihan: `data/makemeahanzi/` ships the project's `LGPL` file (Unicode notice + LGPL-3.0) and the GPL-3.0 text the LGPL incorporates, and its README states that the data has been modified (Unicode notice, condition c). All 9,574 characters are kept (decomposition, radical, etymology); `definition`, `pinyin` and `matches` are dropped.
+- Stroke data comes from the immutable npm tarball `hanzi-writer-data@2.0.1` (sha256 pinned), read with an in-house tar reader; `ARPHICPL.TXT` is copied from the same tarball. Only the characters of the two shipped referentials are kept: all 3,088 HSK 2025 and 3,000 GF0025-2021 characters (3,143 distinct) have stroke data, missing ones would be listed in `data/hanzi-writer-data/missing.tsv`. Served from the project origin, never from the jsDelivr CDN.
+
 ## Attribution (About page)
 
 - CC-CEDICT — MDBG, CC BY-SA 4.0
 - CFDICT — Chine Informations (chine.in), CC BY-SA 3.0
 - HSK 2025 exam syllabus levels — Center for Language Education and Cooperation / Chinese Testing International (transcription: harukicoder/hsk30, MIT)
 - GF0025-2021 standard levels — Ministry of Education and State Language Commission of the PRC (OCR: Pleco Inc. via elkmovie/hsk30, MIT)
-- Make Me a Hanzi — Shaunak Kishore, LGPL-3.0; stroke data © Arphic Technology, Arphic Public License
+- Make Me a Hanzi — Shaunak Kishore, LGPL-3.0, with Unihan data © Unicode, Inc.; stroke data from hanzi-writer-data (David Chanin), © Arphic Technology, Arphic Public License
 - Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - wordfreq — Robyn Speer, CC BY-SA 4.0
 - CEFR-J Wordlist Version 1.6 — compiled by Yukio Tono, Tokyo University of Foreign Studies
