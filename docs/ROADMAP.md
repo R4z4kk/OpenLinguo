@@ -184,17 +184,18 @@ Infrastructure specifics (hosts, ports, credentials) live in the maintainer's pr
 
 ## Data sources (checked 2026-10-09)
 
-| Dataset | License | Status |
-|---|---|---|
-| CC-CEDICT (125,244 entries, release 2026-10-09) | CC BY-SA 4.0 | Verified (mdbg.net) |
-| Make Me a Hanzi `dictionary.txt` / `graphics.txt` | LGPL-3.0+ / Arphic PL | Verified (COPYING) |
-| HSK 2025 syllabus (10,896 distinct words, 3,088 chars) | Derived tables MIT (ivankra/hsk30), corpus CC BY 4.0 | To verify: official CLEC/CTI source + provenance; rollout status contradictory |
-| ts-fsrs | MIT | Verified |
-| Kokoro-82M | Apache-2.0 | Verified (en only) |
-| CosyVoice 3 / MeloTTS | Apache-2.0 / MIT | To verify (weights) |
-| CFDICT (~55k entries) | Creative Commons (variant unknown) | To verify |
-| CEFR-J v1.6 (A1–B2) / Octanove C1–C2 | Free incl. commercial with citation / CC BY-SA 4.0 | To verify on cefr-j.org |
-| Wiktionary via kaikki.org, wordfreq, Tatoeba (text only), pinyin-pro, pitchy, hanzi-writer-data, opencc-js | Various | To verify in M0 |
+All sources were verified on primary sources; the full table, obligations and attribution text live in [`data/SOURCES.md`](../data/SOURCES.md).
+
+| Dataset | License |
+|---|---|
+| CC-CEDICT | CC BY-SA 4.0 |
+| CFDICT | CC BY-SA 3.0 |
+| HSK 2025 exam syllabus (extracted from the official CTI PDF; exam launch 2026-12-13) | Factual level mapping, attributed |
+| Make Me a Hanzi / hanzi-writer-data | LGPL-3.0+ / Arphic PL |
+| Wiktionary (kaikki.org), wordfreq, Octanove C1/C2 | CC BY-SA 4.0 |
+| CEFR-J 1.6 | Free with citation; redistribution not addressed (accepted risk) |
+| Tatoeba sentences (text only) | CC BY 2.0 FR |
+| Kokoro-82M / CosyVoice 3 / MeloTTS | Apache-2.0 / Apache-2.0 / MIT |
 
 Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI job fails when an entry is expired, a scheduled workflow opens a refresh PR with diff stats, never auto-merged. Commercial graded readers are never ingested; Tatoeba audio not used (mixed NC licenses).
 
