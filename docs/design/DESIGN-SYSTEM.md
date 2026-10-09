@@ -8,7 +8,7 @@ The interface is monochrome, ink on paper. Color carries one meaning only: the M
 
 ## Interface colors
 
-Contrast ratios are WCAG 2.x, computed against the surface they sit on.
+Contrast ratios are WCAG 2.x (relative luminance per WCAG 2.2), against the ground named in each cell. The values live in `apps/web/src/styles.css` as `light-dark(light, dark)`; `apps/web/src/design/tokens.test.ts` checks every ratio below in CI, and that `ink`, `muted` and `danger` stay ≥ 4.5:1 and `border-strong` ≥ 3:1 on `bg`, `surface` and `sunken` in both themes.
 
 | Token | Light | Dark | Use |
 |---|---|---|---|
@@ -17,10 +17,10 @@ Contrast ratios are WCAG 2.x, computed against the surface they sit on.
 | `sunken` | `#EEF0ED` | `#232826` | Tracks, selected rows, inset blocks |
 | `hairline` | `#DADDD8` | `#2E3431` | Decorative separators only |
 | `border-strong` | `#7E8580` (3.5:1 on `bg`) | `#7A827E` (4.3:1 on `surface`) | Control boundaries (WCAG 1.4.11) |
-| `ink` | `#191C1A` (16.0:1) | `#ECEFED` (15.9:1) | Text, primary buttons, focus ring |
-| `on-ink` | `#FFFFFF` (17.2:1) | `#121514` (15.9:1) | Text on primary buttons |
-| `muted` | `#555B57` (6.5:1 on `bg`, 6.1:1 on `sunken`) | `#A3ABA6` (7.2:1) | Secondary text |
-| `danger` | `#B42318` (6.6:1) | `#F2827A` (6.6:1) | Destructive actions only |
+| `ink` | `#191C1A` (16.0:1 on `bg`) | `#ECEFED` (15.9:1 on `bg`) | Text, primary buttons, focus ring |
+| `on-ink` | `#FFFFFF` (17.2:1 on `ink`) | `#121514` (15.9:1 on `ink`) | Text on primary buttons |
+| `muted` | `#555B57` (6.5:1 on `bg`, 6.1:1 on `sunken`) | `#A3ABA6` (7.2:1 on `surface`) | Secondary text |
+| `danger` | `#B42318` (6.6:1 on `surface`) | `#F2827A` (6.6:1 on `surface`) | Destructive actions only |
 
 ## Tone colors
 
@@ -28,20 +28,20 @@ Contrast ratios are WCAG 2.x, computed against the surface they sit on.
 |---|---|---|---|---|
 | 1 · high | `#AF2D0B` | 6.6:1 | `#DF6445` | 5.3:1 |
 | 2 · rising | `#A20B9F` | 6.8:1 | `#AB6AE3` | 5.2:1 |
-| 3 · dipping | `#0B796E` | 5.3:1 | `#71E1BB` | ≥ 10.6:1 |
-| 4 · falling | `#0619DB` | 9.7:1 | `#A3B2DD` | ≥ 8.0:1 |
-| neutral | `#5F6662` | 5.9:1 | `#A3ABA6` | 7.2:1 |
+| 3 · dipping | `#0B796E` | 5.3:1 | `#71E1BB` | 11.5:1 |
+| 4 · falling | `#0619DB` | 9.7:1 | `#A3B2DD` | 8.7:1 |
+| neutral | `#5F6662` | 5.9:1 | `#A3ABA6` | 7.8:1 |
 
-Every light tone is ≥ 5.2:1 on white, hence ≥ 4.5:1 on `bg` and `sunken` too. Tone 2 stays purple in both themes so a learner keeps one color per tone.
+**Tone-colored text sits on `bg` or `surface` only**, never on `sunken`: in the dark theme tones 1 and 2 reach only 4.3:1 and 4.2:1 on `sunken` (decision 2026-10-09, the colors are kept). A selected row or inset block that shows colored pinyin uses an outline instead of `sunken`. Every tone is ≥ 4.7:1 on `bg` and `surface` in both themes (checked in CI). Tone 2 stays purple in both themes so a learner keeps one color per tone.
 
-**Colorblind separation.** The palette was found by a search maximizing the smallest color difference (CIE76 ΔE in Lab) between any two tones, under normal vision and simulated protanopia, deuteranopia and tritanopia (Machado, Oliveira and Fernandes 2009, severity 1.0), within the contrast constraints and the usual hue families (red-orange, purple, green-teal, blue).
+**Colorblind separation.** The palette was found by a search maximizing the smallest color difference (CIE76 ΔE in Lab) between any two tones, under normal vision and simulated protanopia, deuteranopia and tritanopia (Machado, Oliveira and Fernandes 2009, severity 1.0 matrices applied to linear sRGB and clamped, then CIE Lab with a D65 white), within the contrast constraints and the usual hue families (red-orange, purple, green-teal, blue).
 
 | Smallest ΔE between two tones | Normal | Protanopia | Deuteranopia | Tritanopia |
 |---|---|---|---|---|
-| Light | 52.4 | 37.1 | 31.7 | 30.6 |
-| Dark | 54.8 | 38.3 | 30.6 | 32.9 |
+| Light | 52.7 | 37.5 | 31.5 | 30.6 |
+| Dark | 54.8 | 38.2 | 30.4 | 32.6 |
 
-For comparison, an Okabe-Ito-derived starting palette dropped to 8.6 under protanopia. The contrast and ΔE checks become a CI test when the tokens are implemented (#22).
+For comparison, an Okabe-Ito-derived starting palette dropped to 8.6 under protanopia. The ΔE values above are recomputed by the CI test (they differed by up to 0.4 from the search's own figures, corrected 2026-10-09), which also requires every simulated deficiency to stay ≥ 30.
 
 ## Typography
 

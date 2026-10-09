@@ -1,0 +1,88 @@
+@import "tailwindcss";
+
+/* "Ink and tone" tokens, docs/design/DESIGN-SYSTEM.md. Colors are light-dark(light, dark). */
+@theme {
+  --color-*: initial;
+  --color-bg: light-dark(#f6f7f5, #121514);
+  --color-surface: light-dark(#ffffff, #1a1e1c);
+  --color-sunken: light-dark(#eef0ed, #232826);
+  --color-hairline: light-dark(#daddd8, #2e3431);
+  --color-border-strong: light-dark(#7e8580, #7a827e);
+  --color-ink: light-dark(#191c1a, #ecefed);
+  --color-on-ink: light-dark(#ffffff, #121514);
+  --color-muted: light-dark(#555b57, #a3aba6);
+  --color-danger: light-dark(#b42318, #f2827a);
+  --color-tone-1: light-dark(#af2d0b, #df6445);
+  --color-tone-2: light-dark(#a20b9f, #ab6ae3);
+  --color-tone-3: light-dark(#0b796e, #71e1bb);
+  --color-tone-4: light-dark(#0619db, #a3b2dd);
+  --color-tone-neutral: light-dark(#5f6662, #a3aba6);
+
+  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-zh: "Noto Sans SC", sans-serif;
+  --font-display: "LXGW WenKai", "Noto Serif SC", serif;
+
+  --text-*: initial;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-small: 14px;
+  --text-small--line-height: 20px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-pinyin: 18px;
+  --text-pinyin--line-height: 24px;
+  --text-subtitle: 22px;
+  --text-subtitle--line-height: 28px;
+  --text-subtitle--font-weight: 600;
+  --text-title: 28px;
+  --text-title--line-height: 36px;
+  --text-title--font-weight: 700;
+
+  --radius-control: 6px;
+  --radius-card: 12px;
+
+  --default-transition-duration: 150ms;
+  --default-transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@layer base {
+  html {
+    scroll-padding-bottom: 6rem;
+
+    @variant lg {
+      scroll-padding-bottom: 0;
+    }
+  }
+
+  body {
+    @apply bg-bg font-sans text-body text-ink;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
