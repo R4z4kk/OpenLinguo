@@ -13,7 +13,7 @@ The app depends on third-party linguistic datasets with mixed licenses, some of 
 - Datasets are built by `tools/data-pipeline` from pinned URLs verified by sha256, never committed raw.
 - `data/manifest.json` records per dataset: source, license, version, `retrievedAt`, `maxAgeDays`, sha256.
 - CI fails when a manifest entry is past `maxAgeDays`. A monthly workflow pushes a refresh branch and opens an issue with diff stats; the maintainer opens the PR (PRs created with the workflow token would not trigger CI), and refresh PRs are never auto-merged.
-- HSK levels use the 2025 exam syllabus as a versioned dataset (`hsk-2025`), extracted by the pipeline from the official CTI PDF and validated against the syllabus's published totals; third-party transcriptions are only used to cross-check.
+- HSK levels use the 2025 exam syllabus as a versioned dataset (`hsk-2025`). The official CTI PDF is copy-protected, so the levels come from a pinned third-party transcription (harukicoder/hsk30), verified on the published character counts and the distinct word count, while permission to use the official PDF is requested (decision 2026-10-09).
 - Excluded: commercial graded readers, non-commercial (NC) licensed content, Tatoeba audio (mixed licenses).
 
 ## Consequences
