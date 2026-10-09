@@ -41,4 +41,7 @@ entry_id	repair
 348110	stray 0xC2 byte removed
 341192	stray 0xC2 byte removed
 359484	empty French gloss removed
+341446	whitespace around a field removed
 348608	empty French gloss removed
+341389	whitespace around a field removed
+341656	whitespace around a field removed
