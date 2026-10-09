@@ -54,7 +54,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 
 - A 2016 Pleco forum post questions the provenance of some unofficial CFDICT versions; only the official download is used.
 - The official XML has 42 corrupted bytes (stray 0xC2 lead bytes, one broken check mark) and 2 empty glosses; the pipeline repairs exactly these defects and lists them in `data/cfdict/repairs.tsv`, any other invalid byte fails the build. The `.u8` export silently drops the same apostrophes, so it is not used.
-- Only French glosses whose simplified headword + pinyin match a CC-CEDICT entry are shipped (47,231 keys); the 9,064 others are listed in `data/cfdict/unmatched.tsv`.
+- French glosses are attached to CC-CEDICT entries (47,668 keys: exact match, traditional form stored as simplified, neutral-tone difference, or a tone conflict with a single candidate, CC-CEDICT tone kept and listed in `data/cfdict/tone-conflicts.tsv`). The 8,162 words CC-CEDICT lacks become French-only dictionary entries, searchable but not used for segmentation. 38 entries with an invalid pinyin are listed in `data/cfdict/rejected.tsv`.
 
 ## Attribution (About page)
 

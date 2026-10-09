@@ -140,17 +140,20 @@ describe("parseCfdict", () => {
 });
 
 describe("cfdict dataset", () => {
-  it("joins French glosses to CC-CEDICT keys and lists the rest", async () => {
+  it("glosses CC-CEDICT entries, keeps French-only words and lists rejected readings", async () => {
     const built = await cfdict.build(encode(document("5", words)), cedict);
     if (!built.ok) throw new Error(built.error);
-    expect(built.value.files.get("entries-000.json")).toBe(
+    expect(built.value.files.get("glosses-000.json")).toBe(
       '[\n["电话","dian4 hua4",["téléphone","appel"]],\n["绿","lu:4",["vert"]]\n]\n',
     );
-    expect(built.value.files.get("unmatched.tsv")).toBe(
-      "simplified\ttraditional\tpinyin\treason\n一万\t一万\tyi1 wan4\tno-cc-cedict-entry\n丆\t丆\txx5\tinvalid-reading\n",
+    expect(built.value.files.get("entries-000.json")).toBe(
+      '[\n["一万","一万","yi1 wan4",["dix mille"]]\n]\n',
+    );
+    expect(built.value.files.get("rejected.tsv")).toBe(
+      "entry_id\tsimplified\tpinyin\n5\t丆\txx5\n",
     );
     expect(built.value.summary).toBe(
-      "5 entries, 2 keys joined to CC-CEDICT, 2 unmatched, 0 repairs",
+      "5 entries, 2 CC-CEDICT keys glossed (3 exact, 0 via traditional form, 0 neutral-tone, 0 tone conflicts), 1 French-only entries (0 ambiguous), 1 rejected, 0 repairs",
     );
   });
 
