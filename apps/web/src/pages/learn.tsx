@@ -1,6 +1,11 @@
-export const LearnPage = () => (
-  <section>
-    <h1 className="text-title">Learn</h1>
-    <p className="mt-2 text-muted">Decks, dictionary, pronunciation and writing studios.</p>
-  </section>
-);
+import { useTranslation } from "react-i18next";
+
+export const LearnPage = () => {
+  const { t } = useTranslation();
+  return (
+    <section>
+      <h1 className="text-title">{t("learn.title")}</h1>
+      <p className="mt-2 text-muted">{t("learn.intro")}</p>
+    </section>
+  );
+};

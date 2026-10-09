@@ -1,4 +1,5 @@
-import { err, ok, type Result } from "@openlinguo/core";
+import { ok, type Result } from "@openlinguo/core";
+import { readStored, writeStored } from "@/lib/stored";
 
 export const themePreferences = ["system", "light", "dark"] as const;
 export type ThemePreference = (typeof themePreferences)[number];
@@ -12,24 +13,14 @@ export const parsePreference = (value: string | null): ThemePreference =>
 export const loadPreference = (
   storage: () => Pick<Storage, "getItem">,
 ): Result<ThemePreference, string> => {
-  try {
-    return ok(parsePreference(storage().getItem(STORAGE_KEY)));
-  } catch (error) {
-    return err(String(error));
-  }
+  const stored = readStored(storage, STORAGE_KEY);
+  return stored.ok ? ok(parsePreference(stored.value)) : stored;
 };
 
 export const savePreference = (
   storage: () => Pick<Storage, "setItem">,
   preference: ThemePreference,
-): Result<null, string> => {
-  try {
-    storage().setItem(STORAGE_KEY, preference);
-    return ok(null);
-  } catch (error) {
-    return err(String(error));
-  }
-};
+): Result<null, string> => writeStored(storage, STORAGE_KEY, preference);
 
 /** `system` follows the operating system through `color-scheme: light dark`. */
 export const applyPreference = (

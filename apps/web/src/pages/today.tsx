@@ -1,6 +1,11 @@
-export const TodayPage = () => (
-  <section>
-    <h1 className="text-title">Today</h1>
-    <p className="mt-2 text-muted">Your daily session starts here.</p>
-  </section>
-);
+import { useTranslation } from "react-i18next";
+
+export const TodayPage = () => {
+  const { t } = useTranslation();
+  return (
+    <section>
+      <h1 className="text-title">{t("today.title")}</h1>
+      <p className="mt-2 text-muted">{t("today.intro")}</p>
+    </section>
+  );
+};
