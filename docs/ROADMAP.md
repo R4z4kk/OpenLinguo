@@ -105,15 +105,15 @@ Each module declares the features it requires; the module registry hides unsuppo
 ## Design & UX
 
 ### Principles
-- Calm, clean, modern: generous whitespace, one accent color, neutral ramp, flat surfaces, hanzi as the visual hero.
+- "Ink and tone": calm, clean, modern; monochrome ink interface, color reserved for the tones, generous whitespace, flat surfaces, hanzi as the visual hero. Full spec in [`docs/design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md).
 - Gamification present but quiet: XP, streak, league badge in a slim header; no confetti walls, no guilt copy, streak freeze, opt-in notifications only. No dark patterns.
 - Mobile-first: bottom tabs on mobile, sidebar from 1024px. One primary action per screen.
 - Copy FR/EN, sentence case, encouraging, never shaming.
 
 ### System
 - Tokens as CSS variables (Tailwind v4 theme): color, type scale, spacing, radius, motion; light / dark / system.
-- Tone colors (T1–T4 + neutral): colorblind-safe palette validated with simulators, always paired with diacritics (never color alone), on by default, toggle in settings.
-- Fonts self-hosted and subset (unicode-range slices): Latin UI sans, Noto Sans SC for UI, a Kai-style display face (e.g. LXGW WenKai, OFL) for word/stroke screens since it is closer to handwriting. No third-party font CDN (GDPR: IP transfer).
+- Tone colors (T1–T4 + neutral): computed for contrast and colorblind separation (smallest ΔE ≥ 30 under protanopia, deuteranopia, tritanopia), always paired with diacritics (never color alone), on by default, toggle in settings.
+- Fonts self-hosted and subset (unicode-range slices): Atkinson Hyperlegible Next (Latin UI), Noto Sans SC (Chinese UI, pinyin), LXGW WenKai (display characters, close to handwriting); all OFL-1.1. No third-party font CDN (GDPR: IP transfer).
 - Motion subtle, fully disabled under `prefers-reduced-motion`.
 
 ### Information architecture
