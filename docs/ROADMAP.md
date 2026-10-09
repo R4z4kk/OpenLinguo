@@ -190,7 +190,7 @@ All sources were verified on primary sources; the full table, obligations and at
 |---|---|
 | CC-CEDICT | CC BY-SA 4.0 |
 | CFDICT | CC BY-SA 3.0 |
-| HSK 2025 exam syllabus (extracted from the official CTI PDF; exam launch 2026-12-13) | Factual level mapping, attributed |
+| HSK 2025 exam syllabus (official CTI PDF is copy-protected: pinned harukicoder/hsk30 transcription, permission requested; exam launch 2026-12-13) | Factual level mapping, attributed |
 | Make Me a Hanzi / hanzi-writer-data | LGPL-3.0+ / Arphic PL |
 | Wiktionary (kaikki.org), wordfreq, Octanove C1/C2 | CC BY-SA 4.0 |
 | CEFR-J 1.6 | Free with citation; redistribution not addressed (accepted risk) |

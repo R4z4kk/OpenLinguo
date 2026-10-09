@@ -10,7 +10,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 |---|---|---|---|---|
 | CC-CEDICT | zh dictionary, EN glosses | CC BY-SA 4.0 | [mdbg.net](https://www.mdbg.net/chinese/dictionary?page=cc-cedict) | Verified — 125,244 entries, release 2026-10-09 |
 | CFDICT | zh dictionary, FR glosses | CC BY-SA 3.0 | [chine.in](https://chine.in/chinois/open/CFDICT/) | Verified — official file (re-checked 2026-10-09): 56,300 entries, 101,235 French translations, version 2024-12-14 in the file header (the page's "240,487 translations" is not what the download contains) |
-| HSK 2025 exam syllabus (新版HSK考试大纲) | zh levels 1–9 | Official exam standard; word→level and char→level facts only | [chinesetest.cn](https://www.chinesetest.cn) → `新版HSK考试大纲1219.pdf` | Verified — see note below |
+| HSK 2025 exam syllabus (新版HSK考试大纲) | zh levels 1–6 and 7-9 | Official exam standard; word→level and char→level facts only | Official PDF on [chinesetest.cn](https://www.chinesetest.cn) (copy-protected); imported from the transcription [harukicoder/hsk30](https://github.com/harukicoder/hsk30) at a pinned commit | Verified with limits — see note below |
 | Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified |
 | hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — ship `ARPHICPL.TXT` with the data |
 | Wiktionary extracts | en dictionary, FR translations, IPA (M9) | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/rawdata.html) | Verified — latest extraction 2026-10-03 from the 2026-09-02 dump |
@@ -41,8 +41,12 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 ### HSK 2025 syllabus
 
 - The syllabus was published by the Center for Language Education and Cooperation and Chinese Testing International (CTI) in November 2025. CTI announced the worldwide launch of the HSK 3.0 exam on **2026-12-13** (official HSKTestOfficial account, September 2026); trial sittings ran in January and September 2026.
-- The pipeline downloads the official PDF (pinned URL + sha256) and extracts levels itself. Extraction must reproduce the syllabus's published cumulative totals: 300 / 500 / 1,000 / 2,000 / 3,600 / 5,400 / 11,000 entries; 3,088 recognition characters.
-- The third-party transcription [harukicoder/hsk30](https://github.com/harukicoder/hsk30) (MIT, created 2026-09-01) is only used to cross-check our extraction, never as a source.
+- The official PDF (406 pages, sha256 `ec74ce04…504941`) is encrypted with permissions that allow printing and accessibility extraction only (`/P -1340`, copy and extraction disabled). Extracting it ourselves would bypass a technical protection measure (CPI L.331-5), so it is not parsed (decision 2026-10-09).
+- Levels come from the transcription [harukicoder/hsk30](https://github.com/harukicoder/hsk30) (MIT, created 2026-09-01) pinned at commit `36c0d11`, which extracted the PDF and validated its per-level entry counts against the published totals (300 / 500 / 1,000 / 2,000 / 3,600 / 5,400 / 11,000).
+- What we verify ourselves: 3,088 recognition characters with the per-level counts 246 / 125 / 284 / 441 / 431 / 413 / 1,148; 10,896 distinct words (the 11,000 entries include homographs); levels 1–7 with the lowest level kept; every graded reading exists in CC-CEDICT. The exact per-level entry totals cannot be recomputed from the collapsed transcription.
+- The transcription's pinyin is truncated for some words (下雨 → `xià`); it is only used to choose between CC-CEDICT readings of polyphones, and unresolved words are listed in `data/hsk-2025-words/issues.tsv`.
+- Permission to extract and redistribute the word → level and character → level facts has been requested from CTI (kaoshi@chinesetest.cn). If granted, the pipeline switches to the official PDF with exact validation.
+- The GF0025-2021 national standard (Ministry of Education PDF, no restriction, scanned pages) is a different list: 41.5% of shared words change level in the 2025 syllabus, so it is not used for exam levels.
 - Only the factual word→level and character→level mapping is stored, with attribution. No editorial content, tasks, topics or grammar material is reproduced. Takedown on request from the issuing body.
 
 ### CEFR-J

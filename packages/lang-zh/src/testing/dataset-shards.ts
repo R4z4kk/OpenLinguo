@@ -13,6 +13,13 @@ export type CfdictGlossRow = readonly [
   glosses: readonly string[],
 ];
 
+export type HskWordRow = readonly [
+  word: string,
+  level: number,
+  otherLevels: readonly number[],
+  readingKeys: readonly string[],
+];
+
 const dataDir = new URL("../../../../data/", import.meta.url);
 
 const loadRows = async <Row>(dataset: string, prefix: string): Promise<readonly Row[]> => {
@@ -32,3 +39,9 @@ export const loadCfdictGlosses = (): Promise<readonly CfdictGlossRow[]> =>
 
 export const loadCfdictEntries = (): Promise<readonly CedictRow[]> =>
   loadRows("cfdict", "entries-");
+
+export const loadHskWords = (): Promise<readonly HskWordRow[]> =>
+  loadRows("hsk-2025-words", "words-");
+
+export const loadHskCharacters = (): Promise<readonly (readonly [string, number])[]> =>
+  loadRows("hsk-2025-chars", "characters-");
