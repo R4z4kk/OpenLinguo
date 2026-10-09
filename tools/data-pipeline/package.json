@@ -1,0 +1,14 @@
+{
+  "name": "@openlinguo/data-pipeline",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "pipeline": "node src/cli.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@openlinguo/core": "workspace:*",
+    "zod": "^4.6.5"
+  }
+}
