@@ -9,8 +9,8 @@ const fixture: readonly DictEntry[] = [
     variants: ["電話"],
     reading: "dian4 hua4",
     glosses: [
-      { lang: "en", text: "telephone" },
-      { lang: "fr", text: "téléphone" },
+      { lang: "en", text: "telephone", source: "cc-cedict" },
+      { lang: "fr", text: "téléphone", source: "cfdict" },
     ],
     level: null,
   },

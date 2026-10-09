@@ -19,7 +19,12 @@ export type Token = {
   readonly isWord: boolean;
 };
 
-export type Gloss = { readonly lang: GlossLanguage; readonly text: string };
+/** `source` names the dataset the gloss comes from, shown with it (attribution, CC BY-SA). */
+export type Gloss = {
+  readonly lang: GlossLanguage;
+  readonly text: string;
+  readonly source: string;
+};
 
 export type DictEntry = {
   readonly headword: string;
