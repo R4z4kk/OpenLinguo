@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "freshness": "node src/check-freshness.ts",
     "pipeline": "node src/cli.ts",
     "typecheck": "tsc -p tsconfig.json"
   },

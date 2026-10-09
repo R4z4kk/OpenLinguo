@@ -1,0 +1,73 @@
+name: data-refresh
+
+on:
+  schedule:
+    - cron: "17 6 1 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: data-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          cache: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - run: pnpm install --frozen-lockfile
+      - name: Refresh every dataset
+        shell: bash
+        run: node tools/data-pipeline/src/cli.ts --refresh | tee "$RUNNER_TEMP/stats.txt"
+      - name: Push a refresh branch
+        id: branch
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          branch="data/refresh-$(date -u +%F)-${GITHUB_RUN_NUMBER}"
+          git switch -c "$branch"
+          git add data
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "data: refresh datasets $(date -u +%F)"
+          git push "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${branch}"
+          echo "name=${branch}" >> "$GITHUB_OUTPUT"
+      - name: Open a review issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ steps.branch.outputs.name }}
+        run: |
+          {
+            echo "The scheduled refresh rebuilt every dataset on \`${BRANCH}\`."
+            echo
+            echo '```'
+            cat "$RUNNER_TEMP/stats.txt"
+            echo '```'
+            echo
+            echo "Review the diff, then [open the pull request](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${BRANCH}?expand=1). Refresh pull requests are never merged automatically."
+          } > "$RUNNER_TEMP/body.md"
+          gh issue create --title "Data refresh $(date -u +%F)" --label area:data --body-file "$RUNNER_TEMP/body.md"
+      - name: Report a failed refresh
+        if: failure()
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue create --title "Data refresh failed $(date -u +%F)" --label area:data \
+            --body "The scheduled data refresh failed. Datasets were not updated. Logs: ${RUN_URL}"
