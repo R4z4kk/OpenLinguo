@@ -66,7 +66,7 @@ docs/
 ```ts
 interface LanguagePack {
   readonly id: LanguageId;
-  readonly proficiency: ProficiencyFramework; // hsk-2025 (9 levels) | cefr (A1–C2)
+  readonly proficiency: ProficiencyFramework; // hsk-2025 (bands 1–6 and 7-9) | cefr (A1–C2)
   tokenize(text: string): readonly Token[];
   lookup(term: string): Promise<Result<readonly DictEntry[], LookupError>>;
   readonly features: {
@@ -81,7 +81,7 @@ interface LanguagePack {
 }
 ```
 
-Each module declares the features it requires; the module registry hides unsupported modules. Contract tests run against `lang-zh` and `lang-en` from M1 (minimal `lang-en` fixture stub first, full content in M9).
+Each module declares the features it requires; the module registry hides unsupported modules. Contract tests run against `lang-zh` and `lang-en` from M1 (minimal `lang-en` fixture stub first, full content in M9). Capabilities are added with the milestone that first uses them: `ime` (M4), `phonetics` (M3), `prompts` (M5).
 
 ### Code standards
 
