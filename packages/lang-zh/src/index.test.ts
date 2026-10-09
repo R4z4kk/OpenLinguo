@@ -15,8 +15,15 @@ const fixture: readonly DictEntry[] = [
   },
 ];
 
-describeLanguagePackContract(() => createZhPack(inMemoryDictionary(fixture)), {
-  knownTerm: "电话",
-  unknownTerm: "龘",
-  sampleText: "我想打电话给你。",
-});
+describeLanguagePackContract(
+  () =>
+    createZhPack({
+      lookup: inMemoryDictionary(fixture),
+      lexicon: new Set(fixture.map((entry) => entry.headword)),
+    }),
+  {
+    knownTerm: "电话",
+    unknownTerm: "龘",
+    sampleText: "我想打电话给你。",
+  },
+);
