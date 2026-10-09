@@ -1,6 +1,6 @@
 import { ok } from "@openlinguo/core";
 import { beforeAll, describe, expect, it } from "vitest";
-import { loadCedictIndex, matchEntry, type CedictIndex } from "./cfdict-join.ts";
+import { loadCedictIndex, matchEntry, type CedictIndex } from "./cedict-join.ts";
 
 const rows = [
   ["位于", "位於", "wei4 yu2", ["to be located at"]],
@@ -16,7 +16,7 @@ const rows = [
 let index: CedictIndex;
 
 beforeAll(async () => {
-  const loaded = await loadCedictIndex(() => Promise.resolve(ok([JSON.stringify(rows)])));
+  const loaded = await loadCedictIndex(() => Promise.resolve(ok([JSON.stringify(rows)])), "test");
   if (!loaded.ok) throw new Error(loaded.error);
   index = loaded.value;
 });

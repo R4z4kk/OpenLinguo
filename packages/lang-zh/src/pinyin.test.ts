@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readingKey, toDiacritic, toNumbered, tonesOf } from "./pinyin.ts";
+import { joinedToNumbered, readingKey, toDiacritic, toNumbered, tonesOf } from "./pinyin.ts";
 
 const golden: readonly (readonly [numbered: string, diacritic: string])[] = [
   ["dian4 hua4", "diàn huà"],
@@ -78,5 +78,39 @@ describe("readingKey", () => {
 
   it("rejects invalid readings", () => {
     expect(readingKey("dain4").ok).toBe(false);
+  });
+});
+
+describe("joinedToNumbered", () => {
+  it.each([
+    ["diànhuà", 2, "dian4 hua4"],
+    ["xīngqī", 2, "xing1 qi1"],
+    ["dōngxi", 2, "dong1 xi5"],
+    ["xī'ān", 2, "xi1 an1"],
+    ["xiān", 1, "xian1"],
+    ["nǚ'ér", 2, "nu:3 er2"],
+    ["lüè", 1, "lu:e4"],
+    ["Rìběn", 2, "Ri4 ben3"],
+    ["yīhuìr", 3, "yi1 hui4 r5"],
+    ["nǎr", 2, "na3 r5"],
+    ["yī mǎ dāng xiān", 4, "yi1 ma3 dang1 xian1"],
+    ["ǹg", 1, "ng4"],
+  ])("%s (%i) → %s", (pinyin, syllables, numbered) => {
+    expect(joinedToNumbered(pinyin, syllables)).toEqual({ ok: true, value: numbered });
+  });
+
+  it("follows the apostrophe rule of pinyin orthography", () => {
+    expect(joinedToNumbered("fāngàn", 2)).toEqual({ ok: true, value: "fan1 gan4" });
+    expect(joinedToNumbered("fāng'àn", 2)).toEqual({ ok: true, value: "fang1 an4" });
+    expect(joinedToNumbered("xian", 2).ok).toBe(false);
+  });
+
+  it.each([
+    ["diànhuà", 3],
+    ["dianhuà1", 2],
+    ["dǎà", 1],
+    ["", 1],
+  ])("rejects %j with %i syllables", (pinyin, syllables) => {
+    expect(joinedToNumbered(pinyin, syllables).ok).toBe(false);
   });
 });

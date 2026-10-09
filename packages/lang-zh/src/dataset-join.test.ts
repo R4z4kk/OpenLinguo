@@ -30,7 +30,12 @@ describe("CFDICT data", () => {
   it("adds French-only entries with valid readings that CC-CEDICT does not have", async () => {
     const entries = await loadCfdictEntries();
     expect(entries.length).toBeGreaterThan(5_000);
-    const invalid = entries.filter(([, , reading]) => !toDiacritic(reading).ok);
+    const invalid = entries.filter(
+      (row) =>
+        row.slice(0, 2).some((field) => /^$|\s/u.test(field)) ||
+        !/\d/u.test(row[2]) ||
+        !toDiacritic(row[2]).ok,
+    );
     expect(invalid.slice(0, 10)).toEqual([]);
     const duplicates = entries.filter(([simplified, , reading]) => {
       const key = readingKey(reading);

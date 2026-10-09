@@ -4,11 +4,13 @@ import { createSegmenter } from "./segment.ts";
 
 export {
   formatNumbered,
+  joinedToNumbered,
   parseNumbered,
   readingKey,
   toDiacritic,
   toNumbered,
   tonesOf,
+  type JoinedPinyinError,
   type ReadingToken,
   type Tone,
 } from "./pinyin.ts";
