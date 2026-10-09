@@ -45,3 +45,9 @@ export const loadHskWords = (): Promise<readonly HskWordRow[]> =>
 
 export const loadHskCharacters = (): Promise<readonly (readonly [string, number])[]> =>
   loadRows("hsk-2025-chars", "characters-");
+
+export const loadGf0025Words = (): Promise<readonly HskWordRow[]> =>
+  loadRows("gf0025-2021-words", "words-");
+
+export const loadGf0025Characters = (): Promise<readonly (readonly [string, number])[]> =>
+  loadRows("gf0025-2021-chars", "characters-");

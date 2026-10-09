@@ -11,6 +11,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | CC-CEDICT | zh dictionary, EN glosses | CC BY-SA 4.0 | [mdbg.net](https://www.mdbg.net/chinese/dictionary?page=cc-cedict) | Verified — 125,244 entries, release 2026-10-09 |
 | CFDICT | zh dictionary, FR glosses | CC BY-SA 3.0 | [chine.in](https://chine.in/chinois/open/CFDICT/) | Verified — official file (re-checked 2026-10-09): 56,300 entries, 101,235 French translations, version 2024-12-14 in the file header (the page's "240,487 translations" is not what the download contains) |
 | HSK 2025 exam syllabus (新版HSK考试大纲) | zh levels 1–6 and 7-9 | Official exam standard; word→level and char→level facts only | Official PDF on [chinesetest.cn](https://www.chinesetest.cn) (copy-protected); imported from the transcription [harukicoder/hsk30](https://github.com/harukicoder/hsk30) at a pinned commit | Verified with limits — see note below |
+| GF0025-2021 national standard (国际中文教育中文水平等级标准) | zh levels 1–6 and 7-9, free referential and fallback | Official standard of the Ministry of Education and State Language Commission; word→level and char→level facts only | Unrestricted official PDF on [moe.gov.cn](http://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202103/t20210329_523304.html) (scanned); imported from the OCR [elkmovie/hsk30](https://github.com/elkmovie/hsk30) (Pleco Inc., MIT) at a pinned commit | Verified — exact counts, see note below |
 | Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified |
 | hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — ship `ARPHICPL.TXT` with the data |
 | Wiktionary extracts | en dictionary, FR translations, IPA (M9) | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/rawdata.html) | Verified — latest extraction 2026-10-03 from the 2026-09-02 dump |
@@ -49,6 +50,13 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 - The GF0025-2021 national standard (Ministry of Education PDF, no restriction, scanned pages) is a different list: 41.5% of shared words change level in the 2025 syllabus, so it is not used for exam levels.
 - Only the factual word→level and character→level mapping is stored, with attribution. No editorial content, tasks, topics or grammar material is reproduced. Takedown on request from the issuing body.
 
+### GF0025-2021 standard
+
+- Shipped next to the 2025 syllabus as a free referential (decision 2026-10-09): the official PDF has no restriction, and as an administrative document of state organs it is likely outside copyright (Copyright Law of the PRC, art. 5; not legal advice). It is also the fallback if CTI asks for the 2025 levels to be removed (#56).
+- The OCR is verified exactly against the standard: 500 / 772 / 973 / 1,000 / 1,071 / 1,140 / 5,636 words (11,092 entries, 10,954 headwords once variants and homographs are merged), 3,000 recognition characters (6 × 300 + 1,200), 1,200 handwriting characters (300 / 400 / 500), contiguous numbering. One OCR-misread index (1856 for 1836) is repaired and listed in `data/gf0025-2021-words/repairs.tsv`.
+- The list has no pinyin: 404 polyphones get the level on every reading and are listed in `issues.tsv`.
+- It is not the exam list: only 58.5% of the words shared with the 2025 syllabus keep the same level.
+
 ### CEFR-J
 
 - The terms grant free research and commercial use, and modification, "with a proper acknowledgement of the source". Citation is therefore mandatory and is kept.
@@ -64,7 +72,8 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 
 - CC-CEDICT — MDBG, CC BY-SA 4.0
 - CFDICT — Chine Informations (chine.in), CC BY-SA 3.0
-- HSK 2025 exam syllabus levels — Center for Language Education and Cooperation / Chinese Testing International
+- HSK 2025 exam syllabus levels — Center for Language Education and Cooperation / Chinese Testing International (transcription: harukicoder/hsk30, MIT)
+- GF0025-2021 standard levels — Ministry of Education and State Language Commission of the PRC (OCR: Pleco Inc. via elkmovie/hsk30, MIT)
 - Make Me a Hanzi — Shaunak Kishore, LGPL-3.0; stroke data © Arphic Technology, Arphic Public License
 - Wiktionary contributors via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - wordfreq — Robyn Speer, CC BY-SA 4.0

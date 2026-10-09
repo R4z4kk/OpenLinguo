@@ -19,7 +19,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | User data | Local-first (IndexedDB via Dexie), optional account; append-only review log enables sync later |
 | v1 scope | Core (dictionary, HSK, decomposer, FSRS) + tones/pronunciation + writing + AI mobilization + graded reader + backend library + full gamification + `en` core. OCR post-v1 |
 | UI / glosses | i18n FR + EN from day one. Glosses: EN (CC-CEDICT), FR (CFDICT if license verified) |
-| HSK | HSK 3.0, **2025 exam syllabus** (新版HSK考试大纲, CLEC, Nov 2025), dataset versioned (`hsk-2025`) |
+| HSK | HSK 3.0, two referentials: **2025 exam syllabus** (新版HSK考试大纲, CLEC, Nov 2025, `hsk-2025`, default) and the free **GF0025-2021** national standard (`gf0025-2021`), selectable |
 | Script | Simplified only (traditional stored, toggle later) |
 | AI | BYOK, OpenAI-compatible endpoint (Groq, OpenRouter, Ollama…). Every AI output is a proposal, human validates |
 | Audio | Pre-generated neural TTS (static files) + F0 contours extracted offline |
