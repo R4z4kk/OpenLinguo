@@ -93,7 +93,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 
 - **Storage**: Dexie (IndexedDB) + `navigator.storage.persist()` + JSON export/import backup. Review log append-only → card state recomputable, sync = log merge.
 - **SRS**: `ts-fsrs` (MIT, FSRS-6). Card types per feature: recognition, recall, listening (all languages), tone (tones), writing (strokes), typing (ime). New-card priority: personal > level > frequency (Pareto).
-- **zh text**: `Intl.Segmenter` + dictionary longest-match; `pinyin-pro` for text→pinyin and sandhi (license to verify); jieba-wasm only if quality is insufficient.
+- **zh text**: `Intl.Segmenter` + dictionary longest-match; pinyin conversion and tone sandhi (一, 不, third tone grouped by words) are in-house code over CC-CEDICT readings (pinyin-pro rejected: no third-tone sandhi, no validation of CC-CEDICT readings); text→pinyin = segmentation + dictionary readings; jieba-wasm only if quality is insufficient.
 - **Strokes**: Hanzi Writer + self-hosted `hanzi-writer-data` subset (HSK chars), service-worker cached.
 - **Pitch**: `pitchy` (license to verify) F0 → semitones normalized to speaker mean → time-normalized comparison vs reference contour. Same code extracts reference contours in the pipeline and user contours in the browser.
 - **TTS**: Kokoro rejected for Mandarin (all zh voices graded D); used for English (af_bella A-). Mandarin bake-off CosyVoice 3 (Apache-2.0, verify weights) vs MeloTTS (MIT) with human listening on tone minimal pairs + 3rd-tone sandhi. Engines run as Docker containers, the TS pipeline calls their HTTP API.

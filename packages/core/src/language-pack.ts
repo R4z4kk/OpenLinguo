@@ -43,7 +43,7 @@ export type RomanizationFeature = {
 };
 
 export type ToneFeature = {
-  readonly tonesOf: (reading: string) => Result<readonly number[], InvalidReading>;
+  readonly tonesOf: (reading: string) => Result<readonly (number | null)[], InvalidReading>;
 };
 
 export type DecompositionNode = {

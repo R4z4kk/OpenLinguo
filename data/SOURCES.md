@@ -23,7 +23,6 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 
 | Package | Version checked | License |
 |---|---|---|
-| pinyin-pro | 3.29.4 | MIT |
 | pitchy | 4.1.0 | MIT |
 | hanzi-writer | 3.7.3 | MIT |
 | opencc-js | 1.4.2 | MIT AND Apache-2.0 (OpenCC dictionaries) |
