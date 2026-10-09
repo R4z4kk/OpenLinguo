@@ -3,6 +3,7 @@ import { parseArgs } from "node:util";
 import { err, ok } from "@openlinguo/core";
 import { ccCedict } from "./datasets/cc-cedict.ts";
 import { cfdict } from "./datasets/cfdict.ts";
+import { gf0025Chars, gf0025Words } from "./datasets/gf0025-2021.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
 import { diffRows } from "./diff.ts";
 import {
@@ -19,6 +20,8 @@ const datasets: ReadonlyMap<string, Dataset> = new Map([
   [cfdict.id, cfdict],
   [hsk2025Chars.id, hsk2025Chars],
   [hsk2025Words.id, hsk2025Words],
+  [gf0025Chars.id, gf0025Chars],
+  [gf0025Words.id, gf0025Words],
 ]);
 
 const fail = (message: string): void => {

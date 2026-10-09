@@ -1,8 +1,8 @@
-import { err, ok, parseWith, type Result } from "@openlinguo/core";
-import { parseNumbered, readingKey } from "@openlinguo/lang-zh";
-import { z } from "zod";
-import type { Dataset, ShardReader } from "../run.ts";
+import { err, ok, type Result } from "@openlinguo/core";
+import { parseNumbered } from "@openlinguo/lang-zh";
+import type { Dataset } from "../run.ts";
 import { toShards } from "../shards.ts";
+import { decodeUtf8, loadReadings, type Candidate } from "./graded.ts";
 
 // Transcription of the official syllabus PDF (copy-protected, so not parsed here); decision 2026-10-09.
 const COMMIT = "36c0d11347b5d4caea52917d1262404824ad58d5";
@@ -13,14 +13,6 @@ const LICENSE = "MIT transcription of CLEC/CTI syllabus facts";
 const CHARACTER_COUNTS = [246, 125, 284, 441, 431, 413, 1148];
 const DISTINCT_WORDS = 10_896;
 const SHARD_SIZE = 10_000;
-
-const decode = (raw: Uint8Array): Result<string, string> => {
-  try {
-    return ok(new TextDecoder("utf-8", { fatal: true }).decode(raw));
-  } catch (error) {
-    return err(`cannot decode: ${String(error)}`);
-  }
-};
 
 const tsvRows = (text: string, header: string): Result<readonly string[][], string> => {
   const [first, ...lines] = text.replace(/\r\n/gu, "\n").trimEnd().split("\n");
@@ -48,7 +40,7 @@ export const hsk2025Chars: Dataset = {
   license: LICENSE,
   maxAgeDays: 365,
   build: (raw) => {
-    const text = decode(raw);
+    const text = decodeUtf8(raw);
     if (!text.ok) return text;
     const rows = tsvRows(text.value, "character\tlevel");
     if (!rows.ok) return rows;
@@ -74,39 +66,6 @@ export const hsk2025Chars: Dataset = {
     files.set("README.md", readme("recognition characters", summary));
     return ok({ version: VERSION, files, summary });
   },
-};
-
-export type Candidate = { readonly key: string; readonly reading: string };
-
-const CedictShard = z.array(z.tuple([z.string(), z.string(), z.string(), z.array(z.string())]));
-
-const loadReadings = async (
-  readShards: ShardReader,
-): Promise<Result<ReadonlyMap<string, readonly Candidate[]>, string>> => {
-  const shards = await readShards("cc-cedict");
-  if (!shards.ok) return err(`cannot read cc-cedict: ${shards.error}`);
-  if (shards.value.length === 0) return err("cc-cedict must be built before hsk-2025-words");
-  const readings = new Map<string, Candidate[]>();
-  for (const shard of shards.value) {
-    let json: unknown;
-    try {
-      json = JSON.parse(shard);
-    } catch (error) {
-      return err(`invalid cc-cedict shard: ${String(error)}`);
-    }
-    const rows = parseWith(CedictShard, json);
-    if (!rows.ok) return err("invalid cc-cedict shard structure");
-    for (const [simplified, , reading] of rows.value) {
-      const key = readingKey(reading);
-      if (!key.ok) continue;
-      const candidates = readings.get(simplified) ?? [];
-      if (!candidates.some((candidate) => candidate.key === key.value)) {
-        candidates.push({ key: key.value, reading });
-      }
-      readings.set(simplified, candidates);
-    }
-  }
-  return ok(readings);
 };
 
 const TONE_MARKS = ["̄", "́", "̌", "̀"];
@@ -189,11 +148,11 @@ export const hsk2025Words: Dataset = {
   license: LICENSE,
   maxAgeDays: 365,
   build: async (raw, readShards) => {
-    const text = decode(raw);
+    const text = decodeUtf8(raw);
     if (!text.ok) return text;
     const rows = tsvRows(text.value, "word\tlevel\talso\tpinyin\tpos");
     if (!rows.ok) return rows;
-    const readings = await loadReadings(readShards);
+    const readings = await loadReadings(readShards, "hsk-2025-words");
     if (!readings.ok) return readings;
 
     const seen = new Set<string>();

@@ -1,7 +1,8 @@
 import { ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
-import { hsk2025Chars, hsk2025Words, resolveReadings, type Candidate } from "./hsk-2025.ts";
+import type { Candidate } from "./graded.ts";
+import { hsk2025Chars, hsk2025Words, resolveReadings } from "./hsk-2025.ts";
 
 const candidates = (...readings: string[]): Candidate[] =>
   readings.map((reading) => ({ key: reading.toLowerCase(), reading }));

@@ -4,6 +4,8 @@ import {
   loadCedictRows,
   loadCfdictEntries,
   loadCfdictGlosses,
+  loadGf0025Characters,
+  loadGf0025Words,
   loadHskCharacters,
   loadHskWords,
 } from "./testing/dataset-shards.ts";
@@ -59,6 +61,29 @@ describe("HSK 2025 data", () => {
     const headwords = new Set((await loadCedictRows()).map(([simplified]) => simplified));
     const characters = await loadHskCharacters();
     expect(characters.length).toBe(3_088);
+    expect(characters.filter(([character]) => !headwords.has(character))).toEqual([]);
+  });
+});
+
+describe("GF0025-2021 data", () => {
+  it("grades readings that exist in CC-CEDICT", async () => {
+    const readings = new Map<string, Set<string>>();
+    for (const [simplified, , reading] of await loadCedictRows()) {
+      const key = readingKey(reading);
+      if (key.ok) readings.set(simplified, (readings.get(simplified) ?? new Set()).add(key.value));
+    }
+    const words = await loadGf0025Words();
+    expect(words.length).toBeGreaterThan(10_900);
+    const wrong = words.filter(([word, , , keys]) =>
+      keys.some((key) => !(readings.get(word)?.has(key) ?? false)),
+    );
+    expect(wrong.slice(0, 10)).toEqual([]);
+  });
+
+  it("grades 3,000 characters that all have a CC-CEDICT entry", async () => {
+    const headwords = new Set((await loadCedictRows()).map(([simplified]) => simplified));
+    const characters = await loadGf0025Characters();
+    expect(characters.length).toBe(3_000);
     expect(characters.filter(([character]) => !headwords.has(character))).toEqual([]);
   });
 });

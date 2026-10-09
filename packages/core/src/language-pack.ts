@@ -6,6 +6,7 @@ export type GlossLanguage = "en" | "fr";
 
 export const proficiencyFrameworks = {
   "hsk-2025": ["1", "2", "3", "4", "5", "6", "7-9"],
+  "gf0025-2021": ["1", "2", "3", "4", "5", "6", "7-9"],
   cefr: ["A1", "A2", "B1", "B2", "C1", "C2"],
 } as const;
 
