@@ -51,3 +51,28 @@ export const loadGf0025Words = (): Promise<readonly HskWordRow[]> =>
 
 export const loadGf0025Characters = (): Promise<readonly (readonly [string, number])[]> =>
   loadRows("gf0025-2021-chars", "characters-");
+
+export type StrokeRow = readonly [
+  character: string,
+  strokes: readonly string[],
+  medians: readonly (readonly (readonly [number, number])[])[],
+  radStrokes: readonly number[],
+];
+
+export type DecompositionRow = readonly [
+  character: string,
+  decomposition: string,
+  radical: string,
+  etymology: {
+    readonly type: string;
+    readonly hint: string | null;
+    readonly phonetic: string | null;
+    readonly semantic: string | null;
+  } | null,
+];
+
+export const loadStrokes = (): Promise<readonly StrokeRow[]> =>
+  loadRows("hanzi-writer-data", "strokes-");
+
+export const loadDecompositions = (): Promise<readonly DecompositionRow[]> =>
+  loadRows("makemeahanzi", "characters-");

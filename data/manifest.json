@@ -31,6 +31,14 @@
     "maxAgeDays": 365,
     "sha256": "4a8cfdc3a8fa85ced837c71aa187454c4d0ee36a1f70765655a93acb6a463af3"
   },
+  "hanzi-writer-data": {
+    "source": "https://registry.npmjs.org/hanzi-writer-data/-/hanzi-writer-data-2.0.1.tgz",
+    "license": "Arphic-1999",
+    "version": "hanzi-writer-data@2.0.1",
+    "retrievedAt": "2026-10-09T19:28:36.212Z",
+    "maxAgeDays": 365,
+    "sha256": "72baf3d82b114e60d6e40ea05f24d2262a05cd39d544e2f322ba2fceb7beff15"
+  },
   "hsk-2025-chars": {
     "source": "https://raw.githubusercontent.com/harukicoder/hsk30/36c0d11347b5d4caea52917d1262404824ad58d5/corpus/syllabus2025/syllabus2025_chars.tsv",
     "license": "MIT transcription of CLEC/CTI syllabus facts",
@@ -46,6 +54,14 @@
     "retrievedAt": "2026-10-09T18:10:15.183Z",
     "maxAgeDays": 365,
     "sha256": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2"
+  },
+  "makemeahanzi": {
+    "source": "https://raw.githubusercontent.com/skishore/makemeahanzi/bddc96d41bef78427ed0e034e9f7e31d71fd1b92/dictionary.txt",
+    "license": "LGPL-3.0-or-later",
+    "version": "skishore/makemeahanzi@bddc96d",
+    "retrievedAt": "2026-10-09T19:28:35.758Z",
+    "maxAgeDays": 365,
+    "sha256": "744bb05d5b0742e9ee35c37791f94d56a173349b3367569e7ca11e510364d203"
   },
   "wiktionary-fr-zh": {
     "source": "https://kaikki.org/frwiktionary/Chinois/kaikki.org-dictionary-Chinois.jsonl.gz",

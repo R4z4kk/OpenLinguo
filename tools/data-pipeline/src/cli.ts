@@ -4,7 +4,9 @@ import { err, ok } from "@openlinguo/core";
 import { ccCedict } from "./datasets/cc-cedict.ts";
 import { cfdict } from "./datasets/cfdict.ts";
 import { gf0025Chars, gf0025Words } from "./datasets/gf0025-2021.ts";
+import { hanziWriterData } from "./datasets/hanzi-writer-data.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
+import { makemeahanzi } from "./datasets/makemeahanzi.ts";
 import { wiktionaryFrZh } from "./datasets/wiktionary-fr-zh.ts";
 import { diffRows } from "./diff.ts";
 import {
@@ -24,6 +26,8 @@ const datasets: ReadonlyMap<string, Dataset> = new Map([
   [hsk2025Words.id, hsk2025Words],
   [gf0025Chars.id, gf0025Chars],
   [gf0025Words.id, gf0025Words],
+  [makemeahanzi.id, makemeahanzi],
+  [hanziWriterData.id, hanziWriterData],
 ]);
 
 const fail = (message: string): void => {

@@ -2,12 +2,14 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { readingKey, toDiacritic } from "./pinyin.ts";
 import {
   loadCedictRows,
+  loadDecompositions,
   loadFrenchEntries,
   loadFrenchGlosses,
   loadGf0025Characters,
   loadGf0025Words,
   loadHskCharacters,
   loadHskWords,
+  loadStrokes,
 } from "./testing/dataset-shards.ts";
 
 describe.each([
@@ -94,5 +96,18 @@ describe("GF0025-2021 data", () => {
     const characters = await loadGf0025Characters();
     expect(characters.length).toBe(3_000);
     expect(characters.filter(([character]) => !headwords.has(character))).toEqual([]);
+  });
+});
+
+describe("Character data", () => {
+  it("has strokes and a decomposition for every HSK 2025 and GF0025-2021 character", async () => {
+    const characters = new Set(
+      [...(await loadHskCharacters()), ...(await loadGf0025Characters())].map(([c]) => c),
+    );
+    const strokes = await loadStrokes();
+    const withStrokes = new Set(strokes.map(([character]) => character));
+    const decomposed = new Set((await loadDecompositions()).map(([character]) => character));
+    expect([...characters].filter((c) => !withStrokes.has(c) || !decomposed.has(c))).toEqual([]);
+    expect(strokes.filter(([, paths, medians]) => paths.length !== medians.length)).toEqual([]);
   });
 });
