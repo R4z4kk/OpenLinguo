@@ -6,5 +6,13 @@
     "retrievedAt": "2026-10-09T14:18:09.970Z",
     "maxAgeDays": 90,
     "sha256": "dd2307775fd21f5d350e6cb0e6a946bfe2eaedd79bb9ce524a67e7fccddf6a8f"
+  },
+  "cfdict": {
+    "source": "https://chine.in/assets/cfdict/cfdict.xml",
+    "license": "CC-BY-SA-3.0",
+    "version": "2024-12-14T02:30",
+    "retrievedAt": "2026-10-09T17:14:04.715Z",
+    "maxAgeDays": 90,
+    "sha256": "9c408f08998fefdc898e10adbf16b315e4cd6a4d7fa08e8204791e6312a5e520"
   }
 }
