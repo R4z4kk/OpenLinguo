@@ -106,10 +106,10 @@ describe("gf0025-2021 datasets", () => {
       Promise.resolve(ok([cedict])),
     );
     if (!built.ok) throw new Error(built.error);
-    expect(built.value.files.get("words-000.json")?.split("\n")[1]).toBe(
+    expect(String(built.value.files.get("words-000.json")).split("\n")[1]).toBe(
       '["东西",1,[4],["dong1 xi1","dong1 xi5"]],',
     );
-    expect(built.value.files.get("issues.tsv")?.split("\n")[1]).toBe(
+    expect(String(built.value.files.get("issues.tsv")).split("\n")[1]).toBe(
       "东西\tdong1 xi1 | dong1 xi5\tpolyphone-without-pinyin",
     );
   });

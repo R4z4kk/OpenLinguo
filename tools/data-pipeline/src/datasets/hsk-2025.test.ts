@@ -120,10 +120,10 @@ describe("hsk-2025-words", () => {
     const rows = [header, "东西\t1\t4\tdōngxi\t名", ...filler(10_895)];
     const built = await hsk2025Words.build(encode(rows.join("\n")), cedict);
     if (!built.ok) throw new Error(built.error);
-    expect(built.value.files.get("words-000.json")?.split("\n")[1]).toBe(
+    expect(String(built.value.files.get("words-000.json")).split("\n")[1]).toBe(
       '["东西",1,[4],["dong1 xi5"]],',
     );
-    expect(built.value.files.get("issues.tsv")?.split("\n")[1]).toBe("词0\tcí\t\tabsent");
+    expect(String(built.value.files.get("issues.tsv")).split("\n")[1]).toBe("词0\tcí\t\tabsent");
   });
 
   it("fails when the distinct word count differs from the transcription", async () => {

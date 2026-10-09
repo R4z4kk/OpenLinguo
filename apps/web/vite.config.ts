@@ -40,10 +40,23 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
+        globPatterns: [
+          "**/*.{js,css,html,svg,png,webmanifest}",
+          "**/atkinson-hyperlegible-next-latin-wght-normal-*.woff2",
+          "**/{noto-sans-sc-400,lxgw-wenkai-gb}-{latin,punctuation,hsk-1,hsk-2}-*.woff2",
+        ],
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === "font",
+            handler: "CacheFirst",
+            options: { cacheName: "fonts", expiration: { maxEntries: 200 } },
+          },
+        ],
         navigateFallback: "/index.html",
       },
     }),
   ],
+  // Inlined data: URIs would be blocked by the CSP (font-src and img-src 'self').
+  build: { assetsInlineLimit: 0 },
   preview: { headers: headers.value },
 });

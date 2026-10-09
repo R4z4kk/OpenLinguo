@@ -3,6 +3,7 @@ import { parseArgs } from "node:util";
 import { err, ok } from "@openlinguo/core";
 import { ccCedict } from "./datasets/cc-cedict.ts";
 import { cfdict } from "./datasets/cfdict.ts";
+import { lxgwWenKaiGb, notoSansSc400, notoSansSc700 } from "./datasets/fonts.ts";
 import { gf0025Chars, gf0025Words } from "./datasets/gf0025-2021.ts";
 import { hanziWriterData } from "./datasets/hanzi-writer-data.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
@@ -28,6 +29,9 @@ const datasets: ReadonlyMap<string, Dataset> = new Map([
   [gf0025Words.id, gf0025Words],
   [makemeahanzi.id, makemeahanzi],
   [hanziWriterData.id, hanziWriterData],
+  [notoSansSc400.id, notoSansSc400],
+  [notoSansSc700.id, notoSansSc700],
+  [lxgwWenKaiGb.id, lxgwWenKaiGb],
 ]);
 
 const fail = (message: string): void => {
@@ -93,12 +97,16 @@ const main = async (): Promise<void> => {
     const { files, entry, summary } = result.value;
     const diff = diffRows(
       previous,
-      [...files].filter(([name]) => isShard(name)).map(([, content]) => content),
+      [...files].flatMap(([name, content]) =>
+        isShard(name) && typeof content === "string" ? [content] : [],
+      ),
     );
     await rm(outDir, { recursive: true, force: true });
     await mkdir(outDir, { recursive: true });
     for (const [name, content] of files) {
-      await writeFile(new URL(name, outDir), content, "utf8");
+      await (typeof content === "string"
+        ? writeFile(new URL(name, outDir), content, "utf8")
+        : writeFile(new URL(name, outDir), content));
     }
     next[id] = entry;
     await writeFile(manifestPath, serializeManifest(next), "utf8");

@@ -18,9 +18,9 @@
   --color-tone-4: light-dark(#0619db, #a3b2dd);
   --color-tone-neutral: light-dark(#5f6662, #a3aba6);
 
-  --font-sans: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible Next Variable", "Noto Sans SC", system-ui, sans-serif;
   --font-zh: "Noto Sans SC", sans-serif;
-  --font-display: "LXGW WenKai", "Noto Serif SC", serif;
+  --font-display: "LXGW WenKai GB", "Noto Sans SC", serif;
 
   --text-*: initial;
   --text-caption: 12px;

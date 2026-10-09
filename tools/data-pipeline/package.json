@@ -11,6 +11,11 @@
   "dependencies": {
     "@openlinguo/core": "workspace:*",
     "@openlinguo/lang-zh": "workspace:*",
+    "harfbuzzjs": "~1.6.2",
+    "subset-font": "^2.9.0",
     "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/subset-font": "^2.3.0"
   }
 }
