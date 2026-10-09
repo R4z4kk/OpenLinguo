@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
 import { createSegmenter } from "./segment.ts";
-import { loadCedictRows } from "./testing/cedict-shards.ts";
+import { loadCedictRows } from "./testing/dataset-shards.ts";
 
 const words = (segment: ReturnType<typeof createSegmenter>, text: string): string =>
   segment(text)

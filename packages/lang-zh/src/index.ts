@@ -5,6 +5,7 @@ import { createSegmenter } from "./segment.ts";
 export {
   formatNumbered,
   parseNumbered,
+  readingKey,
   toDiacritic,
   toNumbered,
   tonesOf,

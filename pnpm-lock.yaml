@@ -217,6 +217,9 @@ importers:
       '@openlinguo/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@openlinguo/lang-zh':
+        specifier: workspace:*
+        version: link:../../packages/lang-zh
       zod:
         specifier: ^4.6.5
         version: 4.6.5

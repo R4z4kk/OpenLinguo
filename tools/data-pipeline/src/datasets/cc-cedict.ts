@@ -82,6 +82,10 @@ export const ccCedict: Dataset = {
     if (!release.ok) return release;
     const files = new Map(toShards("entries", release.value.rows, SHARD_SIZE));
     files.set("README.md", readme(release.value.date));
-    return ok({ version: release.value.date, files });
+    return ok({
+      version: release.value.date,
+      files,
+      summary: `${String(release.value.rows.length)} entries`,
+    });
   },
 };

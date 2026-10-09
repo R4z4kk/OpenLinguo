@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toDiacritic, toNumbered, tonesOf } from "./pinyin.ts";
+import { readingKey, toDiacritic, toNumbered, tonesOf } from "./pinyin.ts";
 
 const golden: readonly (readonly [numbered: string, diacritic: string])[] = [
   ["dian4 hua4", "diàn huà"],
@@ -62,5 +62,21 @@ describe("tonesOf", () => {
 
   it("propagates invalid readings", () => {
     expect(tonesOf("dain4").ok).toBe(false);
+  });
+});
+
+describe("readingKey", () => {
+  it.each([
+    ["Bei3 jing1", "bei3 jing1"],
+    ["lu:4", "lu:4"],
+    ["nv3", "nu:3"],
+    ["lü4", "lu:4"],
+    ["san1 D", "san1 d"],
+  ])("%s → %s", (reading, key) => {
+    expect(readingKey(reading)).toEqual({ ok: true, value: key });
+  });
+
+  it("rejects invalid readings", () => {
+    expect(readingKey("dain4").ok).toBe(false);
   });
 });

@@ -9,7 +9,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | Dataset | Used for | License | Source | Status |
 |---|---|---|---|---|
 | CC-CEDICT | zh dictionary, EN glosses | CC BY-SA 4.0 | [mdbg.net](https://www.mdbg.net/chinese/dictionary?page=cc-cedict) | Verified — 125,244 entries, release 2026-10-09 |
-| CFDICT | zh dictionary, FR glosses | CC BY-SA 3.0 | [chine.in](https://chine.in/chinois/open/CFDICT/) | Verified — 240,487 translations announced; no file date published, the pipeline dates it from the per-entry modification timestamps in the XML |
+| CFDICT | zh dictionary, FR glosses | CC BY-SA 3.0 | [chine.in](https://chine.in/chinois/open/CFDICT/) | Verified — official file (re-checked 2026-10-09): 56,300 entries, 101,235 French translations, version 2024-12-14 in the file header (the page's "240,487 translations" is not what the download contains) |
 | HSK 2025 exam syllabus (新版HSK考试大纲) | zh levels 1–9 | Official exam standard; word→level and char→level facts only | [chinesetest.cn](https://www.chinesetest.cn) → `新版HSK考试大纲1219.pdf` | Verified — see note below |
 | Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified |
 | hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — ship `ARPHICPL.TXT` with the data |
@@ -53,6 +53,8 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 ### CFDICT
 
 - A 2016 Pleco forum post questions the provenance of some unofficial CFDICT versions; only the official download is used.
+- The official XML has 42 corrupted bytes (stray 0xC2 lead bytes, one broken check mark) and 2 empty glosses; the pipeline repairs exactly these defects and lists them in `data/cfdict/repairs.tsv`, any other invalid byte fails the build. The `.u8` export silently drops the same apostrophes, so it is not used.
+- French glosses are attached to CC-CEDICT entries (47,668 keys: exact match, traditional form stored as simplified, neutral-tone difference, or a tone conflict with a single candidate, CC-CEDICT tone kept and listed in `data/cfdict/tone-conflicts.tsv`). The 8,162 words CC-CEDICT lacks become French-only dictionary entries, searchable but not used for segmentation. 38 entries with an invalid pinyin are listed in `data/cfdict/rejected.tsv`.
 
 ## Attribution (About page)
 

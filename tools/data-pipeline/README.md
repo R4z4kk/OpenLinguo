@@ -9,6 +9,7 @@ pnpm --filter @openlinguo/data-pipeline pipeline cc-cedict
 - Without `--refresh`, a dataset whose upstream file changed fails with a checksum mismatch. Nothing is rebuilt.
 - With `--refresh`, the new checksum and retrieval date are pinned, the shards rebuilt, and the row diff printed. The result goes through a reviewed pull request; it is never merged automatically.
 - `data/<dataset>/` is fully generated (shards and attribution README); do not edit it by hand.
+- A build may read datasets built before it (`cfdict` joins onto `cc-cedict` shards); running every dataset follows the registry order in `src/cli.ts`.
 
 ## Freshness
 

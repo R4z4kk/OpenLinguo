@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@openlinguo/core": "workspace:*",
+    "@openlinguo/lang-zh": "workspace:*",
     "zod": "^4.6.5"
   }
 }
