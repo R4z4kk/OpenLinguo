@@ -197,7 +197,7 @@ All sources were verified on primary sources; the full table, obligations and at
 | Tatoeba sentences (text only) | CC BY 2.0 FR |
 | Kokoro-82M / CosyVoice 3 / MeloTTS | Apache-2.0 / Apache-2.0 / MIT |
 
-Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI job fails when an entry is expired, a scheduled workflow opens a refresh PR with diff stats, never auto-merged. Commercial graded readers are never ingested; Tatoeba audio not used (mixed NC licenses).
+Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI job fails when an entry is expired, a monthly workflow pushes a refresh branch and opens an issue with diff stats; the maintainer opens and reviews the PR, never auto-merged. Commercial graded readers are never ingested; Tatoeba audio not used (mixed NC licenses).
 
 ## Milestones
 

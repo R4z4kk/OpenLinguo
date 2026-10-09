@@ -45,3 +45,11 @@ export const serializeManifest = (manifest: Manifest): string => {
   );
   return `${JSON.stringify(sorted, null, 2)}\n`;
 };
+
+export const dataDir = new URL("../../../data/", import.meta.url);
+export const manifestPath = new URL("manifest.json", dataDir);
+
+export const formatManifestError = (error: ManifestError): string =>
+  error.kind === "manifest-unreadable"
+    ? `Cannot read data/manifest.json: ${error.message}`
+    : `Invalid data/manifest.json: ${error.issues.map((i) => `${i.path} ${i.message}`).join("; ")}`;

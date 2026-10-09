@@ -1,23 +1,35 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { parseArgs } from "node:util";
 import { ccCedict } from "./datasets/cc-cedict.ts";
-import { readManifest, serializeManifest, type ManifestError } from "./manifest.ts";
+import { diffRows } from "./diff.ts";
+import {
+  dataDir,
+  formatManifestError,
+  manifestPath,
+  readManifest,
+  serializeManifest,
+} from "./manifest.ts";
 import { fetchBytes, formatError, runDataset, type Dataset } from "./run.ts";
 
 const datasets: ReadonlyMap<string, Dataset> = new Map([[ccCedict.id, ccCedict]]);
-
-const dataDir = new URL("../../../data/", import.meta.url);
-const manifestPath = new URL("manifest.json", dataDir);
 
 const fail = (message: string): void => {
   console.error(message);
   process.exitCode = 1;
 };
 
-const formatManifestError = (error: ManifestError): string =>
-  error.kind === "manifest-unreadable"
-    ? `Cannot read data/manifest.json: ${error.message}`
-    : `Invalid data/manifest.json: ${error.issues.map((i) => `${i.path} ${i.message}`).join("; ")}`;
+const isShard = (name: string): boolean => name.endsWith(".json");
+
+const readShards = async (dir: URL): Promise<string[]> => {
+  let names: string[];
+  try {
+    names = await readdir(dir);
+  } catch (error) {
+    if (error instanceof Error && "code" in error && error.code === "ENOENT") return [];
+    throw error;
+  }
+  return Promise.all(names.filter(isShard).map((name) => readFile(new URL(name, dir), "utf8")));
+};
 
 const main = async (): Promise<void> => {
   const { values, positionals } = parseArgs({
@@ -51,15 +63,22 @@ const main = async (): Promise<void> => {
       return;
     }
     const outDir = new URL(`${id}/`, dataDir);
+    const previous = await readShards(outDir);
+    const { files, entry } = result.value;
+    const diff = diffRows(
+      previous,
+      [...files].filter(([name]) => isShard(name)).map(([, content]) => content),
+    );
     await rm(outDir, { recursive: true, force: true });
     await mkdir(outDir, { recursive: true });
-    for (const [name, content] of result.value.files) {
+    for (const [name, content] of files) {
       await writeFile(new URL(name, outDir), content, "utf8");
     }
-    next[id] = result.value.entry;
+    next[id] = entry;
     await writeFile(manifestPath, serializeManifest(next), "utf8");
+    const before = manifest.value[id]?.version ?? "none";
     console.log(
-      `${id}: ${String(result.value.files.size)} files, version ${result.value.entry.version}`,
+      `${id}: version ${before} -> ${entry.version}, rows +${String(diff.added)} / -${String(diff.removed)}, ${String(files.size)} files`,
     );
   }
 };
