@@ -26,8 +26,8 @@ const ANNOUNCED = /- Nombre de traductions : environ ([\d\s]+)\n/u;
 const PROLOGUE = /^<\?xml version="1\.0" encoding="UTF-8"\?>\s*<!--[\s\S]*?\/\/-->\s*<dic>/u;
 const WORD = /<word>([\s\S]*?)<\/word>/gu;
 const BLOCK =
-  /^\s*<id>(\d+)<\/id>\s*<upd>(\d+)<\/upd>\s*<trad>([^<]+)<\/trad>\s*<simp>([^<]+)<\/simp>\s*<py>([^<]+)<\/py>\s*<trans>((?:\s*<fr><!\[CDATA\[[\s\S]*?\]\]><\/fr>)+)\s*<\/trans>\s*$/u;
-const FR = /<fr><!\[CDATA\[([\s\S]*?)\]\]><\/fr>/gu;
+  /^\s*<id>(\d+)<\/id>\s*<upd>(\d+)<\/upd>\s*<trad>([^<]+)<\/trad>\s*<simp>([^<]+)<\/simp>\s*<py>([^<]+)<\/py>\s*<trans>([\s\S]*)<\/trans>\s*$/u;
+const FR = /<fr><!\[CDATA\[((?:[^\]]|\](?!\]>))*)\]\]><\/fr>/gu;
 const COUNT_TOLERANCE = 0.01;
 const MAX_REPORTED = 10;
 
@@ -112,7 +112,9 @@ export const parseCfdict = (xml: string): Result<CfdictRelease, string> => {
   const repairs: Repair[] = [];
   for (const [index, [, block = ""]] of [...body.matchAll(WORD)].entries()) {
     const match = BLOCK.exec(block);
-    const rawGlosses = [...(match?.[6] ?? "").matchAll(FR)].map(([, text = ""]) => text.trim());
+    const translations = match?.[6] ?? "";
+    const rawGlosses = [...translations.matchAll(FR)].map(([, text = ""]) => text.trim());
+    const onlyGlosses = translations.replace(FR, "").trim() === "";
     const glosses = rawGlosses.filter((gloss) => gloss !== "");
     const [, id, upd, traditional, simplified, reading] = match ?? [];
     if (
@@ -121,6 +123,7 @@ export const parseCfdict = (xml: string): Result<CfdictRelease, string> => {
       traditional == null ||
       simplified == null ||
       reading == null ||
+      !onlyGlosses ||
       glosses.length === 0
     ) {
       invalid.push(id ?? `#${String(index + 1)}`);

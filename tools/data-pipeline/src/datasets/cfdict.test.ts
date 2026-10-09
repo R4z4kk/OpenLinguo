@@ -112,6 +112,19 @@ describe("parseCfdict", () => {
     expect(parseCfdict(document("1", [broken]))).toEqual(err("1 malformed entries (#1)"));
   });
 
+  it("rejects an unexpected element among the translations", () => {
+    const stray = word("9", "电", "dian4", ["électricité"]).replace(
+      "\t</trans>",
+      "<en>x</en></trans>",
+    );
+    expect(parseCfdict(document("1", [stray]))).toEqual(err("1 malformed entries (9)"));
+  });
+
+  it("parses a pathological translation block in linear time", () => {
+    const evil = `<word><id>9</id><upd>9</upd><trad>;</trad><simp>;</simp><py>;</py><trans><fr><![CDATA[${"]]></fr><fr><![CDATA[".repeat(40)}!</word>`;
+    expect(parseCfdict(document("1", [evil])).ok).toBe(false);
+  });
+
   it("rejects an entry count far from the announced one", () => {
     expect(parseCfdict(document("56 300", words)).ok).toBe(false);
   });
