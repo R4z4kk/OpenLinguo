@@ -21,6 +21,7 @@ describeLanguagePackContract(
     createZhPack({
       lookup: inMemoryDictionary(fixture),
       lexicon: new Set(fixture.map((entry) => entry.headword)),
+      decompositions: new Map([["电", "⿻曰乚"]]),
       proficiency: "hsk-2025",
     }),
   {
@@ -35,6 +36,7 @@ describe("createZhPack", () => {
     const pack = createZhPack({
       lookup: inMemoryDictionary(fixture),
       lexicon: new Set(),
+      decompositions: new Map(),
       proficiency: "gf0025-2021",
     });
     expect(pack.proficiency).toBe("gf0025-2021");

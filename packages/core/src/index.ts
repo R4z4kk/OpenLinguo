@@ -1,3 +1,4 @@
+export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {
   proficiencyFrameworks,
