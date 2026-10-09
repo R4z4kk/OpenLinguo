@@ -45,7 +45,7 @@ export const createDecomposition = (
     if (!entries.ok) return entries;
     const glosses = new Map<string, Gloss>();
     for (const gloss of entries.value.flatMap((entry) => entry.glosses)) {
-      glosses.set(`${gloss.lang}\t${gloss.text}`, gloss);
+      glosses.set(`${gloss.lang}\t${gloss.source}\t${gloss.text}`, gloss);
     }
     return ok({ form, glosses: [...glosses.values()], children });
   };

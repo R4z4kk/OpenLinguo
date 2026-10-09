@@ -4,7 +4,7 @@ import type { DecompositionNode } from "./language-pack.ts";
 
 const leaf = (form: string): DecompositionNode => ({
   form,
-  glosses: [{ lang: "en", text: form }],
+  glosses: [{ lang: "en", text: form, source: "test" }],
   children: [],
 });
 

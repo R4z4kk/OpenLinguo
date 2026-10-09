@@ -7,7 +7,7 @@ const entry = (headword: string, ...glosses: readonly string[]): DictEntry => ({
   headword,
   variants: [],
   reading: null,
-  glosses: glosses.map((text) => ({ lang: "en", text })),
+  glosses: glosses.map((text) => ({ lang: "en", text, source: "cc-cedict" })),
   level: null,
 });
 
@@ -46,7 +46,7 @@ describe("createDecomposition", () => {
     const tree = await decompose("电话");
     if (!tree.ok) throw new Error(tree.error.kind);
     expect(outline(tree.value)).toBe("电话(电(曰() 乚()) 话(讠() 舌()))");
-    expect(tree.value.glosses).toEqual([{ lang: "en", text: "telephone" }]);
+    expect(tree.value.glosses).toEqual([{ lang: "en", text: "telephone", source: "cc-cedict" }]);
   });
 
   it("decomposes a single character into its components, with every distinct gloss", async () => {
@@ -54,7 +54,9 @@ describe("createDecomposition", () => {
     if (!tree.ok) throw new Error(tree.error.kind);
     expect(outline(tree.value)).toBe("话(讠() 舌())");
     expect(tree.value.glosses.map(({ text }) => text)).toEqual(["dialect", "speech"]);
-    expect(tree.value.children[1]?.glosses).toEqual([{ lang: "en", text: "tongue" }]);
+    expect(tree.value.children[1]?.glosses).toEqual([
+      { lang: "en", text: "tongue", source: "cc-cedict" },
+    ]);
   });
 
   it("keeps a component without dictionary entry or known parts as a bare leaf", async () => {

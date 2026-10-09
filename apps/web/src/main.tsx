@@ -1,6 +1,7 @@
 import { RouterProvider } from "@tanstack/react-router";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { DataProvider } from "@/data/data-context";
 import { bindDocumentLanguage, createI18n } from "@/i18n";
 import { browserLanguage, loadLanguage } from "@/i18n/language";
 import { router } from "@/router";
@@ -26,6 +27,8 @@ const container = document.getElementById("root");
 if (container === null) throw new Error("index.html has no #root element");
 createRoot(container).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <DataProvider>
+      <RouterProvider router={router} />
+    </DataProvider>
   </StrictMode>,
 );

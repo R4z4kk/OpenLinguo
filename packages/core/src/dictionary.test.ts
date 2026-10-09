@@ -6,7 +6,7 @@ const entry = (headword: string, variants: readonly string[]): DictEntry => ({
   headword,
   variants,
   reading: null,
-  glosses: [{ lang: "en", text: headword }],
+  glosses: [{ lang: "en", text: headword, source: "test" }],
   level: null,
 });
 

@@ -8,8 +8,8 @@ const fixture: readonly DictEntry[] = [
     variants: [],
     reading: null,
     glosses: [
-      { lang: "en", text: "used as a greeting" },
-      { lang: "fr", text: "bonjour" },
+      { lang: "en", text: "used as a greeting", source: "test" },
+      { lang: "fr", text: "bonjour", source: "test" },
     ],
     level: null,
   },
@@ -17,7 +17,7 @@ const fixture: readonly DictEntry[] = [
     headword: "world",
     variants: [],
     reading: null,
-    glosses: [{ lang: "fr", text: "monde" }],
+    glosses: [{ lang: "fr", text: "monde", source: "test" }],
     level: null,
   },
 ];
