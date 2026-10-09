@@ -1,6 +1,7 @@
 import { Link, Outlet } from "@tanstack/react-router";
 import { BookOpen, BookText, CalendarCheck, CircleUser } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { ImportGate } from "./import-gate.tsx";
 import { UpdatePrompt } from "./update-prompt.tsx";
 
 const modules = [
@@ -43,7 +44,9 @@ export const AppShell = () => {
       </nav>
       <main id="main" tabIndex={-1} className="flex-1 px-4 pt-6 pb-24 lg:px-12 lg:pt-10 lg:pb-12">
         <UpdatePrompt />
-        <Outlet />
+        <ImportGate>
+          <Outlet />
+        </ImportGate>
       </main>
     </div>
   );

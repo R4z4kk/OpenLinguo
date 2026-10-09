@@ -4,3 +4,5 @@ dist/
 *.tsbuildinfo
 .env
 .env.*
+# Generated from data/ by apps/web/scripts/pack-data.ts
+apps/web/public/data/
