@@ -14,6 +14,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | GF0025-2021 national standard (国际中文教育中文水平等级标准) | zh levels 1–6 and 7-9, free referential and fallback | Official standard of the Ministry of Education and State Language Commission; word→level and char→level facts only | Unrestricted official PDF on [moe.gov.cn](http://www.moe.gov.cn/jyb_xwfb/gzdt_gzdt/s5987/202103/t20210329_523304.html) (scanned); imported from the OCR [elkmovie/hsk30](https://github.com/elkmovie/hsk30) (Pleco Inc., MIT) at a pinned commit | Verified — exact counts, see note below |
 | Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified |
 | hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — ship `ARPHICPL.TXT` with the data |
+| French Wiktionary, Chinese entries (`wiktionary-fr-zh`) | zh dictionary, extra FR glosses | CC BY-SA 4.0 (fr.wiktionary footer checked 2026-10-09) | [kaikki.org](https://kaikki.org/frwiktionary/Chinois/index.html) | Verified — extraction 2026-10-02 from the 2026-10-01 dump, 33,650 entries, see note below |
 | Wiktionary extracts | en dictionary, FR translations, IPA (M9) | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/rawdata.html) | Verified — latest extraction 2026-10-03 from the 2026-09-02 dump |
 | wordfreq data | en/zh frequency ranking | CC BY-SA 4.0 (code Apache-2.0) | [rspeer/wordfreq](https://github.com/rspeer/wordfreq) | Verified — frozen project (see `SUNSET.md`), treated as a frozen dataset |
 | CEFR-J Wordlist 1.6 | en levels A1–B2 (M9) | Free for research and commercial use **with citation**; redistribution not addressed | [cefr-j.org](https://www.cefr-j.org/download.html) | Verified with accepted risk — see note below |
@@ -68,6 +69,12 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 - The official XML has 42 corrupted bytes (stray 0xC2 lead bytes, one broken check mark) and 2 empty glosses; the pipeline repairs exactly these defects and lists them in `data/cfdict/repairs.tsv`, any other invalid byte fails the build. The `.u8` export silently drops the same apostrophes, so it is not used.
 - French glosses are attached to CC-CEDICT entries (47,671 keys: exact match, traditional form stored as simplified, neutral-tone difference, or a tone conflict with a single candidate, CC-CEDICT tone kept and listed in `data/cfdict/tone-conflicts.tsv`). A toneless syllable (`a`, erhua `r`) is the neutral tone. The 8,154 words CC-CEDICT lacks become French-only dictionary entries, searchable but not used for segmentation. 40 entries with an invalid pinyin or a space inside the headword are listed in `data/cfdict/rejected.tsv`.
 
+### French Wiktionary
+
+- Second source of hand-written French glosses (#55); no pivot language, no AI. Same join policy as CFDICT: 6,970 CC-CEDICT keys glossed (1,288 of them without a CFDICT gloss), 1,203 French-only entries. Both sources are kept side by side; the app shows the source of each gloss.
+- The extract has no date inside, so its version is the start of its sha256; `kaikki.org` only publishes a moving latest URL.
+- The first pinyin reading of each entry is used (1,327 entries have several, listed). Sinogram sections are skipped (61% of their glosses are wiki notes such as HSK levels or stroke counts). Entries without pinyin (889), with an invalid pinyin (85) or a title that is not only Chinese characters (44) are left out, and 27 multi-line glosses (wiki examples) are dropped; all are listed in `data/wiktionary-fr-zh/issues.tsv`, never guessed.
+
 ## Attribution (About page)
 
 - CC-CEDICT — MDBG, CC BY-SA 4.0
@@ -75,7 +82,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 - HSK 2025 exam syllabus levels — Center for Language Education and Cooperation / Chinese Testing International (transcription: harukicoder/hsk30, MIT)
 - GF0025-2021 standard levels — Ministry of Education and State Language Commission of the PRC (OCR: Pleco Inc. via elkmovie/hsk30, MIT)
 - Make Me a Hanzi — Shaunak Kishore, LGPL-3.0; stroke data © Arphic Technology, Arphic Public License
-- Wiktionary contributors via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
+- Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - wordfreq — Robyn Speer, CC BY-SA 4.0
 - CEFR-J Wordlist Version 1.6 — compiled by Yukio Tono, Tokyo University of Foreign Studies
 - Octanove Vocabulary Profile — CC BY-SA 4.0

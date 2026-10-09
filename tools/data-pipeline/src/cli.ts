@@ -5,6 +5,7 @@ import { ccCedict } from "./datasets/cc-cedict.ts";
 import { cfdict } from "./datasets/cfdict.ts";
 import { gf0025Chars, gf0025Words } from "./datasets/gf0025-2021.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
+import { wiktionaryFrZh } from "./datasets/wiktionary-fr-zh.ts";
 import { diffRows } from "./diff.ts";
 import {
   dataDir,
@@ -18,6 +19,7 @@ import { fetchBytes, formatError, runDataset, type Dataset, type ShardReader } f
 const datasets: ReadonlyMap<string, Dataset> = new Map([
   [ccCedict.id, ccCedict],
   [cfdict.id, cfdict],
+  [wiktionaryFrZh.id, wiktionaryFrZh],
   [hsk2025Chars.id, hsk2025Chars],
   [hsk2025Words.id, hsk2025Words],
   [gf0025Chars.id, gf0025Chars],
