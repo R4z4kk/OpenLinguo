@@ -1,8 +1,7 @@
-import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { toDiacritic, toNumbered } from "./pinyin.ts";
+import { loadCedictRows } from "./testing/cedict-shards.ts";
 
-const shardDir = new URL("../../../data/cc-cedict/", import.meta.url);
 const NO_READING = "xx5";
 
 const roundTrips = (reading: string): boolean => {
@@ -12,13 +11,8 @@ const roundTrips = (reading: string): boolean => {
   return numbered.ok && numbered.value === reading;
 };
 
-const readings = async (): Promise<string[]> => {
-  const names = (await readdir(shardDir)).filter((name) => name.endsWith(".json"));
-  const shards = await Promise.all(names.map((name) => readFile(new URL(name, shardDir), "utf8")));
-  return shards.flatMap((shard) =>
-    (JSON.parse(shard) as [string, string, string, string[]][]).map(([, , reading]) => reading),
-  );
-};
+const readings = async (): Promise<string[]> =>
+  (await loadCedictRows()).map(([, , reading]) => reading);
 
 describe("CC-CEDICT readings", () => {
   it("all convert to diacritics, except the no-reading placeholder", async () => {

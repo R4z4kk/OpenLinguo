@@ -13,6 +13,7 @@
     "format:check": "prettier --check .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "bench": "vitest bench --reporter=verbose",
     "data:freshness": "pnpm --filter @openlinguo/data-pipeline freshness"
   },
   "devDependencies": {
