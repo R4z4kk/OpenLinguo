@@ -1,4 +1,5 @@
 [
+["唐代","tang2 dai4",["Dynastie Tang"]],
 ["唐伯虎","tang2 bo2 hu3",["Tang Yin"]],
 ["唐吉诃德","tang2 ji2 he1 de2",["Don Quichotte"]],
 ["唐宋","tang2 song4",["Chronologie des dynasties chinoises"]],
@@ -113,6 +114,7 @@
 ["啊","a2",["(interjection) pour exprimer le doute ou pour questionner","hein ?"]],
 ["啊","a3",["(interjection pour la surprise ou le doute)"]],
 ["啊","a4",["(interjection) ah"]],
+["啊","a5",["(particule modale montrant l'affirmation, l'approbation, le consentement...)"]],
 ["啊呀","a1 ya1",["oh !"]],
 ["啍","tun1",["déplacer lentement"]],
 ["啐","cui4",["gouter","cracher"]],
@@ -2337,6 +2339,7 @@
 ["天后","tian1 hou4",["Tin Hau","princesse du Ciel"]],
 ["天呀","tian1 ya5",["Ciel !","Mon Dieu !"]],
 ["天命","tian1 ming4",["destin","destinée","Mandat du Ciel"]],
+["天啊","tian1 a5",["Jeez !","Mon Dieu !"]],
 ["天国","tian1 guo2",["royaume des cieux"]],
 ["天地","tian1 di4",["ciel et terre","univers","monde","champ d'action","champ d'activité"]],
 ["天地良心","tian1 di4 liang2 xin1",["en toute franchise","à vrai dire"]],
@@ -9995,8 +9998,5 @@
 ["挥汗","hui1 han4",["transpirer abondamment"]],
 ["挥洒","hui1 sa3",["saupoudrer","verser","libre et sans contrainte"]],
 ["挥翰","hui1 han4",["(lit.) manier une brosse"]],
-["挥舞","hui1 wu3",["brandir","agiter"]],
-["挥霍","hui1 huo4",["prodiguer","dépenser avec excès"]],
-["挥霍无度","hui1 huo4 wu2 du4",["dépenses immodérées (extravagantes)","gaspiller immodérément sa fortune","gaspiller de l'argent avec insouciance"]],
-["挦","xian2",["arracher (des cheveux ou des plumes)","choisir","cueillir","extraire (des lignes d'un texte)"]]
+["挥舞","hui1 wu3",["brandir","agiter"]]
 ]

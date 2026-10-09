@@ -24,6 +24,8 @@ export type JoinOutcome =
   | { readonly kind: "french-only"; readonly reading: string; readonly ambiguous: boolean }
   | { readonly kind: "rejected" };
 
+const HAN = /^\p{Script=Han}+$/u;
+
 const CedictShard = z.array(z.tuple([z.string(), z.string(), z.string(), z.array(z.string())]));
 
 const keyOf = (tokens: readonly ReadingToken[]): string => formatNumbered(tokens).toLowerCase();
@@ -87,19 +89,26 @@ const hasToneConflict = (a: readonly ReadingToken[], b: readonly ReadingToken[])
     );
   });
 
-/** CFDICT writes the erhua suffix as a toneless `r`, CC-CEDICT as `r5`. */
-const normalizeErhua = (reading: string): string =>
-  reading
-    .split(" ")
-    .map((token) => (token === "r" ? "r5" : token))
+/**
+ * CFDICT writes the neutral tone without a digit (`a`, erhua `r`), CC-CEDICT with 5. Other
+ * toneless tokens are syllables only when every token stands for one Chinese character.
+ */
+const normalizeNeutralTone = (simplified: string, reading: string): string => {
+  const tokens = reading.split(" ");
+  const aligned = HAN.test(simplified) && tokens.length === Array.from(simplified).length;
+  return tokens
+    .map((token) =>
+      token === "r" || (aligned && /^[A-Za-z:]+$/u.test(token)) ? `${token}5` : token,
+    )
     .join(" ");
+};
 
 export const matchEntry = (
   index: CedictIndex,
   simplified: string,
   reading: string,
 ): JoinOutcome => {
-  const tokens = parseNumbered(normalizeErhua(reading));
+  const tokens = parseNumbered(normalizeNeutralTone(simplified, reading));
   if (!tokens.ok) return { kind: "rejected" };
   const key = keyOf(tokens.value);
   const direct = index.bySimplified.get(simplified) ?? [];
@@ -169,7 +178,9 @@ export const joinFrenchEntries = (
   const rejected: FrenchEntry[] = [];
   let ambiguous = 0;
   for (const entry of entries) {
-    const outcome = matchEntry(index, entry.simplified, entry.reading);
+    const outcome: JoinOutcome = /\s/u.test(`${entry.simplified}${entry.traditional}`)
+      ? { kind: "rejected" }
+      : matchEntry(index, entry.simplified, entry.reading);
     if (outcome.kind === "rejected") {
       rejected.push(entry);
     } else if (outcome.kind === "joined") {

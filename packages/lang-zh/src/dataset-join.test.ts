@@ -32,7 +32,8 @@ describe("CFDICT data", () => {
     expect(entries.length).toBeGreaterThan(5_000);
     const invalid = entries.filter(
       (row) =>
-        row.slice(0, 2).some((field) => /^$|\s/u.test(field)) ||
+        /^$|\s/u.test(row[0]) ||
+        /^$|\s/u.test(row[1]) ||
         !/\d/u.test(row[2]) ||
         !toDiacritic(row[2]).ok,
     );
