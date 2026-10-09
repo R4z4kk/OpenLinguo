@@ -14,5 +14,21 @@
     "retrievedAt": "2026-10-09T17:14:04.715Z",
     "maxAgeDays": 90,
     "sha256": "9c408f08998fefdc898e10adbf16b315e4cd6a4d7fa08e8204791e6312a5e520"
+  },
+  "hsk-2025-chars": {
+    "source": "https://raw.githubusercontent.com/harukicoder/hsk30/36c0d11347b5d4caea52917d1262404824ad58d5/corpus/syllabus2025/syllabus2025_chars.tsv",
+    "license": "MIT transcription of CLEC/CTI syllabus facts",
+    "version": "2025-11 syllabus, harukicoder/hsk30@36c0d11",
+    "retrievedAt": "2026-10-09T18:10:14.665Z",
+    "maxAgeDays": 365,
+    "sha256": "baeeb3aa87f3982e7636f25e0830f67a435db74ea04ab89cdfb28acce6f44656"
+  },
+  "hsk-2025-words": {
+    "source": "https://raw.githubusercontent.com/harukicoder/hsk30/36c0d11347b5d4caea52917d1262404824ad58d5/corpus/syllabus2025/syllabus2025_words.tsv",
+    "license": "MIT transcription of CLEC/CTI syllabus facts",
+    "version": "2025-11 syllabus, harukicoder/hsk30@36c0d11",
+    "retrievedAt": "2026-10-09T18:10:15.183Z",
+    "maxAgeDays": 365,
+    "sha256": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2"
   }
 }
