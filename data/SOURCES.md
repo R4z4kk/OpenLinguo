@@ -21,6 +21,20 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | Octanove Vocabulary Profile C1/C2 | en levels C1–C2 (M9) | CC BY-SA 4.0 | [olp-en-cefrj](https://github.com/openlanguageprofiles/olp-en-cefrj) | Verified |
 | Tatoeba sentences (text only) | example sentences | CC BY 2.0 FR (part also CC0 1.0) | [tatoeba.org/downloads](https://tatoeba.org/en/downloads) | Verified — audio excluded (per-contributor licenses, empty license = no reuse) |
 
+## Fonts
+
+All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), so subsets may keep their names. Served from the project origin only; the license text ships next to each font.
+
+| Font | Used for | Source | Shipped as |
+|---|---|---|---|
+| Atkinson Hyperlegible Next (Braille Institute) | Latin interface | npm `@fontsource-variable/atkinson-hyperlegible-next` 5.3.0 | Variable WOFF2, Latin and Latin Extended |
+| Noto Sans SC 400 and 700 (Adobe, Google) | Chinese interface, pinyin | [notofonts/noto-cjk](https://github.com/notofonts/noto-cjk) at commit `f8d1575` (`Sans/SubsetOTF/SC`) | `data/font-noto-sans-sc-400`, `data/font-noto-sans-sc-700`: 40 slices each, HSK 1 slice 39 KB |
+| LXGW WenKai GB v1.522 (LXGW, from Klee One by Fontworks) | Display characters | [lxgw/LxgwWenkaiGB](https://github.com/lxgw/LxgwWenkaiGB/releases/tag/v1.522) | `data/font-lxgw-wenkai-gb`: 40 slices, HSK 1 slice 51 KB |
+
+- The CJK fonts are split by `tools/data-pipeline` (subset-font, HarfBuzz) into slices ordered by HSK 2025 band, then GF0025-2021, then the other characters of the shipped datasets by frequency. Dataset characters a font lacks (93 for Noto Sans SC, 40 for WenKai GB, all rare) are listed in each `missing.tsv` and fall back to the next font.
+- OpenType alternates (vertical, full-width and proportional forms) are dropped: horizontal simplified Chinese only. This divides the Latin and punctuation slices by 3 to 4.
+- An HSK 1 page (its 246 characters, punctuation and pinyin) loads 67 KB of Noto Sans SC and 51 KB of WenKai GB; the slices published on npm (frequency order) would load 368 KB and 587 KB.
+
 ## Libraries embedding data
 
 | Package | Version checked | License |
@@ -86,6 +100,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 - CFDICT — Chine Informations (chine.in), CC BY-SA 3.0
 - HSK 2025 exam syllabus levels — Center for Language Education and Cooperation / Chinese Testing International (transcription: harukicoder/hsk30, MIT)
 - GF0025-2021 standard levels — Ministry of Education and State Language Commission of the PRC (OCR: Pleco Inc. via elkmovie/hsk30, MIT)
+- Fonts — Atkinson Hyperlegible Next (Braille Institute), Noto Sans SC (Adobe, Google), LXGW WenKai GB (LXGW; Klee One by Fontworks), SIL Open Font License 1.1
 - Make Me a Hanzi — Shaunak Kishore, LGPL-3.0, with Unihan data © Unicode, Inc.; stroke data from hanzi-writer-data (David Chanin), © Arphic Technology, Arphic Public License
 - Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - wordfreq — Robyn Speer, CC BY-SA 4.0

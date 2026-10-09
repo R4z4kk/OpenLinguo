@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.3.0",
     "@openlinguo/core": "workspace:*",
     "@tanstack/react-router": "^1.170.41",
     "class-variance-authority": "^0.7.1",

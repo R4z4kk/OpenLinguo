@@ -49,10 +49,10 @@ For comparison, an Okabe-Ito-derived starting palette dropped to 8.6 under prota
 |---|---|---|
 | Latin interface | Atkinson Hyperlegible Next (Braille Institute, designed for legibility) | OFL-1.1 |
 | Chinese interface and pinyin (all tone diacritics) | Noto Sans SC | OFL-1.1 |
-| Display characters (word page, cards, strokes) | LXGW WenKai, a Kai face close to handwriting (v1.522) | OFL-1.1 |
-| Fallback display | Noto Serif SC | OFL-1.1 |
+| Display characters (word page, cards, strokes) | LXGW WenKai GB, a Kai face close to handwriting with the mainland standard character forms (通用规范汉字表) taught for the HSK (v1.522, decision 2026-10-09) | OFL-1.1 |
+| Fallback display | Noto Sans SC (already loaded; Noto Serif SC dropped, 2026-10-09) | OFL-1.1 |
 
-All fonts are self-hosted and subset with `unicode-range` slices; no third-party font CDN at runtime (GDPR).
+All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fonts are cut by `tools/data-pipeline` into `unicode-range` slices that follow the HSK 2025 bands (Latin and pinyin, punctuation, symbols, HSK 1 … 7-9, GF0025-2021, then the other dataset characters by frequency), so an HSK 1 page loads 67 KB of Noto Sans SC and 51 KB of LXGW WenKai GB, against 368 KB and 587 KB with frequency-ordered slices (measured 2026-10-09, budget checked in CI by `apps/web/src/design/fonts.test.ts`).
 
 | Style | Size / line height |
 |---|---|

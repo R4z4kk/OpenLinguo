@@ -4,7 +4,8 @@ import type { Manifest, ManifestEntry } from "./manifest.ts";
 
 export type DatasetBuild = {
   readonly version: string;
-  readonly files: ReadonlyMap<string, string>;
+  /** Text files are written as UTF-8, binary ones (fonts) as is. */
+  readonly files: ReadonlyMap<string, string | Uint8Array>;
   readonly summary: string;
 };
 

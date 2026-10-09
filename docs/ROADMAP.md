@@ -113,7 +113,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 ### System
 - Tokens as CSS variables (Tailwind v4 theme): color, type scale, spacing, radius, motion; light / dark / system.
 - Tone colors (T1–T4 + neutral): computed for contrast and colorblind separation (smallest ΔE ≥ 30 under protanopia, deuteranopia, tritanopia), always paired with diacritics (never color alone), on by default, toggle in settings.
-- Fonts self-hosted and subset (unicode-range slices): Atkinson Hyperlegible Next (Latin UI), Noto Sans SC (Chinese UI, pinyin), LXGW WenKai (display characters, close to handwriting); all OFL-1.1. No third-party font CDN (GDPR: IP transfer).
+- Fonts self-hosted and subset (unicode-range slices): Atkinson Hyperlegible Next (Latin UI), Noto Sans SC (Chinese UI, pinyin), LXGW WenKai GB (display characters, close to handwriting, mainland standard forms); all OFL-1.1; CJK slices cut by HSK band. No third-party font CDN (GDPR: IP transfer).
 - Motion subtle, fully disabled under `prefers-reduced-motion`.
 
 ### Information architecture
