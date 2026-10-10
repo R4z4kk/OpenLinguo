@@ -6,6 +6,7 @@ The PWA: Vite, React, TanStack Router, Tailwind v4, `vite-plugin-pwa`.
 pnpm --filter @openlinguo/web dev
 pnpm --filter @openlinguo/web build
 pnpm --filter @openlinguo/web preview
+pnpm e2e
 ```
 
 - Design tokens live in `src/styles.css` (`light-dark(light, dark)` colors, type, radius, motion) and nowhere else; `src/design/tokens.test.ts` checks their contrast ratios and the tone palette's colorblind separation against `docs/design/DESIGN-SYSTEM.md`.
@@ -19,3 +20,4 @@ pnpm --filter @openlinguo/web preview
 - About (`/profile/about`): license, source code, and the attribution of every bundled dataset and font with links to their licenses.
 - Fonts: Atkinson Hyperlegible Next from npm; Noto Sans SC 400 / 700 and LXGW WenKai GB from `data/font-*/fonts.css`, sliced by HSK band (see `data/SOURCES.md`). Assets are never inlined (the CSP blocks `data:`); the Latin, punctuation and HSK 1-2 slices are precached, the others cached on first use. `src/design/fonts.test.ts` keeps an HSK 1 page under its budget.
 - Languages: `src/i18n/en.ts` is the reference catalog; `fr.ts` is typed on its shape, so a missing or extra key fails typecheck, and so does `t()` with an unknown key. The language is the stored choice, else the browser's first supported language, else English; `<html lang>` follows it, and text in another language carries its own `lang`.
+- E2E (`e2e/*.e2e.ts`, Playwright on Chromium and WebKit, run in CI after the build): each test serves the built `dist/` with its own `vite preview`, so the `_headers` CSP applies; run `pnpm build` and `pnpm --filter @openlinguo/web exec playwright install chromium webkit` first. Offline means the server is stopped: Playwright's emulated offline in WebKit also fails the responses the service worker serves from its cache. Labels come from `src/i18n/en.ts`. WebKit on Windows writes to IndexedDB dozens of times slower than on Linux and never finishes the first import: run `pnpm e2e --project=chromium` there, WebKit runs in CI.

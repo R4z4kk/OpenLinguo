@@ -14,6 +14,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "bench": "vitest bench --reporter=verbose",
+    "e2e": "pnpm --filter @openlinguo/web e2e",
     "data:freshness": "pnpm --filter @openlinguo/data-pipeline freshness",
     "build": "pnpm -r --if-present build"
   },
