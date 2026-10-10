@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "data": "node scripts/pack-data.ts",
+    "gaps": "node scripts/gaps.ts",
     "dev": "pnpm data && vite",
     "build": "pnpm data && vite build",
     "preview": "vite preview",

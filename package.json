@@ -16,6 +16,7 @@
     "bench": "vitest bench --reporter=verbose",
     "e2e": "pnpm --filter @openlinguo/web e2e",
     "data:freshness": "pnpm --filter @openlinguo/data-pipeline freshness",
+    "data:gaps": "pnpm --filter @openlinguo/web gaps",
     "build": "pnpm -r --if-present build"
   },
   "devDependencies": {
