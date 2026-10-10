@@ -8,6 +8,7 @@
     "dev": "pnpm data && vite",
     "build": "pnpm data && vite build",
     "preview": "vite preview",
+    "e2e": "playwright test",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
@@ -28,6 +29,7 @@
     "zod": "^4.6.5"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",

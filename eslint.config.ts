@@ -7,7 +7,13 @@ import tseslint from "typescript-eslint";
 const NULL_INSTEAD = "Model absence with `T | null`, not undefined.";
 
 export default defineConfig(
-  globalIgnores(["**/node_modules/", "**/dist/", "**/coverage/"]),
+  globalIgnores([
+    "**/node_modules/",
+    "**/dist/",
+    "**/coverage/",
+    "**/test-results/",
+    "**/playwright-report/",
+  ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
   { files: ["**/*.tsx"], extends: [reactHooks.configs.flat["recommended-latest"]] },
