@@ -94,5 +94,13 @@
     "retrievedAt": "2026-10-09T19:01:10.578Z",
     "maxAgeDays": 90,
     "sha256": "b24060c79a908fffd25fb94b269ccc4384bc98bbd30c834eba36526997b87eb4"
+  },
+  "wordfreq-zh": {
+    "source": "https://raw.githubusercontent.com/rspeer/wordfreq/912caf64b657478d1dff1138efdc078947d54bb1/wordfreq/data/large_zh.msgpack.gz",
+    "license": "CC-BY-SA-4.0",
+    "version": "large_zh, rspeer/wordfreq@912caf6",
+    "retrievedAt": "2026-10-09T21:45:04.354Z",
+    "maxAgeDays": 365,
+    "sha256": "e079d7aaff1cfb92874850cb3ffbc7b611af939d9d671c1cbda932d968467cdd"
   }
 }

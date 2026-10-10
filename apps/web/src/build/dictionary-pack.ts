@@ -8,6 +8,8 @@ export type SourceEntry = readonly [string, string, string, readonly string[]];
 export type SourceGlosses = readonly [string, string, readonly string[]];
 /** `[word, lowest level, other levels, reading keys]` from a graded word list. */
 export type GradedWord = readonly [string, number, readonly number[], readonly string[]];
+/** `[simplified word, Zipf frequency]` from wordfreq. */
+export type WordFrequency = readonly [string, number];
 
 export type DictionarySources = {
   readonly cedict: readonly SourceEntry[];
@@ -21,6 +23,7 @@ export type DictionarySources = {
   ])[];
   readonly hsk2025: readonly GradedWord[];
   readonly gf0025: readonly GradedWord[];
+  readonly frequencies: readonly WordFrequency[];
 };
 
 export type Dictionary = {
@@ -53,7 +56,7 @@ const lower = (value: number | null, level: number): number =>
 /**
  * One entry per (simplified, reading key): CC-CEDICT rows sharing it are merged (traditional
  * forms become variants), French glosses and French-only words are attached with their source,
- * and HSK levels are set on the readings the lists name.
+ * HSK levels are set on the readings the lists name, and every reading of a form gets its frequency.
  */
 export const buildDictionary = (sources: DictionarySources): Result<Dictionary, string> => {
   const drafts = new Map<string, Draft>();
@@ -119,6 +122,15 @@ export const buildDictionary = (sources: DictionarySources): Result<Dictionary, 
     }
   }
 
+  const frequencies = new Map(sources.frequencies);
+  const forms = new Set([
+    ...[...drafts.values()].map((entry) => entry.simplified),
+    // A form whose every reading is invalid (々 xx5) has a frequency but no entry.
+    ...skipped.map(([simplified]) => simplified),
+  ]);
+  const unknown = sources.frequencies.find(([word]) => !forms.has(word));
+  if (unknown) return err(`wordfreq ranks ${unknown[0]}, absent from the dictionary`);
+
   const entries = [...drafts.values()].map((entry): EntryRow => [
     entry.simplified,
     entry.key,
@@ -128,6 +140,7 @@ export const buildDictionary = (sources: DictionarySources): Result<Dictionary, 
     entry.hsk2025,
     entry.gf0025,
     entry.lexicon,
+    frequencies.get(entry.simplified) ?? null,
   ]);
   const lexicon = [...new Set(entries.filter((row) => row[7]).map(([simplified]) => simplified))];
   return ok({ entries, lexicon, skipped });

@@ -16,7 +16,7 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — npm tarball 2.0.1, HSK 2025 + GF0025-2021 subset (3,143 characters), `ARPHICPL.TXT` shipped with the data, see note below |
 | French Wiktionary, Chinese entries (`wiktionary-fr-zh`) | zh dictionary, extra FR glosses | CC BY-SA 4.0 (fr.wiktionary footer checked 2026-10-09) | [kaikki.org](https://kaikki.org/frwiktionary/Chinois/index.html) | Verified — extraction 2026-10-02 from the 2026-10-01 dump, 33,650 entries, see note below |
 | Wiktionary extracts | en dictionary, FR translations, IPA (M9) | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/rawdata.html) | Verified — latest extraction 2026-10-03 from the 2026-09-02 dump |
-| wordfreq data | en/zh frequency ranking | CC BY-SA 4.0 (code Apache-2.0) | [rspeer/wordfreq](https://github.com/rspeer/wordfreq) | Verified — frozen project (see `SUNSET.md`), treated as a frozen dataset |
+| wordfreq data | en/zh frequency ranking | CC BY-SA 4.0 (code Apache-2.0) | [rspeer/wordfreq](https://github.com/rspeer/wordfreq) | Verified — frozen project (see `SUNSET.md`), treated as a frozen dataset; Chinese list imported from commit `912caf6` (88,668 of 130,510 dictionary headwords have a frequency), see note below |
 | CEFR-J Wordlist 1.6 | en levels A1–B2 (M9) | Free for research and commercial use **with citation**; redistribution not addressed | [cefr-j.org](https://www.cefr-j.org/download.html) | Verified with accepted risk — see note below |
 | Octanove Vocabulary Profile C1/C2 | en levels C1–C2 (M9) | CC BY-SA 4.0 | [olp-en-cefrj](https://github.com/openlanguageprofiles/olp-en-cefrj) | Verified |
 | Tatoeba sentences (text only) | example sentences | CC BY 2.0 FR (part also CC0 1.0) | [tatoeba.org/downloads](https://tatoeba.org/en/downloads) | Verified — audio excluded (per-contributor licenses, empty license = no reuse) |
@@ -94,6 +94,13 @@ All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), s
 - `dictionary.txt` is LGPL-3.0-or-later and derived from Unihan: `data/makemeahanzi/` ships the project's `LGPL` file (Unicode notice + LGPL-3.0) and the GPL-3.0 text the LGPL incorporates, and its README states that the data has been modified (Unicode notice, condition c). All 9,574 characters are kept (decomposition, radical, etymology); `definition`, `pinyin` and `matches` are dropped.
 - Stroke data comes from the immutable npm tarball `hanzi-writer-data@2.0.1` (sha256 pinned), read with an in-house tar reader; `ARPHICPL.TXT` is copied from the same tarball. Only the characters of the two shipped referentials are kept: all 3,088 HSK 2025 and 3,000 GF0025-2021 characters (3,143 distinct) have stroke data, missing ones would be listed in `data/hanzi-writer-data/missing.tsv`. Served from the project origin, never from the jsDelivr CDN.
 
+### wordfreq
+
+- Only the large Chinese list (`wordfreq/data/large_zh.msgpack.gz`) is used, pinned at commit `912caf6`, the last data release of the frozen project; it is decoded by an in-house MessagePack reader (no new dependency). The Chinese list combines Wikipedia, OpenSubtitles 2018, SUBTLEX-CH, NewsCrawl and GlobalVoices, Google Books Ngrams, OSCAR, Twitter and the Jieba word list; the dataset README credits each of them (SUBTLEX-CH must be credited and stay identified as free data).
+- Each bucket becomes a Zipf frequency (log10 of the occurrences per billion words), kept only for the simplified headwords of CC-CEDICT, CFDICT and French Wiktionary: 88,668 of 130,510 headwords. The dictionary search ranks results by exact match, then level, then this frequency (#26).
+- The frequency belongs to a written form: every reading of a polyphone shares it, the level tells the readings apart. wordfreq segments Chinese with Jieba, so a word Jieba splits has no frequency (32 of the 10,896 HSK 2025 words, such as 不客气 or 有的); it ranks after the words of its level that have one.
+- The wordfreq README asks that conversions keep the attribution and license with the data: the shards carry them in their README, and the dictionary page credits wordfreq next to the results.
+
 ## Attribution (About page)
 
 - CC-CEDICT — MDBG, CC BY-SA 4.0
@@ -103,7 +110,7 @@ All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), s
 - Fonts — Atkinson Hyperlegible Next (Braille Institute), Noto Sans SC (Adobe, Google), LXGW WenKai GB (LXGW; Klee One by Fontworks), SIL Open Font License 1.1
 - Make Me a Hanzi — Shaunak Kishore, LGPL-3.0, with Unihan data © Unicode, Inc.; stroke data from hanzi-writer-data (David Chanin), © Arphic Technology, Arphic Public License
 - Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
-- wordfreq — Robyn Speer, CC BY-SA 4.0
+- wordfreq — Robyn Speer, CC BY-SA 4.0; Chinese list from Wikipedia, OpenSubtitles 2018, SUBTLEX-CH (Cai and Brysbaert, 2010), NewsCrawl, GlobalVoices, Google Books Ngrams, OSCAR, Twitter and the Jieba word list
 - CEFR-J Wordlist Version 1.6 — compiled by Yukio Tono, Tokyo University of Foreign Studies
 - Octanove Vocabulary Profile — CC BY-SA 4.0
 - Tatoeba sentences — tatoeba.org contributors, CC BY 2.0 FR

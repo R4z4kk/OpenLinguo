@@ -16,7 +16,7 @@ const Level = z.number().int().min(1).nullable();
 
 /**
  * `[simplified, readingKey, reading, traditional variants, glosses per source, HSK 2025 level,
- * GF0025-2021 level, in the segmentation lexicon]`
+ * GF0025-2021 level, in the segmentation lexicon, Zipf frequency of the simplified form]`
  */
 export const EntryRow = z.tuple([
   z.string().min(1),
@@ -27,6 +27,7 @@ export const EntryRow = z.tuple([
   Level,
   Level,
   z.boolean(),
+  z.number().nullable(),
 ]);
 export type EntryRow = z.output<typeof EntryRow>;
 

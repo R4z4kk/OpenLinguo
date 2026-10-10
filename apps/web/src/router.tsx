@@ -1,4 +1,5 @@
 import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
 import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
 import { ProfilePage } from "@/pages/profile";
@@ -21,6 +22,13 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/learn",
     component: LearnPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/dictionary",
+    validateSearch: validateDictionarySearch,
+    component: DictionaryPage,
     errorComponent: ModuleError,
   }),
   createRoute({ getParentRoute, path: "/read", component: ReadPage, errorComponent: ModuleError }),

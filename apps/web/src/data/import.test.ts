@@ -10,11 +10,21 @@ const encode = (value: unknown): Uint8Array<ArrayBuffer> =>
   new TextEncoder().encode(JSON.stringify(value));
 
 const entries: EntryRow[] = [
-  ["电话", "dian4 hua4", "dian4 hua4", ["電話"], [["telephone"], ["téléphone"], []], 2, 1, true],
-  ["话", "hua4", "hua4", ["話"], [["speech"], [], ["parole"]], 1, 1, true],
+  [
+    "电话",
+    "dian4 hua4",
+    "dian4 hua4",
+    ["電話"],
+    [["telephone", "phone call"], ["téléphone"], []],
+    2,
+    1,
+    true,
+    5.44,
+  ],
+  ["话", "hua4", "hua4", ["話"], [["speech"], [], ["parole"]], 1, 1, true, 5.62],
 ];
 const more: EntryRow[] = [
-  ["阿龙", "a5 long2", "a5 long2", ["阿龍"], [[], ["Aron"], []], null, null, false],
+  ["阿龙", "a5 long2", "a5 long2", ["阿龍"], [[], ["Aron"], []], null, null, false, null],
 ];
 
 const files = (version: string): Map<string, Uint8Array<ArrayBuffer>> => {
@@ -63,11 +73,20 @@ describe("importData", () => {
     });
     expect(result).toEqual(ok(null));
     expect(await db.entries.count()).toBe(3);
-    expect((await db.entries.get("电话\tdian4 hua4"))?.glosses).toEqual([
-      ["telephone"],
-      ["téléphone"],
-      [],
-    ]);
+    expect(await db.entries.get("电话\tdian4 hua4")).toEqual({
+      id: "电话\tdian4 hua4",
+      simplified: "电话",
+      reading: "dian4 hua4",
+      variants: ["電話"],
+      glosses: [["telephone", "phone call"], ["téléphone"], []],
+      hsk2025: 2,
+      gf0025: 1,
+      lexicon: true,
+      frequency: 5.44,
+    });
+    const [first] = await db.searchIndex.toArray();
+    expect(first?.ids).toEqual(["电话\tdian4 hua4", "话\thua4"]);
+    expect(await db.searchIndex.count()).toBe(2);
     expect((await db.characters.get("话"))?.decomposition).toBe("⿰讠舌");
     expect(await db.meta.get("lexicon")).toEqual({ key: "lexicon", value: ["电话", "话"] });
     expect(progress.at(0)).toEqual({ rows: 0, total: 6 });
@@ -109,10 +128,21 @@ describe("importData", () => {
       hsk2025: null,
       gf0025: null,
       lexicon: true,
+      frequency: null,
     });
     expect(await importData(db, server(files("v2"), []), () => null)).toEqual(ok(null));
     expect(await db.entries.get("stale")).toBeUndefined();
     expect(await db.meta.get("dataVersion")).toEqual({ key: "dataVersion", value: "v2" });
+  });
+
+  it("uses a complete import when the index cannot be downloaded", async () => {
+    const offline = server(new Map(), []);
+    expect(await importData(db, offline, () => null)).toEqual(
+      err({ kind: "network", file: "index.json", message: "HTTP 404" }),
+    );
+    await importData(db, server(files("v1"), []), () => null);
+    expect(await importData(db, offline, () => null)).toEqual(ok(null));
+    expect(await db.entries.count()).toBe(3);
   });
 
   it("reports a malformed index", async () => {
