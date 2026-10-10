@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import prettier from "eslint-config-prettier";
+import jsxA11y from "eslint-plugin-jsx-a11y-x";
 import reactHooks from "eslint-plugin-react-hooks";
 import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
@@ -16,7 +17,10 @@ export default defineConfig(
   ]),
   js.configs.recommended,
   tseslint.configs.strictTypeChecked,
-  { files: ["**/*.tsx"], extends: [reactHooks.configs.flat["recommended-latest"]] },
+  {
+    files: ["**/*.tsx"],
+    extends: [reactHooks.configs.flat["recommended-latest"], jsxA11y.configs.strict],
+  },
   {
     languageOptions: {
       parserOptions: {
