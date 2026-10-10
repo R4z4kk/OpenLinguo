@@ -49,11 +49,21 @@ export const CharacterRow = z.tuple([
 ]);
 export type CharacterRow = z.output<typeof CharacterRow>;
 
+const Point = z.tuple([z.number(), z.number()]);
+
+/** `[character, stroke outlines (SVG paths), stroke medians]` from hanzi-writer-data, 1024-unit box. */
+export const StrokeRow = z
+  .tuple([z.string().min(1), z.array(z.string().min(1)).min(1), z.array(z.array(Point).min(2))])
+  .refine(([, strokes, medians]) => strokes.length === medians.length, {
+    message: "one median per stroke",
+  });
+export type StrokeRow = z.output<typeof StrokeRow>;
+
 export const Lexicon = z.array(z.string().min(1));
 
 export const DataFile = z.object({
   name: z.string().regex(/^[a-z0-9-]+\.json$/u),
-  kind: z.enum(["entries", "characters", "lexicon"]),
+  kind: z.enum(["entries", "characters", "strokes", "lexicon"]),
   sha256: z.string().regex(/^[0-9a-f]{64}$/u),
   rows: z.number().int().nonnegative(),
 });

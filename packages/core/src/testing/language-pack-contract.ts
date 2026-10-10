@@ -59,6 +59,16 @@ export const describeLanguagePackContract = (
       expect(tree.ok && tree.value.form).toBe(fixture.knownTerm);
     });
 
+    it("reads the strokes of the known term's first character, when the feature exists", async () => {
+      const { strokes } = pack.features;
+      if (strokes === null) return;
+      const [first = ""] = Array.from(fixture.knownTerm);
+      const data = await strokes.strokesOf(first);
+      expect(data.ok).toBe(true);
+      if (!data.ok || data.value === null) return;
+      expect(data.value.medians).toHaveLength(data.value.strokes.length);
+    });
+
     it("returns an empty list for an unknown term", async () => {
       expect(await pack.lookup(fixture.unknownTerm)).toEqual({ ok: true, value: [] });
     });

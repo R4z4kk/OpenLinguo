@@ -62,13 +62,15 @@ export type DecompositionFeature = {
   readonly decompose: (word: string) => Promise<Result<DecompositionNode, LookupError>>;
 };
 
+/** Stroke outlines (SVG paths) and medians, in order, in a 1024-unit box with y up. */
 export type StrokeData = {
   readonly strokes: readonly string[];
   readonly medians: readonly (readonly (readonly [number, number])[])[];
 };
 
 export type StrokeFeature = {
-  readonly strokesOf: (character: string) => Promise<Result<StrokeData, LookupError>>;
+  /** `null` when the character has no stroke data. */
+  readonly strokesOf: (character: string) => Promise<Result<StrokeData | null, LookupError>>;
 };
 
 export type LanguageFeatures = {

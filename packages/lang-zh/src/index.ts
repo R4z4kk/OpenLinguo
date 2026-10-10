@@ -1,4 +1,9 @@
-import type { DictionaryLookup, LanguagePack, ProficiencyFramework } from "@openlinguo/core";
+import type {
+  DictionaryLookup,
+  LanguagePack,
+  ProficiencyFramework,
+  StrokeFeature,
+} from "@openlinguo/core";
 import { createDecomposition } from "./decomposition.ts";
 import { toDiacritic, tonesOf } from "./pinyin.ts";
 import { createSegmenter } from "./segment.ts";
@@ -35,6 +40,8 @@ export type ZhPackSources = {
   readonly lexicon: ReadonlySet<string>;
   /** Character → ideographic description sequence (Make Me a Hanzi). */
   readonly decompositions: ReadonlyMap<string, string>;
+  /** Stroke order (hanzi-writer-data, from Make Me a Hanzi). */
+  readonly strokesOf: StrokeFeature["strokesOf"];
 };
 
 export const createZhPack = ({
@@ -42,6 +49,7 @@ export const createZhPack = ({
   lexicon,
   proficiency,
   decompositions,
+  strokesOf,
 }: ZhPackSources): LanguagePack => ({
   id: "zh",
   proficiency,
@@ -49,7 +57,7 @@ export const createZhPack = ({
   lookup,
   features: {
     tones: { tonesOf },
-    strokes: null,
+    strokes: { strokesOf },
     romanization: { system: "pinyin", toDisplay: toDiacritic },
     decomposition: createDecomposition(lookup, decompositions),
   },

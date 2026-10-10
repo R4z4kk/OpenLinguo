@@ -10,18 +10,36 @@ const TONE_COLORS: Readonly<Record<number, string>> = {
   5: "text-tone-neutral",
 };
 
+export type PinyinFeatures = Pick<LanguageFeatures, "romanization" | "tones">;
+
+/** A syllable with its tone marks and the class of its tone color (the mark carries the tone). */
+export type PinyinSyllable = { readonly text: string; readonly color: string | null };
+
+/** The syllables of a reading, or `null` when the pack cannot display it. */
+export const pinyinSyllables = (
+  reading: string,
+  { romanization, tones }: PinyinFeatures,
+): readonly PinyinSyllable[] | null => {
+  const display = romanization?.toDisplay(reading) ?? null;
+  const marks = tones?.tonesOf(reading) ?? null;
+  if (display?.ok !== true || marks?.ok !== true) return null;
+  return display.value.split(" ").map((text, index) => {
+    const tone = marks.value[index] ?? null;
+    return { text, color: tone === null ? null : (TONE_COLORS[tone] ?? null) };
+  });
+};
+
 type Props = {
   readonly reading: string;
-  readonly features: Pick<LanguageFeatures, "romanization" | "tones">;
+  readonly features: PinyinFeatures;
   readonly className: string | null;
 };
 
-/** A reading with its tone marks, each syllable in its tone color (the mark carries the tone). */
-export const Pinyin = ({ reading, features: { romanization, tones }, className }: Props) => {
-  const display = romanization?.toDisplay(reading) ?? null;
-  const marks = tones?.tonesOf(reading) ?? null;
+/** A reading with its tone marks, each syllable in its tone color. */
+export const Pinyin = ({ reading, features, className }: Props) => {
+  const syllables = pinyinSyllables(reading, features);
   const classes = cn("font-zh", className);
-  if (display?.ok !== true || marks?.ok !== true) {
+  if (syllables === null) {
     return (
       <span lang="zh-Latn-pinyin" className={classes}>
         {reading}
@@ -30,17 +48,13 @@ export const Pinyin = ({ reading, features: { romanization, tones }, className }
   }
   return (
     <span lang="zh-Latn-pinyin" className={classes}>
-      {display.value.split(" ").map((syllable, index) => {
-        const tone = marks.value[index] ?? null;
-        const color = tone === null ? null : (TONE_COLORS[tone] ?? null);
-        return (
-          // Syllables never move: the index is a stable key.
-          <Fragment key={index}>
-            {index > 0 && " "}
-            <span {...(color === null ? {} : { className: color })}>{syllable}</span>
-          </Fragment>
-        );
-      })}
+      {syllables.map(({ text, color }, index) => (
+        // Syllables never move: the index is a stable key.
+        <Fragment key={index}>
+          {index > 0 && " "}
+          <span {...(color === null ? {} : { className: color })}>{text}</span>
+        </Fragment>
+      ))}
     </span>
   );
 };

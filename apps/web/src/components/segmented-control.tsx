@@ -23,9 +23,9 @@ export const SegmentedControl = <Value extends string>({
   onChange,
   failure,
 }: Props<Value>) => (
-  <fieldset>
+  <fieldset className="min-w-0">
     <legend className="font-semibold">{legend}</legend>
-    <div className="mt-3 inline-flex gap-1 rounded-control border border-border-strong bg-surface p-1">
+    <div className="mt-3 inline-flex flex-wrap gap-1 rounded-control border border-border-strong bg-surface p-1">
       {options.map((option) => (
         <label
           key={option.value}

@@ -1,10 +1,12 @@
 import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import { AboutPage } from "@/pages/about";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
 import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
 import { ProfilePage } from "@/pages/profile";
 import { ReadPage } from "@/pages/read";
 import { TodayPage } from "@/pages/today";
+import { WordPage } from "@/pages/word";
 import { AppShell } from "@/shell/app-shell";
 import { ModuleError } from "@/shell/module-error";
 
@@ -31,11 +33,23 @@ const routeTree = rootRoute.addChildren([
     component: DictionaryPage,
     errorComponent: ModuleError,
   }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/dictionary/$word",
+    component: WordPage,
+    errorComponent: ModuleError,
+  }),
   createRoute({ getParentRoute, path: "/read", component: ReadPage, errorComponent: ModuleError }),
   createRoute({
     getParentRoute,
     path: "/profile",
     component: ProfilePage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/profile/about",
+    component: AboutPage,
     errorComponent: ModuleError,
   }),
 ]);

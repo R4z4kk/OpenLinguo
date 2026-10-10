@@ -1,6 +1,6 @@
 import type { Gloss } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
-import { summarizeGlosses } from "./gloss-summary.ts";
+import { groupGlosses, summarizeGlosses } from "./gloss-summary.ts";
 
 const glosses: Gloss[] = [
   { lang: "en", text: "telephone", source: "cc-cedict" },
@@ -28,5 +28,20 @@ describe("summarizeGlosses", () => {
     expect(summarizeGlosses(french, ["en", "fr"])?.lang).toBe("fr");
     const classifier: Gloss = { lang: "en", text: "CL:部[bu4]", source: "cc-cedict" };
     expect(summarizeGlosses([classifier], ["en", "fr"])).toBeNull();
+  });
+});
+
+describe("groupGlosses", () => {
+  it("groups by source, the interface language first, without classifiers", () => {
+    expect(groupGlosses(glosses, "fr")).toEqual([
+      { source: "cfdict", lang: "fr", texts: ["téléphone"] },
+      { source: "wiktionary-fr", lang: "fr", texts: ["Téléphone.", "appel téléphonique"] },
+      { source: "cc-cedict", lang: "en", texts: ["telephone", "phone call"] },
+    ]);
+    expect(groupGlosses(glosses, "en").map((group) => group.source)).toEqual([
+      "cc-cedict",
+      "cfdict",
+      "wiktionary-fr",
+    ]);
   });
 });

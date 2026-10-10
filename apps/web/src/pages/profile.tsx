@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useData } from "@/data/data-context";
 import { LanguageSwitcher } from "@/shell/language-switcher";
@@ -21,6 +22,11 @@ export const ProfilePage = () => {
       </div>
       <h2 className="mt-8 text-subtitle">{t("profile.data")}</h2>
       {persistence !== null && <p className="mt-4 text-muted">{t(`persistence.${persistence}`)}</p>}
+      <p className="mt-8">
+        <Link to="/profile/about" className="inline-flex min-h-11 items-center underline">
+          {t("about.title")}
+        </Link>
+      </p>
     </section>
   );
 };

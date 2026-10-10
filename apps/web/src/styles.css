@@ -37,6 +37,9 @@
   --text-title: 28px;
   --text-title--line-height: 36px;
   --text-title--font-weight: 700;
+  /* Display character: 64 px on a phone, up to 96 px. */
+  --text-display: clamp(64px, 16vw, 96px);
+  --text-display--line-height: 1.25;
 
   --radius-control: 6px;
   --radius-card: 12px;
