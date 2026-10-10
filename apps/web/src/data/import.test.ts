@@ -1,6 +1,14 @@
 import "fake-indexeddb/auto";
 import { createHash } from "node:crypto";
-import { err, ok } from "@openlinguo/core";
+import {
+  cardId,
+  CURRENT_SCHEDULER,
+  err,
+  NEW_CARD_STATE,
+  ok,
+  type CardKey,
+  type Review,
+} from "@openlinguo/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { openDatabase, type Database } from "./database.ts";
 import {
@@ -164,6 +172,25 @@ describe("importData", () => {
     expect(await importData(db, server(files("v2"), []), () => null)).toEqual(ok(null));
     expect(await db.entries.get("stale")).toBeUndefined();
     expect(await db.meta.get("dataVersion")).toEqual({ key: "dataVersion", value: "v2" });
+  });
+
+  it("keeps cards and reviews when a new data version replaces the old one", async () => {
+    const key: CardKey = { language: "zh", headword: "话", readingKey: "hua4", type: "recall" };
+    const card = { ...key, id: cardId(key), ...NEW_CARD_STATE };
+    const review: Review = {
+      id: "00000000-0000-4000-8000-000000000001",
+      cardId: card.id,
+      grade: "good",
+      reviewedAt: Date.UTC(2026, 9, 21, 6),
+      utcOffsetMinutes: 120,
+      scheduler: CURRENT_SCHEDULER,
+    };
+    await importData(db, server(files("v1"), []), () => null);
+    await db.cards.put(card);
+    await db.reviews.put(review);
+    expect(await importData(db, server(files("v2"), []), () => null)).toEqual(ok(null));
+    expect(await db.cards.toArray()).toEqual([card]);
+    expect(await db.reviews.toArray()).toEqual([review]);
   });
 
   it("uses a complete import when the index cannot be downloaded", async () => {
