@@ -55,9 +55,12 @@ const Failure = ({ failure }: { readonly failure: LookupError }) => {
 const Glosses = ({
   entry,
   language,
+  heading: Heading,
 }: {
   readonly entry: DictEntry;
   readonly language: Language;
+  /** One level below the reading's own heading, when it has one. */
+  readonly heading: "h2" | "h3";
 }) => {
   const { t } = useTranslation();
   const groups = groupGlosses(entry.glosses, language);
@@ -71,12 +74,12 @@ const Glosses = ({
       )}
       {groups.map((group) => (
         <div key={group.source}>
-          <h3 className="text-small text-muted">
+          <Heading className="text-small text-muted">
             {t("word.glossSource", {
               source: sourceName(group.source),
               language: t(`dictionary.glossesIn.${group.lang}`),
             })}
-          </h3>
+          </Heading>
           <ol lang={group.lang} className="mt-1 list-decimal pl-8">
             {group.texts.map((text) => (
               <li key={text}>{text}</li>
@@ -136,12 +139,13 @@ const Entries = ({
       {entries.map((entry) => {
         const level =
           entry.level === null ? null : proficiencyFrameworks[referential][entry.level - 1];
+        const titled = ruby === null && entry.reading !== null;
         return (
           <section
             key={`${entry.headword}\t${entry.reading ?? ""}`}
             className={ruby === null ? "mt-6 border-t border-hairline pt-4" : "mt-6"}
           >
-            {ruby === null && entry.reading !== null && (
+            {titled && (
               <h2>
                 <RubyWord
                   word={entry.headword}
@@ -159,7 +163,7 @@ const Entries = ({
                 {t(`referential.${referential}`)}
               </p>
             )}
-            <Glosses entry={entry} language={language} />
+            <Glosses entry={entry} language={language} heading={titled ? "h3" : "h2"} />
           </section>
         );
       })}

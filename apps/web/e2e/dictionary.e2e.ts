@@ -1,5 +1,6 @@
 import { expect } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
+import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
 
 test("searches a word, opens it, then reloads it offline", async ({ page, server }) => {
@@ -11,12 +12,26 @@ test("searches a word, opens it, then reloads it offline", async ({ page, server
     ).toBeVisible();
   };
 
+  // The import screen stays up until its axe check is done.
+  const { promise: indexHeld, resolve: releaseIndex } = Promise.withResolvers<null>();
+  await page.route("**/data/index.json", async (route) => {
+    await indexHeld;
+    await route.continue();
+  });
   await page.goto("/learn/dictionary");
+  await expect(page.getByRole("heading", { level: 1, name: en.dataImport.title })).toBeVisible();
+  expect(await accessibilityViolations(page)).toEqual([]);
+  releaseIndex(null);
+
   const search = page.getByRole("searchbox", { name: en.dictionary.label });
   await expect(search).toBeVisible({ timeout: 90_000 });
   await search.fill("ni hao");
-  await page.getByRole("link", { name: "你好", exact: true }).click();
+  const result = page.getByRole("link", { name: "你好", exact: true });
+  await expect(result).toBeVisible();
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await result.click();
   await expectWordPage();
+  expect(await accessibilityViolations(page)).toEqual([]);
 
   await expect
     .poll(
@@ -31,4 +46,5 @@ test("searches a word, opens it, then reloads it offline", async ({ page, server
   await page.reload();
   await expectWordPage();
   expect(await page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
+  expect(await accessibilityViolations(page)).toEqual([]);
 });

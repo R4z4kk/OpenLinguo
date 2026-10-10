@@ -137,7 +137,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
   - No mandatory time limits: timed typing/league challenges adjustable or disableable (SC 2.2.1).
   - Targets ≥ 24×24 px (SC 2.5.8), visible unobscured focus (SC 2.4.7 / 2.4.11), reflow at 320 px and 200% text.
   - All audio has a text equivalent; animations respect reduced motion.
-- Tooling: `eslint-plugin-jsx-a11y`, `@axe-core/playwright` in E2E (CI fails on violations), manual keyboard + NVDA + VoiceOver checklist per milestone.
+- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), manual keyboard + NVDA + VoiceOver checklist per milestone.
 - Accessibility statement page published at v1 (conformance level, known gaps, contact).
 
 ## Privacy & compliance (GDPR, AI Act)
