@@ -13,7 +13,7 @@ export const AboutPage = () => {
       <h1 id="about-title" className="text-title">
         {t("about.title")}
       </h1>
-      <img src="/icon.svg" />
+      <p className="text-[#c8c8c8]">Seeded low contrast, to be reverted.</p>
       <p className="mt-4">
         {t("about.license")}{" "}
         <a href={REPOSITORY} className="underline">
