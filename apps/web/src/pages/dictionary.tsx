@@ -5,15 +5,16 @@ import {
   type LookupError,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
-import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { useEffect, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Credits } from "@/components/credits";
+import { GlossSummary } from "@/components/gloss-summary";
 import { Pinyin } from "@/components/pinyin";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
-import { summarizeGlosses } from "@/data/gloss-summary";
 import { searchDictionary, type SearchResults } from "@/data/search";
 import { languages, type Language } from "@/i18n/language";
 
@@ -76,36 +77,6 @@ const failureMessage = (t: TFunction, failure: LookupError): string =>
     ? t("dataImport.unreadable", { message: failure.message })
     : t("dataImport.missing", { dataset: failure.dataset });
 
-/** Glosses in the interface language, else in the other one with its name shown. */
-const GlossSummary = ({
-  entry,
-  language,
-}: {
-  readonly entry: DictEntry;
-  readonly language: Language;
-}) => {
-  const { t } = useTranslation();
-  const summary = summarizeGlosses(entry.glosses, [
-    language,
-    ...languages.filter((lang) => lang !== language),
-  ]);
-  if (summary === null) return null;
-  return (
-    <p className="mt-1 line-clamp-2">
-      {summary.lang !== language && (
-        <>
-          <span className="rounded-full border border-border-strong px-2 text-caption text-muted">
-            {t(`dictionary.glossesIn.${summary.lang}`)}
-          </span>{" "}
-        </>
-      )}
-      <span lang={summary.lang}>
-        {summary.texts.join(summary.lang === "fr" ? "\u00a0; " : "; ")}
-      </span>
-    </p>
-  );
-};
-
 const ResultItem = ({
   entry,
   features,
@@ -120,11 +91,17 @@ const ResultItem = ({
   const { t } = useTranslation();
   const level = entry.level === null ? null : proficiencyFrameworks[referential][entry.level - 1];
   return (
-    <li className="py-4">
+    <li className="relative py-4">
       <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span lang="zh-Hans" className="font-zh text-subtitle">
+        {/* The whole row opens the word; tone colors stay on `bg` (no hover background). */}
+        <Link
+          to="/learn/dictionary/$word"
+          params={{ word: entry.headword }}
+          lang="zh-Hans"
+          className="font-zh text-subtitle after:absolute after:inset-0 hover:underline"
+        >
           {entry.headword}
-        </span>
+        </Link>
         {entry.variants.length > 0 && (
           <span lang="zh-Hant" className="font-zh text-muted">
             {entry.variants.join(" ")}
@@ -139,73 +116,8 @@ const ResultItem = ({
           </span>
         )}
       </p>
-      <GlossSummary entry={entry} language={language} />
+      <GlossSummary glosses={entry.glosses} language={language} className="mt-1" />
     </li>
-  );
-};
-
-const CREDITS = [
-  {
-    id: "cc-cedict",
-    name: "CC-CEDICT",
-    url: "https://www.mdbg.net/chinese/dictionary?page=cc-cedict",
-    holder: "MDBG",
-    license: "CC BY-SA 4.0",
-    licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
-  },
-  {
-    id: "cfdict",
-    name: "CFDICT",
-    url: "https://chine.in/chinois/open/CFDICT/",
-    holder: "Chine Informations",
-    license: "CC BY-SA 3.0",
-    licenseUrl: "https://creativecommons.org/licenses/by-sa/3.0/",
-  },
-  {
-    id: "wiktionary-fr",
-    name: "Wiktionnaire",
-    url: "https://kaikki.org/frwiktionary/Chinois/index.html",
-    holder: "kaikki.org",
-    license: "CC BY-SA 4.0",
-    licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
-  },
-  {
-    id: "wordfreq",
-    name: "wordfreq",
-    url: "https://github.com/rspeer/wordfreq",
-    holder: "Robyn Speer",
-    license: "CC BY-SA 4.0",
-    licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/",
-  },
-] as const;
-
-const Credits = () => {
-  const { t } = useTranslation();
-  const titleId = useId();
-  return (
-    <footer
-      aria-labelledby={titleId}
-      className="mt-12 border-t border-hairline pt-4 text-small text-muted"
-    >
-      <h2 id={titleId} className="font-semibold">
-        {t("dictionary.sources")}
-      </h2>
-      <ul className="mt-2">
-        {CREDITS.map((credit) => (
-          <li key={credit.id}>
-            {t(`dictionary.credits.${credit.id}`)}{" "}
-            <a href={credit.url} className="underline">
-              {credit.name}
-            </a>{" "}
-            ({credit.holder},{" "}
-            <a href={credit.licenseUrl} className="underline">
-              {credit.license}
-            </a>
-            )
-          </li>
-        ))}
-      </ul>
-    </footer>
   );
 };
 
@@ -308,7 +220,7 @@ export const DictionaryPage = () => {
           )}
         </>
       )}
-      <Credits />
+      <Credits ids={["cc-cedict", "cfdict", "wiktionary-fr", "wordfreq"]} />
     </section>
   );
 };

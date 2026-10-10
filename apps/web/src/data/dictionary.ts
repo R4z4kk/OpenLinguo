@@ -6,6 +6,7 @@ import {
   type LanguagePack,
   type LookupError,
   type Result,
+  type StrokeFeature,
 } from "@openlinguo/core";
 import { createZhPack, type ZhProficiency } from "@openlinguo/lang-zh";
 import type { Database, StoredEntry } from "./database.ts";
@@ -39,7 +40,18 @@ export const createLookup =
     }
   };
 
-/** The zh pack over the imported data: CC-CEDICT lexicon, Make Me a Hanzi decompositions. */
+export const createStrokesOf =
+  (db: Database): StrokeFeature["strokesOf"] =>
+  async (character) => {
+    try {
+      const row = await db.strokes.get(character);
+      return ok(row == null ? null : { strokes: row.strokes, medians: row.medians });
+    } catch (error) {
+      return err({ kind: "storage-failure", message: String(error) });
+    }
+  };
+
+/** The zh pack over the imported data: CC-CEDICT lexicon, Make Me a Hanzi decompositions, strokes. */
 export const loadZhPack = async (
   db: Database,
   referential: ZhProficiency,
@@ -49,12 +61,15 @@ export const loadZhPack = async (
     if (lexicon?.key !== "lexicon") return err({ kind: "dataset-missing", dataset: "lexicon" });
     const characters = await db.characters.toArray();
     if (characters.length === 0) return err({ kind: "dataset-missing", dataset: "characters" });
+    if ((await db.strokes.count()) === 0)
+      return err({ kind: "dataset-missing", dataset: "strokes" });
     return ok(
       createZhPack({
         lookup: createLookup(db, referential),
         lexicon: new Set(lexicon.value),
         decompositions: new Map(characters.map((row) => [row.character, row.decomposition])),
         proficiency: referential,
+        strokesOf: createStrokesOf(db),
       }),
     );
   } catch (error) {

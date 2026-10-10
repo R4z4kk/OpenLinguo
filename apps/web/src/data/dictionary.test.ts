@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { beforeAll, describe, expect, it } from "vitest";
 import { openDatabase, type Database, type StoredEntry } from "./database.ts";
-import { createLookup, loadZhPack } from "./dictionary.ts";
+import { createLookup, createStrokesOf, loadZhPack } from "./dictionary.ts";
 
 const entry = (
   id: string,
@@ -35,6 +35,16 @@ beforeAll(async () => {
     { character: "话", decomposition: "⿰讠舌", radical: "讠", etymology: null },
     { character: "电", decomposition: "⿻曰乚", radical: "曰", etymology: null },
   ]);
+  await db.strokes.put({
+    character: "电",
+    strokes: ["M 0 0 Z"],
+    medians: [
+      [
+        [0, 0],
+        [10, 10],
+      ],
+    ],
+  });
   await db.meta.put({ key: "lexicon", value: ["电话", "话", "电"] });
 });
 
@@ -75,6 +85,22 @@ describe("dictionary", () => {
     expect(pack.value.tokenize("电话").map((token) => token.text)).toEqual(["电话"]);
     const tree = await pack.value.features.decomposition?.decompose("话");
     expect(tree?.ok && tree.value.children.map((child) => child.form)).toEqual(["讠", "舌"]);
+  });
+
+  it("reads the strokes of a character, null when it has none", async () => {
+    expect(await createStrokesOf(db)("电")).toEqual({
+      ok: true,
+      value: {
+        strokes: ["M 0 0 Z"],
+        medians: [
+          [
+            [0, 0],
+            [10, 10],
+          ],
+        ],
+      },
+    });
+    expect(await createStrokesOf(db)("龘")).toEqual({ ok: true, value: null });
   });
 
   it("reports data that was never imported", async () => {

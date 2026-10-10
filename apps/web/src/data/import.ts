@@ -1,7 +1,7 @@
 import { err, ok, parseWith, type Result } from "@openlinguo/core";
 import { z } from "zod";
-import type { Database, StoredCharacter, StoredEntry } from "./database.ts";
-import { CharacterRow, DataIndex, EntryRow, Lexicon, type DataFile } from "./format.ts";
+import type { Database, StoredCharacter, StoredEntry, StoredStrokes } from "./database.ts";
+import { CharacterRow, DataIndex, EntryRow, Lexicon, StrokeRow, type DataFile } from "./format.ts";
 import { indexRecord } from "./search-index.ts";
 
 export type ImportProgress = { readonly rows: number; readonly total: number };
@@ -80,12 +80,27 @@ const toCharacter = ([
   etymology,
 });
 
+const toStrokes = ([character, strokes, medians]: StrokeRow): StoredStrokes => ({
+  character,
+  strokes,
+  medians,
+});
+
+const dataTables = (db: Database) => [
+  db.entries,
+  db.characters,
+  db.strokes,
+  db.meta,
+  db.imports,
+  db.searchIndex,
+];
+
 const store = async (
   db: Database,
   file: DataFile,
   bytes: Uint8Array,
 ): Promise<Result<null, ImportFailure>> => {
-  const tables = [db.entries, db.characters, db.meta, db.imports, db.searchIndex];
+  const tables = dataTables(db);
   if (file.kind === "entries") {
     const rows = readJson(bytes, z.array(EntryRow), file.name);
     if (!rows.ok) return rows;
@@ -100,6 +115,13 @@ const store = async (
     if (!rows.ok) return rows;
     await db.transaction("rw", tables, async () => {
       await db.characters.bulkPut(rows.value.map(toCharacter));
+      await db.imports.put({ sha256: file.sha256 });
+    });
+  } else if (file.kind === "strokes") {
+    const rows = readJson(bytes, z.array(StrokeRow), file.name);
+    if (!rows.ok) return rows;
+    await db.transaction("rw", tables, async () => {
+      await db.strokes.bulkPut(rows.value.map(toStrokes));
       await db.imports.put({ sha256: file.sha256 });
     });
   } else {
@@ -149,7 +171,7 @@ export const importData = async (
     }
     const importing = await db.meta.get("importingVersion");
     if (importing?.value !== index.value.version) {
-      const tables = [db.entries, db.characters, db.meta, db.imports, db.searchIndex];
+      const tables = dataTables(db);
       await db.transaction("rw", tables, async () => {
         await Promise.all(tables.map((table) => table.clear()));
         await db.meta.put({ key: "importingVersion", value: index.value.version });

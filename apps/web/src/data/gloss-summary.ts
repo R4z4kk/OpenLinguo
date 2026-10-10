@@ -22,3 +22,26 @@ export const summarizeGlosses = (
   }
   return null;
 };
+
+export type GlossGroup = {
+  readonly source: string;
+  readonly lang: GlossLanguage;
+  readonly texts: readonly string[];
+};
+
+/** Glosses by source, the sources of `language` first, classifiers left out. */
+export const groupGlosses = (
+  glosses: readonly Gloss[],
+  language: GlossLanguage,
+): readonly GlossGroup[] => {
+  const groups = new Map<string, { source: string; lang: GlossLanguage; texts: string[] }>();
+  for (const { lang, text, source } of glosses) {
+    if (text.startsWith("CL:")) continue;
+    const group = groups.get(source) ?? { source, lang, texts: [] };
+    group.texts.push(text);
+    groups.set(source, group);
+  }
+  return [...groups.values()].sort(
+    (a, b) => Number(b.lang === language) - Number(a.lang === language),
+  );
+};

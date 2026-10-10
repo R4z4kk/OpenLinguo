@@ -1,3 +1,4 @@
+import type { StrokeData } from "@openlinguo/core";
 import { Dexie, type EntityTable } from "dexie";
 import type { SearchIndexRecord } from "./search-index.ts";
 
@@ -29,6 +30,8 @@ export type StoredCharacter = {
   } | null;
 };
 
+export type StoredStrokes = StrokeData & { readonly character: string };
+
 export type MetaRecord =
   | { readonly key: "dataVersion" | "importingVersion"; readonly value: string }
   | { readonly key: "lexicon"; readonly value: readonly string[] };
@@ -39,6 +42,7 @@ export type ImportRecord = { readonly sha256: string };
 export type Database = Dexie & {
   entries: EntityTable<StoredEntry, "id">;
   characters: EntityTable<StoredCharacter, "character">;
+  strokes: EntityTable<StoredStrokes, "character">;
   meta: EntityTable<MetaRecord, "key">;
   imports: EntityTable<ImportRecord, "sha256">;
   searchIndex: EntityTable<SearchIndexRecord, "file">;
@@ -56,6 +60,7 @@ export const openDatabase = (name: string): Database => {
   db.version(2)
     .stores({ searchIndex: "file" })
     .upgrade((tx) => tx.table("meta").bulkDelete(["dataVersion", "importingVersion"]));
+  db.version(3).stores({ strokes: "character" });
   return db;
 };
 

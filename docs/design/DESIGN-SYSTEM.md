@@ -56,7 +56,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 
 | Style | Size / line height |
 |---|---|
-| Display character | 96 / 64 px |
+| Display character | 64 px on a phone up to 96 px (fluid), line height 1.25 to leave room for the ruby pinyin |
 | Title | 28 / 36 px, weight 700 |
 | Subtitle | 22 / 28 px, weight 600 |
 | Pinyin | 18 / 24 px |

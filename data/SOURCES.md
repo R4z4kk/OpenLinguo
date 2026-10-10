@@ -92,7 +92,7 @@ All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), s
 ### Make Me a Hanzi and hanzi-writer-data
 
 - `dictionary.txt` is LGPL-3.0-or-later and derived from Unihan: `data/makemeahanzi/` ships the project's `LGPL` file (Unicode notice + LGPL-3.0) and the GPL-3.0 text the LGPL incorporates, and its README states that the data has been modified (Unicode notice, condition c). All 9,574 characters are kept (decomposition, radical, etymology); `definition`, `pinyin` and `matches` are dropped.
-- Stroke data comes from the immutable npm tarball `hanzi-writer-data@2.0.1` (sha256 pinned), read with an in-house tar reader; `ARPHICPL.TXT` is copied from the same tarball. Only the characters of the two shipped referentials are kept: all 3,088 HSK 2025 and 3,000 GF0025-2021 characters (3,143 distinct) have stroke data, missing ones would be listed in `data/hanzi-writer-data/missing.tsv`. Served from the project origin, never from the jsDelivr CDN.
+- Stroke data comes from the immutable npm tarball `hanzi-writer-data@2.0.1` (sha256 pinned), read with an in-house tar reader; `ARPHICPL.TXT` is copied from the same tarball. Only the characters of the two shipped referentials are kept: all 3,088 HSK 2025 and 3,000 GF0025-2021 characters (3,143 distinct) have stroke data, missing ones would be listed in `data/hanzi-writer-data/missing.tsv`. Served from the project origin, never from the jsDelivr CDN: imported into IndexedDB with the dictionary (`strokes.json`, 8.3 MB), with `ARPHICPL.TXT` published next to it in `/data/licenses/` and linked from the About page (as are the Make Me a Hanzi LGPL and GPL texts).
 
 ### wordfreq
 
