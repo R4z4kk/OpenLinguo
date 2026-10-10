@@ -41,5 +41,18 @@ export default defineConfig(
       eqeqeq: ["error", "always", { null: "ignore" }],
     },
   },
+  {
+    ignores: ["packages/core/src/fsrs.ts", "packages/core/src/fsrs.test.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          name: "ts-fsrs",
+          message:
+            "Use the @openlinguo/core SRS model: ts-fsrs Dates and undefined stay in fsrs.ts.",
+        },
+      ],
+    },
+  },
   prettier,
 );
