@@ -1,6 +1,8 @@
 import type { Result } from "./result.ts";
 
-export type LanguageId = "zh" | "en";
+export const LANGUAGE_IDS = ["zh", "en"] as const;
+
+export type LanguageId = (typeof LANGUAGE_IDS)[number];
 
 export type GlossLanguage = "en" | "fr";
 

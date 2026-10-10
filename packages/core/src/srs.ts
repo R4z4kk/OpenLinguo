@@ -1,0 +1,151 @@
+import { z } from "zod";
+import { fsrsNext, SCHEDULER_VERSIONS, type SchedulerFailure } from "./fsrs.ts";
+import { LANGUAGE_IDS, type LanguageId } from "./language-pack.ts";
+import { err, ok, type Result } from "./result.ts";
+
+const MINUTE = 60_000;
+const ROLLOVER = 4 * 60 * MINUTE;
+
+/** Milliseconds since the Unix epoch (UTC), within the `Date` range. */
+const Epoch = z.number().int().min(0).max(8_640_000_000_000_000);
+
+export const CardType = z.enum(["recognition", "recall"]);
+export type CardType = z.output<typeof CardType>;
+
+export const Grade = z.enum(["again", "hard", "good", "easy"]);
+export type Grade = z.output<typeof Grade>;
+
+export const Phase = z.enum(["new", "learning", "review", "relearning"]);
+export type Phase = z.output<typeof Phase>;
+
+export type CardKey = {
+  readonly language: LanguageId;
+  readonly headword: string;
+  readonly readingKey: string;
+  readonly type: CardType;
+};
+
+/** Derived from the entry and type, so a card added on two devices is the same card. */
+export const cardId = (key: CardKey): string =>
+  JSON.stringify([key.language, key.headword, key.readingKey, key.type]);
+
+export const Card = z
+  .object({
+    id: z.string(),
+    language: z.enum(LANGUAGE_IDS),
+    headword: z.string().min(1),
+    readingKey: z.string().min(1),
+    type: CardType,
+  })
+  .refine((card) => card.id === cardId(card), {
+    message: "id does not match the entry and type",
+    path: ["id"],
+  });
+export type Card = z.output<typeof Card>;
+
+/** The cards of one reading, created together. */
+export const newCards = (
+  language: LanguageId,
+  headword: string,
+  readingKey: string,
+): readonly Card[] =>
+  CardType.options.map((type) => {
+    const key = { language, headword, readingKey, type };
+    return { ...key, id: cardId(key) };
+  });
+
+/** An append-only review log entry. `utcOffsetMinutes` is local time minus UTC (Paris summer: 120). */
+export const Review = z.object({
+  id: z.uuid(),
+  cardId: z.string().min(1),
+  grade: Grade,
+  reviewedAt: Epoch,
+  utcOffsetMinutes: z
+    .number()
+    .int()
+    .min(-12 * 60)
+    .max(14 * 60),
+  scheduler: z.enum(SCHEDULER_VERSIONS),
+});
+export type Review = z.output<typeof Review>;
+
+/** Cache of a card's replayed log. `due` is `null` until the first review. */
+export const CardState = z.object({
+  phase: Phase,
+  due: Epoch.nullable(),
+  stability: z.number().nonnegative(),
+  difficulty: z.number().nonnegative(),
+  reps: z.number().int().nonnegative(),
+  lapses: z.number().int().nonnegative(),
+  learningSteps: z.number().int().nonnegative(),
+  scheduledDays: z.number().int().nonnegative(),
+  lastReviewDay: z.iso.date().nullable(),
+});
+export type CardState = z.output<typeof CardState>;
+
+export const NEW_CARD_STATE: CardState = {
+  phase: "new",
+  due: null,
+  stability: 0,
+  difficulty: 0,
+  reps: 0,
+  lapses: 0,
+  learningSteps: 0,
+  scheduledDays: 0,
+  lastReviewDay: null,
+};
+
+/** Local time minus the 4:00 rollover: its UTC date is the learning day. */
+const learningClock = (at: number, utcOffsetMinutes: number): number =>
+  at + utcOffsetMinutes * MINUTE - ROLLOVER;
+
+/** `YYYY-MM-DD`: the local date, with days starting at 4:00. */
+export const learningDay = (at: number, utcOffsetMinutes: number): string =>
+  new Date(learningClock(at, utcOffsetMinutes)).toISOString().slice(0, 10);
+
+/** FSRS runs on the learning clock, so its elapsed days are learning days. */
+export const applyReview = (
+  state: CardState,
+  review: Review,
+): Result<CardState, SchedulerFailure> => {
+  const lastReview = state.lastReviewDay === null ? null : Date.parse(state.lastReviewDay);
+  const step = fsrsNext(
+    review.scheduler,
+    state,
+    lastReview,
+    learningClock(review.reviewedAt, review.utcOffsetMinutes),
+    review.grade,
+  );
+  if (!step.ok) return step;
+  return ok({
+    ...step.value.memory,
+    due: review.reviewedAt + step.value.interval,
+    lastReviewDay: learningDay(review.reviewedAt, review.utcOffsetMinutes),
+  });
+};
+
+export type ReplayError =
+  | SchedulerFailure
+  | { readonly kind: "foreign-review"; readonly reviewId: string }
+  | { readonly kind: "duplicate-review"; readonly reviewId: string };
+
+const chronological = (a: Review, b: Review): number =>
+  a.reviewedAt - b.reviewedAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+
+/** A card's state from its whole log, in any order: the source of truth for the cache. */
+export const replay = (
+  cardId: string,
+  reviews: readonly Review[],
+): Result<CardState, ReplayError> => {
+  const seen = new Set<string>();
+  let state = NEW_CARD_STATE;
+  for (const review of [...reviews].sort(chronological)) {
+    if (review.cardId !== cardId) return err({ kind: "foreign-review", reviewId: review.id });
+    if (seen.has(review.id)) return err({ kind: "duplicate-review", reviewId: review.id });
+    seen.add(review.id);
+    const next = applyReview(state, review);
+    if (!next.ok) return next;
+    state = next.value;
+  }
+  return ok(state);
+};

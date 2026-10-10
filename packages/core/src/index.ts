@@ -1,6 +1,13 @@
 export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {
+  CURRENT_SCHEDULER,
+  SCHEDULER_VERSIONS,
+  type SchedulerFailure,
+  type SchedulerVersion,
+} from "./fsrs.ts";
+export {
+  LANGUAGE_IDS,
   proficiencyFrameworks,
   type DecompositionFeature,
   type DecompositionNode,
@@ -28,4 +35,20 @@ export {
   type PackWith,
 } from "./module-registry.ts";
 export { err, isErr, isOk, ok, type Err, type Ok, type Result } from "./result.ts";
+export {
+  applyReview,
+  Card,
+  cardId,
+  CardState,
+  CardType,
+  Grade,
+  learningDay,
+  NEW_CARD_STATE,
+  newCards,
+  Phase,
+  replay,
+  Review,
+  type CardKey,
+  type ReplayError,
+} from "./srs.ts";
 export { parseWith, type ValidationError, type ValidationIssue } from "./validation.ts";
