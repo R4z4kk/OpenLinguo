@@ -1,4 +1,4 @@
-import type { StrokeData } from "@openlinguo/core";
+import type { Card, CardState, Review, StrokeData } from "@openlinguo/core";
 import { Dexie, type EntityTable } from "dexie";
 import type { SearchIndexRecord } from "./search-index.ts";
 
@@ -36,6 +36,9 @@ export type MetaRecord =
   | { readonly key: "dataVersion" | "importingVersion"; readonly value: string }
   | { readonly key: "lexicon"; readonly value: readonly string[] };
 
+/** A card with its state replayed from the review log. */
+export type StoredCard = Card & CardState;
+
 /** A data file fully imported, by content hash. */
 export type ImportRecord = { readonly sha256: string };
 
@@ -46,6 +49,8 @@ export type Database = Dexie & {
   meta: EntityTable<MetaRecord, "key">;
   imports: EntityTable<ImportRecord, "sha256">;
   searchIndex: EntityTable<SearchIndexRecord, "file">;
+  cards: EntityTable<StoredCard, "id">;
+  reviews: EntityTable<Review, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -61,6 +66,8 @@ export const openDatabase = (name: string): Database => {
     .stores({ searchIndex: "file" })
     .upgrade((tx) => tx.table("meta").bulkDelete(["dataVersion", "importingVersion"]));
   db.version(3).stores({ strokes: "character" });
+  // New cards have a null `due`, which IndexedDB leaves out of the index.
+  db.version(4).stores({ cards: "id, due", reviews: "id, cardId" });
   return db;
 };
 
