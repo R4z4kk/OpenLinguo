@@ -15,24 +15,19 @@ import { useTranslation } from "react-i18next";
 import { GlossSummary } from "@/components/gloss-summary";
 import { RubyWord } from "@/components/ruby-word";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { currentSetting, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { localNow, type LocalTime } from "@/data/decks";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
-import {
-  DEFAULT_NEW_CARDS_PER_DAY,
-  gradeItem,
-  loadSession,
-  type ReviewItem,
-  type Session,
-} from "@/data/session";
+import { gradeItem, loadSession, type ReviewItem, type Session } from "@/data/session";
 import { languages, type Language } from "@/i18n/language";
 import { formatInterval } from "@/lib/interval";
 
 const GRADE_KEYS = ["1", "2", "3", "4"];
 
-const PROGRESS =
-  "h-2 w-full appearance-none overflow-hidden rounded-full bg-sunken [&::-moz-progress-bar]:bg-ink [&::-webkit-progress-bar]:bg-sunken [&::-webkit-progress-value]:bg-ink";
+const storage = (): Storage => localStorage;
 
 const Characters = ({ word }: { readonly word: string }) => (
   <p lang="zh-Hans" className="font-display text-display">
@@ -211,7 +206,7 @@ const Runner = ({
     // eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- Shortcuts bubble from the focusable card and buttons, so they only work in the session (WCAG 2.1.4).
     <div className="mt-6" onKeyDown={onKeyDown}>
       <div className="flex items-center gap-3">
-        <progress aria-label={t("review.progress")} value={done} max={total} className={PROGRESS} />
+        <Progress aria-label={t("review.progress")} value={done} max={total} />
         <span className="shrink-0 text-small text-muted tabular-nums">
           {t("review.progressCount", { done, total })}
         </span>
@@ -292,7 +287,8 @@ export const ReviewPage = () => {
   const { t, i18n } = useTranslation();
   const { state, referential } = useData();
   const session = useMemo(
-    () => loadSession(database, referential, localNow(), DEFAULT_NEW_CARDS_PER_DAY),
+    () =>
+      loadSession(database, referential, localNow(), currentSetting(storage, NEW_CARDS_PER_DAY)),
     [referential],
   );
   const language = languages.find((lang) => lang === i18n.language) ?? "en";

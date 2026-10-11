@@ -2,6 +2,7 @@ import { Card, err, ok, replay, Review, type ReplayError, type Result } from "@o
 import { z } from "zod";
 import { languages } from "@/i18n/language";
 import { themePreferences } from "@/theme";
+import { DAILY_GOAL, NEW_CARDS_PER_DAY } from "./daily-goal.ts";
 import {
   deckWordId,
   MY_WORDS,
@@ -17,10 +18,13 @@ import { guarded, type ReviewLogFailure } from "./review-log.ts";
 export const BACKUP_FORMAT = "openlinguo-backup";
 export const BACKUP_VERSION = 1;
 
+/** Settings added later default to their fallback, so older backups still import. */
 export const Settings = z.object({
   language: z.enum(languages),
   theme: z.enum(themePreferences),
   referential: z.enum(referentials),
+  dailyGoal: z.literal(DAILY_GOAL.values).default(DAILY_GOAL.fallback),
+  newCardsPerDay: z.literal(NEW_CARDS_PER_DAY.values).default(NEW_CARDS_PER_DAY.fallback),
 });
 export type Settings = z.output<typeof Settings>;
 

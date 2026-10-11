@@ -10,7 +10,15 @@ export const en = {
     read: "Read",
     profile: "Profile",
   },
-  today: { title: "Today", intro: "Your daily session starts here.", start: "Start the session" },
+  today: {
+    title: "Today",
+    intro: "Your daily session starts here.",
+    start: "Start the session",
+    goal: "Daily goal",
+    goalCount: "{{done}} of {{goal}} reviews today",
+    goalMet: "Daily goal met. You can keep going.",
+    failed: "The reviews of today could not be counted: {{reason}}",
+  },
   review: {
     title: "Review",
     recognition: "Recall its pinyin and meaning.",
@@ -131,6 +139,11 @@ export const en = {
     "hsk-2025": "HSK 2025 exam",
     "gf0025-2021": "GF0025-2021 standard",
     notSaved: "The levels apply now but the choice cannot be saved in this browser: {{reason}}",
+  },
+  goal: {
+    dailyGoal: "Daily goal (reviews)",
+    newCardsPerDay: "New cards per day",
+    notSaved: "The choice cannot be saved in this browser: {{reason}}",
   },
   dataImport: {
     title: "Preparing the offline dictionary",

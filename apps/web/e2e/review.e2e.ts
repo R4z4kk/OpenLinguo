@@ -3,6 +3,9 @@ import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
 
+const goalCount = (done: number, goal: number): string =>
+  en.today.goalCount.replace("{{done}}", String(done)).replace("{{goal}}", String(goal));
+
 test("reviews my word first from the keyboard, then a band word", async ({ page }) => {
   const main = page.getByRole("main");
   const focused = page.locator(":focus");
@@ -15,6 +18,7 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(myWords).toBeChecked();
 
   await page.getByRole("link", { name: en.nav.today }).click();
+  await expect(main).toContainText(goalCount(0, 20));
   await main.getByRole("link", { name: en.today.start }).click();
   await expect(focused).toContainText(en.review.recognition);
   await expect(focused).toContainText("你好");
@@ -32,4 +36,21 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(focused).toContainText(en.review.recognition);
   await expect(focused).not.toContainText("你好");
   expect(await accessibilityViolations(page)).toEqual([]);
+
+  await page.getByRole("link", { name: en.nav.today }).click();
+  await expect(main.getByRole("progressbar", { name: en.today.goal })).toHaveAttribute(
+    "value",
+    "1",
+  );
+  await expect(main).toContainText(goalCount(1, 20));
+  await page.getByRole("link", { name: en.nav.profile }).click();
+  const smallGoal = main
+    .getByRole("group", { name: en.goal.dailyGoal })
+    .getByRole("radio", { name: "10", exact: true });
+  await smallGoal.focus();
+  await page.keyboard.press("Space");
+  await expect(smallGoal).toBeChecked();
+  await page.getByRole("link", { name: en.nav.today }).click();
+  await expect(main).toContainText(goalCount(1, 10));
+  await expect(main).not.toContainText(en.today.goalMet);
 });

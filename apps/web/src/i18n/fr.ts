@@ -15,6 +15,10 @@ export const fr: Messages = {
     title: "Aujourd’hui",
     intro: "La séance du jour commence ici.",
     start: "Commencer la séance",
+    goal: "Objectif du jour",
+    goalCount: "{{done}} sur {{goal}} révisions aujourd’hui",
+    goalMet: "Objectif du jour atteint. Vous pouvez continuer.",
+    failed: "Les révisions du jour n’ont pas pu être comptées\u00a0: {{reason}}",
   },
   review: {
     title: "Révision",
@@ -142,6 +146,11 @@ export const fr: Messages = {
     "gf0025-2021": "Standard GF0025-2021",
     notSaved:
       "Les niveaux s’appliquent maintenant mais le choix ne peut pas être enregistré dans ce navigateur\u00a0: {{reason}}",
+  },
+  goal: {
+    dailyGoal: "Objectif du jour (révisions)",
+    newCardsPerDay: "Nouvelles cartes par jour",
+    notSaved: "Le choix ne peut pas être enregistré dans ce navigateur\u00a0: {{reason}}",
   },
   dataImport: {
     title: "Préparation du dictionnaire hors ligne",

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useData } from "@/data/data-context";
 import { BackupControls } from "@/shell/backup-controls";
+import { GoalSwitcher } from "@/shell/goal-switcher";
 import { LanguageSwitcher } from "@/shell/language-switcher";
 import { ReferentialSwitcher } from "@/shell/referential-switcher";
 import { ThemeSwitcher } from "@/shell/theme-switcher";
@@ -16,11 +17,13 @@ export const ProfilePage = () => {
     <section>
       <h1 className="text-title">{t("profile.title")}</h1>
       <h2 className="mt-8 text-subtitle">{t("profile.learning")}</h2>
-      <div className="mt-4">
+      <div key={`learning-${String(restored)}`} className="mt-4 flex flex-col gap-6">
         <ReferentialSwitcher />
+        <GoalSwitcher name="dailyGoal" />
+        <GoalSwitcher name="newCardsPerDay" />
       </div>
       <h2 className="mt-8 text-subtitle">{t("profile.display")}</h2>
-      <div key={restored} className="mt-4 flex flex-col gap-6">
+      <div key={`display-${String(restored)}`} className="mt-4 flex flex-col gap-6">
         <LanguageSwitcher />
         <ThemeSwitcher />
       </div>

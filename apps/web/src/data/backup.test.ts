@@ -53,7 +53,13 @@ const replayed = (id: string, log: readonly Review[]): CardState => {
   return state.value;
 };
 
-const SETTINGS: Settings = { language: "fr", theme: "dark", referential: "gf0025-2021" };
+const SETTINGS: Settings = {
+  language: "fr",
+  theme: "dark",
+  referential: "gf0025-2021",
+  dailyGoal: 50,
+  newCardsPerDay: 0,
+};
 const ANIMALS = { id: uuid(100), name: "Animals" };
 
 const backup = (data: Partial<Backup>): Backup => ({
@@ -112,6 +118,13 @@ describe("parseBackup", () => {
       ok: false,
       error: { kind: "newer-version", version: 2 },
     });
+  });
+
+  it("gives settings missing from an older backup their fallback", () => {
+    const older = { language: "fr", theme: "dark", referential: "gf0025-2021" };
+    expect(parseBackup(JSON.stringify({ ...backup({}), settings: older }))).toEqual(
+      ok(backup({ settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20 } })),
+    );
   });
 
   it("lists each failing path", () => {

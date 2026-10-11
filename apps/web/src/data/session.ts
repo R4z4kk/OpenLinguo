@@ -16,9 +16,6 @@ import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks
 import { toDictEntry } from "./dictionary.ts";
 import { guarded, recordReview, type ReviewLogFailure } from "./review-log.ts";
 
-/** Anki's default `new_per_day` (ankitects/anki rslib/src/deckconfig/mod.rs); a setting in #79. */
-export const DEFAULT_NEW_CARDS_PER_DAY = 20;
-
 export type ReviewItem = SessionItem & { readonly entry: DictEntry; readonly state: CardState };
 
 /** `skipped`: cards whose reading left the dictionary. */
