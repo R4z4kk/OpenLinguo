@@ -50,15 +50,20 @@ export const loadSession = (
     });
     const states = new Map(cards.map((card) => [card.id, card]));
     const entries = await db.entries.bulkGet(items.map(entryId));
-    const filed = await db.deckWords
-      .where("[headword+readingKey]")
-      .anyOf(items.map((item) => [item.headword, item.readingKey]))
-      .toArray();
+    const filed = (
+      await Promise.all(
+        items.map((item) =>
+          db.deckWords
+            .where("[headword+readingKey]")
+            .equals([item.headword, item.readingKey])
+            .toArray(),
+        ),
+      )
+    ).flat();
     const voiced = new Set(
-      await db.audio
-        .where(":id")
-        .anyOf(filed.map((word) => word.id))
-        .primaryKeys(),
+      (
+        await Promise.all(filed.map((word) => db.audio.where(":id").equals(word.id).primaryKeys()))
+      ).flat(),
     );
     const audioOf = new Map(
       filed.filter((word) => voiced.has(word.id)).map((word) => [entryId(word), word.id] as const),

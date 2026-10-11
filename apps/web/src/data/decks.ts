@@ -134,16 +134,12 @@ export const putCards = async (
   const cards = words.flatMap((word) => newCards("zh", word.headword, word.readingKey));
   const stored = await db.cards.bulkGet(cards.map((card) => card.id));
   const missing = cards.filter((_, index) => stored[index] == null);
-  const logs = Map.groupBy(
-    await db.reviews
-      .where("cardId")
-      .anyOf(missing.map((card) => card.id))
-      .toArray(),
-    (review) => review.cardId,
+  const logs = await Promise.all(
+    missing.map((card) => db.reviews.where("cardId").equals(card.id).toArray()),
   );
   const replayed: StoredCard[] = [];
-  for (const card of missing) {
-    const state = replay(card.id, logs.get(card.id) ?? []);
+  for (const [index, card] of missing.entries()) {
+    const state = replay(card.id, logs[index] ?? []);
     if (!state.ok) return state;
     replayed.push({ ...card, ...state.value });
   }

@@ -267,14 +267,17 @@ export const planImport = (
       else notes.push(text);
     }
     const forms = [...new Set(notes.map((note) => note.characters))];
-    const rows = await db.entries
-      .where("simplified")
-      .anyOf(forms)
-      .or("variants")
-      .anyOf(forms)
-      .toArray();
+    // One lookup per form: in WebKit, Dexie's `anyOf` walks the whole index (seconds here).
+    const found = await db.transaction("r", db.entries, () =>
+      Promise.all(
+        forms.flatMap((form) => [
+          db.entries.where("simplified").equals(form).toArray(),
+          db.entries.where("variants").equals(form).toArray(),
+        ]),
+      ),
+    );
     const readingsOf = new Map<string, Map<string, StoredEntry>>();
-    for (const row of rows) {
+    for (const row of found.flat()) {
       for (const form of [row.simplified, ...row.variants]) {
         const readings = readingsOf.get(form) ?? new Map<string, StoredEntry>();
         readings.set(row.id, row);
