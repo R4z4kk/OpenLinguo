@@ -36,8 +36,8 @@ export type MetaRecord =
   | { readonly key: "dataVersion" | "importingVersion"; readonly value: string }
   | { readonly key: "lexicon"; readonly value: readonly string[] };
 
-/** A card with its state replayed from the review log. */
-export type StoredCard = Card & CardState;
+/** A card with its state replayed from the review log; `personal` when added from the dictionary. */
+export type StoredCard = Card & CardState & { readonly personal: boolean };
 
 /** A data file fully imported, by content hash. */
 export type ImportRecord = { readonly sha256: string };
@@ -68,6 +68,8 @@ export const openDatabase = (name: string): Database => {
   db.version(3).stores({ strokes: "character" });
   // New cards have a null `due`, which IndexedDB leaves out of the index.
   db.version(4).stores({ cards: "id, due", reviews: "id, cardId" });
+  // Band decks; ungraded (null) readings stay out of these indexes.
+  db.version(5).stores({ entries: "id, simplified, *variants, hsk2025, gf0025" });
   return db;
 };
 

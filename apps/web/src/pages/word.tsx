@@ -8,18 +8,22 @@ import {
   type Result,
   type StrokeData,
 } from "@openlinguo/core";
-import type { ZhProficiency } from "@openlinguo/lang-zh";
+import { readingKey, type ZhProficiency } from "@openlinguo/lang-zh";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Info } from "lucide-react";
-import { Suspense, use, useId, useMemo, useState } from "react";
+import { ArrowLeft, Check, Info, Minus, Plus } from "lucide-react";
+import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CREDITS, Credits } from "@/components/credits";
 import { DecompositionTree } from "@/components/decomposition-tree";
 import { RubyWord } from "@/components/ruby-word";
 import { SegmentedControl } from "@/components/segmented-control";
 import { StrokeOrder } from "@/components/stroke-order";
+import { Button } from "@/components/ui/button";
 import { useData } from "@/data/data-context";
+import { database } from "@/data/database";
+import { addWord, isPersonal, removeWord } from "@/data/decks";
 import { groupGlosses } from "@/data/gloss-summary";
+import { describeFailure } from "@/data/review-log";
 import { languages, type Language } from "@/i18n/language";
 
 const HAN = /\p{Script=Han}/u;
@@ -91,6 +95,85 @@ const Glosses = ({
   );
 };
 
+/** One button that adds or removes a reading, so focus stays on it; the status says it is added. */
+const MyWord = ({
+  headword,
+  reading,
+  describedBy,
+}: {
+  readonly headword: string;
+  readonly reading: string;
+  /** The heading that shows the reading. */
+  readonly describedBy: string;
+}) => {
+  const { t } = useTranslation();
+  const key = useMemo(() => readingKey(reading), [reading]);
+  const [added, setAdded] = useState<boolean | null>(null);
+  const [failure, setFailure] = useState<string | null>(
+    key.ok ? null : `${key.error.kind} ${key.error.reading}`,
+  );
+  const pending = useRef(false);
+
+  useEffect(() => {
+    if (!key.ok) return;
+    let active = true;
+    void isPersonal(database, { headword, readingKey: key.value }).then((result) => {
+      if (!active) return;
+      if (result.ok) setAdded(result.value);
+      else setFailure(describeFailure(result.error));
+    });
+    return () => {
+      active = false;
+    };
+  }, [headword, key]);
+
+  const toggle = async (): Promise<void> => {
+    if (!key.ok || added === null || pending.current) return;
+    pending.current = true;
+    const result = await (added ? removeWord : addWord)(database, {
+      headword,
+      readingKey: key.value,
+    });
+    pending.current = false;
+    if (result.ok) {
+      setAdded(!added);
+      setFailure(null);
+    } else {
+      setFailure(describeFailure(result.error));
+    }
+  };
+
+  const Icon = added === true ? Minus : Plus;
+  return (
+    <div className="mt-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          variant="outline"
+          aria-describedby={describedBy}
+          disabled={added === null}
+          onClick={() => void toggle()}
+        >
+          <Icon aria-hidden="true" className="size-4" />
+          {t(added === true ? "myWords.remove" : "myWords.add")}
+        </Button>
+        <p role="status" className="flex items-center gap-2 text-small">
+          {added === true && (
+            <>
+              <Check aria-hidden="true" className="size-4" />
+              {t("myWords.added")}
+            </>
+          )}
+        </p>
+      </div>
+      {failure !== null && (
+        <p role="alert" className="mt-2 text-danger">
+          {t("myWords.failed", { reason: failure })}
+        </p>
+      )}
+    </div>
+  );
+};
+
 const Entries = ({
   word,
   lookup,
@@ -105,6 +188,7 @@ const Entries = ({
   readonly language: Language;
 }) => {
   const { t } = useTranslation();
+  const headingIds = useId();
   const result = use(lookup);
   if (!result.ok) return <Failure failure={result.error} />;
   // The reading taught first comes first; ungraded readings keep the dictionary order.
@@ -136,17 +220,18 @@ const Entries = ({
         </p>
       )}
       {entries.length === 0 && <p className="mt-4">{t("word.notFound")}</p>}
-      {entries.map((entry) => {
+      {entries.map((entry, index) => {
         const level =
           entry.level === null ? null : proficiencyFrameworks[referential][entry.level - 1];
         const titled = ruby === null && entry.reading !== null;
+        const headingId = titled ? `${headingIds}-${String(index)}` : "word-title";
         return (
           <section
             key={`${entry.headword}\t${entry.reading ?? ""}`}
             className={ruby === null ? "mt-6 border-t border-hairline pt-4" : "mt-6"}
           >
             {titled && (
-              <h2>
+              <h2 id={headingId}>
                 <RubyWord
                   word={entry.headword}
                   reading={entry.reading}
@@ -162,6 +247,9 @@ const Entries = ({
                 </span>{" "}
                 {t(`referential.${referential}`)}
               </p>
+            )}
+            {entry.reading !== null && (
+              <MyWord headword={entry.headword} reading={entry.reading} describedBy={headingId} />
             )}
             <Glosses entry={entry} language={language} heading={titled ? "h3" : "h2"} />
           </section>
