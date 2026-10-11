@@ -54,6 +54,14 @@ All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), s
 | Fun-CosyVoice3-0.5B-2512 | zh candidate | Apache-2.0 (weights tag); the model card's "academic purposes only" disclaimer refers to its demo content | Verified |
 | MeloTTS-Chinese | zh candidate | MIT (code and weights) | Verified |
 
+## Audio recordings (M3 candidates, not imported)
+
+| Dataset | Used for | License | Source | Status |
+|---|---|---|---|---|
+| audio-cmn syllables (speaker Chen Wang) | pinyin chart, 1,707 syllables in every tone (#89) | "CC-by-sa" in the README, no version; no LICENSE file | [hugolpz/audio-cmn](https://github.com/hugolpz/audio-cmn) | To verify — license version and origin (checked 2026-10-11) |
+| audio-cmn HSK 2000 words (speaker Yue Tan, Shtooka pack `cmn-caen-tan`) | word audio, about 8,600 words | CC BY-SA per the audio-cmn README; the Shtooka readme was unreachable on 2026-10-11 | [hugolpz/audio-cmn](https://github.com/hugolpz/audio-cmn) | To verify |
+| Lingua Libre Mandarin recordings | word audio | CC BY-SA 4.0 project-wide; each file's license on Wikimedia Commons | [lingualibre.org](https://lingualibre.org) | To verify per file |
+
 ## Notes
 
 ### HSK 2025 syllabus
@@ -122,3 +130,4 @@ All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), s
 - Commercial graded readers.
 - Any non-commercial (NC) licensed content.
 - Tatoeba audio.
+- AnkiWeb shared decks: never bundled, fetched or listed (copyright stays with each uploader, scraping is forbidden by the AnkiWeb terms). Learners import their own `.apkg` files, read and kept locally (#88).
