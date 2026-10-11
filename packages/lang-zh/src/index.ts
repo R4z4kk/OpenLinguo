@@ -21,6 +21,15 @@ export {
   type Tone,
 } from "./pinyin.ts";
 export {
+  FINALS,
+  INITIALS,
+  INTERJECTIONS,
+  spell,
+  type FinalGroup,
+  type PinyinFinal,
+  type PinyinInitial,
+} from "./pinyin-chart.ts";
+export {
   matchesPinyin,
   parsePinyinQuery,
   searchKey,

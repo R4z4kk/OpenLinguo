@@ -48,6 +48,8 @@ export const en = {
     intro: "Decks, dictionary, pronunciation and writing studios.",
     dictionary: "Dictionary",
     dictionaryIntro: "Look up a word by its characters, pinyin, English or French.",
+    pinyinChart: "Pinyin chart",
+    pinyinChartIntro: "Initials, finals and every syllable, with their phonetics.",
   },
   decks: {
     personal: "My decks",
@@ -170,6 +172,73 @@ export const en = {
     previousStroke: "Previous stroke",
     nextStroke: "Next stroke",
     noStrokes: "No stroke order for {{character}}.",
+  },
+  pinyinChart: {
+    title: "Pinyin chart",
+    intro:
+      "The sounds of Standard Chinese: initials, finals and the syllables they form, with their phonetic transcription (IPA).",
+    initials: "Initials",
+    initialsIntro: "Said alone, an initial is named with a vowel: bo, de, ge, ji, zhi, zi.",
+    initial: "Initial",
+    saidAlone: "Said alone",
+    ipa: "IPA",
+    place: "Place",
+    manner: "Manner",
+    chao: "Chao (1968):",
+    places: {
+      bilabial: "bilabial (both lips)",
+      labiodental: "labiodental (lower lip, upper teeth)",
+      "denti-alveolar": "denti-alveolar (tongue tip at the upper teeth)",
+      "post-alveolar": "post-alveolar (tongue tip behind the gum ridge)",
+      "alveolo-palatal": "alveolo-palatal (front of the tongue at the palate)",
+      velar: "velar (back of the tongue at the soft palate)",
+    },
+    manners: {
+      plosive: "plosive, unaspirated",
+      "aspirated-plosive": "plosive, aspirated (a puff of air)",
+      affricate: "affricate, unaspirated",
+      "aspirated-affricate": "affricate, aspirated (a puff of air)",
+      fricative: "fricative",
+      nasal: "nasal",
+      lateral: "lateral",
+      approximant: "approximant",
+    },
+    finals: "Finals",
+    finalsIntro: "The rest of the syllable, after the initial.",
+    group: "Group {{letter}}",
+    final: "Final",
+    kind: "Kind",
+    kinds: {
+      vowel: "vowel",
+      apical: "apical vowel (tongue tip)",
+      rhotic: "r-colored vowel",
+      diphthong: "diphthong",
+      triphthong: "triphthong",
+      "vowel-nasal": "vowel + nasal",
+      "diphthong-nasal": "diphthong + nasal",
+    },
+    rules: "Spelling rules",
+    rulesIntro:
+      "Where pinyin hides the sound. In the grid below, the row shows the final and the cell its spelling.",
+    rule: {
+      apical:
+        "zhi, chi, shi, ri, zi, ci, si: the i is not [i] but an apical vowel [ɹ̩], said with the tongue tip where the initial left it. Linguists in China often write it [ɿ] after z, c, s and [ʅ] after zh, ch, sh, r.",
+      yw: "Without an initial, finals starting with i, u or ü are written with y or w: yi, ya, you, wu, wo, wei, yu, yue.",
+      umlaut:
+        "ü is written u after j, q, x and y: ju, qu, xu, yu. After n and l it keeps its dots: nü, lü, against nu, lu.",
+      contracted:
+        "After an initial, iou, uei and uen are written iu, ui, un, but the middle vowel is still said: liu [liou], gui [kuei], lun [luən].",
+    },
+    syllables: "Syllables",
+    syllablesIntro:
+      "Every syllable by final (rows) and initial (columns). An empty cell: no such syllable.",
+    corner: "Final / initial",
+    noInitial: "No initial",
+    interjections: "Outside the grid, interjections: {{list}}.",
+    sources: "Sources",
+    scheme: "Hanyu Pinyin scheme (1958)",
+    leeZee:
+      "W.-S. Lee and E. Zee (2003), “Standard Chinese (Beijing)”, Journal of the International Phonetic Association 33(1)",
   },
   credits: {
     title: "Sources",

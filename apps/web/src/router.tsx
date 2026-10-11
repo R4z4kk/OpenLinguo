@@ -4,6 +4,7 @@ import { AnkiImportPage } from "@/pages/anki-import";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
 import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
+import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
 import { ReadPage } from "@/pages/read";
 import { ReviewPage } from "@/pages/review";
@@ -38,6 +39,12 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/learn/import",
     component: AnkiImportPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/pinyin",
+    component: PinyinChartPage,
     errorComponent: ModuleError,
   }),
   createRoute({
