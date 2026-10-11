@@ -64,6 +64,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   const noNewCards = main
     .getByRole("group", { name: en.goal.newCardsPerDay })
     .getByRole("radio", { name: "0", exact: true });
+  const showProgress = main.getByRole("checkbox", { name: en.progress.show });
   const importButton = main.getByRole("button", { name: en.backup.import });
 
   await page.goto("/learn/dictionary/你好");
@@ -94,6 +95,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await noNewCards.focus();
   await page.keyboard.press("Space");
   await expect(noNewCards).toBeChecked();
+  await showProgress.uncheck();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     main.getByRole("button", { name: en.backup.export }).click(),
@@ -107,6 +109,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await page.reload();
   await expect(dark).not.toBeChecked();
   await expect(noNewCards).not.toBeChecked();
+  await expect(showProgress).toBeChecked();
   await page.getByRole("link", { name: en.nav.learn }).click();
   await expect(counts.first()).toHaveText("0");
 
@@ -116,6 +119,8 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await expect(status).toHaveText(imported({ reviews: 1, cards: 2, decks: 0, words: 1 }));
   await expect(dark).toBeChecked();
   await expect(noNewCards).toBeChecked();
+  await expect(showProgress).not.toBeChecked();
+  await expect(main.getByRole("heading", { name: en.progress.title })).toBeHidden();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   // axe measures colors halfway through the theme transition otherwise.
   await page.waitForFunction(() => document.getAnimations().length === 0);

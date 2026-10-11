@@ -60,6 +60,7 @@ const SETTINGS: Settings = {
   referential: "gf0025-2021",
   dailyGoal: 50,
   newCardsPerDay: 0,
+  showProgress: false,
 };
 const ANIMALS = { id: uuid(100), name: "Animals" };
 
@@ -130,7 +131,7 @@ describe("parseBackup", () => {
     ).toEqual(
       ok(
         backup({
-          settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20 },
+          settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20, showProgress: true },
           reviews: [review(1, RECALL.id, start, "good")],
         }),
       ),

@@ -141,6 +141,7 @@ export const fr: Messages = {
   read: { title: "Lire", intro: "Textes gradués et lecteur." },
   progress: {
     title: "Progression",
+    show: "Afficher la série, l’XP et les succès",
     streak: "Série",
     xp: "Expérience",
     days_one: "{{count, number}} jour",

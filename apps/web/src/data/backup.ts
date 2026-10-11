@@ -12,6 +12,7 @@ import {
   type StoredDeckWord,
 } from "./database.ts";
 import { DECK_NAME_MAX, sameDeckName, type DeckFailure } from "./decks.ts";
+import { SHOW_PROGRESS } from "./progress.ts";
 import { referentials } from "./referential.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
@@ -25,6 +26,7 @@ export const Settings = z.object({
   referential: z.enum(referentials),
   dailyGoal: z.literal(DAILY_GOAL.values).default(DAILY_GOAL.fallback),
   newCardsPerDay: z.literal(NEW_CARDS_PER_DAY.values).default(NEW_CARDS_PER_DAY.fallback),
+  showProgress: z.boolean().default(SHOW_PROGRESS.fallback),
 });
 export type Settings = z.output<typeof Settings>;
 
