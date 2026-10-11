@@ -72,7 +72,9 @@ export const cardKey = (id: string): CardKey | null => {
 
 /**
  * An append-only review log entry. `utcOffsetMinutes` is local time minus UTC (Paris summer: 120).
- * `dailyGoal` is the goal in effect when reviewing, so the streak derives from the log alone.
+ * `dailyGoal` is the goal in effect when reviewing, so the streak derives from the log alone; the
+ * review that empties the day's session caps it at the day's count, so a day with nothing left
+ * to review is met.
  */
 export const Review = z.object({
   id: z.uuid(),

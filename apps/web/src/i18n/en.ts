@@ -17,6 +17,7 @@ export const en = {
     goal: "Daily goal",
     goalCount: "{{done}} of {{goal}} reviews today",
     goalMet: "Daily goal met. You can keep going.",
+    goalCleared: "Daily goal met: nothing left to review today.",
     failed: "The reviews of today could not be counted: {{reason}}",
   },
   review: {

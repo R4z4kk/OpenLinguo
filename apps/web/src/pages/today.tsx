@@ -1,34 +1,35 @@
-import type { Progress as LearnerProgress, Result } from "@openlinguo/core";
+import type { DayActivity, Progress as LearnerProgress, Result } from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import { Flame, Sparkles, type LucideIcon } from "lucide-react";
 import { Suspense, use, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { currentSetting, DAILY_GOAL, reviewsToday } from "@/data/daily-goal";
+import { currentSetting, DAILY_GOAL, todayActivity } from "@/data/daily-goal";
 import { database } from "@/data/database";
 import { localNow } from "@/data/decks";
 import { loadProgress, SHOW_PROGRESS, type ProgressFailure } from "@/data/progress";
-import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
+import { describeFailure } from "@/data/review-log";
 
 const storage = (): Storage => localStorage;
 
+/** A day met by emptying the session below the goal says so, without any loss message. */
 const Goal = ({
-  reviews,
+  activity,
   goal,
 }: {
-  readonly reviews: Promise<Result<number, ReviewLogFailure>>;
+  readonly activity: Promise<Result<DayActivity, ProgressFailure>>;
   readonly goal: number;
 }) => {
   const { t } = useTranslation();
-  const result = use(reviews);
+  const result = use(activity);
   if (!result.ok)
     return (
       <p role="alert" className="mt-6 text-danger">
         {t("today.failed", { reason: describeFailure(result.error) })}
       </p>
     );
-  const done = result.value;
+  const { reviews: done, goalMet } = result.value;
   return (
     <div className="mt-6">
       <div className="flex items-center gap-3">
@@ -37,7 +38,9 @@ const Goal = ({
           {t("today.goalCount", { done, goal })}
         </span>
       </div>
-      {done >= goal && <p className="mt-2">{t("today.goalMet")}</p>}
+      {(done >= goal || goalMet) && (
+        <p className="mt-2">{t(done >= goal ? "today.goalMet" : "today.goalCleared")}</p>
+      )}
     </div>
   );
 };
@@ -93,7 +96,7 @@ const Chips = ({
 export const TodayPage = () => {
   const { t } = useTranslation();
   const [goal] = useState(() => currentSetting(storage, DAILY_GOAL));
-  const reviews = useMemo(() => reviewsToday(database, localNow()), []);
+  const activity = useMemo(() => todayActivity(database, localNow()), []);
   const progress = useMemo(
     () => (currentSetting(storage, SHOW_PROGRESS) ? loadProgress(database, localNow()) : null),
     [],
@@ -110,7 +113,7 @@ export const TodayPage = () => {
       </header>
       <p className="mt-2 text-muted">{t("today.intro")}</p>
       <Suspense fallback={null}>
-        <Goal reviews={reviews} goal={goal} />
+        <Goal activity={activity} goal={goal} />
       </Suspense>
       <Link to="/review" className={buttonVariants({ className: "mt-6" })}>
         {t("today.start")}

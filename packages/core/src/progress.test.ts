@@ -110,6 +110,14 @@ describe("daily goal", () => {
     expect(run([...metOn(0), review(9, at(0, 2), { dailyGoal: 10 })], 0).totals.goalDays).toBe(1);
   });
 
+  test("a session emptied below the goal stamps the day's count and keeps the streak", () => {
+    const cleared = [review(5, at(1), { dailyGoal: 20 }), review(6, at(1, 1), { dailyGoal: 2 })];
+    expect(run([...metOn(0), ...cleared], 2)).toMatchObject({
+      streak: 2,
+      totals: { goalDays: 2 },
+    });
+  });
+
   test("a learning day starts at 4:00 local time", () => {
     const paris = { utcOffsetMinutes: 120 };
     const log = [
