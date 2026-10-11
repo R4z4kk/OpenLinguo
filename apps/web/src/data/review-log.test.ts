@@ -35,6 +35,7 @@ const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Re
   reviewedAt,
   utcOffsetMinutes: 120,
   scheduler: CURRENT_SCHEDULER,
+  dailyGoal: 20,
 });
 
 const replayed = (id: string, log: readonly Review[]): CardState => {

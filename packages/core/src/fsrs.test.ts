@@ -105,6 +105,7 @@ const viaCore = (log: Review[], states: Map<string, CardState>): Scheduler => ({
       reviewedAt: at,
       utcOffsetMinutes: offset,
       scheduler: CURRENT_SCHEDULER,
+      dailyGoal: 20,
     };
     const next = applyReview(states.get(card) ?? NEW_CARD_STATE, review);
     if (!next.ok) throw new Error(next.error.message);

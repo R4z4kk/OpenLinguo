@@ -45,6 +45,7 @@ const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Re
   reviewedAt,
   utcOffsetMinutes: 120,
   scheduler: CURRENT_SCHEDULER,
+  dailyGoal: 20,
 });
 
 const replayed = (id: string, log: readonly Review[]): CardState => {
@@ -120,10 +121,19 @@ describe("parseBackup", () => {
     });
   });
 
-  it("gives settings missing from an older backup their fallback", () => {
+  it("gives settings and review goals missing from an older backup their fallback", () => {
     const older = { language: "fr", theme: "dark", referential: "gf0025-2021" };
-    expect(parseBackup(JSON.stringify({ ...backup({}), settings: older }))).toEqual(
-      ok(backup({ settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20 } })),
+    const unstamped = { ...review(1, RECALL.id, start, "good") };
+    Reflect.deleteProperty(unstamped, "dailyGoal");
+    expect(
+      parseBackup(JSON.stringify({ ...backup({}), settings: older, reviews: [unstamped] })),
+    ).toEqual(
+      ok(
+        backup({
+          settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20 },
+          reviews: [review(1, RECALL.id, start, "good")],
+        }),
+      ),
     );
   });
 

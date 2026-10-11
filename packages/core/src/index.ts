@@ -34,6 +34,16 @@ export {
   type ModuleDefinition,
   type PackWith,
 } from "./module-registry.ts";
+export {
+  ACHIEVEMENTS,
+  levelStart,
+  progress,
+  XP_PER_REVIEW,
+  type Achievement,
+  type Metric,
+  type Progress,
+  type ProgressError,
+} from "./progress.ts";
 export { err, isErr, isOk, ok, type Err, type Ok, type Result } from "./result.ts";
 export {
   composeSession,

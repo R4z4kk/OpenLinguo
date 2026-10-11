@@ -62,6 +62,7 @@ export const gradeItem = async (
   item: ReviewItem,
   grade: Grade,
   now: LocalTime,
+  dailyGoal: number,
 ): Promise<Result<ReviewItem | null, ReviewLogFailure>> => {
   if (item.new) {
     const stored = await introduceWord(db, item);
@@ -74,6 +75,7 @@ export const gradeItem = async (
     reviewedAt: now.at,
     utcOffsetMinutes: now.utcOffsetMinutes,
     scheduler: CURRENT_SCHEDULER,
+    dailyGoal,
   });
   if (!state.ok) return state;
   return ok(

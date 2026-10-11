@@ -54,7 +54,26 @@ export const newCards = (
     return { ...key, id: cardId(key) };
   });
 
-/** An append-only review log entry. `utcOffsetMinutes` is local time minus UTC (Paris summer: 120). */
+const CardIdParts = z.tuple([z.enum(LANGUAGE_IDS), z.string().min(1), z.string().min(1), CardType]);
+
+/** The key a card id derives from, `null` when the id is not one. */
+export const cardKey = (id: string): CardKey | null => {
+  let parts: unknown;
+  try {
+    parts = JSON.parse(id);
+  } catch {
+    return null;
+  }
+  const parsed = CardIdParts.safeParse(parts);
+  if (!parsed.success) return null;
+  const [language, headword, readingKey, type] = parsed.data;
+  return { language, headword, readingKey, type };
+};
+
+/**
+ * An append-only review log entry. `utcOffsetMinutes` is local time minus UTC (Paris summer: 120).
+ * `dailyGoal` is the goal in effect when reviewing, so the streak derives from the log alone.
+ */
 export const Review = z.object({
   id: z.uuid(),
   cardId: z.string().min(1),
@@ -66,6 +85,7 @@ export const Review = z.object({
     .min(-12 * 60)
     .max(14 * 60),
   scheduler: z.enum(SCHEDULER_VERSIONS),
+  dailyGoal: z.number().int().min(1),
 });
 export type Review = z.output<typeof Review>;
 
@@ -162,7 +182,7 @@ export type ReplayError =
   | { readonly kind: "foreign-review"; readonly reviewId: string }
   | { readonly kind: "duplicate-review"; readonly reviewId: string };
 
-const chronological = (a: Review, b: Review): number =>
+export const chronological = (a: Review, b: Review): number =>
   a.reviewedAt - b.reviewedAt || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
 
 /** A card's state from its whole log, in any order: the source of truth for the cache. */

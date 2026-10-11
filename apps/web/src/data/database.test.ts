@@ -49,4 +49,15 @@ describe("openDatabase", () => {
     expect(await db.cards.count()).toBe(3);
     db.close();
   });
+
+  it("stamps reviews made before the daily goal with its fallback", async () => {
+    const legacy = new Dexie("goal-test");
+    legacy.version(6).stores({ reviews: "id, cardId" });
+    await legacy.table("reviews").add({ id: "r1", cardId: "c1" });
+    legacy.close();
+
+    const db = openDatabase("goal-test");
+    expect(await db.reviews.toArray()).toEqual([{ id: "r1", cardId: "c1", dailyGoal: 20 }]);
+    db.close();
+  });
 });

@@ -16,7 +16,7 @@ import { GlossSummary } from "@/components/gloss-summary";
 import { RubyWord } from "@/components/ruby-word";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { currentSetting, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
+import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { localNow, type LocalTime } from "@/data/decks";
@@ -142,7 +142,13 @@ const Runner = ({
   const submit = async (grade: Grade): Promise<void> => {
     if (current === null || revealedAt === null || pending.current) return;
     pending.current = true;
-    const result = await gradeItem(database, current, grade, localNow());
+    const result = await gradeItem(
+      database,
+      current,
+      grade,
+      localNow(),
+      currentSetting(storage, DAILY_GOAL),
+    );
     pending.current = false;
     if (!result.ok) {
       setFailure(describeFailure(result.error));
