@@ -148,6 +148,7 @@ const Runner = ({
       grade,
       localNow(),
       currentSetting(storage, DAILY_GOAL),
+      queue.length === 1,
     );
     pending.current = false;
     if (!result.ok) {

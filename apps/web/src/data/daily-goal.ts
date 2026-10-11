@@ -1,4 +1,11 @@
-import { learningDay, ok, type Result } from "@openlinguo/core";
+import {
+  learningDay,
+  ok,
+  tally,
+  type DayActivity,
+  type ProgressError,
+  type Result,
+} from "@openlinguo/core";
 import { readStored, writeStored } from "@/lib/stored";
 import type { Database } from "./database.ts";
 import type { LocalTime } from "./decks.ts";
@@ -50,16 +57,18 @@ export const currentSetting = <Value extends number | boolean>(
   return loaded.ok ? loaded.value : setting.fallback;
 };
 
-/** Reviews of the current learning day, each dated with its own offset as the streak counts it. */
-export const reviewsToday = (
+/** The current learning day's reviews, each dated with its own offset as the streak counts it. */
+export const todayActivity = (
   db: Database,
   now: LocalTime,
-): Promise<Result<number, ReviewLogFailure>> =>
-  guarded(async () => {
+): Promise<Result<DayActivity, ReviewLogFailure | ProgressError>> =>
+  guarded(async (): Promise<Result<DayActivity, ProgressError>> => {
     const today = learningDay(now.at, now.utcOffsetMinutes);
-    return ok(
+    const tallied = tally(
       await db.reviews
         .filter((review) => learningDay(review.reviewedAt, review.utcOffsetMinutes) === today)
-        .count(),
+        .toArray(),
     );
+    if (!tallied.ok) return tallied;
+    return ok(tallied.value.days.get(today) ?? { reviews: 0, goalMet: false });
   });

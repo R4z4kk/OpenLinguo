@@ -3,6 +3,7 @@ import { cardId, ok, type CardType, type WordKey } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
 import { fileWord, type LocalTime } from "./decks.ts";
+import { todayActivity } from "./daily-goal.ts";
 import { gradeItem, loadSession, type ReviewItem } from "./session.ts";
 
 const entry = (simplified: string, readingKey: string, hsk2025: number): StoredEntry => ({
@@ -35,6 +36,11 @@ const session = async (now: LocalTime) => {
 
 const ids = (items: readonly ReviewItem[]) =>
   items.map(({ cardId: id, new: isNew }) => [id, isNew]);
+
+const stampedGoals = async () =>
+  (await db.reviews.toArray())
+    .sort((a, b) => a.reviewedAt - b.reviewedAt)
+    .map(({ dailyGoal }) => dailyGoal);
 
 let db: Database;
 let counter = 0;
@@ -74,21 +80,31 @@ describe("gradeItem", () => {
   it("stores a band word's cards, then brings the card back while it is learning", async () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
-    const again = await gradeItem(db, first, "good", NOON, 50);
+    const again = await gradeItem(db, first, "good", NOON, 50, false);
     expect(again).toMatchObject({ ok: true, value: { cardId: first.cardId, new: false } });
     expect(await db.reviews.toArray()).toMatchObject([{ cardId: first.cardId, dailyGoal: 50 }]);
     expect(await db.cards.get(idOf(NI, "recall"))).toMatchObject({ phase: "new" });
     expect(await db.deckWords.count()).toBe(0);
     if (!again.ok || again.value === null) throw new Error("not requeued");
     expect(again.value.state.phase).toBe("learning");
-    expect(await gradeItem(db, again.value, "good", later(10), 20)).toEqual(ok(null));
-    expect(await db.reviews.count()).toBe(2);
+    expect(await gradeItem(db, again.value, "good", later(10), 20, false)).toEqual(ok(null));
+    expect(await stampedGoals()).toEqual([50, 20]);
+  });
+
+  it("caps the stamped goal at the day's count once the grade empties the session", async () => {
+    const [first] = (await session(NOON)).items;
+    if (first == null) throw new Error("empty session");
+    const again = await gradeItem(db, first, "good", NOON, 20, true);
+    if (!again.ok || again.value === null) throw new Error("not requeued");
+    expect(await gradeItem(db, again.value, "good", later(10), 20, true)).toEqual(ok(null));
+    expect(await stampedGoals()).toEqual([20, 2]);
+    expect(await todayActivity(db, later(10))).toEqual(ok({ reviews: 2, goalMet: true }));
   });
 
   it("keeps the word's other card for another day", async () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
-    await gradeItem(db, first, "again", NOON, 20);
+    await gradeItem(db, first, "again", NOON, 20, false);
     expect(ids((await session(later(1))).items)).toEqual([
       [idOf(NI, "recognition"), false],
       [idOf(TIAN, "recognition"), true],
@@ -99,7 +115,7 @@ describe("gradeItem", () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
     vi.spyOn(db.reviews, "add").mockRejectedValueOnce(new Error("QuotaExceededError"));
-    expect(await gradeItem(db, first, "good", NOON, 20)).toEqual({
+    expect(await gradeItem(db, first, "good", NOON, 20, false)).toEqual({
       ok: false,
       error: { kind: "storage", message: "Error: QuotaExceededError" },
     });

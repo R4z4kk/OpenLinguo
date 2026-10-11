@@ -1,13 +1,13 @@
 import "fake-indexeddb/auto";
-import { CURRENT_SCHEDULER, type Review } from "@openlinguo/core";
+import { cardId, CURRENT_SCHEDULER, type Review } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import {
   currentSetting,
   DAILY_GOAL,
   loadSetting,
   NEW_CARDS_PER_DAY,
-  reviewsToday,
   saveSetting,
+  todayActivity,
 } from "./daily-goal.ts";
 import { openDatabase } from "./database.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
@@ -28,7 +28,7 @@ const unavailable = (): never => {
 
 const review = (n: number, reviewedAt: number, utcOffsetMinutes: number): Review => ({
   id: `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`,
-  cardId: "card",
+  cardId: cardId({ language: "zh", headword: "你", readingKey: "ni3", type: "recognition" }),
   grade: "good",
   reviewedAt,
   utcOffsetMinutes,
@@ -75,7 +75,7 @@ describe("settings", () => {
   });
 });
 
-describe("reviewsToday", () => {
+describe("todayActivity", () => {
   it("counts the reviews of the learning day, which starts at 4:00 at each review's offset", async () => {
     const db = openDatabase("daily-goal-test");
     const PARIS = 120;
@@ -92,10 +92,13 @@ describe("reviewsToday", () => {
     ]);
     // 2026-10-22 03:30 in Paris: still the 21st.
     const now = { at: Date.UTC(2026, 9, 22, 1, 30), utcOffsetMinutes: PARIS };
-    expect(await reviewsToday(db, now)).toEqual({ ok: true, value: 2 });
-    expect(await reviewsToday(db, { ...now, at: now.at + 30 * 60_000 })).toEqual({
+    expect(await todayActivity(db, now)).toEqual({
       ok: true,
-      value: 0,
+      value: { reviews: 2, goalMet: false },
+    });
+    expect(await todayActivity(db, { ...now, at: now.at + 30 * 60_000 })).toEqual({
+      ok: true,
+      value: { reviews: 0, goalMet: false },
     });
   });
 });

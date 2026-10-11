@@ -18,6 +18,7 @@ export const fr: Messages = {
     goal: "Objectif du jour",
     goalCount: "{{done}} sur {{goal}} révisions aujourd’hui",
     goalMet: "Objectif du jour atteint. Vous pouvez continuer.",
+    goalCleared: "Objectif du jour atteint\u00a0: plus rien à réviser aujourd’hui.",
     failed: "Les révisions du jour n’ont pas pu être comptées\u00a0: {{reason}}",
   },
   review: {
