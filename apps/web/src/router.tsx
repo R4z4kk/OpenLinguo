@@ -5,6 +5,7 @@ import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
 import { ProfilePage } from "@/pages/profile";
 import { ReadPage } from "@/pages/read";
+import { ReviewPage } from "@/pages/review";
 import { TodayPage } from "@/pages/today";
 import { WordPage } from "@/pages/word";
 import { AppShell } from "@/shell/app-shell";
@@ -20,6 +21,12 @@ const getParentRoute = () => rootRoute;
 
 const routeTree = rootRoute.addChildren([
   createRoute({ getParentRoute, path: "/", component: TodayPage, errorComponent: ModuleError }),
+  createRoute({
+    getParentRoute,
+    path: "/review",
+    component: ReviewPage,
+    errorComponent: ModuleError,
+  }),
   createRoute({
     getParentRoute,
     path: "/learn",

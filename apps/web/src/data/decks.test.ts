@@ -8,17 +8,18 @@ import {
   type CardType,
   type Phase,
   type Review,
+  type WordKey,
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase, type Database, type StoredCard, type StoredEntry } from "./database.ts";
 import {
   addWord,
   deckCounts,
+  introduceWord,
   isPersonal,
   nextNewReadings,
   removeWord,
   type LocalTime,
-  type WordKey,
 } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
 
@@ -132,6 +133,19 @@ describe("my words", () => {
     await db.cards.add(stored(NI, "recall", "new", null, false));
     await addWord(db, NI);
     expect(await isPersonal(db, NI)).toEqual(ok(true));
+  });
+
+  it("introduces a band word without making it personal, and keeps stored cards", async () => {
+    expect(await introduceWord(db, NI)).toEqual(ok(null));
+    expect(await db.cards.get(idOf(NI, "recall"))).toEqual(
+      stored(NI, "recall", "new", null, false),
+    );
+    await addWord(db, HAO);
+    await recordReview(db, review(idOf(HAO, "recognition"), "good"));
+    const reviewed = await db.cards.get(idOf(HAO, "recognition"));
+    await introduceWord(db, HAO);
+    expect(await db.cards.get(idOf(HAO, "recognition"))).toEqual(reviewed);
+    expect(await isPersonal(db, HAO)).toEqual(ok(true));
   });
 
   it("writes nothing when the log cannot be replayed or the cards cannot be stored", async () => {

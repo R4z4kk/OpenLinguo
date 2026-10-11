@@ -36,19 +36,30 @@ export {
 } from "./module-registry.ts";
 export { err, isErr, isOk, ok, type Err, type Ok, type Result } from "./result.ts";
 export {
+  composeSession,
+  type SessionCard,
+  type SessionInput,
+  type SessionItem,
+  type WordKey,
+} from "./session.ts";
+export {
   applyReview,
   Card,
   cardId,
   CardState,
   CardType,
+  dueToday,
   Grade,
   learningDay,
   NEW_CARD_STATE,
   newCards,
   Phase,
+  previewGrades,
   replay,
   Review,
   type CardKey,
+  type GradeOutcome,
+  type Grading,
   type ReplayError,
 } from "./srs.ts";
 export { parseWith, type ValidationError, type ValidationIssue } from "./validation.ts";

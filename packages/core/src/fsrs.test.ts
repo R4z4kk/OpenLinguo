@@ -131,7 +131,10 @@ const RATING: Readonly<Record<Grade, FsrsGrade>> = {
 /** ts-fsrs with its own defaults, given the local time minus the 4:00 rollover. */
 const viaTsFsrs = (): Scheduler => {
   const scheduler = fsrs();
-  const cards = new Map<string, { readonly card: FsrsCard; readonly due: number }>();
+  const cards = new Map<
+    string,
+    { readonly card: FsrsCard; readonly due: number; readonly firstDay: string }
+  >();
   return {
     due: (card) => cards.get(card)?.due ?? null,
     review: (id, at, offset, grade) => {
@@ -142,7 +145,9 @@ const viaTsFsrs = (): Scheduler => {
         RATING[grade],
       ).card;
       const due = at + card.due.getTime() - clock.getTime();
-      cards.set(id, { card, due });
+      const day = clock.toISOString().slice(0, 10);
+      const firstDay = cards.get(id)?.firstDay ?? day;
+      cards.set(id, { card, due, firstDay });
       return {
         phase: PHASE[card.state],
         due,
@@ -152,7 +157,8 @@ const viaTsFsrs = (): Scheduler => {
         lapses: card.lapses,
         learningSteps: card.learning_steps,
         scheduledDays: card.scheduled_days,
-        lastReviewDay: clock.toISOString().slice(0, 10),
+        firstReviewDay: firstDay,
+        lastReviewDay: day,
       };
     },
   };
