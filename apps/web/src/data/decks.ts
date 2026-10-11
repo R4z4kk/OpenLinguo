@@ -67,6 +67,8 @@ const LEVEL = {
 /** Sorts deck names; names equal for it are the same name. */
 const names = new Intl.Collator([], { sensitivity: "accent" });
 
+export const sameDeckName = (a: string, b: string): boolean => names.compare(a, b) === 0;
+
 export const entryId = ({ headword, readingKey }: WordKey): string => `${headword}\t${readingKey}`;
 
 const cardIds = ({ headword, readingKey }: WordKey): string[] =>
@@ -87,7 +89,7 @@ const checkName = async (
   if (trimmed === "") return err({ kind: "deck-name", problem: "empty" });
   if (trimmed.length > DECK_NAME_MAX) return err({ kind: "deck-name", problem: "too-long" });
   const decks = await db.decks.toArray();
-  return decks.some((deck) => deck.id !== renamed && names.compare(deck.name, trimmed) === 0)
+  return decks.some((deck) => deck.id !== renamed && sameDeckName(deck.name, trimmed))
     ? err({ kind: "deck-name", problem: "taken" })
     : ok(trimmed);
 };

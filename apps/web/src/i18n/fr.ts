@@ -155,6 +155,27 @@ export const fr: Messages = {
     unreadable: "Le dictionnaire n’a pas pu être lu\u00a0: {{message}}",
     retry: "Réessayer",
   },
+  backup: {
+    intro:
+      "Gardez vos cartes, votre historique de révisions, vos paquets et vos réglages dans un fichier, et restaurez-les sur n’importe quel appareil. L’import ajoute ce qui manque sur cet appareil et garde le reste.",
+    export: "Exporter une sauvegarde",
+    import: "Importer une sauvegarde",
+    exported: "Sauvegarde exportée.",
+    imported:
+      "Sauvegarde importée\u00a0: révisions +{{reviews}}, cartes +{{cards}}, paquets +{{decks}}, mots classés +{{words}}.",
+    exportFailed: "La sauvegarde n’a pas pu être exportée\u00a0: {{reason}}",
+    readFailed: "Le fichier n’a pas pu être lu\u00a0: {{reason}}",
+    notJson: "Ce fichier n’est pas une sauvegarde, ce n’est pas du JSON\u00a0: {{reason}}",
+    notBackup: "Ce fichier n’est pas une sauvegarde OpenLinguo.",
+    newerVersion:
+      "Cette sauvegarde vient d’une version plus récente d’OpenLinguo (format {{version}}). Mettez l’application à jour, puis importez-la de nouveau.",
+    invalid: "Cette sauvegarde contient des erreurs, rien n’a été importé\u00a0:",
+    moreIssues_one: "Et {{count}} autre erreur.",
+    moreIssues_other: "Et {{count}} autres erreurs.",
+    importFailed: "La sauvegarde n’a pas pu être importée, rien n’a été modifié\u00a0: {{reason}}",
+    settingsNotSaved:
+      "Les réglages s’appliquent maintenant mais ne peuvent pas être enregistrés dans ce navigateur\u00a0: {{reason}}",
+  },
   persistence: {
     granted: "Stockage persistant\u00a0: le navigateur ne supprimera pas vos données hors ligne.",
     denied: "Le navigateur peut effacer vos données hors ligne si l’espace manque.",

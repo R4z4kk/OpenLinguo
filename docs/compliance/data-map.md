@@ -15,6 +15,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | Voice recordings and pitch curves | Yes (voice) | Processed on the device (Whisper, pitch); never uploaded |
 | AI provider endpoint and key | Secret | Never leaves the device except to that provider |
 | Preferences (language, theme, tone colors) | No | Consent-exempt UI personalization |
+| Backup file (JSON, exported from Profile) | Yes (learning data) | Cards, review log, personal decks and settings, no dictionary data. Saved wherever the user chooses; OpenLinguo never receives it. Import merges by ids |
 
 ## On the OpenLinguo server (from M7)
 
@@ -38,3 +39,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | SMTP provider `[TBD in M7]` | Email address, message content | Verification, password reset, inactivity notice |
 
 No analytics, no ads, no third-party fonts or scripts at runtime.
+
+## Data portability
+
+The backup export gives the learner their cards, review log and decks "in a structured, commonly used and machine-readable format" (GDPR art. 20(1), [EUR-Lex 32016R0679](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32016R0679)). Art. 20 binds a controller only for data it processes; from M8 the same export covers synced data.

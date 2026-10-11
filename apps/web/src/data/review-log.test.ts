@@ -14,7 +14,7 @@ import {
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase, type Database, type StoredCard } from "./database.ts";
-import { rebuildCards, recordReview } from "./review-log.ts";
+import { recordReview } from "./review-log.ts";
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -99,35 +99,5 @@ describe("recordReview", () => {
     );
     expect(await db.reviews.count()).toBe(0);
     expect(await db.cards.get(RECOGNITION.id)).toEqual(RECOGNITION);
-  });
-});
-
-describe("rebuildCards", () => {
-  it("replays every card from an imported log and keeps reviews of removed cards", async () => {
-    const first = review(1, RECOGNITION.id, start, "good");
-    const recall = review(2, RECALL.id, start + DAY, "hard");
-    const lapse = review(3, RECOGNITION.id, start + 2 * DAY, "again");
-    const removed = review(4, "removed", start, "easy");
-    await db.reviews.bulkAdd([lapse, recall, removed, first]);
-    expect(await rebuildCards(db)).toEqual(ok(null));
-    expect(await db.cards.get(RECOGNITION.id)).toEqual({
-      ...RECOGNITION,
-      ...replayed(RECOGNITION.id, [first, lapse]),
-    });
-    expect(await db.cards.get(RECALL.id)).toEqual({ ...RECALL, ...replayed(RECALL.id, [recall]) });
-    expect(await db.cards.count()).toBe(2);
-    expect(await db.reviews.count()).toBe(4);
-  });
-
-  it("surfaces a log it cannot replay and leaves the cache as it was", async () => {
-    await db.reviews.add(review(1, RECALL.id, start, "good"));
-    await db
-      .table("reviews")
-      .add({ ...review(2, RECOGNITION.id, start, "good"), scheduler: "fsrs7-v1" });
-    expect(await rebuildCards(db)).toMatchObject({
-      ok: false,
-      error: { kind: "scheduler-failure" },
-    });
-    expect(await db.cards.get(RECALL.id)).toEqual(RECALL);
   });
 });

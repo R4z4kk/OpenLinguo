@@ -144,6 +144,26 @@ export const en = {
     unreadable: "The dictionary could not be read: {{message}}",
     retry: "Try again",
   },
+  backup: {
+    intro:
+      "Keep your cards, review history, decks and settings in a file, and restore them on any device. Importing adds what this device lacks and keeps the rest.",
+    export: "Export a backup",
+    import: "Import a backup",
+    exported: "Backup exported.",
+    imported:
+      "Backup imported: reviews +{{reviews}}, cards +{{cards}}, decks +{{decks}}, filed words +{{words}}.",
+    exportFailed: "The backup could not be exported: {{reason}}",
+    readFailed: "The file could not be read: {{reason}}",
+    notJson: "This file is not a backup, it is not JSON: {{reason}}",
+    notBackup: "This file is not an OpenLinguo backup.",
+    newerVersion:
+      "This backup comes from a newer version of OpenLinguo (format {{version}}). Update the app, then import it again.",
+    invalid: "This backup has errors, nothing was imported:",
+    moreIssues_one: "And {{count}} more error.",
+    moreIssues_other: "And {{count}} more errors.",
+    importFailed: "The backup could not be imported, nothing was changed: {{reason}}",
+    settingsNotSaved: "The settings apply now but cannot be saved in this browser: {{reason}}",
+  },
   persistence: {
     granted: "Storage is persistent: the browser will not clear your offline data.",
     denied: "The browser may clear your offline data when space runs low.",
