@@ -14,7 +14,11 @@ const title =
 
 /** One visit per router path; `routes.test.ts` keeps the keys in line with the router. */
 export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
-  "/": { url: "/", ready: title(en.today.title) },
+  "/": {
+    url: "/",
+    ready: (page) =>
+      page.getByText(en.progress.xpCount.replace("{{xp, number}}", "0"), { exact: true }),
+  },
   "/review": {
     url: "/review",
     ready: (page) => page.getByRole("button", { name: en.review.showAnswer }),
@@ -33,7 +37,11 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
       page.getByRole("img", { name: en.word.strokeImage.replace("{{character}}", "行") }),
   },
   "/read": { url: "/read", ready: title(en.read.title) },
-  "/profile": { url: "/profile", ready: title(en.profile.title) },
+  "/profile": {
+    url: "/profile",
+    ready: (page) =>
+      page.getByText(en.progress.level.replace("{{level, number}}", "1"), { exact: true }),
+  },
   "/profile/about": { url: "/profile/about", ready: title(en.about.title) },
 };
 

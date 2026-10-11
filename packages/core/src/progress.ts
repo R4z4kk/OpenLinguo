@@ -7,8 +7,8 @@ const DAY = 24 * 60 * 60_000;
 export const XP_PER_REVIEW = 10;
 
 /** One freeze is earned per this many streak days. */
-const FREEZE_EVERY = 7;
-const MAX_FREEZES = 2;
+export const FREEZE_EVERY = 7;
+export const MAX_FREEZES = 2;
 
 /** The XP a level starts at: 100·(level − 1)², so each level takes longer than the last. */
 export const levelStart = (level: number): number => 100 * (level - 1) ** 2;

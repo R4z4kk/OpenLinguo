@@ -2,6 +2,7 @@ import {
   err,
   replay,
   type CardState,
+  type ProgressError,
   type ReplayError,
   type Result,
   type Review,
@@ -14,7 +15,7 @@ export type ReviewLogFailure =
   | { readonly kind: "storage"; readonly message: string };
 
 /** The detail shown in an error message. */
-export const describeFailure = (failure: ReviewLogFailure): string =>
+export const describeFailure = (failure: ReviewLogFailure | ProgressError): string =>
   "message" in failure
     ? failure.message
     : `${failure.kind} ${"cardId" in failure ? failure.cardId : failure.reviewId}`;
