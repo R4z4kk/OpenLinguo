@@ -1,4 +1,4 @@
-import { expect, type Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
@@ -11,10 +11,12 @@ const fill = (template: string, values: Readonly<Record<string, number>>): strin
 
 const goalCount = (done: number, goal: number): string => fill(en.today.goalCount, { done, goal });
 
-/** Reduced motion skips the color transitions axe would otherwise sample midway. */
-const expectAccessibleInBothThemes = async (page: Page): Promise<void> => {
+/** Reloads in each theme: WebKit keeps inherited colors stale after a live scheme switch. */
+const expectAccessibleInBothThemes = async (page: Page, ready: Locator): Promise<void> => {
   for (const colorScheme of ["dark", "light"] as const) {
-    await page.emulateMedia({ colorScheme, reducedMotion: "reduce" });
+    await page.emulateMedia({ colorScheme });
+    await page.reload();
+    await expect(ready).toBeVisible();
     expect(await accessibilityViolations(page)).toEqual([]);
   }
 };
@@ -59,15 +61,13 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(
     main.getByText(fill(en.progress.days_other, { count: 0 }), { exact: true }),
   ).toBeVisible();
-  await expect(
-    main.getByText(fill(en.progress.xpCount, { xp: 10 }), { exact: true }),
-  ).toBeVisible();
-  await expectAccessibleInBothThemes(page);
+  const xp = main.getByText(fill(en.progress.xpCount, { xp: 10 }), { exact: true });
+  await expect(xp).toBeVisible();
+  await expectAccessibleInBothThemes(page, xp);
 
   await page.getByRole("link", { name: en.nav.profile }).click();
-  await expect(
-    main.getByText(fill(en.progress.level, { level: 1 }), { exact: true }),
-  ).toBeVisible();
+  const level = main.getByText(fill(en.progress.level, { level: 1 }), { exact: true });
+  await expect(level).toBeVisible();
   await expect(main.getByRole("progressbar", { name: en.progress.levelProgress })).toHaveAttribute(
     "value",
     "10",
@@ -81,7 +81,7 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(main.getByRole("listitem")).toHaveText([
     fill(en.progress.milestones.reviews_one, { count: 1 }),
   ]);
-  await expectAccessibleInBothThemes(page);
+  await expectAccessibleInBothThemes(page, level);
   const smallGoal = main
     .getByRole("group", { name: en.goal.dailyGoal })
     .getByRole("radio", { name: "10", exact: true });
