@@ -1,13 +1,12 @@
 import {
   err,
-  ok,
   replay,
   type CardState,
   type ReplayError,
   type Result,
   type Review,
 } from "@openlinguo/core";
-import type { Database, StoredCard } from "./database.ts";
+import type { Database } from "./database.ts";
 
 export type ReviewLogFailure =
   | ReplayError
@@ -48,26 +47,6 @@ export const recordReview = (
         await db.reviews.add(review);
         await db.cards.put({ ...card, ...state.value });
         return state;
-      },
-    ),
-  );
-
-/** Replays every card from the log, e.g. after an import. Reviews of removed cards stay. */
-export const rebuildCards = (db: Database): Promise<Result<null, ReviewLogFailure>> =>
-  guarded(() =>
-    db.transaction(
-      "rw",
-      [db.cards, db.reviews],
-      async (): Promise<Result<null, ReviewLogFailure>> => {
-        const logs = Map.groupBy(await db.reviews.toArray(), (review) => review.cardId);
-        const cards: StoredCard[] = [];
-        for (const card of await db.cards.toArray()) {
-          const state = replay(card.id, logs.get(card.id) ?? []);
-          if (!state.ok) return state;
-          cards.push({ ...card, ...state.value });
-        }
-        await db.cards.bulkPut(cards);
-        return ok(null);
       },
     ),
   );

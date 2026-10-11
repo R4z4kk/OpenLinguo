@@ -2,7 +2,7 @@ import { ok, type Result } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { readStored, writeStored } from "@/lib/stored";
 
-export const referentials: readonly ZhProficiency[] = ["hsk-2025", "gf0025-2021"];
+export const referentials = ["hsk-2025", "gf0025-2021"] as const satisfies readonly ZhProficiency[];
 
 /** The 2025 exam syllabus unless the learner chose the national standard. */
 export const DEFAULT_REFERENTIAL: ZhProficiency = "hsk-2025";
