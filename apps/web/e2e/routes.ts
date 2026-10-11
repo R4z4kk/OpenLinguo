@@ -27,6 +27,7 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
     url: "/learn",
     ready: (page) => page.getByRole("heading", { level: 3, name: en.decks.myWords }),
   },
+  "/learn/import": { url: "/learn/import", ready: title(en.ankiImport.title) },
   "/learn/dictionary": {
     url: "/learn/dictionary?q=hao",
     ready: (page) => page.getByRole("link", { name: "好", exact: true }).first(),

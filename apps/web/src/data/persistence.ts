@@ -1,6 +1,6 @@
 export type Persistence = "granted" | "denied" | "unsupported";
 
-type StorageApi = Pick<StorageManager, "persist" | "persisted">;
+type StorageApi = Pick<StorageManager, "persist" | "persisted" | "estimate">;
 
 /** `navigator.storage`, absent in some browsers and insecure contexts. */
 export const browserStorage = (): StorageApi | null =>

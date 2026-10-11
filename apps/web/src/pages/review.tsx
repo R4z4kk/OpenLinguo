@@ -13,6 +13,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { GlossSummary } from "@/components/gloss-summary";
+import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -70,6 +71,7 @@ const Card = ({
         size="display"
       />
     );
+  const audio = item.audio === null ? null : <PlayAudio audioId={item.audio} />;
   const focus = {
     ref: focusTarget,
     tabIndex: -1,
@@ -83,15 +85,19 @@ const Card = ({
       </div>
     );
   return item.type === "recognition" ? (
-    <div {...focus}>
-      {word}
-      {meaning}
+    <div className="flex flex-col items-center gap-4">
+      <div {...focus}>
+        {word}
+        {meaning}
+      </div>
+      {audio}
     </div>
   ) : (
     <div className="flex flex-col items-center gap-4">
       <p className="text-small text-muted">{t("review.recall")}</p>
       {meaning}
       <div {...focus}>{word}</div>
+      {audio}
     </div>
   );
 };

@@ -80,7 +80,8 @@ const listDecks = async (db: Database): Promise<Deck[]> => [
   ...(await db.decks.toArray()).sort((a, b) => names.compare(a.name, b.name)),
 ];
 
-const checkName = async (
+/** The trimmed name when no other deck has it. */
+export const checkName = async (
   db: Database,
   name: string,
   renamed: string | null,
@@ -125,18 +126,24 @@ export const renameDeck = (
     }),
   );
 
-/** Stores a reading's missing cards with their state replayed from the log. */
-const putCards = async (db: Database, word: WordKey): Promise<Result<null, ReviewLogFailure>> => {
-  const cards = newCards("zh", word.headword, word.readingKey);
+/** Stores the readings' missing cards with their state replayed from the log. */
+export const putCards = async (
+  db: Database,
+  words: readonly WordKey[],
+): Promise<Result<null, ReviewLogFailure>> => {
+  const cards = words.flatMap((word) => newCards("zh", word.headword, word.readingKey));
   const stored = await db.cards.bulkGet(cards.map((card) => card.id));
-  const missing: StoredCard[] = [];
-  for (const [index, card] of cards.entries()) {
-    if (stored[index] != null) continue;
-    const state = replay(card.id, await db.reviews.where("cardId").equals(card.id).toArray());
+  const missing = cards.filter((_, index) => stored[index] == null);
+  const logs = await Promise.all(
+    missing.map((card) => db.reviews.where("cardId").equals(card.id).toArray()),
+  );
+  const replayed: StoredCard[] = [];
+  for (const [index, card] of missing.entries()) {
+    const state = replay(card.id, logs[index] ?? []);
     if (!state.ok) return state;
-    missing.push({ ...card, ...state.value });
+    replayed.push({ ...card, ...state.value });
   }
-  await db.cards.bulkPut(missing);
+  await db.cards.bulkPut(replayed);
   return ok(null);
 };
 
@@ -159,11 +166,11 @@ export const introduceWord = (
   db: Database,
   word: WordKey,
 ): Promise<Result<null, ReviewLogFailure>> =>
-  guarded(() => db.transaction("rw", [db.cards, db.reviews], () => putCards(db, word)));
+  guarded(() => db.transaction("rw", [db.cards, db.reviews], () => putCards(db, [word])));
 
 /**
- * Files a reading in a deck, with its progress back if it was filed before, or takes it out.
- * Reviews always stay in the log.
+ * Files a reading in a deck, with its progress back if it was filed before, or takes it out with
+ * the audio the deck gave it. Reviews always stay in the log.
  */
 export const fileWord = (
   db: Database,
@@ -175,17 +182,18 @@ export const fileWord = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews, db.entries],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.entries, db.audio],
       async (): Promise<Result<null, DeckFailure>> => {
         if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
           return err({ kind: "unknown-deck", deckId });
         const id = deckWordId(deckId, word);
         if (!filed) {
           await db.deckWords.delete(id);
+          await db.audio.delete(id);
           await dropUnfiled(db, word, referential);
           return ok(null);
         }
-        const stored = await putCards(db, word);
+        const stored = await putCards(db, [word]);
         if (!stored.ok) return stored;
         await db.deckWords.put({
           id,
@@ -198,7 +206,7 @@ export const fileWord = (
     ),
   );
 
-/** Deletes a learner's deck; its readings in no other deck leave the queue as in `fileWord`. */
+/** Deletes a learner's deck and its audio; its readings in no other deck leave the queue as in `fileWord`. */
 export const deleteDeck = (
   db: Database,
   deckId: string,
@@ -207,11 +215,12 @@ export const deleteDeck = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.entries],
+      [db.decks, db.deckWords, db.cards, db.entries, db.audio],
       async (): Promise<Result<null, DeckFailure>> => {
         if ((await db.decks.get(deckId)) == null) return err({ kind: "unknown-deck", deckId });
         const words = await db.deckWords.where("deckId").equals(deckId).toArray();
         await db.deckWords.bulkDelete(words.map((word) => word.id));
+        await db.audio.bulkDelete(words.map((word) => word.id));
         await db.decks.delete(deckId);
         for (const word of words) await dropUnfiled(db, word, referential);
         return ok(null);

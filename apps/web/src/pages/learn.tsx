@@ -1,10 +1,11 @@
 import { proficiencyFrameworks, type Result } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { Link } from "@tanstack/react-router";
-import { BookA, Pencil, Plus, Trash2 } from "lucide-react";
+import { BookA, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Suspense, use, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { NameField } from "@/components/name-field";
 import { Dialog } from "@/components/ui/dialog";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
@@ -87,45 +88,6 @@ const useFailureText = () => {
     failure.kind === "deck-name"
       ? t(`decks.nameProblem.${failure.problem}`, { max: DECK_NAME_MAX })
       : t("decks.changeFailed", { reason: describeDeckFailure(failure) });
-};
-
-const NameField = ({
-  label,
-  value,
-  onChange,
-  problem,
-}: {
-  readonly label: string;
-  readonly value: string;
-  readonly onChange: (value: string) => void;
-  readonly problem: string | null;
-}) => {
-  const inputId = useId();
-  const problemId = useId();
-  return (
-    <div className="max-w-sm">
-      <label htmlFor={inputId} className="font-semibold">
-        {label}
-      </label>
-      <input
-        id={inputId}
-        value={value}
-        onChange={(event) => {
-          onChange(event.target.value);
-        }}
-        maxLength={DECK_NAME_MAX}
-        autoComplete="off"
-        aria-invalid={problem !== null}
-        {...(problem === null ? {} : { "aria-describedby": problemId })}
-        className="mt-2 min-h-11 w-full rounded-control border border-border-strong bg-surface px-3 text-body"
-      />
-      {problem !== null && (
-        <p id={problemId} role="alert" className="mt-2 text-danger">
-          {problem}
-        </p>
-      )}
-    </div>
-  );
 };
 
 const CreateDeck = ({ onCreated }: { readonly onCreated: (name: string) => void }) => {
@@ -351,6 +313,13 @@ const PersonalDecks = ({
           changed(t("decks.created", { name }));
         }}
       />
+      <Link
+        to="/learn/import"
+        className={buttonVariants({ variant: "outline", className: "mt-6" })}
+      >
+        <Upload aria-hidden="true" className="size-4" />
+        {t("decks.importAnki")}
+      </Link>
       <p role="status" className="mt-3 text-small">
         {notice}
       </p>

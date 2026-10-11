@@ -20,7 +20,12 @@ import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks
 import { toDictEntry } from "./dictionary.ts";
 import { guarded, recordReview, type ReviewLogFailure } from "./review-log.ts";
 
-export type ReviewItem = SessionItem & { readonly entry: DictEntry; readonly state: CardState };
+/** `audio`: the id of audio a deck gives the reading. */
+export type ReviewItem = SessionItem & {
+  readonly entry: DictEntry;
+  readonly state: CardState;
+  readonly audio: string | null;
+};
 
 /** `skipped`: cards whose reading left the dictionary. */
 export type Session = { readonly items: readonly ReviewItem[]; readonly skipped: number };
@@ -45,6 +50,24 @@ export const loadSession = (
     });
     const states = new Map(cards.map((card) => [card.id, card]));
     const entries = await db.entries.bulkGet(items.map(entryId));
+    const filed = (
+      await Promise.all(
+        items.map((item) =>
+          db.deckWords
+            .where("[headword+readingKey]")
+            .equals([item.headword, item.readingKey])
+            .toArray(),
+        ),
+      )
+    ).flat();
+    const voiced = new Set(
+      (
+        await Promise.all(filed.map((word) => db.audio.where(":id").equals(word.id).primaryKeys()))
+      ).flat(),
+    );
+    const audioOf = new Map(
+      filed.filter((word) => voiced.has(word.id)).map((word) => [entryId(word), word.id] as const),
+    );
     const joined = items.flatMap((item, index) => {
       const row = entries[index];
       return row == null
@@ -54,6 +77,7 @@ export const loadSession = (
               ...item,
               entry: toDictEntry(row, referential),
               state: states.get(item.cardId) ?? NEW_CARD_STATE,
+              audio: audioOf.get(entryId(item)) ?? null,
             },
           ];
     });

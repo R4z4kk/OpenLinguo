@@ -1,5 +1,6 @@
 import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import { AboutPage } from "@/pages/about";
+import { AnkiImportPage } from "@/pages/anki-import";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
 import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
@@ -31,6 +32,12 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/learn",
     component: LearnPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/import",
+    component: AnkiImportPage,
     errorComponent: ModuleError,
   }),
   createRoute({

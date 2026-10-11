@@ -56,6 +56,15 @@ export type StoredDeckWord = WordKey & {
 export const deckWordId = (deckId: string, { headword, readingKey }: WordKey): string =>
   `${deckId}\t${headword}\t${readingKey}`;
 
+/** Audio a deck gives one of its readings, removed with the reading's filing in that deck. */
+export type StoredAudio = {
+  /** The deck word's id. */
+  readonly id: string;
+  /** Media type, from the file extension. */
+  readonly type: string;
+  readonly data: ArrayBuffer;
+};
+
 /** A data file fully imported, by content hash. */
 export type ImportRecord = { readonly sha256: string };
 
@@ -70,6 +79,7 @@ export type Database = Dexie & {
   reviews: EntityTable<Review, "id">;
   decks: EntityTable<StoredDeck, "id">;
   deckWords: EntityTable<StoredDeckWord, "id">;
+  audio: EntityTable<StoredAudio, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -116,6 +126,7 @@ export const openDatabase = (name: string): Database => {
         Object.assign(review, { dailyGoal: DAILY_GOAL.fallback });
       }),
   );
+  db.version(8).stores({ audio: "id" });
   return db;
 };
 
