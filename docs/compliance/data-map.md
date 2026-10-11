@@ -10,11 +10,12 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | Cards and their content | Yes (learning data) | Synced if sync is on |
 | Review log (append-only) | Yes (learning data) | Synced if sync is on; XP is derived from it |
 | Personal decks: names typed by the learner, words filed in them | Yes (learning data) | Synced if sync is on |
+| Imported Anki decks: the words matched in the `.apkg` and their audio | Yes (learning data) | The file is read on the device and never uploaded; note text is not kept. Audio stays on the device, is not in the backup file and is deleted with its deck |
 | Personal vocabulary profile (interests, profession) | Yes | Never synced; sent only to the user's own AI provider when they ask for suggestions |
 | Journal and 5-sentence answers | Yes | Never synced; sent only to the user's own AI provider for correction |
 | Voice recordings and pitch curves | Yes (voice) | Processed on the device (Whisper, pitch); never uploaded |
 | AI provider endpoint and key | Secret | Never leaves the device except to that provider |
-| Preferences (language, theme, tone colors) | No | Consent-exempt UI personalization |
+| Preferences (language, theme, tone colors, Anki field choices per note type) | No | Consent-exempt UI personalization |
 | Backup file (JSON, exported from Profile) | Yes (learning data) | Cards, review log, personal decks and settings, no dictionary data. Saved wherever the user chooses; OpenLinguo never receives it. Import merges by ids |
 
 ## On the OpenLinguo server (from M7)

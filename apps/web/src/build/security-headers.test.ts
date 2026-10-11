@@ -21,6 +21,10 @@ describe("public/_headers", () => {
     expect(directives.get("frame-ancestors")).toBe("'none'");
   });
 
+  it("plays stored audio from Blob URLs, nothing else from outside", () => {
+    expect(directives.get("media-src")).toBe("'self' blob:");
+  });
+
   it("enforces HTTPS for at least a year", () => {
     const maxAge = /max-age=(\d+)/u.exec(headers["Strict-Transport-Security"] ?? "")?.[1];
     expect(Number(maxAge)).toBeGreaterThanOrEqual(31_536_000);

@@ -1,7 +1,7 @@
 import "fake-indexeddb/auto";
 import { cardId, ok, type CardType, type WordKey } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
+import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
 import { fileWord, type LocalTime } from "./decks.ts";
 import { todayActivity } from "./daily-goal.ts";
 import { gradeItem, loadSession, type ReviewItem } from "./session.ts";
@@ -63,6 +63,17 @@ describe("loadSession", () => {
     expect(items[1]?.state.phase).toBe("new");
     expect(skipped).toBe(0);
     expect(await db.cards.count()).toBe(2);
+  });
+
+  it("gives the audio a deck holds for the reading", async () => {
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
+    const id = deckWordId(MY_WORDS, TIAN);
+    await db.audio.add({ id, type: "audio/wav", data: new ArrayBuffer(4) });
+    const { items } = await session(NOON);
+    expect(items.map((item) => [item.headword, item.audio])).toEqual([
+      ["天", id],
+      ["你", null],
+    ]);
   });
 
   it("skips a card whose word left the dictionary", async () => {
