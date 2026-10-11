@@ -42,7 +42,11 @@ export const AppShell = () => {
           ))}
         </ul>
       </nav>
-      <main id="main" tabIndex={-1} className="flex-1 px-4 pt-6 pb-24 lg:px-12 lg:pt-10 lg:pb-12">
+      <main
+        id="main"
+        tabIndex={-1}
+        className="min-w-0 flex-1 px-4 pt-6 pb-24 lg:px-12 lg:pt-10 lg:pb-12"
+      >
         <UpdatePrompt />
         <ImportGate>
           <Outlet />

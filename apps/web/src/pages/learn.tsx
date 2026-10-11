@@ -1,7 +1,7 @@
 import { proficiencyFrameworks, type Result } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { Link } from "@tanstack/react-router";
-import { BookA, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { BookA, Grid3x3, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Suspense, use, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -435,6 +435,18 @@ export const LearnPage = () => {
             <span>
               <span className="block font-semibold">{t("learn.dictionary")}</span>
               <span className="block text-small text-muted">{t("learn.dictionaryIntro")}</span>
+            </span>
+          </Link>
+        </li>
+        <li>
+          <Link
+            to="/learn/pinyin"
+            className="flex min-h-11 items-center gap-4 rounded-card border border-hairline bg-surface p-4 hover:bg-sunken"
+          >
+            <Grid3x3 aria-hidden="true" className="size-6 shrink-0" />
+            <span>
+              <span className="block font-semibold">{t("learn.pinyinChart")}</span>
+              <span className="block text-small text-muted">{t("learn.pinyinChartIntro")}</span>
             </span>
           </Link>
         </li>

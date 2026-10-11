@@ -21,6 +21,8 @@
   --font-sans: "Atkinson Hyperlegible Next Variable", "Noto Sans SC", system-ui, sans-serif;
   --font-zh: "Noto Sans SC", sans-serif;
   --font-display: "LXGW WenKai GB", "Noto Sans SC", serif;
+  /* The self-hosted fonts have no IPA glyphs: one system font draws a whole transcription. */
+  --font-ipa: system-ui, sans-serif;
 
   --text-*: initial;
   --text-caption: 12px;

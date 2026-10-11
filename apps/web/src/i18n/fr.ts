@@ -50,6 +50,8 @@ export const fr: Messages = {
     intro: "Paquets, dictionnaire, studios de prononciation et d’écriture.",
     dictionary: "Dictionnaire",
     dictionaryIntro: "Chercher un mot par ses caractères, son pinyin, en français ou en anglais.",
+    pinyinChart: "Tableau du pinyin",
+    pinyinChartIntro: "Initiales, finales et toutes les syllabes, avec leur phonétique.",
   },
   decks: {
     personal: "Mes paquets",
@@ -179,6 +181,73 @@ export const fr: Messages = {
     previousStroke: "Trait précédent",
     nextStroke: "Trait suivant",
     noStrokes: "Pas d’ordre des traits pour {{character}}.",
+  },
+  pinyinChart: {
+    title: "Tableau du pinyin",
+    intro:
+      "Les sons du chinois standard : initiales, finales et les syllabes qu’elles forment, avec leur transcription phonétique (API).",
+    initials: "Initiales",
+    initialsIntro: "Seule, une initiale se dit avec une voyelle : bo, de, ge, ji, zhi, zi.",
+    initial: "Initiale",
+    saidAlone: "Seule, se dit",
+    ipa: "API",
+    place: "Lieu",
+    manner: "Mode",
+    chao: "Chao (1968) :",
+    places: {
+      bilabial: "bilabiale (les deux lèvres)",
+      labiodental: "labiodentale (lèvre inférieure, dents du haut)",
+      "denti-alveolar": "dento-alvéolaire (pointe de la langue aux dents du haut)",
+      "post-alveolar": "postalvéolaire (pointe de la langue derrière les alvéoles)",
+      "alveolo-palatal": "alvéolo-palatale (avant de la langue au palais)",
+      velar: "vélaire (arrière de la langue au voile du palais)",
+    },
+    manners: {
+      plosive: "occlusive non aspirée",
+      "aspirated-plosive": "occlusive aspirée (un souffle d’air)",
+      affricate: "affriquée non aspirée",
+      "aspirated-affricate": "affriquée aspirée (un souffle d’air)",
+      fricative: "fricative",
+      nasal: "nasale",
+      lateral: "latérale",
+      approximant: "approximante",
+    },
+    finals: "Finales",
+    finalsIntro: "Le reste de la syllabe, après l’initiale.",
+    group: "Groupe {{letter}}",
+    final: "Finale",
+    kind: "Nature",
+    kinds: {
+      vowel: "voyelle",
+      apical: "voyelle apicale (pointe de la langue)",
+      rhotic: "voyelle rhotacisée",
+      diphthong: "diphtongue",
+      triphthong: "triphtongue",
+      "vowel-nasal": "voyelle + nasale",
+      "diphthong-nasal": "diphtongue + nasale",
+    },
+    rules: "Règles d’écriture",
+    rulesIntro:
+      "Là où le pinyin cache le son. Dans la grille ci-dessous, la ligne donne la finale et la case son écriture.",
+    rule: {
+      apical:
+        "zhi, chi, shi, ri, zi, ci, si : le i n’est pas [i] mais une voyelle apicale [ɹ̩], dite la pointe de la langue là où l’initiale l’a laissée. Les linguistes chinois l’écrivent souvent [ɿ] après z, c, s et [ʅ] après zh, ch, sh, r.",
+      yw: "Sans initiale, les finales qui commencent par i, u ou ü s’écrivent avec y ou w : yi, ya, you, wu, wo, wei, yu, yue.",
+      umlaut:
+        "ü s’écrit u après j, q, x et y : ju, qu, xu, yu. Après n et l, il garde ses points : nü, lü, à côté de nu, lu.",
+      contracted:
+        "Après une initiale, iou, uei et uen s’écrivent iu, ui, un, mais la voyelle du milieu se dit toujours : liu [liou], gui [kuei], lun [luən].",
+    },
+    syllables: "Syllabes",
+    syllablesIntro:
+      "Toutes les syllabes, par finale (lignes) et initiale (colonnes). Une case vide : pas de syllabe.",
+    corner: "Finale / initiale",
+    noInitial: "Sans initiale",
+    interjections: "Hors de la grille, des interjections : {{list}}.",
+    sources: "Sources",
+    scheme: "Hanyu Pinyin (1958)",
+    leeZee:
+      "W.-S. Lee et E. Zee (2003), « Standard Chinese (Beijing) », Journal of the International Phonetic Association 33(1)",
   },
   credits: {
     title: "Sources",
