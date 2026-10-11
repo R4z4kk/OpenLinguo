@@ -11,14 +11,24 @@ import {
   type WordKey,
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { openDatabase, type Database, type StoredCard, type StoredEntry } from "./database.ts";
 import {
-  addWord,
+  MY_WORDS,
+  openDatabase,
+  type Database,
+  type StoredCard,
+  type StoredEntry,
+} from "./database.ts";
+import {
+  createDeck,
+  DECK_NAME_MAX,
   deckCounts,
+  deleteDeck,
+  fileWord,
   introduceWord,
-  isPersonal,
   nextNewReadings,
-  removeWord,
+  renameDeck,
+  wordDecks,
+  type DeckNameProblem,
   type LocalTime,
 } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
@@ -64,13 +74,7 @@ const NEXT_ROLLOVER = Date.UTC(2026, 9, 22, 2);
 
 const idOf = (word: WordKey, type: CardType): string => cardId({ language: "zh", ...word, type });
 
-const stored = (
-  word: WordKey,
-  type: CardType,
-  phase: Phase,
-  due: number | null,
-  personal: boolean,
-): StoredCard => ({
+const stored = (word: WordKey, type: CardType, phase: Phase, due: number | null): StoredCard => ({
   language: "zh",
   ...word,
   type,
@@ -78,7 +82,6 @@ const stored = (
   ...NEW_CARD_STATE,
   phase,
   due,
-  personal,
 });
 
 const review = (cardId: string, grade: Review["grade"]): Review => ({
@@ -99,69 +102,169 @@ beforeEach(async () => {
   await db.entries.bulkAdd(ENTRIES);
 });
 
-describe("my words", () => {
-  it("adds both cards of a reading", async () => {
-    expect(await addWord(db, HAO)).toEqual(ok(null));
+const file = (deckId: string, word: WordKey, filed = true) =>
+  fileWord(db, deckId, word, filed, "hsk-2025");
+
+const deckOf = async (name: string): Promise<string> => {
+  const created = await createDeck(db, name);
+  if (!created.ok) throw new Error(created.error.kind);
+  return created.value.id;
+};
+
+const filedIn = async (word: WordKey): Promise<string[]> => {
+  const result = await wordDecks(db, word);
+  if (!result.ok) throw new Error(result.error.kind);
+  return [...result.value.filed].sort();
+};
+
+const refused = (problem: DeckNameProblem) => ({
+  ok: false,
+  error: { kind: "deck-name", problem },
+});
+
+const unknown = (deckId: string) => ({ ok: false, error: { kind: "unknown-deck", deckId } });
+
+describe("named decks", () => {
+  it("lists my words first, then the learner's decks by name", async () => {
+    const zoo = await deckOf("  Zoo ");
+    const animals = await deckOf("Animals");
+    expect(await wordDecks(db, HAO)).toEqual(
+      ok({
+        decks: [
+          { id: MY_WORDS, name: null },
+          { id: animals, name: "Animals" },
+          { id: zoo, name: "Zoo" },
+        ],
+        filed: new Set(),
+      }),
+    );
+  });
+
+  it("refuses an empty, too long or taken name", async () => {
+    await deckOf("Zoo");
+    expect(await createDeck(db, "  ")).toEqual(refused("empty"));
+    expect(await createDeck(db, "x".repeat(DECK_NAME_MAX + 1))).toEqual(refused("too-long"));
+    expect(await createDeck(db, " zoo")).toEqual(refused("taken"));
+    expect(await createDeck(db, "x".repeat(DECK_NAME_MAX))).toMatchObject({ ok: true });
+    expect(await createDeck(db, "Zöo")).toMatchObject({ ok: true });
+    expect(await db.decks.count()).toBe(3);
+  });
+
+  it("renames a deck, to another case of its own name too", async () => {
+    const zoo = await deckOf("Zoo");
+    await deckOf("Farm");
+    expect(await renameDeck(db, zoo, "farm")).toEqual(refused("taken"));
+    expect(await renameDeck(db, zoo, "zoo ")).toEqual(ok({ id: zoo, name: "zoo" }));
+    expect(await db.decks.get(zoo)).toEqual({ id: zoo, name: "zoo" });
+    expect(await renameDeck(db, MY_WORDS, "Mine")).toEqual(unknown(MY_WORDS));
+  });
+});
+
+describe("fileWord", () => {
+  it("stores the two cards of a reading once, whatever the number of decks", async () => {
+    const zoo = await deckOf("Zoo");
+    expect(await file(MY_WORDS, HAO)).toEqual(ok(null));
+    expect(await file(zoo, HAO)).toEqual(ok(null));
     expect(await db.cards.toArray()).toEqual(
       expect.arrayContaining([
-        stored(HAO, "recognition", "new", null, true),
-        stored(HAO, "recall", "new", null, true),
+        stored(HAO, "recognition", "new", null),
+        stored(HAO, "recall", "new", null),
       ]),
     );
     expect(await db.cards.count()).toBe(2);
-    expect(await isPersonal(db, HAO)).toEqual(ok(true));
-    expect(await isPersonal(db, NI)).toEqual(ok(false));
+    expect(await filedIn(HAO)).toEqual([MY_WORDS, zoo].sort());
+    expect(await filedIn(NI)).toEqual([]);
   });
 
-  it("removes the cards, keeps their reviews and restores the progress when added again", async () => {
-    await addWord(db, HAO);
-    const first = review(idOf(HAO, "recognition"), "good");
+  it("takes an ungraded reading out of the queue with its last deck, keeping its reviews", async () => {
+    const zoo = await deckOf("Zoo");
+    await file(MY_WORDS, E);
+    await file(zoo, E);
+    const first = review(idOf(E, "recognition"), "good");
     await recordReview(db, first);
-    expect(await removeWord(db, HAO)).toEqual(ok(null));
+    expect(await file(MY_WORDS, E, false)).toEqual(ok(null));
+    expect(await db.cards.count()).toBe(2);
+    expect(await file(zoo, E, false)).toEqual(ok(null));
     expect(await db.cards.count()).toBe(0);
     expect(await db.reviews.toArray()).toEqual([first]);
-    expect(await isPersonal(db, HAO)).toEqual(ok(false));
+    expect(await filedIn(E)).toEqual([]);
 
-    await addWord(db, HAO);
+    await file(zoo, E);
     const state = replay(first.cardId, [first]);
     if (!state.ok) throw new Error(state.error.kind);
-    expect(await db.cards.get(first.cardId)).toMatchObject({ ...state.value, personal: true });
+    expect(await db.cards.get(first.cardId)).toMatchObject(state.value);
   });
 
-  it("marks a band card as personal without changing its progress", async () => {
-    await db.cards.add(stored(NI, "recognition", "review", NOW.at, false));
-    await db.cards.add(stored(NI, "recall", "new", null, false));
-    await addWord(db, NI);
-    expect(await isPersonal(db, NI)).toEqual(ok(true));
+  it("keeps the cards of a reading graded in the referential", async () => {
+    await file(MY_WORDS, NI);
+    await recordReview(db, review(idOf(NI, "recognition"), "good"));
+    const reviewed = await db.cards.get(idOf(NI, "recognition"));
+    await file(MY_WORDS, NI, false);
+    expect(await db.cards.get(idOf(NI, "recognition"))).toEqual(reviewed);
+    expect(await filedIn(NI)).toEqual([]);
+
+    await file(MY_WORDS, HANG);
+    expect(await fileWord(db, MY_WORDS, HANG, false, "gf0025-2021")).toEqual(ok(null));
+    expect(await db.cards.get(idOf(HANG, "recall"))).toBeUndefined();
   });
 
-  it("introduces a band word without making it personal, and keeps stored cards", async () => {
+  it("files an introduced band word without changing its progress", async () => {
     expect(await introduceWord(db, NI)).toEqual(ok(null));
-    expect(await db.cards.get(idOf(NI, "recall"))).toEqual(
-      stored(NI, "recall", "new", null, false),
-    );
-    await addWord(db, HAO);
-    await recordReview(db, review(idOf(HAO, "recognition"), "good"));
-    const reviewed = await db.cards.get(idOf(HAO, "recognition"));
-    await introduceWord(db, HAO);
-    expect(await db.cards.get(idOf(HAO, "recognition"))).toEqual(reviewed);
-    expect(await isPersonal(db, HAO)).toEqual(ok(true));
+    expect(await db.cards.get(idOf(NI, "recall"))).toEqual(stored(NI, "recall", "new", null));
+    expect(await db.deckWords.count()).toBe(0);
+    await recordReview(db, review(idOf(NI, "recognition"), "good"));
+    const reviewed = await db.cards.get(idOf(NI, "recognition"));
+    await file(MY_WORDS, NI);
+    await introduceWord(db, NI);
+    expect(await db.cards.get(idOf(NI, "recognition"))).toEqual(reviewed);
+    expect(await filedIn(NI)).toEqual([MY_WORDS]);
+  });
+
+  it("refuses an unknown deck", async () => {
+    expect(await file("gone", HAO)).toEqual(unknown("gone"));
+    expect(await db.cards.count()).toBe(0);
   });
 
   it("writes nothing when the log cannot be replayed or the cards cannot be stored", async () => {
     await db
       .table("reviews")
       .add({ ...review(idOf(HAO, "recall"), "good"), scheduler: "fsrs7-v1" });
-    expect(await addWord(db, HAO)).toMatchObject({
+    expect(await file(MY_WORDS, HAO)).toMatchObject({
       ok: false,
       error: { kind: "scheduler-failure" },
     });
     vi.spyOn(db.cards, "bulkPut").mockRejectedValueOnce(new Error("QuotaExceededError"));
-    expect(await addWord(db, NI)).toEqual({
+    expect(await file(MY_WORDS, NI)).toEqual({
       ok: false,
       error: { kind: "storage", message: "Error: QuotaExceededError" },
     });
     expect(await db.cards.count()).toBe(0);
+    expect(await db.deckWords.count()).toBe(0);
+  });
+});
+
+describe("deleteDeck", () => {
+  it("takes out of the queue the words in no other deck and in no band", async () => {
+    const zoo = await deckOf("Zoo");
+    await file(zoo, E);
+    await file(zoo, HAO);
+    await file(MY_WORDS, HAO);
+    await file(zoo, NI);
+    await recordReview(db, review(idOf(E, "recall"), "good"));
+    expect(await deleteDeck(db, zoo, "hsk-2025")).toEqual(ok(null));
+    expect(await db.decks.count()).toBe(0);
+    expect(await db.deckWords.toArray()).toEqual([
+      expect.objectContaining({ deckId: MY_WORDS, ...HAO }),
+    ]);
+    expect(await db.cards.count()).toBe(4);
+    expect(await db.cards.get(idOf(E, "recall"))).toBeUndefined();
+    expect(await db.reviews.count()).toBe(1);
+  });
+
+  it("cannot delete my words", async () => {
+    await file(MY_WORDS, E);
+    expect(await deleteDeck(db, MY_WORDS, "hsk-2025")).toEqual(unknown(MY_WORDS));
+    expect(await filedIn(E)).toEqual([MY_WORDS]);
   });
 });
 
@@ -170,7 +273,7 @@ describe("deckCounts", () => {
     const empty = { new: 0, learning: 0, due: 0 };
     expect(await deckCounts(db, "hsk-2025", NOW)).toEqual(
       ok({
-        personal: empty,
+        personal: [{ id: MY_WORDS, name: null, counts: empty, leaving: 0 }],
         bands: [
           { ...empty, new: 6 },
           { ...empty, new: 2 },
@@ -184,20 +287,27 @@ describe("deckCounts", () => {
     );
   });
 
-  it("counts started cards due before the next 4:00 rollover", async () => {
+  it("counts started cards due before the next 4:00 rollover, and the words a deletion drops", async () => {
     await db.cards.bulkAdd([
-      stored(HAO, "recognition", "review", NEXT_ROLLOVER - 1, true),
-      stored(HAO, "recall", "new", null, true),
-      stored(E, "recognition", "learning", NOW.at + HOUR / 6, true),
-      stored(E, "recall", "review", NEXT_ROLLOVER, true),
-      stored(NI, "recognition", "relearning", NOW.at - HOUR, false),
-      stored(NI, "recall", "new", null, false),
+      stored(HAO, "recognition", "review", NEXT_ROLLOVER - 1),
+      stored(HAO, "recall", "new", null),
+      stored(E, "recognition", "learning", NOW.at + HOUR / 6),
+      stored(E, "recall", "review", NEXT_ROLLOVER),
+      stored(NI, "recognition", "relearning", NOW.at - HOUR),
+      stored(NI, "recall", "new", null),
     ]);
-    const counts = await deckCounts(db, "gf0025-2021", NOW);
-    expect(counts).toMatchObject({
+    const animals = await deckOf("Animals");
+    await file(MY_WORDS, HAO);
+    await file(MY_WORDS, E);
+    await file(animals, E);
+    await file(animals, HANG);
+    expect(await deckCounts(db, "gf0025-2021", NOW)).toMatchObject({
       ok: true,
       value: {
-        personal: { new: 1, learning: 1, due: 1 },
+        personal: [
+          { id: MY_WORDS, name: null, counts: { new: 1, learning: 1, due: 1 }, leaving: 0 },
+          { id: animals, name: "Animals", counts: { new: 2, learning: 1, due: 0 }, leaving: 1 },
+        ],
         bands: [
           { new: 4, learning: 1, due: 1 },
           { new: 2, learning: 0, due: 0 },
@@ -206,20 +316,27 @@ describe("deckCounts", () => {
         ],
       },
     });
+    expect(await deckCounts(db, "hsk-2025", NOW)).toMatchObject({
+      ok: true,
+      value: { personal: [{ leaving: 0 }, { leaving: 0 }] },
+    });
   });
 });
 
 describe("nextNewReadings", () => {
   beforeEach(async () => {
-    await addWord(db, E);
-    await addWord(db, HANG);
+    const zoo = await deckOf("Zoo");
+    await file(MY_WORDS, E);
+    await file(MY_WORDS, HANG);
+    await file(zoo, HANG);
     await db.cards.bulkAdd([
-      stored(TIAN, "recognition", "review", NOW.at, true),
-      stored(TIAN, "recall", "new", null, true),
+      stored(TIAN, "recognition", "review", NOW.at),
+      stored(TIAN, "recall", "new", null),
     ]);
+    await file(zoo, TIAN);
   });
 
-  it("puts my words first, then the bands by level and frequency", async () => {
+  it("puts the words of every personal deck first, then the bands by level and frequency", async () => {
     expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, NI, HAO, XING]));
   });
 

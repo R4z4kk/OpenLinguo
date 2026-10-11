@@ -21,7 +21,7 @@ const DAY = 24 * 60 * MINUTE;
 
 const card = (type: CardType): StoredCard => {
   const key: CardKey = { language: "zh", headword: "好", readingKey: "hao3", type };
-  return { ...key, id: cardId(key), ...NEW_CARD_STATE, personal: true };
+  return { ...key, id: cardId(key), ...NEW_CARD_STATE };
 };
 const RECOGNITION = card("recognition");
 const RECALL = card("recall");

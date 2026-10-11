@@ -1,8 +1,8 @@
 import "fake-indexeddb/auto";
 import { cardId, ok, type CardType, type WordKey } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { openDatabase, type Database, type StoredEntry } from "./database.ts";
-import { addWord, type LocalTime } from "./decks.ts";
+import { MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
+import { fileWord, type LocalTime } from "./decks.ts";
 import { gradeItem, loadSession, type ReviewItem } from "./session.ts";
 
 const entry = (simplified: string, readingKey: string, hsk2025: number): StoredEntry => ({
@@ -47,7 +47,7 @@ beforeEach(async () => {
 
 describe("loadSession", () => {
   it("shows my words first, then band words, with their entries, and stores nothing", async () => {
-    await addWord(db, TIAN);
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
     const { items, skipped } = await session(NOON);
     expect(ids(items)).toEqual([
       [idOf(TIAN, "recognition"), true],
@@ -60,7 +60,7 @@ describe("loadSession", () => {
   });
 
   it("skips a card whose word left the dictionary", async () => {
-    await addWord(db, E);
+    await fileWord(db, MY_WORDS, E, true, "hsk-2025");
     const { items, skipped } = await session(NOON);
     expect(ids(items)).toEqual([
       [idOf(NI, "recognition"), true],
@@ -76,7 +76,8 @@ describe("gradeItem", () => {
     if (first == null) throw new Error("empty session");
     const again = await gradeItem(db, first, "good", NOON);
     expect(again).toMatchObject({ ok: true, value: { cardId: first.cardId, new: false } });
-    expect(await db.cards.get(idOf(NI, "recall"))).toMatchObject({ personal: false, phase: "new" });
+    expect(await db.cards.get(idOf(NI, "recall"))).toMatchObject({ phase: "new" });
+    expect(await db.deckWords.count()).toBe(0);
     if (!again.ok || again.value === null) throw new Error("not requeued");
     expect(again.value.state.phase).toBe("learning");
     expect(await gradeItem(db, again.value, "good", later(10))).toEqual(ok(null));

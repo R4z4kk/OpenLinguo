@@ -10,6 +10,7 @@ export const buttonVariants = cva(
         default: "bg-ink text-on-ink hover:bg-ink/90",
         outline: "border border-border-strong bg-surface text-ink hover:bg-sunken",
         ghost: "text-ink hover:bg-sunken",
+        danger: "border border-danger bg-surface text-danger hover:bg-sunken",
       },
     },
     defaultVariants: { variant: "default" },

@@ -9,6 +9,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | Dictionary, levels, stroke data, audio packs | No | Public datasets, cached offline |
 | Cards and their content | Yes (learning data) | Synced if sync is on |
 | Review log (append-only) | Yes (learning data) | Synced if sync is on; XP is derived from it |
+| Personal decks: names typed by the learner, words filed in them | Yes (learning data) | Synced if sync is on |
 | Personal vocabulary profile (interests, profession) | Yes | Never synced; sent only to the user's own AI provider when they ask for suggestions |
 | Journal and 5-sentence answers | Yes | Never synced; sent only to the user's own AI provider for correction |
 | Voice recordings and pitch curves | Yes (voice) | Processed on the device (Whisper, pitch); never uploaded |
