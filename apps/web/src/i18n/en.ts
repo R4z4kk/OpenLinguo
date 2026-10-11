@@ -17,6 +17,22 @@ export const en = {
     dictionary: "Dictionary",
     dictionaryIntro: "Look up a word by its characters, pinyin, English or French.",
   },
+  decks: {
+    title: "Decks",
+    intro:
+      "One deck per level ({{referential}}) and one for the words you add from the dictionary.",
+    myWords: "My words",
+    new: "New",
+    learning: "Learning",
+    due: "Due",
+    failed: "The decks could not be read: {{reason}}",
+  },
+  myWords: {
+    add: "Add to my words",
+    remove: "Remove from my words",
+    added: "In my words",
+    failed: "My words could not be updated: {{reason}}",
+  },
   dictionary: {
     title: "Dictionary",
     label: "Search the dictionary",

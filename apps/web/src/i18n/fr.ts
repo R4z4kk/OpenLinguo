@@ -18,6 +18,22 @@ export const fr: Messages = {
     dictionary: "Dictionnaire",
     dictionaryIntro: "Chercher un mot par ses caractères, son pinyin, en français ou en anglais.",
   },
+  decks: {
+    title: "Paquets",
+    intro:
+      "Un paquet par niveau ({{referential}}) et un pour les mots ajoutés depuis le dictionnaire.",
+    myWords: "Mes mots",
+    new: "Nouvelles",
+    learning: "En cours",
+    due: "À revoir",
+    failed: "Les paquets n’ont pas pu être lus\u00a0: {{reason}}",
+  },
+  myWords: {
+    add: "Ajouter à mes mots",
+    remove: "Retirer de mes mots",
+    added: "Dans mes mots",
+    failed: "Mes mots n’ont pas pu être modifiés\u00a0: {{reason}}",
+  },
   dictionary: {
     title: "Dictionnaire",
     label: "Rechercher dans le dictionnaire",

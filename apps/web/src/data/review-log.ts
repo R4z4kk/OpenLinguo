@@ -14,7 +14,13 @@ export type ReviewLogFailure =
   | { readonly kind: "unknown-card"; readonly cardId: string }
   | { readonly kind: "storage"; readonly message: string };
 
-const guarded = async <T>(
+/** The detail shown in an error message. */
+export const describeFailure = (failure: ReviewLogFailure): string =>
+  "message" in failure
+    ? failure.message
+    : `${failure.kind} ${"cardId" in failure ? failure.cardId : failure.reviewId}`;
+
+export const guarded = async <T>(
   run: () => Promise<Result<T, ReviewLogFailure>>,
 ): Promise<Result<T, ReviewLogFailure>> => {
   try {
