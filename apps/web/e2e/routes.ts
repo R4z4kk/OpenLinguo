@@ -40,7 +40,12 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   "/profile": {
     url: "/profile",
     ready: (page) =>
-      page.getByText(en.progress.level.replace("{{level, number}}", "1"), { exact: true }),
+      page
+        .getByRole("main")
+        .filter({
+          has: page.getByText(en.progress.level.replace("{{level, number}}", "1"), { exact: true }),
+        })
+        .filter({ has: page.getByText(en.stats.showNumbers) }),
   },
   "/profile/about": { url: "/profile/about", ready: title(en.about.title) },
 };

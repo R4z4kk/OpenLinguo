@@ -2,7 +2,7 @@ import "fake-indexeddb/auto";
 import { cardId, CURRENT_SCHEDULER, err, type Review } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase, type Database } from "./database.ts";
-import { loadProgress } from "./progress.ts";
+import { loadProgress, loadStats } from "./progress.ts";
 
 const PARIS = 120;
 // 2026-10-21 12:00 in Paris.
@@ -59,6 +59,39 @@ describe("loadProgress", () => {
   it("reports a storage failure", async () => {
     vi.spyOn(db.reviews, "toArray").mockRejectedValueOnce(new Error("UnknownError"));
     expect(await loadProgress(db, { at: NOON, utcOffsetMinutes: PARIS })).toEqual(
+      err({ kind: "storage", message: "Error: UnknownError" }),
+    );
+  });
+});
+
+describe("loadStats", () => {
+  it("computes the stats of the whole stored log", async () => {
+    await db.reviews.bulkAdd([review(1, RECOGNITION), review(2, RECOGNITION)]);
+    const result = await loadStats(db, { at: NOON + 3_600_000, utcOffsetMinutes: PARIS });
+    if (!result.ok) throw new Error(result.error.kind);
+    expect(result.value).toMatchObject({
+      retention: { passed: 0, total: 0 },
+      words: 1,
+      recent: { reviews: 2, studiedDays: 1 },
+    });
+    expect(result.value.weeks.at(-1)?.days[2]).toEqual({
+      day: "2026-10-21",
+      reviews: 2,
+      goalMet: true,
+    });
+  });
+
+  it("passes a log error on", async () => {
+    const broken = review(1, "not a card id");
+    await db.reviews.add(broken);
+    expect(await loadStats(db, { at: NOON, utcOffsetMinutes: PARIS })).toEqual(
+      err({ kind: "invalid-card-id", reviewId: broken.id }),
+    );
+  });
+
+  it("reports a storage failure", async () => {
+    vi.spyOn(db.reviews, "toArray").mockRejectedValueOnce(new Error("UnknownError"));
+    expect(await loadStats(db, { at: NOON, utcOffsetMinutes: PARIS })).toEqual(
       err({ kind: "storage", message: "Error: UnknownError" }),
     );
   });
