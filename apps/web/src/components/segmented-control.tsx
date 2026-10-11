@@ -1,11 +1,11 @@
-export type SegmentedOption<Value extends string> = {
+export type SegmentedOption<Value extends string | number> = {
   readonly value: Value;
   readonly label: string;
   /** `lang` of the label when it is not in the interface language. */
   readonly lang: string | null;
 };
 
-type Props<Value extends string> = {
+type Props<Value extends string | number> = {
   readonly legend: string;
   readonly name: string;
   readonly options: readonly SegmentedOption<Value>[];
@@ -15,7 +15,7 @@ type Props<Value extends string> = {
 };
 
 /** Radio group drawn as a segmented control: native keyboard and screen reader support. */
-export const SegmentedControl = <Value extends string>({
+export const SegmentedControl = <Value extends string | number>({
   legend,
   name,
   options,

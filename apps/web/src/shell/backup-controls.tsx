@@ -10,6 +10,7 @@ import {
   type ImportSummary,
   type Settings,
 } from "@/data/backup";
+import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY, saveSetting } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { describeDeckFailure } from "@/data/decks";
@@ -90,6 +91,8 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
     language: languages.find((language) => language === i18n.language) ?? DEFAULT_LANGUAGE,
     theme: parsePreference(document.documentElement.getAttribute("data-theme")),
     referential,
+    dailyGoal: currentSetting(storage, DAILY_GOAL),
+    newCardsPerDay: currentSetting(storage, NEW_CARDS_PER_DAY),
   });
 
   const exportFile = async (): Promise<void> => {
@@ -103,11 +106,22 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
     setOutcome({ kind: "exported" });
   };
 
-  const apply = ({ language, theme, referential: chosen }: Settings): string | null => {
+  const apply = ({
+    language,
+    theme,
+    referential: chosen,
+    dailyGoal,
+    newCardsPerDay,
+  }: Settings): string | null => {
     void i18n.changeLanguage(language);
     applyPreference(document.documentElement, theme);
     chooseReferential(chosen);
-    const saved = [saveLanguage(storage, language), savePreference(storage, theme)];
+    const saved = [
+      saveLanguage(storage, language),
+      savePreference(storage, theme),
+      saveSetting(storage, DAILY_GOAL, dailyGoal),
+      saveSetting(storage, NEW_CARDS_PER_DAY, newCardsPerDay),
+    ];
     return saved.flatMap((result) => (result.ok ? [] : [result.error]))[0] ?? null;
   };
 
