@@ -15,6 +15,10 @@ const title =
 /** One visit per router path; `routes.test.ts` keeps the keys in line with the router. */
 export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   "/": { url: "/", ready: title(en.today.title) },
+  "/review": {
+    url: "/review",
+    ready: (page) => page.getByRole("button", { name: en.review.showAnswer }),
+  },
   "/learn": {
     url: "/learn",
     ready: (page) => page.getByRole("heading", { level: 3, name: en.decks.myWords }),

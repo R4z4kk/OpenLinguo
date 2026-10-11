@@ -1,19 +1,16 @@
 import {
   CardType,
-  learningDay,
+  dueToday,
   newCards,
   ok,
   proficiencyFrameworks,
   replay,
-  type CardKey,
   type Result,
+  type WordKey,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import type { Database, StoredCard, StoredEntry } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
-
-/** One reading of a word: the cards of both types share it. */
-export type WordKey = Pick<CardKey, "headword" | "readingKey">;
 
 /** A time with the local offset it was read in, as reviews store it. */
 export type LocalTime = { readonly at: number; readonly utcOffsetMinutes: number };
@@ -32,29 +29,49 @@ const LEVEL = {
   "gf0025-2021": "gf0025",
 } as const satisfies Record<ZhProficiency, keyof StoredEntry>;
 
-const entryId = ({ headword, readingKey }: WordKey): string => `${headword}\t${readingKey}`;
+export const entryId = ({ headword, readingKey }: WordKey): string => `${headword}\t${readingKey}`;
 
 const cardIds = ({ headword, readingKey }: WordKey): string[] =>
   newCards("zh", headword, readingKey).map((card) => card.id);
 
-/** Puts a reading's cards in my words; a reading removed before gets its progress back. */
-export const addWord = (db: Database, word: WordKey): Promise<Result<null, ReviewLogFailure>> =>
+/** Stores a reading's cards with their state replayed from the log; stored ones are kept. */
+const storeCards = (
+  db: Database,
+  word: WordKey,
+  personal: boolean,
+): Promise<Result<null, ReviewLogFailure>> =>
   guarded(() =>
     db.transaction(
       "rw",
       [db.cards, db.reviews],
       async (): Promise<Result<null, ReviewLogFailure>> => {
+        const stored = await db.cards.bulkGet(cardIds(word));
         const cards: StoredCard[] = [];
-        for (const card of newCards("zh", word.headword, word.readingKey)) {
+        for (const [index, card] of newCards("zh", word.headword, word.readingKey).entries()) {
+          const existing = stored[index];
+          if (existing != null) {
+            cards.push({ ...existing, personal: existing.personal || personal });
+            continue;
+          }
           const state = replay(card.id, await db.reviews.where("cardId").equals(card.id).toArray());
           if (!state.ok) return state;
-          cards.push({ ...card, ...state.value, personal: true });
+          cards.push({ ...card, ...state.value, personal });
         }
         await db.cards.bulkPut(cards);
         return ok(null);
       },
     ),
   );
+
+/** Puts a reading's cards in my words; a reading removed before gets its progress back. */
+export const addWord = (db: Database, word: WordKey): Promise<Result<null, ReviewLogFailure>> =>
+  storeCards(db, word, true);
+
+/** Stores the cards of a band word the session shows for the first time. */
+export const introduceWord = (
+  db: Database,
+  word: WordKey,
+): Promise<Result<null, ReviewLogFailure>> => storeCards(db, word, false);
 
 /** Takes a reading's cards out of the queue; their reviews stay in the log. */
 export const removeWord = (db: Database, word: WordKey): Promise<Result<null, ReviewLogFailure>> =>
@@ -77,10 +94,7 @@ type Tally = { new: number; learning: number; due: number };
 const tally = (counts: Tally, card: StoredCard, now: LocalTime): void => {
   if (card.phase === "new") {
     counts.new += 1;
-  } else if (
-    card.due !== null &&
-    learningDay(card.due, now.utcOffsetMinutes) <= learningDay(now.at, now.utcOffsetMinutes)
-  ) {
+  } else if (dueToday(card.due, now.at, now.utcOffsetMinutes)) {
     counts[card.phase === "review" ? "due" : "learning"] += 1;
   }
 };

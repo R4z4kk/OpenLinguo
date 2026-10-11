@@ -62,7 +62,7 @@ const RATING: Readonly<Record<Grade, FsrsGrade>> = {
   easy: Rating.Easy,
 };
 
-export type FsrsMemory = Omit<CardState, "due" | "lastReviewDay">;
+export type FsrsMemory = Omit<CardState, "due" | "firstReviewDay" | "lastReviewDay">;
 
 /** `interval`: milliseconds from the review to the next due time. */
 export type FsrsStep = { readonly memory: FsrsMemory; readonly interval: number };

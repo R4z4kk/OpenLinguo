@@ -5,9 +5,11 @@ import {
   Card,
   cardId,
   CardState,
+  dueToday,
   learningDay,
   NEW_CARD_STATE,
   newCards,
+  previewGrades,
   replay,
   Review,
   type Grade,
@@ -109,6 +111,7 @@ describe("replay", () => {
       cache = CardState.parse(JSON.parse(JSON.stringify(next.value)));
     }
     expect(cache.reps).toBe(log.length);
+    expect(cache).toMatchObject({ firstReviewDay: "2026-10-21", lastReviewDay: "2026-10-24" });
     expect(replay(HAO, log)).toEqual({ ok: true, value: cache });
   });
 
@@ -149,4 +152,39 @@ test("FSRS counts learning days, not UTC days", () => {
   const state = replay(HAO, [review(1, first, "good", 480), review(2, second, "good", 480)]);
   if (!state.ok) throw new Error(state.error.kind);
   expect(state.value).toMatchObject({ phase: "review", scheduledDays: 2, due: second + 2 * DAY });
+});
+
+describe("previewGrades", () => {
+  test("gives each grade's due time, in grade order, without storing anything", () => {
+    const outcomes = previewGrades(NEW_CARD_STATE, start, 120);
+    if (!outcomes.ok) throw new Error(outcomes.error.message);
+    expect(outcomes.value.map(({ grade }) => grade)).toEqual(["again", "hard", "good", "easy"]);
+    const [again, , good] = outcomes.value;
+    expect(again?.due).toBe(start + MINUTE);
+    expect(good?.due).toBe(start + 10 * MINUTE);
+    const dues = outcomes.value.map(({ due }) => due);
+    expect(dues).toEqual([...dues].sort((a, b) => a - b));
+  });
+
+  test("matches the review it previews", () => {
+    const cache = replay(HAO, log.slice(0, 2));
+    if (!cache.ok) throw new Error(cache.error.kind);
+    const at = start + 4 * DAY;
+    const hard = previewGrades(cache.value, at, 120);
+    const reviewed = applyReview(cache.value, review(6, at, "hard"));
+    if (!hard.ok || !reviewed.ok) throw new Error("scheduler failure");
+    expect(hard.value[1]).toEqual({ grade: "hard", due: reviewed.value.due });
+  });
+});
+
+describe("dueToday", () => {
+  const noon = Date.UTC(2026, 9, 21, 10);
+  test.each([
+    ["overdue", noon - DAY, true],
+    ["before the next 4:00 rollover", Date.UTC(2026, 9, 22, 1, 59), true],
+    ["at the rollover", Date.UTC(2026, 9, 22, 2), false],
+    ["never reviewed", null, false],
+  ])("%s", (_, due, expected) => {
+    expect(dueToday(due, noon, 120)).toBe(expected);
+  });
 });

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { fsrsNext, SCHEDULER_VERSIONS, type SchedulerFailure } from "./fsrs.ts";
+import { CURRENT_SCHEDULER, fsrsNext, SCHEDULER_VERSIONS, type SchedulerFailure } from "./fsrs.ts";
 import { LANGUAGE_IDS, type LanguageId } from "./language-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 
@@ -79,6 +79,7 @@ export const CardState = z.object({
   lapses: z.number().int().nonnegative(),
   learningSteps: z.number().int().nonnegative(),
   scheduledDays: z.number().int().nonnegative(),
+  firstReviewDay: z.iso.date().nullable(),
   lastReviewDay: z.iso.date().nullable(),
 });
 export type CardState = z.output<typeof CardState>;
@@ -92,6 +93,7 @@ export const NEW_CARD_STATE: CardState = {
   lapses: 0,
   learningSteps: 0,
   scheduledDays: 0,
+  firstReviewDay: null,
   lastReviewDay: null,
 };
 
@@ -103,11 +105,18 @@ const learningClock = (at: number, utcOffsetMinutes: number): number =>
 export const learningDay = (at: number, utcOffsetMinutes: number): string =>
   new Date(learningClock(at, utcOffsetMinutes)).toISOString().slice(0, 10);
 
+/** Whether a started card is due before the next rollover. */
+export const dueToday = (due: number | null, at: number, utcOffsetMinutes: number): boolean =>
+  due !== null && learningDay(due, utcOffsetMinutes) <= learningDay(at, utcOffsetMinutes);
+
+/** What `applyReview` reads of a review, so a grade can be previewed without storing it. */
+export type Grading = Pick<Review, "grade" | "reviewedAt" | "utcOffsetMinutes" | "scheduler">;
+
 /** FSRS runs on the learning clock, so its elapsed days are learning days. */
 export const applyReview = (
   state: CardState,
-  review: Review,
-): Result<CardState, SchedulerFailure> => {
+  review: Grading,
+): Result<CardState & { readonly due: number }, SchedulerFailure> => {
   const lastReview = state.lastReviewDay === null ? null : Date.parse(state.lastReviewDay);
   const step = fsrsNext(
     review.scheduler,
@@ -117,11 +126,35 @@ export const applyReview = (
     review.grade,
   );
   if (!step.ok) return step;
+  const day = learningDay(review.reviewedAt, review.utcOffsetMinutes);
   return ok({
     ...step.value.memory,
     due: review.reviewedAt + step.value.interval,
-    lastReviewDay: learningDay(review.reviewedAt, review.utcOffsetMinutes),
+    firstReviewDay: state.firstReviewDay ?? day,
+    lastReviewDay: day,
   });
+};
+
+export type GradeOutcome = { readonly grade: Grade; readonly due: number };
+
+/** The due time of each grade given now, in grade order, shown on the grade buttons. */
+export const previewGrades = (
+  state: CardState,
+  at: number,
+  utcOffsetMinutes: number,
+): Result<readonly GradeOutcome[], SchedulerFailure> => {
+  const outcomes: GradeOutcome[] = [];
+  for (const grade of Grade.options) {
+    const next = applyReview(state, {
+      grade,
+      reviewedAt: at,
+      utcOffsetMinutes,
+      scheduler: CURRENT_SCHEDULER,
+    });
+    if (!next.ok) return next;
+    outcomes.push({ grade, due: next.value.due });
+  }
+  return ok(outcomes);
 };
 
 export type ReplayError =
