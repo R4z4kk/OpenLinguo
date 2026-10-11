@@ -20,9 +20,9 @@ export const describeFailure = (failure: ReviewLogFailure): string =>
     ? failure.message
     : `${failure.kind} ${"cardId" in failure ? failure.cardId : failure.reviewId}`;
 
-export const guarded = async <T>(
-  run: () => Promise<Result<T, ReviewLogFailure>>,
-): Promise<Result<T, ReviewLogFailure>> => {
+export const guarded = async <T, E = ReviewLogFailure>(
+  run: () => Promise<Result<T, E>>,
+): Promise<Result<T, E | ReviewLogFailure>> => {
   try {
     return await run();
   } catch (error) {

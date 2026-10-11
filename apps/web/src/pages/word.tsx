@@ -10,7 +10,7 @@ import {
 } from "@openlinguo/core";
 import { readingKey, type ZhProficiency } from "@openlinguo/lang-zh";
 import { Link, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Check, Info, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Info } from "lucide-react";
 import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CREDITS, Credits } from "@/components/credits";
@@ -18,10 +18,9 @@ import { DecompositionTree } from "@/components/decomposition-tree";
 import { RubyWord } from "@/components/ruby-word";
 import { SegmentedControl } from "@/components/segmented-control";
 import { StrokeOrder } from "@/components/stroke-order";
-import { Button } from "@/components/ui/button";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
-import { addWord, isPersonal, removeWord } from "@/data/decks";
+import { describeDeckFailure, fileWord, wordDecks, type WordDecks } from "@/data/decks";
 import { groupGlosses } from "@/data/gloss-summary";
 import { describeFailure } from "@/data/review-log";
 import { languages, type Language } from "@/i18n/language";
@@ -95,20 +94,22 @@ const Glosses = ({
   );
 };
 
-/** One button that adds or removes a reading, so focus stays on it; the status says it is added. */
-const MyWord = ({
+/** One checkbox per personal deck: native keyboard and screen reader support. */
+const DeckPicker = ({
   headword,
   reading,
+  referential,
   describedBy,
 }: {
   readonly headword: string;
   readonly reading: string;
+  readonly referential: ZhProficiency;
   /** The heading that shows the reading. */
   readonly describedBy: string;
 }) => {
   const { t } = useTranslation();
   const key = useMemo(() => readingKey(reading), [reading]);
-  const [added, setAdded] = useState<boolean | null>(null);
+  const [decks, setDecks] = useState<WordDecks | null>(null);
   const [failure, setFailure] = useState<string | null>(
     key.ok ? null : `${key.error.kind} ${key.error.reading}`,
   );
@@ -117,9 +118,9 @@ const MyWord = ({
   useEffect(() => {
     if (!key.ok) return;
     let active = true;
-    void isPersonal(database, { headword, readingKey: key.value }).then((result) => {
+    void wordDecks(database, { headword, readingKey: key.value }).then((result) => {
       if (!active) return;
-      if (result.ok) setAdded(result.value);
+      if (result.ok) setDecks(result.value);
       else setFailure(describeFailure(result.error));
     });
     return () => {
@@ -127,47 +128,54 @@ const MyWord = ({
     };
   }, [headword, key]);
 
-  const toggle = async (): Promise<void> => {
-    if (!key.ok || added === null || pending.current) return;
+  const toggle = async (deckId: string, filed: boolean): Promise<void> => {
+    if (!key.ok || pending.current) return;
     pending.current = true;
-    const result = await (added ? removeWord : addWord)(database, {
-      headword,
-      readingKey: key.value,
-    });
+    const result = await fileWord(
+      database,
+      deckId,
+      { headword, readingKey: key.value },
+      filed,
+      referential,
+    );
     pending.current = false;
-    if (result.ok) {
-      setAdded(!added);
-      setFailure(null);
-    } else {
-      setFailure(describeFailure(result.error));
+    if (!result.ok) {
+      setFailure(describeDeckFailure(result.error));
+      return;
     }
+    setFailure(null);
+    setDecks((current) => {
+      if (current === null) return null;
+      const next = new Set(current.filed);
+      if (filed) next.add(deckId);
+      else next.delete(deckId);
+      return { ...current, filed: next };
+    });
   };
 
-  const Icon = added === true ? Minus : Plus;
   return (
     <div className="mt-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <Button
-          variant="outline"
-          aria-describedby={describedBy}
-          disabled={added === null}
-          onClick={() => void toggle()}
-        >
-          <Icon aria-hidden="true" className="size-4" />
-          {t(added === true ? "myWords.remove" : "myWords.add")}
-        </Button>
-        <p role="status" className="flex items-center gap-2 text-small">
-          {added === true && (
-            <>
-              <Check aria-hidden="true" className="size-4" />
-              {t("myWords.added")}
-            </>
-          )}
-        </p>
-      </div>
+      {decks !== null && (
+        <fieldset aria-describedby={describedBy} className="min-w-0">
+          <legend className="text-small text-muted">{t("decks.fileIn")}</legend>
+          <div className="flex flex-wrap gap-x-6">
+            {decks.decks.map((deck) => (
+              <label key={deck.id} className="flex min-h-11 cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={decks.filed.has(deck.id)}
+                  onChange={(event) => void toggle(deck.id, event.target.checked)}
+                  className="size-5 accent-ink"
+                />
+                {deck.name ?? t("decks.myWords")}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      )}
       {failure !== null && (
         <p role="alert" className="mt-2 text-danger">
-          {t("myWords.failed", { reason: failure })}
+          {t("decks.fileFailed", { reason: failure })}
         </p>
       )}
     </div>
@@ -249,7 +257,12 @@ const Entries = ({
               </p>
             )}
             {entry.reading !== null && (
-              <MyWord headword={entry.headword} reading={entry.reading} describedBy={headingId} />
+              <DeckPicker
+                headword={entry.headword}
+                reading={entry.reading}
+                referential={referential}
+                describedBy={headingId}
+              />
             )}
             <Glosses entry={entry} language={language} heading={titled ? "h3" : "h2"} />
           </section>

@@ -176,7 +176,7 @@ describe("importData", () => {
 
   it("keeps cards and reviews when a new data version replaces the old one", async () => {
     const key: CardKey = { language: "zh", headword: "话", readingKey: "hua4", type: "recall" };
-    const card = { ...key, id: cardId(key), ...NEW_CARD_STATE, personal: true };
+    const card = { ...key, id: cardId(key), ...NEW_CARD_STATE };
     const review: Review = {
       id: "00000000-0000-4000-8000-000000000001",
       cardId: card.id,

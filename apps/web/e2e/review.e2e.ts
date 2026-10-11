@@ -9,10 +9,10 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   const progress = main.getByRole("progressbar", { name: en.review.progress });
 
   await page.goto("/learn/dictionary/你好");
-  const add = main.getByRole("button", { name: en.myWords.add });
-  await expect(add).toBeEnabled({ timeout: 90_000 });
-  await add.click();
-  await expect(main.getByRole("status")).toHaveText(en.myWords.added);
+  const myWords = main.getByRole("checkbox", { name: en.decks.myWords });
+  await expect(myWords).toBeEnabled({ timeout: 90_000 });
+  await myWords.click();
+  await expect(myWords).toBeChecked();
 
   await page.getByRole("link", { name: en.nav.today }).click();
   await main.getByRole("link", { name: en.today.start }).click();

@@ -1,7 +1,8 @@
 import "fake-indexeddb/auto";
+import { cardId, NEW_CARD_STATE, type CardKey, type CardType } from "@openlinguo/core";
 import { Dexie } from "dexie";
 import { describe, expect, it } from "vitest";
-import { openDatabase } from "./database.ts";
+import { MY_WORDS, openDatabase } from "./database.ts";
 
 describe("openDatabase", () => {
   it("imports the data again when upgrading a database without search keys", async () => {
@@ -21,6 +22,31 @@ describe("openDatabase", () => {
 
     const db = openDatabase("upgrade-test");
     expect(await db.meta.toArray()).toEqual([{ key: "lexicon", value: ["电话"] }]);
+    db.close();
+  });
+
+  it("files personal cards in my words", async () => {
+    const legacy = new Dexie("personal-test");
+    legacy.version(5).stores({ cards: "id, due", reviews: "id, cardId" });
+    const card = (headword: string, type: CardType, personal: boolean) => {
+      const key: CardKey = { language: "zh", headword, readingKey: "hao3", type };
+      return { ...key, id: cardId(key), ...NEW_CARD_STATE, personal };
+    };
+    await legacy
+      .table("cards")
+      .bulkAdd([
+        card("好", "recognition", true),
+        card("好", "recall", true),
+        card("号", "recall", false),
+      ]);
+    legacy.close();
+
+    const db = openDatabase("personal-test");
+    expect(await db.deckWords.toArray()).toEqual([
+      { id: `${MY_WORDS}\t好\thao3`, deckId: MY_WORDS, headword: "好", readingKey: "hao3" },
+    ]);
+    expect((await db.cards.toArray()).filter((stored) => "personal" in stored)).toEqual([]);
+    expect(await db.cards.count()).toBe(3);
     db.close();
   });
 });
