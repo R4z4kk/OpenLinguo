@@ -36,7 +36,9 @@ export {
 } from "./module-registry.ts";
 export {
   ACHIEVEMENTS,
+  FREEZE_EVERY,
   levelStart,
+  MAX_FREEZES,
   progress,
   XP_PER_REVIEW,
   type Achievement,

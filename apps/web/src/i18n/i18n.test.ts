@@ -12,6 +12,16 @@ describe("i18n", () => {
     );
   });
 
+  it("formats counts in the chosen language", () => {
+    expect(createI18n("en").t("progress.milestones.reviews", { count: 1000 })).toBe(
+      "1,000 reviews",
+    );
+    expect(createI18n("fr").t("progress.milestones.reviews", { count: 1000 })).toBe(
+      "1\u202f000 révisions",
+    );
+    expect(createI18n("fr").t("progress.days", { count: 0 })).toBe("0 jour");
+  });
+
   it("keeps the document lang in step with the language", async () => {
     const i18n = createI18n("en");
     const element = { lang: "" };
