@@ -50,22 +50,35 @@ const Card = ({
   readonly focusTarget: RefObject<HTMLDivElement | null>;
 }) => {
   const { t } = useTranslation();
-  const meaning = (
-    <GlossSummary
-      glosses={item.entry.glosses}
-      language={language}
-      className="text-subtitle font-normal"
-    />
-  );
+  const characters = "note" in item ? item.content.characters : item.headword;
+  const meaning =
+    "note" in item ? (
+      <p className="text-subtitle font-normal">{item.content.meaning}</p>
+    ) : (
+      <GlossSummary
+        glosses={item.entry.glosses}
+        language={language}
+        className="text-subtitle font-normal"
+      />
+    );
   const word =
-    item.entry.reading === null ? (
+    "note" in item ? (
       <>
-        <Characters word={item.headword} />
+        <Characters word={characters} />
+        {item.content.pinyin !== "" && (
+          <p lang="zh-Latn-pinyin" className="font-zh text-subtitle">
+            {item.content.pinyin}
+          </p>
+        )}
+      </>
+    ) : item.entry.reading === null ? (
+      <>
+        <Characters word={characters} />
         <p className="text-small text-muted">{t("review.noReading")}</p>
       </>
     ) : (
       <RubyWord
-        word={item.headword}
+        word={characters}
         reading={item.entry.reading}
         features={pack.features}
         size="display"
@@ -81,7 +94,7 @@ const Card = ({
     return (
       <div {...focus}>
         <p className="text-small text-muted">{t(`review.${item.type}`)}</p>
-        {item.type === "recognition" ? <Characters word={item.headword} /> : meaning}
+        {item.type === "recognition" ? <Characters word={characters} /> : meaning}
       </div>
     );
   return item.type === "recognition" ? (

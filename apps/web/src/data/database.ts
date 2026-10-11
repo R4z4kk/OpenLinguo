@@ -1,5 +1,5 @@
-import type { Card, CardState, Review, StrokeData, WordKey } from "@openlinguo/core";
-import { Dexie, type EntityTable } from "dexie";
+import type { Card, CardState, Review, StrokeData, Subject, WordKey } from "@openlinguo/core";
+import { Dexie, type EntityTable, type Table } from "dexie";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
 
@@ -46,17 +46,33 @@ export const MY_WORDS = "my-words";
 /** A personal deck created by the learner; `id` is a random UUID. */
 export type StoredDeck = { readonly id: string; readonly name: string };
 
-/** A reading filed in a personal deck. */
-export type StoredDeckWord = WordKey & {
-  /** `deckId \t headword \t readingKey` */
+/** A reading or a note filed in a personal deck. */
+export type StoredDeckWord = Subject & {
+  /** `deckId \t headword \t readingKey`, or `deckId \t \t note`: headwords are never empty. */
   readonly id: string;
   readonly deckId: string;
 };
 
-export const deckWordId = (deckId: string, { headword, readingKey }: WordKey): string =>
-  `${deckId}\t${headword}\t${readingKey}`;
+export const deckWordId = (deckId: string, subject: Subject): string =>
+  "note" in subject
+    ? `${deckId}\t\t${subject.note}`
+    : `${deckId}\t${subject.headword}\t${subject.readingKey}`;
 
-/** Audio a deck gives one of its readings, removed with the reading's filing in that deck. */
+/** What a note shows, as plain text. */
+export type NoteContent = {
+  readonly characters: string;
+  readonly pinyin: string;
+  readonly meaning: string;
+};
+
+/** A note's content, kept while a deck holds the note; the latest write wins (ADR 0002). */
+export type StoredNote = NoteContent & {
+  /** The note key: Anki's guid for an imported note. */
+  readonly id: string;
+  readonly updatedAt: number;
+};
+
+/** Audio a deck gives one of its readings or notes, removed with its filing in that deck. */
 export type StoredAudio = {
   /** The deck word's id. */
   readonly id: string;
@@ -75,11 +91,13 @@ export type Database = Dexie & {
   meta: EntityTable<MetaRecord, "key">;
   imports: EntityTable<ImportRecord, "sha256">;
   searchIndex: EntityTable<SearchIndexRecord, "file">;
-  cards: EntityTable<StoredCard, "id">;
+  // Union rows: `EntityTable` would type inserts with their common fields only.
+  cards: Table<StoredCard, string>;
   reviews: EntityTable<Review, "id">;
   decks: EntityTable<StoredDeck, "id">;
-  deckWords: EntityTable<StoredDeckWord, "id">;
+  deckWords: Table<StoredDeckWord, string>;
   audio: EntityTable<StoredAudio, "id">;
+  notes: EntityTable<StoredNote, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -103,7 +121,7 @@ export const openDatabase = (name: string): Database => {
   db.version(6)
     .stores({ decks: "id", deckWords: "id, deckId, [headword+readingKey]" })
     .upgrade(async (tx) => {
-      const cards = tx.table<StoredCard & { readonly personal: boolean }, string>("cards");
+      const cards = tx.table<WordKey & { readonly personal: boolean }, string>("cards");
       const personal = await cards.filter((card) => card.personal).toArray();
       await tx.table<StoredDeckWord, string>("deckWords").bulkPut(
         personal.map((card) => ({
@@ -127,6 +145,7 @@ export const openDatabase = (name: string): Database => {
       }),
   );
   db.version(8).stores({ audio: "id" });
+  db.version(9).stores({ deckWords: "id, deckId, [headword+readingKey], note", notes: "id" });
   return db;
 };
 

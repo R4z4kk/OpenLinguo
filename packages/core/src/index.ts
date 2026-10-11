@@ -64,7 +64,6 @@ export {
   type SessionCard,
   type SessionInput,
   type SessionItem,
-  type WordKey,
 } from "./session.ts";
 export {
   applyReview,
@@ -74,6 +73,7 @@ export {
   CardType,
   dueToday,
   Grade,
+  isWord,
   learningDay,
   NEW_CARD_STATE,
   newCards,
@@ -81,9 +81,14 @@ export {
   previewGrades,
   replay,
   Review,
+  subjectId,
+  subjectOf,
   type CardKey,
   type GradeOutcome,
   type Grading,
+  type NoteKey,
   type ReplayError,
+  type Subject,
+  type WordKey,
 } from "./srs.ts";
 export { parseWith, type ValidationError, type ValidationIssue } from "./validation.ts";

@@ -35,10 +35,12 @@ describe("readPackage", () => {
     const [chinese, basic] = ankiPackage.noteTypes;
     expect(ankiPackage.notes).toHaveLength(9);
     expect(ankiPackage.notes[0]).toEqual({
+      guid: expect.stringMatching(/^\S+$/u) as string,
       noteTypeId: chinese?.id,
       fields: ["你好", "nǐ hǎo", "hello", "[sound:nihao.wav]"],
     });
-    expect(ankiPackage.notes[8]).toEqual({ noteTypeId: basic?.id, fields: ["书", "book"] });
+    expect(ankiPackage.notes[8]).toMatchObject({ noteTypeId: basic?.id, fields: ["书", "book"] });
+    expect(new Set(ankiPackage.notes.map((note) => note.guid)).size).toBe(9);
     expect([...ankiPackage.media.keys()].sort()).toEqual([
       "chi.js",
       "dianhua.mp3",

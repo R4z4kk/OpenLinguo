@@ -35,6 +35,15 @@ const card = (headword: string, readingKey: string, type: CardType): Card => {
 const RECOGNITION = card("好", "hao3", "recognition");
 const RECALL = card("好", "hao3", "recall");
 const CAT = card("猫", "mao1", "recognition");
+const NOTE_KEY: CardKey = { language: "zh", note: "Fx4k]?Lb!e", type: "recall" };
+const NOTE_CARD: Card = { ...NOTE_KEY, id: cardId(NOTE_KEY) };
+const NOTE = {
+  id: "Fx4k]?Lb!e",
+  characters: "不存在",
+  pinyin: "bù cún zài",
+  meaning: "made up",
+  updatedAt: start,
+};
 
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
 
@@ -73,6 +82,7 @@ const backup = (data: Partial<Backup>): Backup => ({
   reviews: [],
   decks: [],
   deckWords: [],
+  notes: [],
   ...data,
 });
 
@@ -90,22 +100,31 @@ describe("exportBackup", () => {
     await db.cards.bulkAdd([
       { ...RECOGNITION, ...replayed(RECOGNITION.id, [first]) },
       { ...RECALL, ...NEW_CARD_STATE },
+      { ...NOTE_CARD, ...NEW_CARD_STATE },
     ]);
     await db.reviews.add(first);
     await db.decks.add(ANIMALS);
-    await db.deckWords.add({
-      id: deckWordId(ANIMALS.id, RECOGNITION),
-      deckId: ANIMALS.id,
-      headword: "好",
-      readingKey: "hao3",
-    });
+    await db.deckWords.bulkAdd([
+      {
+        id: deckWordId(ANIMALS.id, RECOGNITION),
+        deckId: ANIMALS.id,
+        headword: "好",
+        readingKey: "hao3",
+      },
+      { id: deckWordId(ANIMALS.id, { note: NOTE.id }), deckId: ANIMALS.id, note: NOTE.id },
+    ]);
+    await db.notes.add(NOTE);
 
     const exported = await exportBackup(db, SETTINGS, now);
     const expected = backup({
-      cards: [RECOGNITION, RECALL].toSorted((a, b) => (a.id < b.id ? -1 : 1)),
+      cards: [RECOGNITION, RECALL, NOTE_CARD].toSorted((a, b) => (a.id < b.id ? -1 : 1)),
       reviews: [first],
       decks: [ANIMALS],
-      deckWords: [{ deckId: ANIMALS.id, headword: "好", readingKey: "hao3" }],
+      deckWords: [
+        { deckId: ANIMALS.id, note: NOTE.id },
+        { deckId: ANIMALS.id, headword: "好", readingKey: "hao3" },
+      ],
+      notes: [NOTE],
     });
     expect(exported).toEqual(ok(expected));
     expect(parseBackup(JSON.stringify(expected))).toEqual(ok(expected));
@@ -126,9 +145,9 @@ describe("parseBackup", () => {
     const older = { language: "fr", theme: "dark", referential: "gf0025-2021" };
     const unstamped = { ...review(1, RECALL.id, start, "good") };
     Reflect.deleteProperty(unstamped, "dailyGoal");
-    expect(
-      parseBackup(JSON.stringify({ ...backup({}), settings: older, reviews: [unstamped] })),
-    ).toEqual(
+    const withoutNotes = { ...backup({}), settings: older, reviews: [unstamped] };
+    Reflect.deleteProperty(withoutNotes, "notes");
+    expect(parseBackup(JSON.stringify(withoutNotes))).toEqual(
       ok(
         backup({
           settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20, showProgress: true },
@@ -161,6 +180,7 @@ describe("parseBackup", () => {
           reviews: [first, first],
           decks: [ANIMALS, { id: uuid(101), name: " animals " }],
           deckWords: [{ deckId: uuid(102), headword: "猫", readingKey: "mao1" }],
+          notes: [NOTE, NOTE],
         }),
       ),
     );
@@ -171,6 +191,7 @@ describe("parseBackup", () => {
         issues: [
           { path: "reviews.1.id" },
           { path: "decks.1.name" },
+          { path: "notes.1.id" },
           { path: "deckWords.0.deckId" },
         ],
       },
@@ -189,7 +210,7 @@ describe("importBackup", () => {
 
     expect(
       await importBackup(db, backup({ cards: [RECALL], reviews: [local, lapse, recall, removed] })),
-    ).toEqual(ok({ reviews: 3, cards: 1, decks: 0, words: 0 }));
+    ).toEqual(ok({ reviews: 3, cards: 1, decks: 0, words: 0, notes: 0 }));
     expect(await db.cards.get(RECOGNITION.id)).toEqual({
       ...RECOGNITION,
       ...replayed(RECOGNITION.id, [local, lapse]),
@@ -208,8 +229,12 @@ describe("importBackup", () => {
         { deckId: ANIMALS.id, headword: "猫", readingKey: "mao1" },
       ],
     });
-    expect(await importBackup(db, data)).toEqual(ok({ reviews: 0, cards: 1, decks: 1, words: 2 }));
-    expect(await importBackup(db, data)).toEqual(ok({ reviews: 0, cards: 0, decks: 0, words: 0 }));
+    expect(await importBackup(db, data)).toEqual(
+      ok({ reviews: 0, cards: 1, decks: 1, words: 2, notes: 0 }),
+    );
+    expect(await importBackup(db, data)).toEqual(
+      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }),
+    );
     expect(await db.decks.toArray()).toEqual([ANIMALS]);
     expect((await db.deckWords.toArray()).map((word) => word.id).toSorted()).toEqual(
       [deckWordId(ANIMALS.id, CAT), deckWordId(MY_WORDS, CAT)].toSorted(),
@@ -228,13 +253,44 @@ describe("importBackup", () => {
         { deckId: uuid(102), headword: "好", readingKey: "hao3" },
       ],
     });
-    expect(await importBackup(db, data)).toEqual(ok({ reviews: 0, cards: 0, decks: 0, words: 2 }));
+    expect(await importBackup(db, data)).toEqual(
+      ok({ reviews: 0, cards: 0, decks: 0, words: 2, notes: 0 }),
+    );
     expect(await db.decks.toArray()).toEqual([
       { id: ANIMALS.id, name: "Zoo" },
       { id: uuid(101), name: "Food" },
     ]);
     expect(await db.deckWords.get(deckWordId(uuid(101), RECOGNITION))).toMatchObject({
       deckId: uuid(101),
+    });
+  });
+
+  it("files notes and keeps the latest content of each, the second time too", async () => {
+    const older = { ...NOTE, id: "older", meaning: "old" };
+    await db.notes.bulkAdd([
+      { ...NOTE, meaning: "local", updatedAt: start + DAY },
+      { ...older, updatedAt: start - DAY },
+    ]);
+    const data = backup({
+      cards: [NOTE_CARD],
+      deckWords: [{ deckId: MY_WORDS, note: NOTE.id }],
+      notes: [NOTE, { ...older, meaning: "imported" }, { ...NOTE, id: "new" }],
+    });
+    expect(await importBackup(db, data)).toEqual(
+      ok({ reviews: 0, cards: 1, decks: 0, words: 1, notes: 2 }),
+    );
+    expect(await importBackup(db, data)).toEqual(
+      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }),
+    );
+    expect((await db.notes.toArray()).map(({ id, meaning }) => [id, meaning])).toEqual([
+      [NOTE.id, "local"],
+      ["new", "made up"],
+      ["older", "imported"],
+    ]);
+    expect(await db.deckWords.get(deckWordId(MY_WORDS, { note: NOTE.id }))).toEqual({
+      id: deckWordId(MY_WORDS, { note: NOTE.id }),
+      deckId: MY_WORDS,
+      note: NOTE.id,
     });
   });
 

@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { NameField } from "@/components/name-field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
+  audioBytes,
   freeSpace,
   guessMapping,
   importPlan,
@@ -205,12 +206,16 @@ type Checked = Promise<{
   readonly free: number | null;
 }>;
 
-/** The plan's counts and lists; `action` gets the plan when it can be imported. */
+/** The plan's counts and lists; `action` gets the chosen words and notes when they can be imported. */
 const Summary = ({
   checked,
+  withNotes,
+  onWithNotes,
   action,
 }: {
   readonly checked: Checked;
+  readonly withNotes: boolean;
+  readonly onWithNotes: (withNotes: boolean) => void;
   readonly action: (plan: ImportPlan | null) => ReactNode;
 }) => {
   const { t, i18n } = useTranslation();
@@ -224,17 +229,15 @@ const Summary = ({
         {action(null)}
       </>
     );
-  const { words, unmatched, ignored, missingAudio, notAudio, audioBytes } = plan.value;
-  const short = isQuotaShort(plan.value, free);
-  const voiced = words.filter((word) => word.audio !== null).length;
+  const { unmatched, ignored, missingAudio, notAudio } = plan.value;
+  const chosen = withNotes ? plan.value : { ...plan.value, notes: [] };
+  const empty = chosen.words.length + chosen.notes.length === 0;
+  const short = isQuotaShort(chosen, free);
+  const size = formatSize(audioBytes(chosen), i18n.language);
+  const voiced = [...chosen.words, ...chosen.notes].filter((item) => item.audio !== null).length;
   return (
     <div className="mt-4 flex flex-col gap-2">
-      <p>{t("ankiImport.words", { count: words.length })}</p>
-      {voiced > 0 && (
-        <p>
-          {t("ankiImport.audio", { count: voiced, size: formatSize(audioBytes, i18n.language) })}
-        </p>
-      )}
+      <p>{t("ankiImport.words", { count: chosen.words.length })}</p>
       {unmatched.length > 0 && (
         <details>
           <summary className="cursor-pointer">
@@ -247,11 +250,26 @@ const Summary = ({
                 {note.pinyin !== "" && ` ${note.pinyin}`}
                 {note.meaning !== "" && ` · ${note.meaning}`}
                 {` — ${t(`ankiImport.reasons.${note.reason}`)}`}
+                {note.meaning === "" && ` · ${t("ankiImport.noMeaning")}`}
               </li>
             ))}
           </ul>
         </details>
       )}
+      {plan.value.notes.length > 0 && (
+        <label className="flex min-h-11 cursor-pointer items-center gap-2">
+          <input
+            type="checkbox"
+            checked={withNotes}
+            onChange={(event) => {
+              onWithNotes(event.target.checked);
+            }}
+            className="size-5 accent-ink"
+          />
+          {t("ankiImport.withNotes", { count: plan.value.notes.length })}
+        </label>
+      )}
+      {voiced > 0 && <p>{t("ankiImport.audio", { count: voiced, size })}</p>}
       {ignored > 0 && <p>{t("ankiImport.ignored", { count: ignored })}</p>}
       {missingAudio.length > 0 && (
         <p>
@@ -261,17 +279,14 @@ const Summary = ({
       {notAudio.length > 0 && (
         <p>{t("ankiImport.notAudio", { count: notAudio.length, names: names(notAudio) })}</p>
       )}
-      {words.length === 0 && <p role="alert">{t("ankiImport.nothingToImport")}</p>}
+      {empty && <p role="alert">{t("ankiImport.nothingToImport")}</p>}
       {voiced > 0 && free === null && <p className="text-muted">{t("ankiImport.freeUnknown")}</p>}
       {short && free !== null && (
         <p role="alert" className="text-danger">
-          {t("ankiImport.tooBig", {
-            size: formatSize(audioBytes, i18n.language),
-            free: formatSize(free, i18n.language),
-          })}
+          {t("ankiImport.tooBig", { size, free: formatSize(free, i18n.language) })}
         </p>
       )}
-      {action(short || words.length === 0 ? null : plan.value)}
+      {action(short || empty ? null : chosen)}
     </div>
   );
 };
@@ -292,6 +307,7 @@ type Outcome =
       readonly kind: "imported";
       readonly name: string;
       readonly words: number;
+      readonly notes: number;
       readonly audio: number;
       readonly unsaved: string | null;
     }
@@ -307,6 +323,7 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
       ([plan, free]) => ({ plan, free }),
     );
   const [checked, setChecked] = useState(() => check(mappings));
+  const [withNotes, setWithNotes] = useState(true);
   const [, startTransition] = useTransition();
   const [name, setName] = useState(
     (ankiPackage.deckName ?? fileName.replace(/\.apkg$/iu, "")).slice(0, DECK_NAME_MAX),
@@ -375,6 +392,8 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
         <Suspense fallback={<p className="mt-4 text-muted">{t("ankiImport.checking")}</p>}>
           <Summary
             checked={checked}
+            withNotes={withNotes}
+            onWithNotes={setWithNotes}
             action={(plan) => (
               <form
                 onSubmit={(event) => {

@@ -1,4 +1,13 @@
-import { Card, err, ok, replay, Review, type ReplayError, type Result } from "@openlinguo/core";
+import {
+  Card,
+  err,
+  ok,
+  replay,
+  Review,
+  subjectOf,
+  type ReplayError,
+  type Result,
+} from "@openlinguo/core";
 import { z } from "zod";
 import { languages } from "@/i18n/language";
 import { themePreferences } from "@/theme";
@@ -10,6 +19,7 @@ import {
   type StoredCard,
   type StoredDeck,
   type StoredDeckWord,
+  type StoredNote,
 } from "./database.ts";
 import { DECK_NAME_MAX, sameDeckName, type DeckFailure } from "./decks.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
@@ -32,6 +42,8 @@ export type Settings = z.output<typeof Settings>;
 
 const Header = z.object({ format: z.literal(BACKUP_FORMAT), version: z.number().int().min(1) });
 
+const DeckId = z.union([z.literal(MY_WORDS), z.uuid()]);
+
 /** Learning data and settings, without dictionary data; card states are replayed from the log. */
 export const Backup = z
   .object({
@@ -45,14 +57,24 @@ export const Backup = z
     ),
     decks: z.array(z.object({ id: z.uuid(), name: z.string().trim().min(1).max(DECK_NAME_MAX) })),
     deckWords: z.array(
-      z.object({
-        deckId: z.union([z.literal(MY_WORDS), z.uuid()]),
-        headword: z.string().min(1),
-        readingKey: z.string().min(1),
-      }),
+      z.union([
+        z.object({ deckId: DeckId, headword: z.string().min(1), readingKey: z.string().min(1) }),
+        z.object({ deckId: DeckId, note: z.string().min(1) }),
+      ]),
     ),
+    notes: z
+      .array(
+        z.object({
+          id: z.string().min(1),
+          characters: z.string().min(1),
+          pinyin: z.string(),
+          meaning: z.string().min(1),
+          updatedAt: z.number().int().nonnegative(),
+        }),
+      )
+      .default([]),
   })
-  .superRefine(({ reviews, decks, deckWords }, context) => {
+  .superRefine(({ reviews, decks, deckWords, notes }, context) => {
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -67,6 +89,11 @@ export const Backup = z
         issue(["decks", index, "id"], "Duplicate deck id");
       else if (earlier.some((other) => sameDeckName(other.name, deck.name)))
         issue(["decks", index, "name"], "Another deck has this name");
+    });
+    const noteIds = new Set<string>();
+    notes.forEach(({ id }, index) => {
+      if (noteIds.has(id)) issue(["notes", index, "id"], "Duplicate note id");
+      noteIds.add(id);
     });
     const deckIds = new Set([MY_WORDS, ...decks.map((deck) => deck.id)]);
     deckWords.forEach(({ deckId }, index) => {
@@ -114,27 +141,26 @@ export const exportBackup = (
   guarded(() =>
     db.transaction(
       "r",
-      [db.cards, db.reviews, db.decks, db.deckWords],
+      [db.cards, db.reviews, db.decks, db.deckWords, db.notes],
       async (): Promise<Result<Backup, ReviewLogFailure>> =>
         ok({
           format: BACKUP_FORMAT,
           version: BACKUP_VERSION,
           exportedAt: now.toISOString(),
           settings,
-          cards: (await db.cards.toArray()).map(({ id, language, headword, readingKey, type }) => ({
-            id,
-            language,
-            headword,
-            readingKey,
-            type,
+          cards: (await db.cards.toArray()).map((card) => ({
+            ...subjectOf(card),
+            id: card.id,
+            language: card.language,
+            type: card.type,
           })),
           reviews: await db.reviews.toArray(),
           decks: await db.decks.toArray(),
-          deckWords: (await db.deckWords.toArray()).map(({ deckId, headword, readingKey }) => ({
-            deckId,
-            headword,
-            readingKey,
+          deckWords: (await db.deckWords.toArray()).map((word) => ({
+            ...subjectOf(word),
+            deckId: word.deckId,
           })),
+          notes: await db.notes.toArray(),
         }),
     ),
   );
@@ -145,6 +171,7 @@ export type ImportSummary = {
   readonly cards: number;
   readonly decks: number;
   readonly words: number;
+  readonly notes: number;
 };
 
 const replayCards = (
@@ -163,8 +190,8 @@ const replayCards = (
 
 /**
  * Merges by ids, so importing twice changes nothing: the union of review logs, then every card
- * replayed. A local deck keeps its name and takes in an imported deck of the same id or name.
- * Nothing is written unless the whole merge succeeds.
+ * replayed. A local deck keeps its name and takes in an imported deck of the same id or name; a
+ * note keeps its latest content. Nothing is written unless the whole merge succeeds.
  */
 export const importBackup = (
   db: Database,
@@ -173,7 +200,7 @@ export const importBackup = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.cards, db.reviews, db.decks, db.deckWords],
+      [db.cards, db.reviews, db.decks, db.deckWords, db.notes],
       async (): Promise<Result<ImportSummary, DeckFailure>> => {
         const reviews = await db.reviews.toArray();
         const reviewIds = new Set(reviews.map((review) => review.id));
@@ -198,24 +225,31 @@ export const importBackup = (
           if (local === null) newDecks.push(deck);
         }
         const words = new Map<string, StoredDeckWord>();
-        for (const { deckId: imported, headword, readingKey } of backup.deckWords) {
-          const deckId = deckIds.get(imported) ?? null;
-          if (deckId === null) return err({ kind: "unknown-deck", deckId: imported });
-          const id = deckWordId(deckId, { headword, readingKey });
-          words.set(id, { id, deckId, headword, readingKey });
+        for (const word of backup.deckWords) {
+          const deckId = deckIds.get(word.deckId) ?? null;
+          if (deckId === null) return err({ kind: "unknown-deck", deckId: word.deckId });
+          const subject = subjectOf(word);
+          const id = deckWordId(deckId, subject);
+          words.set(id, { ...subject, id, deckId });
         }
         const filed = await db.deckWords.bulkGet([...words.keys()]);
         const newWords = [...words.values()].filter((_, index) => filed[index] == null);
+        const localNotes = await db.notes.bulkGet(backup.notes.map((note) => note.id));
+        const newerNotes: StoredNote[] = backup.notes.filter(
+          (note, index) => note.updatedAt > (localNotes[index]?.updatedAt ?? -1),
+        );
 
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
         await db.decks.bulkAdd(newDecks);
         await db.deckWords.bulkAdd(newWords);
+        await db.notes.bulkPut(newerNotes);
         return ok({
           reviews: newReviews.length,
           cards: cards.size - localCards,
           decks: newDecks.length,
           words: newWords.length,
+          notes: newerNotes.length,
         });
       },
     ),
