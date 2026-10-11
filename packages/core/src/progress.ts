@@ -52,7 +52,38 @@ export type ProgressError =
   | { readonly kind: "duplicate-review"; readonly reviewId: string }
   | { readonly kind: "invalid-card-id"; readonly reviewId: string };
 
-const nextDay = (day: string): string => new Date(Date.parse(day) + DAY).toISOString().slice(0, 10);
+export const addDays = (day: string, count: number): string =>
+  new Date(Date.parse(day) + count * DAY).toISOString().slice(0, 10);
+
+export type DayActivity = { readonly reviews: number; readonly goalMet: boolean };
+
+/**
+ * Reviews per learning day and distinct readings, in any order. A day is met once its count
+ * reaches the goal stamped on the review just made, so lowering the goal counts at the next
+ * review and raising it never unmeets a day.
+ */
+export const tally = (
+  reviews: readonly Review[],
+): Result<
+  { readonly days: ReadonlyMap<string, DayActivity>; readonly words: number },
+  ProgressError
+> => {
+  const ids = new Set<string>();
+  const words = new Set<string>();
+  const days = new Map<string, DayActivity>();
+  for (const review of [...reviews].sort(chronological)) {
+    if (ids.has(review.id)) return err({ kind: "duplicate-review", reviewId: review.id });
+    ids.add(review.id);
+    const key = cardKey(review.cardId);
+    if (key === null) return err({ kind: "invalid-card-id", reviewId: review.id });
+    words.add(JSON.stringify([key.language, key.headword, key.readingKey]));
+    const day = learningDay(review.reviewedAt, review.utcOffsetMinutes);
+    const before = days.get(day) ?? { reviews: 0, goalMet: false };
+    const count = before.reviews + 1;
+    days.set(day, { reviews: count, goalMet: before.goalMet || count >= review.dailyGoal });
+  }
+  return ok({ days, words: words.size });
+};
 
 /** Missed days before the last one use a freeze or end the streak; the last may be in progress. */
 const streakOf = (metDays: ReadonlySet<string>, today: string) => {
@@ -64,7 +95,7 @@ const streakOf = (metDays: ReadonlySet<string>, today: string) => {
   const lastMet = days.at(-1);
   if (first == null || lastMet == null) return { current, longest, freezes };
   const end = lastMet > today ? lastMet : today;
-  for (let day = first; day <= end; day = nextDay(day)) {
+  for (let day = first; day <= end; day = addDays(day, 1)) {
     if (metDays.has(day)) {
       current += 1;
       longest = Math.max(longest, current);
@@ -79,34 +110,21 @@ const streakOf = (metDays: ReadonlySet<string>, today: string) => {
 
 /**
  * XP, level, streak and achievements from the review log alone, in any order. `at` only tells
- * which learning day is still in progress. A day is met once its review count reaches the goal
- * stamped on the review just made, so lowering the goal counts at the next review and raising it
- * never unmeets a day.
+ * which learning day is still in progress.
  */
 export const progress = (
   reviews: readonly Review[],
   at: number,
   utcOffsetMinutes: number,
 ): Result<Progress, ProgressError> => {
-  const ids = new Set<string>();
-  const words = new Set<string>();
-  const counts = new Map<string, number>();
-  const metDays = new Set<string>();
-  for (const review of [...reviews].sort(chronological)) {
-    if (ids.has(review.id)) return err({ kind: "duplicate-review", reviewId: review.id });
-    ids.add(review.id);
-    const key = cardKey(review.cardId);
-    if (key === null) return err({ kind: "invalid-card-id", reviewId: review.id });
-    words.add(JSON.stringify([key.language, key.headword, key.readingKey]));
-    const day = learningDay(review.reviewedAt, review.utcOffsetMinutes);
-    const count = (counts.get(day) ?? 0) + 1;
-    counts.set(day, count);
-    if (count >= review.dailyGoal) metDays.add(day);
-  }
+  const tallied = tally(reviews);
+  if (!tallied.ok) return tallied;
+  const { days, words } = tallied.value;
+  const metDays = new Set([...days].filter(([, { goalMet }]) => goalMet).map(([day]) => day));
   const streak = streakOf(metDays, learningDay(at, utcOffsetMinutes));
   const totals = {
-    reviews: ids.size,
-    words: words.size,
+    reviews: reviews.length,
+    words,
     longestStreak: streak.longest,
     goalDays: metDays.size,
   };

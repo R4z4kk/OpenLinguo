@@ -48,6 +48,16 @@ export {
 } from "./progress.ts";
 export { err, isErr, isOk, ok, type Err, type Ok, type Result } from "./result.ts";
 export {
+  HEATMAP_WEEKS,
+  RECENT_DAYS,
+  stats,
+  type HeatmapDay,
+  type HeatmapWeek,
+  type Ratio,
+  type Stats,
+  type StatsError,
+} from "./stats.ts";
+export {
   composeSession,
   type SessionCard,
   type SessionInput,

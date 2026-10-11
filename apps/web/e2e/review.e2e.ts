@@ -75,13 +75,26 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(main).toContainText(
     fill(en.progress.toNextLevel, { done: 10, total: 100, next: 2 }),
   );
-  await expect(main.getByRole("heading", { level: 3 })).toHaveText(
+  await expect(main.getByRole("heading", { level: 3, name: en.progress.achievements })).toHaveText(
     `${en.progress.achievements} ${fill(en.progress.achievementCount, { earned: 1, total: 16 })}`,
   );
   await expect(main.getByRole("listitem")).toHaveText([
     fill(en.progress.milestones.reviews_one, { count: 1 }),
   ]);
-  await expectAccessibleInBothThemes(page, level);
+  await expect(main.getByText(en.stats.notYet, { exact: true })).toBeVisible();
+  await expect(main).toContainText(fill(en.stats.studiedDays_one, { count: 1, days: 30 }));
+  const showNumbers = page.getByText(en.stats.showNumbers);
+  await expectAccessibleInBothThemes(
+    page,
+    main
+      .filter({ has: page.getByText(fill(en.progress.level, { level: 1 }), { exact: true }) })
+      .filter({ has: showNumbers }),
+  );
+  await showNumbers.click();
+  await expect(main.getByRole("table").getByRole("cell", { name: "1", exact: true })).toHaveCount(
+    1,
+  );
+  expect(await accessibilityViolations(page)).toEqual([]);
   const smallGoal = main
     .getByRole("group", { name: en.goal.dailyGoal })
     .getByRole("radio", { name: "10", exact: true });

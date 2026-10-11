@@ -60,6 +60,11 @@ describe("design tokens (docs/design/DESIGN-SYSTEM.md)", () => {
     },
   );
 
+  it.each(THEMES)("keeps the heatmap shades ≥ 3:1 from their neighbours (%s)", (theme) => {
+    expect(ratio(theme, "border-strong", "sunken")).toBeGreaterThanOrEqual(3);
+    expect(ratio(theme, "ink", "border-strong")).toBeGreaterThanOrEqual(3);
+  });
+
   it.each(THEMES)(
     "keeps tone text ≥ 4.5:1 on bg and surface, the grounds it may sit on (%s)",
     (theme) => {
