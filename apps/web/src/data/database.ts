@@ -1,5 +1,6 @@
 import type { Card, CardState, Review, StrokeData, WordKey } from "@openlinguo/core";
 import { Dexie, type EntityTable } from "dexie";
+import { DAILY_GOAL } from "./daily-goal.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
 
 export type StoredEntry = {
@@ -106,6 +107,15 @@ export const openDatabase = (name: string): Database => {
         Reflect.deleteProperty(card, "personal");
       });
     });
+  // Reviews made before the goal was stamped count against the default goal.
+  db.version(7).upgrade((tx) =>
+    tx
+      .table<Omit<Review, "dailyGoal">, string>("reviews")
+      .toCollection()
+      .modify((review) => {
+        Object.assign(review, { dailyGoal: DAILY_GOAL.fallback });
+      }),
+  );
   return db;
 };
 

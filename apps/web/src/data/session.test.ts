@@ -74,20 +74,21 @@ describe("gradeItem", () => {
   it("stores a band word's cards, then brings the card back while it is learning", async () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
-    const again = await gradeItem(db, first, "good", NOON);
+    const again = await gradeItem(db, first, "good", NOON, 50);
     expect(again).toMatchObject({ ok: true, value: { cardId: first.cardId, new: false } });
+    expect(await db.reviews.toArray()).toMatchObject([{ cardId: first.cardId, dailyGoal: 50 }]);
     expect(await db.cards.get(idOf(NI, "recall"))).toMatchObject({ phase: "new" });
     expect(await db.deckWords.count()).toBe(0);
     if (!again.ok || again.value === null) throw new Error("not requeued");
     expect(again.value.state.phase).toBe("learning");
-    expect(await gradeItem(db, again.value, "good", later(10))).toEqual(ok(null));
+    expect(await gradeItem(db, again.value, "good", later(10), 20)).toEqual(ok(null));
     expect(await db.reviews.count()).toBe(2);
   });
 
   it("keeps the word's other card for another day", async () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
-    await gradeItem(db, first, "again", NOON);
+    await gradeItem(db, first, "again", NOON, 20);
     expect(ids((await session(later(1))).items)).toEqual([
       [idOf(NI, "recognition"), false],
       [idOf(TIAN, "recognition"), true],
@@ -98,7 +99,7 @@ describe("gradeItem", () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
     vi.spyOn(db.reviews, "add").mockRejectedValueOnce(new Error("QuotaExceededError"));
-    expect(await gradeItem(db, first, "good", NOON)).toEqual({
+    expect(await gradeItem(db, first, "good", NOON, 20)).toEqual({
       ok: false,
       error: { kind: "storage", message: "Error: QuotaExceededError" },
     });

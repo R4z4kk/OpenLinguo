@@ -91,6 +91,7 @@ const review = (cardId: string, grade: Review["grade"]): Review => ({
   reviewedAt: NOW.at,
   utcOffsetMinutes: NOW.utcOffsetMinutes,
   scheduler: CURRENT_SCHEDULER,
+  dailyGoal: 20,
 });
 
 let db: Database;

@@ -184,6 +184,7 @@ describe("importData", () => {
       reviewedAt: Date.UTC(2026, 9, 21, 6),
       utcOffsetMinutes: 120,
       scheduler: CURRENT_SCHEDULER,
+      dailyGoal: 20,
     };
     await importData(db, server(files("v1"), []), () => null);
     await db.cards.put(card);

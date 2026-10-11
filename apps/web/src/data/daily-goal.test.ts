@@ -32,6 +32,7 @@ const review = (n: number, reviewedAt: number, utcOffsetMinutes: number): Review
   reviewedAt,
   utcOffsetMinutes,
   scheduler: CURRENT_SCHEDULER,
+  dailyGoal: 20,
 });
 
 describe("settings", () => {
