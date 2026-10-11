@@ -10,6 +10,7 @@ import {
   saveSetting,
 } from "./daily-goal.ts";
 import { openDatabase } from "./database.ts";
+import { SHOW_PROGRESS } from "./progress.ts";
 
 const memory = (): Pick<Storage, "getItem" | "setItem"> => {
   const values = new Map<string, string>();
@@ -56,6 +57,15 @@ describe("settings", () => {
     storage.setItem(NEW_CARDS_PER_DAY.key, "5.0");
     expect(loadSetting(() => storage, DAILY_GOAL)).toEqual({ ok: true, value: 20 });
     expect(loadSetting(() => storage, NEW_CARDS_PER_DAY)).toEqual({ ok: true, value: 20 });
+  });
+
+  it("shows progress by default and reads back a hidden choice", () => {
+    const storage = memory();
+    expect(loadSetting(() => storage, SHOW_PROGRESS)).toEqual({ ok: true, value: true });
+    expect(saveSetting(() => storage, SHOW_PROGRESS, false)).toEqual({ ok: true, value: null });
+    expect(loadSetting(() => storage, SHOW_PROGRESS)).toEqual({ ok: true, value: false });
+    storage.setItem(SHOW_PROGRESS.key, "no");
+    expect(loadSetting(() => storage, SHOW_PROGRESS)).toEqual({ ok: true, value: true });
   });
 
   it("reports an unavailable storage and uses the fallback meanwhile", () => {

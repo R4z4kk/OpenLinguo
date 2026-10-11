@@ -105,3 +105,50 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(main).toContainText(goalCount(1, 10));
   await expect(main).not.toContainText(en.today.goalMet);
 });
+
+test("hides streak, XP and achievements, and counts the reviews made meanwhile", async ({
+  page,
+}) => {
+  const main = page.getByRole("main");
+  const show = main.getByRole("checkbox", { name: en.progress.show });
+  const progressTitle = main.getByRole("heading", { level: 2, name: en.progress.title });
+  const xp = main.getByText(fill(en.progress.xpCount, { xp: 10 }), { exact: true });
+
+  await page.goto("/learn/dictionary/你好");
+  const myWords = main.getByRole("checkbox", { name: en.decks.myWords });
+  await expect(myWords).toBeEnabled({ timeout: 90_000 });
+  await myWords.click();
+  await expect(myWords).toBeChecked();
+
+  await page.getByRole("link", { name: en.nav.profile }).click();
+  await expect(progressTitle).toBeVisible();
+  await show.focus();
+  await page.keyboard.press("Space");
+  await expect(show).not.toBeChecked();
+  await expect(progressTitle).toBeHidden();
+  await expect(main.getByRole("heading", { level: 2, name: en.stats.title })).toBeVisible();
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  await page.getByRole("link", { name: en.nav.today }).click();
+  await main.getByRole("link", { name: en.today.start }).click();
+  await expect(page.locator(":focus")).toContainText("你好");
+  await page.keyboard.press("Space");
+  await expect(page.locator(":focus")).toContainText("hello; hi");
+  await page.keyboard.press("3");
+  await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
+    "value",
+    "1",
+  );
+  await page.getByRole("link", { name: en.nav.today }).click();
+  await expect(main).toContainText(goalCount(1, 20));
+  await expect(main.getByRole("term")).toHaveCount(0);
+
+  await page.getByRole("link", { name: en.nav.profile }).click();
+  await show.check();
+  await expect(main.getByRole("progressbar", { name: en.progress.levelProgress })).toHaveAttribute(
+    "value",
+    "10",
+  );
+  await page.getByRole("link", { name: en.nav.today }).click();
+  await expect(xp).toBeVisible();
+});

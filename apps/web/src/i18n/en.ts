@@ -135,6 +135,7 @@ export const en = {
   read: { title: "Read", intro: "Graded texts and the reader." },
   progress: {
     title: "Progress",
+    show: "Show streak, XP and achievements",
     streak: "Streak",
     xp: "Experience",
     days_one: "{{count, number}} day",

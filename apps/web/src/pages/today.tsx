@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { currentSetting, DAILY_GOAL, reviewsToday } from "@/data/daily-goal";
 import { database } from "@/data/database";
 import { localNow } from "@/data/decks";
-import { loadProgress, type ProgressFailure } from "@/data/progress";
+import { loadProgress, SHOW_PROGRESS, type ProgressFailure } from "@/data/progress";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 
 const storage = (): Storage => localStorage;
@@ -94,14 +94,19 @@ export const TodayPage = () => {
   const { t } = useTranslation();
   const [goal] = useState(() => currentSetting(storage, DAILY_GOAL));
   const reviews = useMemo(() => reviewsToday(database, localNow()), []);
-  const progress = useMemo(() => loadProgress(database, localNow()), []);
+  const progress = useMemo(
+    () => (currentSetting(storage, SHOW_PROGRESS) ? loadProgress(database, localNow()) : null),
+    [],
+  );
   return (
     <section>
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-title">{t("today.title")}</h1>
-        <Suspense fallback={null}>
-          <Chips progress={progress} />
-        </Suspense>
+        {progress !== null && (
+          <Suspense fallback={null}>
+            <Chips progress={progress} />
+          </Suspense>
+        )}
       </header>
       <p className="mt-2 text-muted">{t("today.intro")}</p>
       <Suspense fallback={null}>
