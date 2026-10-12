@@ -132,3 +132,62 @@ test("imports an Anki deck with its sounds and notes of its own, then reviews th
   await expect(main.getByRole("button", { name: en.review.playAudio })).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
 });
+
+const HISTORY = fileURLToPath(
+  new URL("../fixtures/anki/anki-26.09.3-history-latest.apkg", import.meta.url),
+);
+
+test.describe("with a review history", () => {
+  test.use({ timezoneId: "Asia/Shanghai" });
+
+  test("imports the review history of the chosen cards, dated in this device's time zone", async ({
+    page,
+  }) => {
+    const main = page.getByRole("main");
+    await page.goto("/learn");
+    const importLink = main.getByRole("link", { name: en.decks.importAnki });
+    await expect(importLink).toBeVisible({ timeout: 90_000 });
+    await importLink.click();
+    const chooser = page.waitForEvent("filechooser");
+    await main.getByRole("button", { name: en.ankiImport.choose }).click();
+    await (await chooser).setFiles(HISTORY);
+
+    const withHistory = main.getByRole("checkbox", { name: en.ankiImport.withHistory });
+    await expect(withHistory).not.toBeChecked();
+    const history = (count: number) =>
+      main.getByText(new RegExp(`^${String(count)} reviews from Anki join the history \\(`, "u"));
+    await expect(main.getByText(fill(en.ankiImport.words_other, { count: 3 }))).toBeVisible();
+    await expect(history(12)).toHaveCount(0);
+    await withHistory.check();
+
+    const chinese = main.getByRole("region", {
+      name: fill(en.ankiImport.noteType, { name: "Chinese history" }),
+    });
+    const recall = chinese.getByRole("combobox", { name: en.ankiImport.cards.recall });
+    await expect(
+      chinese
+        .getByRole("combobox", { name: en.ankiImport.cards.recognition })
+        .locator("option:checked"),
+    ).toHaveText("Reading");
+    await expect(recall.locator("option:checked")).toHaveText("Writing");
+    await expect(history(12)).toBeVisible();
+    await expect(
+      main.getByText(fill(en.ankiImport.timeZone, { zone: "Asia/Shanghai" })),
+    ).toBeVisible();
+    await expect(main.getByText(fill(en.ankiImport.historyCounts, { goal: 20 }))).toBeVisible();
+    expect(await accessibilityViolations(page)).toEqual([]);
+
+    await recall.selectOption({ label: en.ankiImport.noHistory });
+    await expect(history(10)).toBeVisible();
+    await recall.selectOption({ label: "Writing" });
+    await expect(history(12)).toBeVisible();
+
+    await main.getByRole("button", { name: en.ankiImport.import, exact: true }).click();
+    await expect(
+      main.getByRole("status").filter({ hasText: "12 reviews added to the history." }),
+    ).toBeVisible();
+    await main.getByRole("link", { name: en.ankiImport.backToLearn }).click();
+    // Only the recall cards of 谢谢, 学习 and the note of its own were never answered.
+    await expect(deck(page, "History test").getByRole("definition").first()).toHaveText("3");
+  });
+});

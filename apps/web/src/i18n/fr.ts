@@ -98,6 +98,10 @@ export const fr: Messages = {
     choose: "Choisir un fichier .apkg",
     reading: "Lecture du fichier…",
     file: "Fichier\u00a0: {{name}}",
+    withHistory:
+      "Importer l’historique des révisions, pour que les cartes reprennent là où elles en étaient dans Anki",
+    noHistoryInFile:
+      "Ce fichier n’a pas d’historique des révisions. Pour l’importer, exportez-le depuis Anki en cochant «\u00a0Inclure les données de planification\u00a0».",
     notApkg: "Ce fichier n’est pas un paquet Anki (.apkg).",
     tooNew:
       "Ce paquet vient d’une version plus récente d’Anki (format {{version}}). Dans Anki, exportez-le de nouveau en cochant «\u00a0Prendre en charge les anciennes versions d’Anki\u00a0».",
@@ -111,6 +115,11 @@ export const fr: Messages = {
     roles: { characters: "Caractères", pinyin: "Pinyin", meaning: "Sens", audio: "Son" },
     notUsed: "Non utilisé",
     leftOut: "Non importé",
+    cards: {
+      recognition: "Historique en reconnaissance (des caractères au sens)",
+      recall: "Historique en rappel (du sens aux caractères)",
+    },
+    noHistory: "Aucun",
     preview: "Premières notes",
     summary: "Bilan",
     checking: "Recherche des notes dans le dictionnaire…",
@@ -128,6 +137,14 @@ export const fr: Messages = {
     noMeaning: "sans sens, ignorée",
     withNotes_one: "Ajouter la note qui a un sens comme carte à part entière",
     withNotes_other: "Ajouter les {{count}} notes qui ont un sens comme cartes à part entière",
+    history_one: "{{count, number}} révision d’Anki rejoint l’historique ({{dates}}).",
+    history_other: "{{count, number}} révisions d’Anki rejoignent l’historique ({{dates}}).",
+    noAnswers:
+      "Aucune carte choisie n’a de révision dans ce fichier\u00a0: choisissez quelles cartes Anki donnent chaque historique.",
+    timeZone:
+      "Anki n’enregistre pas les fuseaux horaires\u00a0: les révisions sont datées dans celui de cet appareil, {{zone}}.",
+    historyCounts:
+      "Comme les révisions faites ici, elles comptent pour l’XP, la série et les succès\u00a0; l’objectif d’un jour passé est atteint si ses révisions atteignent votre objectif du jour actuel, {{goal}}.",
     ignored_one:
       "{{count}} note est laissée de côté\u00a0: son type de note n’est pas importé, ou elle n’a pas de caractères.",
     ignored_other:
@@ -147,6 +164,9 @@ export const fr: Messages = {
     import: "Importer",
     importing: "Import en cours…",
     imported: "«\u00a0{{name}}\u00a0» créé avec {{words}} mots, {{notes}} notes et {{audio}} sons.",
+    importedReviews_one: "{{count, number}} révision ajoutée à l’historique.",
+    importedReviews_other: "{{count, number}} révisions ajoutées à l’historique.",
+    noNewReviews: "Aucune révision ajoutée\u00a0: elles étaient déjà dans l’historique.",
     importFailed: "L’import a échoué, rien n’a été écrit\u00a0: {{reason}}",
     mappingNotSaved:
       "Le choix des champs n’a pas pu être mémorisé dans ce navigateur\u00a0: {{reason}}",

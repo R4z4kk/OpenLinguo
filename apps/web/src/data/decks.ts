@@ -10,6 +10,7 @@ import {
   subjectId,
   subjectOf,
   type Result,
+  type Review,
   type Subject,
   type WordKey,
 } from "@openlinguo/core";
@@ -129,25 +130,40 @@ export const renameDeck = (
     }),
   );
 
-/** Stores the missing cards of readings and notes with their state replayed from the log. */
+/**
+ * Stores the missing cards of readings and notes, and the reviews of their cards not yet in the
+ * log, with every card they touch replayed from its merged log. Nothing is written unless every
+ * replay succeeds. Returns the number of reviews added.
+ */
 export const putCards = async (
   db: Database,
   subjects: readonly Subject[],
-): Promise<Result<null, ReviewLogFailure>> => {
+  reviews: readonly Review[] = [],
+): Promise<Result<number, ReviewLogFailure>> => {
   const cards = subjects.flatMap((subject) => newCards("zh", subject));
   const stored = await db.cards.bulkGet(cards.map((card) => card.id));
-  const missing = cards.filter((_, index) => stored[index] == null);
+  const logged = await db.reviews.bulkGet(reviews.map((review) => review.id));
+  const added = Map.groupBy(
+    reviews.filter((_, index) => logged[index] == null),
+    (review) => review.cardId,
+  );
+  const known = new Set(cards.map((card) => card.id));
+  const foreign = [...added.keys()].find((id) => !known.has(id));
+  if (foreign != null) return err({ kind: "unknown-card", cardId: foreign });
+  const touched = cards.filter((card, index) => stored[index] == null || added.has(card.id));
   const logs = await Promise.all(
-    missing.map((card) => db.reviews.where("cardId").equals(card.id).toArray()),
+    touched.map((card) => db.reviews.where("cardId").equals(card.id).toArray()),
   );
   const replayed: StoredCard[] = [];
-  for (const [index, card] of missing.entries()) {
-    const state = replay(card.id, logs[index] ?? []);
+  for (const [index, card] of touched.entries()) {
+    const state = replay(card.id, [...(logs[index] ?? []), ...(added.get(card.id) ?? [])]);
     if (!state.ok) return state;
     replayed.push({ ...card, ...state.value });
   }
+  const newReviews = [...added.values()].flat();
+  await db.reviews.bulkAdd(newReviews);
   await db.cards.bulkPut(replayed);
-  return ok(null);
+  return ok(newReviews.length);
 };
 
 /**
@@ -178,7 +194,12 @@ export const introduceWord = (
   db: Database,
   subject: Subject,
 ): Promise<Result<null, ReviewLogFailure>> =>
-  guarded(() => db.transaction("rw", [db.cards, db.reviews], () => putCards(db, [subject])));
+  guarded(() =>
+    db.transaction("rw", [db.cards, db.reviews], async () => {
+      const stored = await putCards(db, [subject]);
+      return stored.ok ? ok(null) : stored;
+    }),
+  );
 
 /**
  * Files a reading in a deck, with its progress back if it was filed before, or takes it out with

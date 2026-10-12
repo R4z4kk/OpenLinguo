@@ -4,17 +4,41 @@ import { z } from "zod";
 import { openSqlite, type SqlRow, type SqliteFailure } from "@/lib/sqlite";
 import { openZip, type ZipArchive, type ZipEntry, type ZipFailure } from "@/lib/zip";
 
+export type AnkiTemplate = {
+  readonly name: string;
+  /** The question side's template, with its `{{Field}}` replacements. */
+  readonly front: string;
+};
+
 export type AnkiNoteType = {
   readonly id: string;
   readonly name: string;
   readonly fields: readonly string[];
+  /** Card templates in order; a cloze note type has one, shared by all its cards. */
+  readonly templates: readonly AnkiTemplate[];
 };
 
 /** Field values as Anki stores them: HTML. `guid` stays the same across exports of the note. */
 export type AnkiNote = {
+  readonly id: string;
   readonly guid: string;
   readonly noteTypeId: string;
   readonly fields: readonly string[];
+};
+
+/** `ord` is the template's order, or the cloze number minus one. */
+export type AnkiCard = { readonly id: string; readonly noteId: string; readonly ord: number };
+
+/**
+ * A `revlog` row (rslib/src/revlog/mod.rs): `id` is the answer time in milliseconds, `ease` the
+ * button (0 when none), `type` the kind of review and `factor` the ease factor after it.
+ */
+export type AnkiReview = {
+  readonly id: number;
+  readonly cardId: string;
+  readonly ease: number;
+  readonly type: number;
+  readonly factor: number;
 };
 
 export type AnkiMedia = { readonly entry: ZipEntry; readonly size: number };
@@ -25,6 +49,14 @@ export type AnkiPackage = {
   /** Note types with at least one note, in note order. */
   readonly noteTypes: readonly AnkiNoteType[];
   readonly notes: readonly AnkiNote[];
+  readonly cards: readonly AnkiCard[];
+  /** The review log of the cards, empty when exported without scheduling. */
+  readonly reviews: readonly AnkiReview[];
+  /**
+   * Whether learning steps had 3 buttons. Anki writes `collection.anki2` with scheduling only from
+   * a collection on the v1 scheduler (`_v2sched` in pylib's `AnkiExporter`).
+   */
+  readonly v1Scheduler: boolean;
   /** Media files present in the package, by name. */
   readonly media: ReadonlyMap<string, AnkiMedia>;
   readonly read: (media: AnkiMedia) => Promise<Result<Uint8Array, AnkiFailure>>;
@@ -46,7 +78,10 @@ const COLLECTIONS = new Map([
   [2, "collection.anki21"],
   [3, "collection.anki21b"],
 ]);
+const LEGACY1 = 1;
 const LATEST = 3;
+/** Revlog ids are milliseconds; review ids keep them in 48 bits, until the year 10889. */
+const MAX_TIME = 2 ** 48;
 const FIELD_SEPARATOR = "\x1f";
 const DECK_SEPARATOR = "::";
 
@@ -64,13 +99,16 @@ const corrupt = (detail: string): never => {
 
 type ProtoField = { readonly field: number; readonly value: number | Uint8Array };
 
-/** Top-level fields of a protobuf message; fixed-width fields are skipped. */
+/**
+ * Top-level fields of a protobuf message; fixed-width fields are skipped. Varints take up to 10
+ * bytes; past 2^53 they lose precision, as only skipped ids such as a template's get there.
+ */
 const protoFields = (bytes: Uint8Array): ProtoField[] => {
   const fields: ProtoField[] = [];
   let at = 0;
   const varint = (): number => {
     let value = 0;
-    for (let scale = 1; scale < 2 ** 56; scale *= 128) {
+    for (let scale = 1; scale < 2 ** 70; scale *= 128) {
       const byte = bytes[at++] ?? corrupt("protobuf cut short");
       value += (byte & 0x7f) * scale;
       if (byte < 0x80) return value;
@@ -132,11 +170,19 @@ const id = (value: unknown, what: string): string =>
     ? String(value)
     : corrupt(`${what} is not an id`);
 
+const time = (value: unknown, what: string): number =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0 && value < MAX_TIME
+    ? value
+    : corrupt(`${what} is not a time`);
+
 const LegacyNoteTypes = z.record(
   z.string(),
   z.object({
     name: z.string(),
     flds: z.array(z.object({ name: z.string(), ord: z.number().int() })),
+    tmpls: z
+      .array(z.object({ name: z.string(), ord: z.number().int(), qfmt: z.string().default("") }))
+      .default([]),
   }),
 );
 const LegacyDecks = z.record(z.string(), z.object({ name: z.string() }));
@@ -159,7 +205,12 @@ type Schema = {
   readonly decks: ReadonlyMap<string, string>;
 };
 
-/** Schema 18: `notetypes`, `fields` (WITHOUT ROWID) and `decks`, whose names separate levels with 0x1f. */
+const byOrd = (a: { readonly ord: number }, b: { readonly ord: number }): number => a.ord - b.ord;
+
+/**
+ * Schema 18: `notetypes`, `fields` and `templates` (both WITHOUT ROWID; a template's config is a
+ * protobuf whose field 1 is the front) and `decks`, whose names separate levels with 0x1f.
+ */
 const latestSchema = (rows: Rows): Schema => {
   const fields = Map.groupBy(
     rows("fields").map(({ values: [noteType, ord, name] }) => ({
@@ -169,14 +220,33 @@ const latestSchema = (rows: Rows): Schema => {
     })),
     (field) => field.noteType,
   );
+  const templates = Map.groupBy(
+    rows("templates").map(({ values: [noteType, ord, name, , , config] }) => ({
+      noteType: id(noteType, "template note type"),
+      ord: integer(ord, "template order"),
+      name: text(name, "template name"),
+      front: new TextDecoder().decode(
+        bytesField(
+          protoFields(config instanceof Uint8Array ? config : corrupt("template config")),
+          1,
+        ) ?? new Uint8Array(),
+      ),
+    })),
+    (template) => template.noteType,
+  );
   return {
     noteTypes: new Map(
       rows("notetypes").map(({ rowid, values: [, name] }) => {
         const noteType = id(rowid, "note type id");
-        const names = (fields.get(noteType) ?? []).sort((a, b) => a.ord - b.ord);
         return [
           noteType,
-          { name: text(name, "note type name"), fields: names.map((field) => field.name) },
+          {
+            name: text(name, "note type name"),
+            fields: (fields.get(noteType) ?? []).sort(byOrd).map((field) => field.name),
+            templates: (templates.get(noteType) ?? [])
+              .sort(byOrd)
+              .map((template) => ({ name: template.name, front: template.front })),
+          },
         ];
       }),
     ),
@@ -197,9 +267,16 @@ const legacySchema = (rows: Rows): Schema => {
   const decks = json(LegacyDecks, col.values[10], "decks");
   return {
     noteTypes: new Map(
-      Object.entries(noteTypes).map(([key, { name, flds }]) => [
+      Object.entries(noteTypes).map(([key, { name, flds, tmpls }]) => [
         key,
-        { name, fields: flds.sort((a, b) => a.ord - b.ord).map((field) => field.name) },
+        {
+          name,
+          fields: flds.sort(byOrd).map((field) => field.name),
+          templates: tmpls.sort(byOrd).map((template) => ({
+            name: template.name,
+            front: template.qfmt,
+          })),
+        },
       ]),
     ),
     decks: new Map(Object.entries(decks).map(([key, deck]) => [key, deck.name])),
@@ -270,7 +347,8 @@ const parsePackage = async (archive: ZipArchive): Promise<AnkiPackage> => {
   };
 
   const schema = latest ? latestSchema(rows) : legacySchema(rows);
-  const notes = rows("notes").map(({ values }) => ({
+  const notes = rows("notes").map(({ rowid, values }) => ({
+    id: id(rowid, "note id"),
     guid: text(values[1], "note guid"),
     noteTypeId: id(values[2], "note type of a note"),
     fields: text(values[6], "note fields").split(FIELD_SEPARATOR),
@@ -279,8 +357,21 @@ const parsePackage = async (archive: ZipArchive): Promise<AnkiPackage> => {
     const noteType = schema.noteTypes.get(noteTypeId) ?? corrupt(`no note type ${noteTypeId}`);
     return { id: noteTypeId, ...noteType };
   });
-  const deckIds = new Set(rows("cards").map(({ values }) => id(values[2], "deck of a card")));
+  const cardRows = rows("cards");
+  const cards = cardRows.map(({ rowid, values }) => ({
+    id: id(rowid, "card id"),
+    noteId: id(values[1], "note of a card"),
+    ord: integer(values[3], "card template"),
+  }));
+  const deckIds = new Set(cardRows.map(({ values }) => id(values[2], "deck of a card")));
   const deckName = commonDeck([...deckIds].flatMap((deck) => schema.decks.get(deck) ?? []));
+  const reviews = rows("revlog").map(({ rowid, values }) => ({
+    id: time(rowid, "review id"),
+    cardId: id(values[1], "card of a review"),
+    ease: integer(values[3], "review button"),
+    type: integer(values[8], "review kind"),
+    factor: integer(values[6], "review ease factor"),
+  }));
 
   const list = await readEntry(archive, "media");
   const listed =
@@ -308,7 +399,16 @@ const parsePackage = async (archive: ZipArchive): Promise<AnkiPackage> => {
       return err({ kind: "corrupt-package", detail: String(error) });
     }
   };
-  return { deckName, noteTypes, notes, media, read };
+  return {
+    deckName,
+    noteTypes,
+    notes,
+    cards,
+    reviews,
+    v1Scheduler: packageVersion === LEGACY1,
+    media,
+    read,
+  };
 };
 
 /** Reads an `.apkg` file locally: Legacy1 (`collection.anki2`), Legacy2 (`.anki21`) and Latest (`.anki21b`). */
