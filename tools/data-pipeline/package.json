@@ -6,6 +6,7 @@
   "scripts": {
     "freshness": "node src/check-freshness.ts",
     "pipeline": "node src/cli.ts",
+    "tts-bakeoff": "node src/tts/bakeoff.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
