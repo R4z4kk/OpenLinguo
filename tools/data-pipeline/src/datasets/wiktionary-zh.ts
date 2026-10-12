@@ -1,10 +1,10 @@
-import { gunzipSync, gzipSync } from "node:zlib";
+import { gunzipSync } from "node:zlib";
 import { err, ok, parseWith, type Result } from "@openlinguo/core";
 import { joinedToNumbered, type JoinedPinyinError } from "@openlinguo/lang-zh";
 import { z } from "zod";
 import { parseJsonLineBytes } from "../jsonl.ts";
 import { sha256, type Dataset, type ShardReader } from "../run.ts";
-import { toShards } from "../shards.ts";
+import { payloadOf, toShards } from "../shards.ts";
 import { countBy, Form, formsTagged, HAN, readingsOf, Sound, Tags, tsv } from "./wiktextract.ts";
 
 /** The fields used from a wiktextract line; other fields are ignored. */
@@ -216,20 +216,6 @@ export const parseEnglishWiktionary = (
 };
 
 const SHARD_SIZE = 10_000;
-
-const megabytes = (bytes: number): string => `${(bytes / 1_000_000).toFixed(1)} MB`;
-
-/** Shard bytes as stored, and gzipped one file at a time as a server sends them. */
-const payloadOf = (shards: ReadonlyMap<string, string>): string => {
-  let raw = 0;
-  let gzipped = 0;
-  for (const content of shards.values()) {
-    const bytes = new TextEncoder().encode(content);
-    raw += bytes.length;
-    gzipped += gzipSync(bytes).length;
-  }
-  return `${megabytes(raw)} of JSON in ${String(shards.size)} files, ${megabytes(gzipped)} gzipped`;
-};
 
 const readme = (
   version: string,

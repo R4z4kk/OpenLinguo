@@ -284,7 +284,14 @@ export const fr: Messages = {
     wordfreq: "Fréquences des mots",
     makemeahanzi: "Décomposition des caractères",
     "hanzi-writer-data": "Ordre des traits",
+    jieba: "Indices de noms propres",
     fonts: "Polices",
+  },
+  nameProposal: {
+    person: "Nom de personne probable",
+    place: "Nom de lieu probable",
+    organization: "Nom d’organisation probable",
+    name: "Nom propre probable",
   },
   about: {
     title: "À propos d’OpenLinguo",

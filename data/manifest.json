@@ -95,6 +95,14 @@
     "maxAgeDays": 365,
     "sha256": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2"
   },
+  "jieba-names": {
+    "source": "https://raw.githubusercontent.com/fxsjy/jieba/67fa2e36e72f69d9134b8a1037b83fbb070b9775/jieba/dict.txt",
+    "license": "MIT",
+    "version": "fxsjy/jieba@67fa2e3",
+    "retrievedAt": "2026-10-12T12:36:41.308Z",
+    "maxAgeDays": 365,
+    "sha256": "7197c3211ddd98962b036cdf40324d1ea2bfaa12bd028e68faa70111a88e12a8"
+  },
   "makemeahanzi": {
     "source": "https://raw.githubusercontent.com/skishore/makemeahanzi/bddc96d41bef78427ed0e034e9f7e31d71fd1b92/dictionary.txt",
     "license": "LGPL-3.0-or-later",

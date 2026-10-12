@@ -274,7 +274,14 @@ export const en = {
     wordfreq: "Word frequencies",
     makemeahanzi: "Character decomposition",
     "hanzi-writer-data": "Stroke order",
+    jieba: "Proper-name hints",
     fonts: "Fonts",
+  },
+  nameProposal: {
+    person: "Probable person name",
+    place: "Probable place name",
+    organization: "Probable organization name",
+    name: "Probable proper name",
   },
   about: {
     title: "About OpenLinguo",

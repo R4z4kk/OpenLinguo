@@ -89,6 +89,14 @@ export const CREDITS = {
     license: "Arphic Public License",
     licenseUrl: "/data/licenses/hanzi-writer-data/ARPHICPL.txt",
   },
+  jieba: {
+    name: "jieba",
+    url: "https://github.com/fxsjy/jieba",
+    holder: "Sun Junyi",
+    site: null,
+    license: "MIT",
+    licenseUrl: "/data/licenses/jieba/LICENSE.txt",
+  },
   fonts: {
     name: "Atkinson Hyperlegible Next, Noto Sans SC, LXGW WenKai GB, OpenLinguo Han Fallback",
     url: "https://openfontlicense.org",
