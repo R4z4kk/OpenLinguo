@@ -1,8 +1,9 @@
 import "fake-indexeddb/auto";
 import { openAsBlob } from "node:fs";
-import { err, ok, type WordKey } from "@openlinguo/core";
+import { cardId, CURRENT_SCHEDULER, err, ok, type WordKey } from "@openlinguo/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  audioBytes,
   audioType,
   fieldText,
   freeSpace,
@@ -19,6 +20,7 @@ import {
 import { readPackage, type AnkiNoteType, type AnkiPackage } from "./anki-package.ts";
 import { deckWordId, openDatabase, type Database, type StoredEntry } from "./database.ts";
 import { createDeck, deleteDeck, fileWord } from "./decks.ts";
+import { recordReview } from "./review-log.ts";
 
 const entry = (simplified: string, reading: string, variants: string[] = []): StoredEntry => ({
   id: `${simplified}\t${reading.toLowerCase()}`,
@@ -78,7 +80,11 @@ const CHINESE: AnkiNoteType = { id: "1", name: "Chinese", fields: ["Hanzi", "Pin
 const notesPackage = (notes: readonly (readonly [string, string])[]): AnkiPackage => ({
   deckName: null,
   noteTypes: [CHINESE],
-  notes: notes.map((fields) => ({ noteTypeId: CHINESE.id, fields })),
+  notes: notes.map((fields, index) => ({
+    guid: `g${String(index)}`,
+    noteTypeId: CHINESE.id,
+    fields,
+  })),
   media: new Map(),
   read: () => Promise.resolve(err({ kind: "no-collection" })),
 });
@@ -220,13 +226,51 @@ describe("planImport", () => {
         reason: "not-found",
       },
     ]);
+    const guidOf = (characters: string) =>
+      ankiPackage.notes.find((note) => note.fields[0] === characters)?.guid;
+    expect(plan.notes.map(({ audio, ...note }) => [note, audio?.name ?? null])).toEqual([
+      [{ note: guidOf("了"), characters: "了", pinyin: "", meaning: "particle" }, null],
+      [
+        {
+          note: guidOf("不存在词语"),
+          characters: "不存在词语",
+          pinyin: "bù cún zài",
+          meaning: "made up",
+        },
+        "fake.mp3",
+      ],
+    ]);
     expect(plan.ignored).toBe(0);
     expect(plan.notAudio).toEqual(["chi.js"]);
     expect(plan.missingAudio).toEqual(["missing.mp3"]);
-    expect(plan.audioBytes).toBe(
-      plan.words.reduce((sum, planned) => sum + (planned.audio?.media.size ?? 0), 0),
+    expect(audioBytes(plan)).toBe(
+      [...plan.words, ...plan.notes].reduce((sum, item) => sum + (item.audio?.media.size ?? 0), 0),
     );
-    expect(plan.audioBytes).toBeGreaterThan(1600);
+    expect(audioBytes({ ...plan, notes: [] })).toBeGreaterThan(1600);
+  });
+
+  it("offers the unmatched notes with a meaning as cards of their own, once per guid", async () => {
+    const note = (guid: string, fields: readonly string[]) => ({
+      guid,
+      noteTypeId: CHINESE.id,
+      fields,
+    });
+    const plan = await planned(
+      {
+        ...notesPackage([]),
+        notes: [
+          note("a", ["不存在", "bù cún zài", "<b>made</b> up"]),
+          note("a", ["不存在", "bù", "again"]),
+          note("b", ["无意", "wú yì", ""]),
+          note("", ["无号", "", "no guid"]),
+        ],
+      },
+      new Map([[CHINESE.id, { characters: 0, pinyin: 1, meaning: 2, audio: null }]]),
+    );
+    expect(plan.notes).toEqual([
+      { note: "a", characters: "不存在", pinyin: "bù cún zài", meaning: "made up", audio: null },
+    ]);
+    expect(plan.unmatched).toHaveLength(4);
   });
 
   it("chooses a reading by pinyin, toneless or with sandhi tones", async () => {
@@ -270,31 +314,81 @@ describe("planImport", () => {
 describe("importPlan", () => {
   const audioRows = () => db.audio.toArray();
 
-  it("creates the deck with its readings' cards and audio", async () => {
+  const review = (id: string) => ({
+    id: crypto.randomUUID(),
+    cardId: id,
+    grade: "good" as const,
+    reviewedAt: Date.now(),
+    utcOffsetMinutes: 0,
+    scheduler: CURRENT_SCHEDULER,
+    dailyGoal: 20,
+  });
+
+  it("creates the deck with the cards and audio of its readings and notes", async () => {
     const ankiPackage = await fixture();
     const plan = await planned(ankiPackage, guessed(ankiPackage));
     expect(await importPlan(db, ankiPackage, plan, "  HSK test  ")).toEqual(
-      ok({ name: "HSK test", words: 7, audio: 4 }),
+      ok({ name: "HSK test", words: 7, notes: 2, audio: 5 }),
     );
     const [deck] = await db.decks.toArray();
     if (deck == null) throw new Error("no deck");
     expect(deck.name).toBe("HSK test");
-    expect(await db.deckWords.count()).toBe(7);
-    expect(await db.cards.count()).toBe(14);
+    expect(await db.deckWords.count()).toBe(9);
+    expect(await db.cards.count()).toBe(18);
+    const [, made] = plan.notes;
+    if (made == null) throw new Error("no note");
+    expect(await db.notes.get(made.note)).toEqual({
+      id: made.note,
+      characters: "不存在词语",
+      pinyin: "bù cún zài",
+      meaning: "made up",
+      updatedAt: expect.any(Number) as number,
+    });
     const audio = await audioRows();
-    expect(audio.map(({ id, type }) => [id, type])).toContainEqual([
-      deckWordId(deck.id, word("你好", "ni3 hao3")),
-      "audio/wav",
-    ]);
+    expect(audio.map(({ id, type }) => [id, type])).toEqual(
+      expect.arrayContaining([
+        [deckWordId(deck.id, word("你好", "ni3 hao3")), "audio/wav"],
+        [deckWordId(deck.id, made), "audio/mpeg"],
+      ]),
+    );
     const wav = audio.find((row) => row.type === "audio/wav");
     expect(wav && [...new Uint8Array(wav.data).subarray(0, 4)]).toEqual([0x52, 0x49, 0x46, 0x46]);
 
     expect(await fileWord(db, deck.id, word("你好", "ni3 hao3"), false, "hsk-2025")).toEqual(
       ok(null),
     );
-    expect(await db.audio.count()).toBe(3);
+    expect(await db.audio.count()).toBe(4);
+    const graded = await recordReview(
+      db,
+      review(cardId({ language: "zh", note: made.note, type: "recognition" })),
+    );
+    expect(graded.ok).toBe(true);
     expect(await deleteDeck(db, deck.id, "hsk-2025")).toEqual(ok(null));
     expect(await db.audio.count()).toBe(0);
+    expect(await db.notes.count()).toBe(0);
+    expect(await db.cards.count()).toBe(0);
+    expect(await db.reviews.count()).toBe(1);
+  });
+
+  it("imports a note again as the same cards, with its new content", async () => {
+    const ankiPackage = await fixture();
+    const plan = await planned(ankiPackage, guessed(ankiPackage));
+    await importPlan(db, ankiPackage, plan, "First");
+    const [first] = await db.decks.toArray();
+    if (first == null) throw new Error("no deck");
+    const [particle] = plan.notes;
+    if (particle == null) throw new Error("no note");
+    const id = cardId({ language: "zh", note: particle.note, type: "recognition" });
+    await recordReview(db, review(id));
+    const changed = { ...plan, notes: plan.notes.map((note) => ({ ...note, meaning: "changed" })) };
+    expect(await importPlan(db, ankiPackage, changed, "Second")).toMatchObject(ok({ notes: 2 }));
+    expect(await db.cards.count()).toBe(18);
+    expect((await db.cards.get(id))?.phase).not.toBe("new");
+    expect((await db.notes.toArray()).map((note) => note.meaning)).toEqual(["changed", "changed"]);
+
+    expect(await deleteDeck(db, first.id, "hsk-2025")).toEqual(ok(null));
+    expect(await db.notes.count()).toBe(2);
+    expect(await db.cards.count()).toBe(18);
   });
 
   it("writes nothing when the name is taken or the audio cannot be read", async () => {
@@ -312,6 +406,7 @@ describe("importPlan", () => {
     expect(await db.decks.count()).toBe(1);
     expect(await db.deckWords.count()).toBe(0);
     expect(await db.cards.count()).toBe(0);
+    expect(await db.notes.count()).toBe(0);
     expect(await audioRows()).toEqual([]);
   });
 });
@@ -324,9 +419,11 @@ describe("free space", () => {
     expect(await freeSpace({ estimate: () => Promise.resolve({}) })).toBeNull();
     expect(await freeSpace({ estimate: () => Promise.reject(new Error("no")) })).toBeNull();
     expect(await freeSpace(null)).toBeNull();
-    const plan = { audioBytes: 80 } as const satisfies Pick<ImportPlan, "audioBytes">;
-    expect(isQuotaShort(plan, 70)).toBe(true);
-    expect(isQuotaShort(plan, 80)).toBe(false);
+    const ankiPackage = await fixture();
+    const plan = await planned(ankiPackage, guessed(ankiPackage));
+    const bytes = audioBytes(plan);
+    expect(isQuotaShort(plan, bytes - 1)).toBe(true);
+    expect(isQuotaShort(plan, bytes)).toBe(false);
     expect(isQuotaShort(plan, null)).toBe(false);
   });
 });

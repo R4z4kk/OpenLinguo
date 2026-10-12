@@ -1,5 +1,5 @@
 import { err, ok, type Result } from "./result.ts";
-import { cardKey, chronological, learningDay, type Review } from "./srs.ts";
+import { cardKey, chronological, learningDay, subjectId, type Review } from "./srs.ts";
 
 const DAY = 24 * 60 * 60_000;
 
@@ -43,7 +43,7 @@ export type Progress = {
   readonly level: number;
   readonly streak: number;
   readonly freezes: number;
-  /** `words`: readings with a review; `goalDays`: learning days whose goal was met. */
+  /** `words`: readings and notes with a review; `goalDays`: learning days whose goal was met. */
   readonly totals: Readonly<Record<Metric, number>>;
   readonly achievements: readonly string[];
 };
@@ -58,8 +58,8 @@ export const addDays = (day: string, count: number): string =>
 export type DayActivity = { readonly reviews: number; readonly goalMet: boolean };
 
 /**
- * Reviews per learning day and distinct readings, in any order. A day is met once its count
- * reaches the goal stamped on the review just made, so lowering the goal counts at the next
+ * Reviews per learning day and distinct readings and notes, in any order. A day is met once its
+ * count reaches the goal stamped on the review just made, so lowering the goal counts at the next
  * review and raising it never unmeets a day.
  */
 export const tally = (
@@ -76,7 +76,7 @@ export const tally = (
     ids.add(review.id);
     const key = cardKey(review.cardId);
     if (key === null) return err({ kind: "invalid-card-id", reviewId: review.id });
-    words.add(JSON.stringify([key.language, key.headword, key.readingKey]));
+    words.add(JSON.stringify([key.language, subjectId(key)]));
     const day = learningDay(review.reviewedAt, review.utcOffsetMinutes);
     const before = days.get(day) ?? { reviews: 0, goalMet: false };
     const count = before.reviews + 1;

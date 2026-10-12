@@ -1,9 +1,15 @@
-import { err, ok, type Result, type WordKey } from "@openlinguo/core";
+import { err, ok, subjectOf, type NoteKey, type Result, type WordKey } from "@openlinguo/core";
 import { matchesPinyin, parsePinyinQuery, searchKey } from "@openlinguo/lang-zh";
 import { z } from "zod";
 import { readStored, writeStored } from "@/lib/stored";
 import type { AnkiFailure, AnkiMedia, AnkiNoteType, AnkiPackage } from "./anki-package.ts";
-import { deckWordId, type Database, type StoredAudio, type StoredEntry } from "./database.ts";
+import {
+  deckWordId,
+  type Database,
+  type NoteContent,
+  type StoredAudio,
+  type StoredEntry,
+} from "./database.ts";
 import { checkName, putCards, type DeckNameFailure } from "./decks.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
@@ -213,19 +219,25 @@ export type PlannedAudio = {
 
 export type PlannedWord = WordKey & { readonly audio: PlannedAudio | null };
 
+export type PlannedNote = NoteKey & NoteContent & { readonly audio: PlannedAudio | null };
+
 export type ImportPlan = {
   /** Distinct readings, in note order. */
   readonly words: readonly PlannedWord[];
+  /** Unmatched notes with a meaning, offered as cards of their own, keyed by guid. */
+  readonly notes: readonly PlannedNote[];
   readonly unmatched: readonly Unmatched[];
   /** Notes of note types left out, or with empty characters. */
   readonly ignored: number;
-  /** Sounds of matched notes absent from the package. */
+  /** Sounds of matched and offered notes absent from the package. */
   readonly missingAudio: readonly string[];
-  /** Media of matched notes that is not audio. */
+  /** Media of matched and offered notes that is not audio. */
   readonly notAudio: readonly string[];
-  /** Uncompressed size of the audio to store. */
-  readonly audioBytes: number;
 };
+
+/** Uncompressed size of the audio to store. */
+export const audioBytes = ({ words, notes }: Pick<ImportPlan, "words" | "notes">): number =>
+  [...words, ...notes].reduce((sum, item) => sum + (item.audio?.media.size ?? 0), 0);
 
 const wordOf = (entry: StoredEntry): WordKey => ({
   headword: entry.simplified,
@@ -259,12 +271,12 @@ export const planImport = (
 ): Promise<Result<ImportPlan, ReviewLogFailure>> =>
   guarded(async (): Promise<Result<ImportPlan, never>> => {
     let ignored = 0;
-    const notes: NoteText[] = [];
+    const notes: (NoteText & { readonly guid: string })[] = [];
     for (const note of ankiPackage.notes) {
       const mapping = mappings.get(note.noteTypeId);
       const text = mapping == null ? null : noteText(note.fields, mapping);
       if (text === null || text.characters === "") ignored += 1;
-      else notes.push(text);
+      else notes.push({ ...text, guid: note.guid });
     }
     const forms = [...new Set(notes.map((note) => note.characters))];
     // One lookup per form: in WebKit, Dexie's `anyOf` walks the whole index (seconds here).
@@ -286,37 +298,50 @@ export const planImport = (
     }
 
     const words = new Map<string, PlannedWord>();
+    const offered = new Map<string, PlannedNote>();
     const unmatched: Unmatched[] = [];
     const missingAudio = new Set<string>();
     const notAudio = new Set<string>();
-    for (const note of notes) {
+    const audioOf = (sound: string | null): PlannedAudio | null => {
+      if (sound === null) return null;
+      const media = ankiPackage.media.get(sound) ?? null;
+      const type = audioType(sound);
+      if (type === null) notAudio.add(sound);
+      else if (media === null) missingAudio.add(sound);
+      return media !== null && type !== null ? { name: sound, type, media } : null;
+    };
+    for (const { guid, ...note } of notes) {
       const chosen = chooseReading(
         [...(readingsOf.get(note.characters)?.values() ?? [])],
         note.pinyin,
       );
       if (typeof chosen === "string") {
         unmatched.push({ ...note, reason: chosen });
+        // Without a meaning, the recall card would show nothing.
+        if (note.meaning !== "" && guid !== "" && !offered.has(guid)) {
+          const { characters, pinyin, meaning } = note;
+          offered.set(guid, {
+            note: guid,
+            characters,
+            pinyin,
+            meaning,
+            audio: audioOf(note.sound),
+          });
+        }
         continue;
       }
-      const media = note.sound === null ? null : (ankiPackage.media.get(note.sound) ?? null);
-      const type = note.sound === null ? null : audioType(note.sound);
-      if (note.sound !== null && type === null) notAudio.add(note.sound);
-      else if (note.sound !== null && media === null) missingAudio.add(note.sound);
-      const audio =
-        note.sound !== null && media !== null && type !== null
-          ? { name: note.sound, type, media }
-          : null;
+      const audio = audioOf(note.sound);
       const known = words.get(chosen.id);
       if (known == null || (known.audio === null && audio !== null))
         words.set(chosen.id, { ...wordOf(chosen), audio });
     }
     return ok({
       words: [...words.values()],
+      notes: [...offered.values()],
       unmatched,
       ignored,
       missingAudio: [...missingAudio],
       notAudio: [...notAudio],
-      audioBytes: [...words.values()].reduce((sum, word) => sum + (word.audio?.media.size ?? 0), 0),
     });
   });
 
@@ -336,55 +361,70 @@ export const freeSpace = async (
 export type ImportedDeck = {
   readonly name: string;
   readonly words: number;
+  readonly notes: number;
   readonly audio: number;
 };
 
 export type AnkiImportFailure = AnkiFailure | DeckNameFailure;
 
 /**
- * Creates the deck with its readings' cards and audio in one transaction: nothing is written
- * unless everything is. Audio is read from the package first, outside the transaction.
+ * Creates the deck with the cards and audio of its readings and notes in one transaction: nothing
+ * is written unless everything is. A note imported again keeps its cards and takes the new
+ * content. Audio is read from the package first, outside the transaction.
  */
 export const importPlan = async (
   db: Database,
   ankiPackage: AnkiPackage,
-  plan: ImportPlan,
+  plan: Pick<ImportPlan, "words" | "notes">,
   name: string,
 ): Promise<Result<ImportedDeck, AnkiImportFailure>> => {
   const deckId = crypto.randomUUID();
+  const items = [...plan.words, ...plan.notes];
   const audio: StoredAudio[] = [];
-  for (const word of plan.words) {
-    if (word.audio === null) continue;
-    const bytes = await ankiPackage.read(word.audio.media);
+  for (const item of items) {
+    if (item.audio === null) continue;
+    const bytes = await ankiPackage.read(item.audio.media);
     if (!bytes.ok) return err(bytes.error);
     const data = new ArrayBuffer(bytes.value.byteLength);
     new Uint8Array(data).set(bytes.value);
-    audio.push({ id: deckWordId(deckId, word), type: word.audio.type, data });
+    audio.push({ id: deckWordId(deckId, item), type: item.audio.type, data });
   }
+  const updatedAt = Date.now();
   return guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews, db.audio],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.audio, db.notes],
       async (): Promise<Result<ImportedDeck, AnkiImportFailure>> => {
         const checked = await checkName(db, name, null);
         if (!checked.ok) return checked;
-        const stored = await putCards(db, plan.words);
+        const stored = await putCards(db, items);
         if (!stored.ok) return stored;
         await db.decks.add({ id: deckId, name: checked.value });
         await db.deckWords.bulkAdd(
-          plan.words.map(({ headword, readingKey }) => ({
-            id: deckWordId(deckId, { headword, readingKey }),
-            deckId,
-            headword,
-            readingKey,
+          items.map((item) => ({ ...subjectOf(item), id: deckWordId(deckId, item), deckId })),
+        );
+        await db.notes.bulkPut(
+          plan.notes.map(({ note, characters, pinyin, meaning }) => ({
+            id: note,
+            characters,
+            pinyin,
+            meaning,
+            updatedAt,
           })),
         );
         await db.audio.bulkAdd(audio);
-        return ok({ name: checked.value, words: plan.words.length, audio: audio.length });
+        return ok({
+          name: checked.value,
+          words: plan.words.length,
+          notes: plan.notes.length,
+          audio: audio.length,
+        });
       },
     ),
   );
 };
 
-export const isQuotaShort = (plan: Pick<ImportPlan, "audioBytes">, free: number | null): boolean =>
-  free !== null && plan.audioBytes > free;
+export const isQuotaShort = (
+  plan: Pick<ImportPlan, "words" | "notes">,
+  free: number | null,
+): boolean => free !== null && audioBytes(plan) > free;

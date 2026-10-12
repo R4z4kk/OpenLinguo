@@ -94,7 +94,7 @@ export const fr: Messages = {
   ankiImport: {
     title: "Importer un paquet Anki",
     intro:
-      "Choisissez un fichier .apkg exporté depuis Anki. Il est lu sur cet appareil et jamais envoyé. Ses notes qui correspondent à un mot du dictionnaire rejoignent un nouveau paquet, avec leurs sons.",
+      "Choisissez un fichier .apkg exporté depuis Anki. Il est lu sur cet appareil et jamais envoyé. Ses notes rejoignent un nouveau paquet avec leurs sons\u00a0: celles qui correspondent à un mot du dictionnaire comme ce mot, les autres comme cartes à part entière.",
     choose: "Choisir un fichier .apkg",
     reading: "Lecture du fichier…",
     file: "Fichier\u00a0: {{name}}",
@@ -118,13 +118,16 @@ export const fr: Messages = {
     words_other: "{{count}} mots rejoignent le paquet.",
     audio_one: "{{count}} son, {{size}}.",
     audio_other: "{{count}} sons, {{size}}.",
-    unmatched_one: "{{count}} note sans correspondance dans le dictionnaire est ignorée",
-    unmatched_other: "{{count}} notes sans correspondance dans le dictionnaire sont ignorées",
+    unmatched_one: "{{count}} note sans correspondance dans le dictionnaire",
+    unmatched_other: "{{count}} notes sans correspondance dans le dictionnaire",
     reasons: {
       "not-found": "absente du dictionnaire",
       "several-readings": "plusieurs lectures\u00a0: choisissez un champ pinyin",
       "pinyin-differs": "son pinyin ne correspond à aucune lecture",
     },
+    noMeaning: "sans sens, ignorée",
+    withNotes_one: "Ajouter la note qui a un sens comme carte à part entière",
+    withNotes_other: "Ajouter les {{count}} notes qui ont un sens comme cartes à part entière",
     ignored_one:
       "{{count}} note est laissée de côté\u00a0: son type de note n’est pas importé, ou elle n’a pas de caractères.",
     ignored_other:
@@ -134,7 +137,8 @@ export const fr: Messages = {
     notAudio_one: "{{count}} fichier média n’est pas un son et est ignoré\u00a0: {{names}}",
     notAudio_other:
       "{{count}} fichiers média ne sont pas des sons et sont ignorés\u00a0: {{names}}",
-    nothingToImport: "Aucune note ne correspond à un mot du dictionnaire\u00a0: rien à importer.",
+    nothingToImport:
+      "Aucune note ne correspond à un mot du dictionnaire ni n’est ajoutée comme carte à part entière\u00a0: rien à importer.",
     freeUnknown: "Ce navigateur n’indique pas l’espace de stockage libre.",
     tooBig:
       "Espace de stockage insuffisant\u00a0: les sons occupent {{size}} et {{free}} sont libres. Libérez de l’espace, ou réglez le champ son sur «\u00a0Non utilisé\u00a0».",
@@ -142,7 +146,7 @@ export const fr: Messages = {
     deckName: "Nom du paquet",
     import: "Importer",
     importing: "Import en cours…",
-    imported: "«\u00a0{{name}}\u00a0» créé avec {{words}} mots et {{audio}} sons.",
+    imported: "«\u00a0{{name}}\u00a0» créé avec {{words}} mots, {{notes}} notes et {{audio}} sons.",
     importFailed: "L’import a échoué, rien n’a été écrit\u00a0: {{reason}}",
     mappingNotSaved:
       "Le choix des champs n’a pas pu être mémorisé dans ce navigateur\u00a0: {{reason}}",
@@ -350,7 +354,7 @@ export const fr: Messages = {
     import: "Importer une sauvegarde",
     exported: "Sauvegarde exportée.",
     imported:
-      "Sauvegarde importée\u00a0: révisions +{{reviews}}, cartes +{{cards}}, paquets +{{decks}}, mots classés +{{words}}.",
+      "Sauvegarde importée\u00a0: révisions +{{reviews}}, cartes +{{cards}}, paquets +{{decks}}, mots classés +{{words}}, notes mises à jour +{{notes}}.",
     exportFailed: "La sauvegarde n’a pas pu être exportée\u00a0: {{reason}}",
     readFailed: "Le fichier n’a pas pu être lu\u00a0: {{reason}}",
     notJson: "Ce fichier n’est pas une sauvegarde, ce n’est pas du JSON\u00a0: {{reason}}",

@@ -1,8 +1,8 @@
 import "fake-indexeddb/auto";
-import { cardId, ok, type CardType, type WordKey } from "@openlinguo/core";
+import { cardId, ok, type CardType, type Subject, type WordKey } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
-import { fileWord, type LocalTime } from "./decks.ts";
+import { fileWord, putCards, type LocalTime } from "./decks.ts";
 import { todayActivity } from "./daily-goal.ts";
 import { gradeItem, loadSession, type ReviewItem } from "./session.ts";
 
@@ -26,7 +26,8 @@ const MINUTE = 60_000;
 const NOON: LocalTime = { at: Date.UTC(2026, 9, 21, 10), utcOffsetMinutes: 120 };
 const later = (minutes: number): LocalTime => ({ ...NOON, at: NOON.at + minutes * MINUTE });
 
-const idOf = (word: WordKey, type: CardType): string => cardId({ language: "zh", ...word, type });
+const idOf = (subject: Subject, type: CardType): string =>
+  cardId({ language: "zh", ...subject, type });
 
 const session = async (now: LocalTime) => {
   const loaded = await loadSession(db, "hsk-2025", now, 20);
@@ -59,7 +60,7 @@ describe("loadSession", () => {
       [idOf(TIAN, "recognition"), true],
       [idOf(NI, "recognition"), true],
     ]);
-    expect(items[1]?.entry).toMatchObject({ headword: "你", reading: "ni3", level: 1 });
+    expect(items[1]).toMatchObject({ entry: { headword: "你", reading: "ni3", level: 1 } });
     expect(items[1]?.state.phase).toBe("new");
     expect(skipped).toBe(0);
     expect(await db.cards.count()).toBe(2);
@@ -70,10 +71,36 @@ describe("loadSession", () => {
     const id = deckWordId(MY_WORDS, TIAN);
     await db.audio.add({ id, type: "audio/wav", data: new ArrayBuffer(4) });
     const { items } = await session(NOON);
-    expect(items.map((item) => [item.headword, item.audio])).toEqual([
+    expect(items.map((item) => ["note" in item ? item.note : item.headword, item.audio])).toEqual([
       ["天", id],
       ["你", null],
     ]);
+  });
+
+  it("shows notes after my words with their content and audio, and grades them", async () => {
+    const note = { note: "Fx4k]?Lb!e" };
+    const lost = { note: "lost" };
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
+    for (const subject of [note, lost])
+      await db.deckWords.add({ ...subject, id: deckWordId(MY_WORDS, subject), deckId: MY_WORDS });
+    await putCards(db, [note, lost]);
+    const content = { characters: "不存在", pinyin: "bù cún zài", meaning: "made up" };
+    await db.notes.add({ ...content, id: note.note, updatedAt: 0 });
+    const audio = deckWordId(MY_WORDS, note);
+    await db.audio.add({ id: audio, type: "audio/mpeg", data: new ArrayBuffer(4) });
+
+    const { items, skipped } = await session(NOON);
+    expect(ids(items)).toEqual([
+      [idOf(TIAN, "recognition"), true],
+      [idOf(note, "recognition"), true],
+      [idOf(NI, "recognition"), true],
+    ]);
+    expect(skipped).toBe(1);
+    const [, shown] = items;
+    expect(shown).toMatchObject({ ...note, content, audio, state: { phase: "new" } });
+    if (shown == null) throw new Error("no note");
+    expect(await gradeItem(db, shown, "easy", NOON, 20, false)).toEqual(ok(null));
+    expect(await db.cards.get(idOf(note, "recognition"))).toMatchObject({ phase: "review" });
   });
 
   it("skips a card whose word left the dictionary", async () => {

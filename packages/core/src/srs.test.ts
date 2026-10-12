@@ -4,6 +4,7 @@ import {
   applyReview,
   Card,
   cardId,
+  cardKey,
   CardState,
   dueToday,
   learningDay,
@@ -56,7 +57,7 @@ describe("learningDay", () => {
 
 describe("cards", () => {
   test("one recognition and one recall card per reading, with derived ids", () => {
-    expect(newCards("zh", "好", "hao3")).toEqual([
+    expect(newCards("zh", { headword: "好", readingKey: "hao3" })).toEqual([
       {
         id: '["zh","好","hao3","recognition"]',
         language: "zh",
@@ -74,11 +75,43 @@ describe("cards", () => {
     ]);
   });
 
+  test("a note's cards derive from its id alone, and keep nothing else of the subject", () => {
+    const note = { note: "Fx4k]?Lb!e", deckId: "d1" };
+    expect(newCards("zh", note)).toEqual([
+      {
+        id: '["zh","Fx4k]?Lb!e","recognition"]',
+        language: "zh",
+        note: note.note,
+        type: "recognition",
+      },
+      { id: '["zh","Fx4k]?Lb!e","recall"]', language: "zh", note: note.note, type: "recall" },
+    ]);
+  });
+
   test("the schema rejects an id that does not derive from the card", () => {
     const card = { language: "zh", headword: "好", readingKey: "hao4", type: "recall" } as const;
     expect(Card.safeParse({ ...card, id: cardId(card) }).success).toBe(true);
     expect(Card.safeParse({ ...card, id: HAO }).success).toBe(false);
+    const note = { language: "zh", note: "好", type: "recall" } as const;
+    expect(Card.safeParse({ ...note, id: cardId(note) }).success).toBe(true);
+    expect(Card.safeParse({ ...note, id: cardId({ ...card, headword: "好" }) }).success).toBe(
+      false,
+    );
   });
+
+  test.each([
+    { language: "zh", headword: "好", readingKey: "hao3", type: "recall" },
+    { language: "zh", note: "好	hao3", type: "recognition" },
+  ] as const)("cardKey reads back the key of %o", (key) => {
+    expect(cardKey(cardId(key))).toEqual(key);
+  });
+
+  test.each(["好", "[]", '["zh","好"]', '["xx","好","recall"]', '["zh","","hao3","recall"]'])(
+    "cardKey refuses %s",
+    (id) => {
+      expect(cardKey(id)).toBeNull();
+    },
+  );
 });
 
 describe("Review", () => {

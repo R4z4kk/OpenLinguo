@@ -10,8 +10,12 @@ export type AnkiNoteType = {
   readonly fields: readonly string[];
 };
 
-/** Field values as Anki stores them: HTML. */
-export type AnkiNote = { readonly noteTypeId: string; readonly fields: readonly string[] };
+/** Field values as Anki stores them: HTML. `guid` stays the same across exports of the note. */
+export type AnkiNote = {
+  readonly guid: string;
+  readonly noteTypeId: string;
+  readonly fields: readonly string[];
+};
 
 export type AnkiMedia = { readonly entry: ZipEntry; readonly size: number };
 
@@ -267,6 +271,7 @@ const parsePackage = async (archive: ZipArchive): Promise<AnkiPackage> => {
 
   const schema = latest ? latestSchema(rows) : legacySchema(rows);
   const notes = rows("notes").map(({ values }) => ({
+    guid: text(values[1], "note guid"),
     noteTypeId: id(values[2], "note type of a note"),
     fields: text(values[6], "note fields").split(FIELD_SEPARATOR),
   }));

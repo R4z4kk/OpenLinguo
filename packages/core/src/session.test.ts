@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { CURRENT_SCHEDULER } from "./fsrs.ts";
-import { composeSession, type SessionCard, type SessionInput, type WordKey } from "./session.ts";
+import { composeSession, type SessionCard, type SessionInput } from "./session.ts";
 import {
   applyReview,
   cardId,
@@ -9,6 +9,8 @@ import {
   type CardState,
   type CardType,
   type Grade,
+  type Subject,
+  type WordKey,
 } from "./srs.ts";
 
 const MINUTE = 60_000;
@@ -26,10 +28,11 @@ const NI = word("你", "ni3");
 const TIAN = word("天", "tian1");
 const SHUI = word("水", "shui3");
 const HUO = word("火", "huo3");
+const NOTE = { note: "Fx4k]?Lb!e" };
 
-const idOf = (key: WordKey, type: CardType): string => cardId({ language: "zh", ...key, type });
+const idOf = (key: Subject, type: CardType): string => cardId({ language: "zh", ...key, type });
 
-const card = (key: WordKey, type: CardType, state: Partial<CardState>): SessionCard => ({
+const card = (key: Subject, type: CardType, state: Partial<CardState>): SessionCard => ({
   ...key,
   id: idOf(key, type),
   type,
@@ -129,6 +132,23 @@ describe("composeSession", () => {
       }),
     ).toEqual([[idOf(TIAN, "recognition"), true]]);
     expect(compose({ newReadings: [TIAN], newLimit: 0 })).toEqual([]);
+  });
+
+  test("a note is composed like a word, one card per learning day", () => {
+    expect(
+      compose({
+        cards: [
+          card(NOTE, "recognition", review(NOON + 3 * DAY, TODAY)),
+          card(NOTE, "recall", {}),
+          card(HAO, "recognition", review(NOON + 3 * DAY)),
+          card(HAO, "recall", {}),
+        ],
+        newReadings: [{ note: "other" }],
+      }),
+    ).toEqual([
+      [idOf(HAO, "recall"), true],
+      [idOf({ note: "other" }, "recognition"), true],
+    ]);
   });
 });
 

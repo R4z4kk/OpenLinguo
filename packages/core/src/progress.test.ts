@@ -86,8 +86,9 @@ describe("progress", () => {
       review(1, at(0), { cardId: card("好") }),
       review(2, at(0, 1), { cardId: card("好", "recall") }),
       review(3, at(0, 2), { cardId: card("猫") }),
+      review(4, at(0, 3), { cardId: cardId({ language: "zh", note: "猫", type: "recall" }) }),
     ];
-    expect(run(log, 0).totals).toMatchObject({ reviews: 3, words: 2 });
+    expect(run(log, 0).totals).toMatchObject({ reviews: 4, words: 3 });
   });
 
   test("rejects a duplicate review and an invalid card id", () => {

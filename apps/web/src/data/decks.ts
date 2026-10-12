@@ -2,11 +2,15 @@ import {
   CardType,
   dueToday,
   err,
+  isWord,
   newCards,
   ok,
   proficiencyFrameworks,
   replay,
+  subjectId,
+  subjectOf,
   type Result,
+  type Subject,
   type WordKey,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
@@ -71,8 +75,7 @@ export const sameDeckName = (a: string, b: string): boolean => names.compare(a, 
 
 export const entryId = ({ headword, readingKey }: WordKey): string => `${headword}\t${readingKey}`;
 
-const cardIds = ({ headword, readingKey }: WordKey): string[] =>
-  newCards("zh", headword, readingKey).map((card) => card.id);
+const cardIds = (subject: Subject): string[] => newCards("zh", subject).map((card) => card.id);
 
 /** « My words » first, then the learner's decks by name. */
 const listDecks = async (db: Database): Promise<Deck[]> => [
@@ -126,12 +129,12 @@ export const renameDeck = (
     }),
   );
 
-/** Stores the readings' missing cards with their state replayed from the log. */
+/** Stores the missing cards of readings and notes with their state replayed from the log. */
 export const putCards = async (
   db: Database,
-  words: readonly WordKey[],
+  subjects: readonly Subject[],
 ): Promise<Result<null, ReviewLogFailure>> => {
-  const cards = words.flatMap((word) => newCards("zh", word.headword, word.readingKey));
+  const cards = subjects.flatMap((subject) => newCards("zh", subject));
   const stored = await db.cards.bulkGet(cards.map((card) => card.id));
   const missing = cards.filter((_, index) => stored[index] == null);
   const logs = await Promise.all(
@@ -147,26 +150,35 @@ export const putCards = async (
   return ok(null);
 };
 
-/** A reading in no deck leaves the queue, unless a band of the referential has it. */
+/**
+ * A reading in no deck leaves the queue, unless a band of the referential has it; a note in no
+ * deck leaves it with its content.
+ */
 const dropUnfiled = async (
   db: Database,
-  word: WordKey,
+  subject: Subject,
   referential: ZhProficiency,
 ): Promise<void> => {
+  if ("note" in subject) {
+    if ((await db.deckWords.where("note").equals(subject.note).count()) > 0) return;
+    await db.notes.delete(subject.note);
+    await db.cards.bulkDelete(cardIds(subject));
+    return;
+  }
   const filed = await db.deckWords
     .where("[headword+readingKey]")
-    .equals([word.headword, word.readingKey])
+    .equals([subject.headword, subject.readingKey])
     .count();
-  const level = (await db.entries.get(entryId(word)))?.[LEVEL[referential]] ?? null;
-  if (filed === 0 && level === null) await db.cards.bulkDelete(cardIds(word));
+  const level = (await db.entries.get(entryId(subject)))?.[LEVEL[referential]] ?? null;
+  if (filed === 0 && level === null) await db.cards.bulkDelete(cardIds(subject));
 };
 
 /** Stores the cards of a band word the session shows for the first time. */
 export const introduceWord = (
   db: Database,
-  word: WordKey,
+  subject: Subject,
 ): Promise<Result<null, ReviewLogFailure>> =>
-  guarded(() => db.transaction("rw", [db.cards, db.reviews], () => putCards(db, [word])));
+  guarded(() => db.transaction("rw", [db.cards, db.reviews], () => putCards(db, [subject])));
 
 /**
  * Files a reading in a deck, with its progress back if it was filed before, or takes it out with
@@ -195,18 +207,16 @@ export const fileWord = (
         }
         const stored = await putCards(db, [word]);
         if (!stored.ok) return stored;
-        await db.deckWords.put({
-          id,
-          deckId,
-          headword: word.headword,
-          readingKey: word.readingKey,
-        });
+        await db.deckWords.put({ ...subjectOf(word), id, deckId });
         return ok(null);
       },
     ),
   );
 
-/** Deletes a learner's deck and its audio; its readings in no other deck leave the queue as in `fileWord`. */
+/**
+ * Deletes a learner's deck and its audio; its readings and notes in no other deck leave the queue
+ * as in `fileWord`. Reviews stay in the log.
+ */
 export const deleteDeck = (
   db: Database,
   deckId: string,
@@ -215,7 +225,7 @@ export const deleteDeck = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.entries, db.audio],
+      [db.decks, db.deckWords, db.cards, db.entries, db.audio, db.notes],
       async (): Promise<Result<null, DeckFailure>> => {
         if ((await db.decks.get(deckId)) == null) return err({ kind: "unknown-deck", deckId });
         const words = await db.deckWords.where("deckId").equals(deckId).toArray();
@@ -262,7 +272,8 @@ export const deckCounts = (
   guarded(async () => {
     const field = LEVEL[referential];
     const cards = await db.cards.toArray();
-    const entries = await db.entries.bulkGet(cards.map(entryId));
+    const wordCards = cards.filter(isWord);
+    const entries = await db.entries.bulkGet(wordCards.map(entryId));
     const bands: Tally[] = await Promise.all(
       proficiencyFrameworks[referential].map(async (_, index) => ({
         new:
@@ -275,24 +286,24 @@ export const deckCounts = (
       })),
     );
     const graded = new Set<string>();
-    cards.forEach((card, index) => {
+    wordCards.forEach((card, index) => {
       const level = entries[index]?.[field] ?? null;
       const band = level === null ? null : (bands[level - 1] ?? null);
       if (band === null) return;
-      graded.add(entryId(card));
+      graded.add(subjectId(card));
       // The stored card replaces one of the band's virtual new cards.
       band.new -= 1;
       tally(band, card, now);
     });
-    const cardsOf = Map.groupBy(cards, entryId);
+    const cardsOf = Map.groupBy(cards, subjectId);
     const words = await db.deckWords.toArray();
-    const decksOf = Map.groupBy(words, entryId);
+    const decksOf = Map.groupBy(words, subjectId);
     const wordsOf = Map.groupBy(words, (word) => word.deckId);
     const personal = (await listDecks(db)).map((deck) => {
       const counts: Tally = { new: 0, learning: 0, due: 0 };
       let leaving = 0;
       for (const word of wordsOf.get(deck.id) ?? []) {
-        const id = entryId(word);
+        const id = subjectId(word);
         for (const card of cardsOf.get(id) ?? []) tally(counts, card, now);
         if (decksOf.get(id)?.length === 1 && !graded.has(id)) leaving += 1;
       }
@@ -301,10 +312,10 @@ export const deckCounts = (
     return ok({ personal, bands });
   });
 
-type Candidate = WordKey & { readonly level: number | null; readonly frequency: number | null };
+type Candidate = Subject & { readonly level: number | null; readonly frequency: number | null };
 
 const byPriority = (a: Candidate, b: Candidate): number => {
-  const ids = [entryId(a), entryId(b)] as const;
+  const ids = [subjectId(a), subjectId(b)] as const;
   return (
     (a.level ?? Number.MAX_SAFE_INTEGER) - (b.level ?? Number.MAX_SAFE_INTEGER) ||
     (b.frequency ?? 0) - (a.frequency ?? 0) ||
@@ -312,45 +323,51 @@ const byPriority = (a: Candidate, b: Candidate): number => {
   );
 };
 
-/** Readings to introduce next: personal decks, then the bands, each by level then frequency (Pareto). */
+/**
+ * Readings and notes to introduce next: personal decks, then the bands, each by level then
+ * frequency (Pareto); notes have neither.
+ */
 export const nextNewReadings = (
   db: Database,
   referential: ZhProficiency,
   limit: number,
-): Promise<Result<readonly WordKey[], ReviewLogFailure>> =>
+): Promise<Result<readonly Subject[], ReviewLogFailure>> =>
   guarded(async () => {
     const field = LEVEL[referential];
     const cards = await db.cards.toArray();
-    const carded = new Set(cards.map(entryId));
-    const started = new Set(cards.filter((card) => card.phase !== "new").map(entryId));
+    const carded = new Set(cards.map(subjectId));
+    const started = new Set(cards.filter((card) => card.phase !== "new").map(subjectId));
     const personal = new Map(
       (await db.deckWords.toArray())
-        .filter((word) => !started.has(entryId(word)))
-        .map((word) => [entryId(word), word] as const),
+        .filter((word) => !started.has(subjectId(word)))
+        .map((word) => [subjectId(word), subjectOf(word)] as const),
     );
-    const entries = await db.entries.bulkGet([...personal.keys()]);
-    const queue: Candidate[] = [...personal.values()]
-      .map((word, index) => ({
-        headword: word.headword,
-        readingKey: word.readingKey,
+    const words = [...personal.values()].filter(isWord);
+    const entries = await db.entries.bulkGet(words.map(entryId));
+    const queue: Candidate[] = [
+      ...words.map((word, index) => ({
+        ...word,
         level: entries[index]?.[field] ?? null,
         frequency: entries[index]?.frequency ?? null,
-      }))
-      .sort(byPriority);
+      })),
+      ...[...personal.values()]
+        .filter((subject) => "note" in subject)
+        .map((note) => ({ ...note, level: null, frequency: null })),
+    ].sort(byPriority);
     const levels = proficiencyFrameworks[referential].length;
     for (let level = 1; level <= levels && queue.length < limit; level += 1) {
       const rows = await db.entries.where(field).equals(level).toArray();
       queue.push(
         ...rows
-          .filter((row) => !carded.has(row.id) && !personal.has(row.id))
           .map((row) => ({
             headword: row.simplified,
             readingKey: row.id.slice(row.simplified.length + 1),
             level,
             frequency: row.frequency,
           }))
+          .filter((word) => !carded.has(subjectId(word)) && !personal.has(subjectId(word)))
           .sort(byPriority),
       );
     }
-    return ok(queue.slice(0, limit).map(({ headword, readingKey }) => ({ headword, readingKey })));
+    return ok(queue.slice(0, limit).map(subjectOf));
   });

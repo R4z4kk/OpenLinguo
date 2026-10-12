@@ -7,11 +7,14 @@ import {
   replay,
   type CardType,
   type Phase,
+  type NoteKey,
   type Review,
+  type Subject,
   type WordKey,
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  deckWordId,
   MY_WORDS,
   openDatabase,
   type Database,
@@ -26,6 +29,7 @@ import {
   fileWord,
   introduceWord,
   nextNewReadings,
+  putCards,
   renameDeck,
   wordDecks,
   type DeckNameProblem,
@@ -72,7 +76,8 @@ const HOUR = 3_600_000;
 const NOW: LocalTime = { at: Date.UTC(2026, 9, 21, 10), utcOffsetMinutes: 120 };
 const NEXT_ROLLOVER = Date.UTC(2026, 9, 22, 2);
 
-const idOf = (word: WordKey, type: CardType): string => cardId({ language: "zh", ...word, type });
+const idOf = (subject: Subject, type: CardType): string =>
+  cardId({ language: "zh", ...subject, type });
 
 const stored = (word: WordKey, type: CardType, phase: Phase, due: number | null): StoredCard => ({
   language: "zh",
@@ -124,6 +129,13 @@ const refused = (problem: DeckNameProblem) => ({
 });
 
 const unknown = (deckId: string) => ({ ok: false, error: { kind: "unknown-deck", deckId } });
+
+/** Files a note with its cards and content, as the Anki import does. */
+const fileNote = async (deckId: string, note: NoteKey): Promise<void> => {
+  await db.deckWords.put({ ...note, id: deckWordId(deckId, note), deckId });
+  await putCards(db, [note]);
+  await db.notes.put({ id: note.note, characters: "字", pinyin: "", meaning: "m", updatedAt: 0 });
+};
 
 describe("named decks", () => {
   it("lists my words first, then the learner's decks by name", async () => {
@@ -262,6 +274,23 @@ describe("deleteDeck", () => {
     expect(await db.reviews.count()).toBe(1);
   });
 
+  it("deletes the notes in no other deck with their content and cards, keeping their reviews", async () => {
+    const zoo = await deckOf("Zoo");
+    const farm = await deckOf("Farm");
+    const kept = { note: "kept" };
+    const gone = { note: "gone" };
+    await fileNote(zoo, kept);
+    await fileNote(farm, kept);
+    await fileNote(zoo, gone);
+    await recordReview(db, review(idOf(gone, "recall"), "good"));
+    expect(await deleteDeck(db, zoo, "hsk-2025")).toEqual(ok(null));
+    expect((await db.notes.toArray()).map((note) => note.id)).toEqual(["kept"]);
+    expect((await db.cards.toArray()).map((card) => card.id).sort()).toEqual(
+      [idOf(kept, "recall"), idOf(kept, "recognition")].sort(),
+    );
+    expect(await db.reviews.count()).toBe(1);
+  });
+
   it("cannot delete my words", async () => {
     await file(MY_WORDS, E);
     expect(await deleteDeck(db, MY_WORDS, "hsk-2025")).toEqual(unknown(MY_WORDS));
@@ -324,6 +353,24 @@ describe("deckCounts", () => {
   });
 });
 
+describe("deckCounts of notes", () => {
+  it("counts the cards of a deck's notes, and the notes a deletion drops", async () => {
+    const zoo = await deckOf("Zoo");
+    await fileNote(zoo, { note: "n" });
+    const counts = await deckCounts(db, "hsk-2025", NOW);
+    expect(counts.ok && counts.value.bands.map((band) => band.new)).toEqual([6, 2, 2, 0, 0, 0, 0]);
+    expect(counts).toMatchObject({
+      ok: true,
+      value: {
+        personal: [
+          { id: MY_WORDS },
+          { id: zoo, counts: { new: 2, learning: 0, due: 0 }, leaving: 1 },
+        ],
+      },
+    });
+  });
+});
+
 describe("nextNewReadings", () => {
   beforeEach(async () => {
     const zoo = await deckOf("Zoo");
@@ -339,6 +386,12 @@ describe("nextNewReadings", () => {
 
   it("puts the words of every personal deck first, then the bands by level and frequency", async () => {
     expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, NI, HAO, XING]));
+  });
+
+  it("puts notes after the personal words with a level or a frequency", async () => {
+    const note = { note: "n" };
+    await fileNote(MY_WORDS, note);
+    expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, note, NI, HAO, XING]));
   });
 
   it("stops at the limit", async () => {

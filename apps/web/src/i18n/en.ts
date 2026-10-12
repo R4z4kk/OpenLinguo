@@ -89,7 +89,7 @@ export const en = {
   ankiImport: {
     title: "Import an Anki deck",
     intro:
-      "Choose an .apkg file exported from Anki. It is read on this device and never uploaded. Its notes that match a dictionary word join a new deck, with their sounds.",
+      "Choose an .apkg file exported from Anki. It is read on this device and never uploaded. Its notes join a new deck with their sounds: those matching a dictionary word as that word, the others as cards of their own.",
     choose: "Choose an .apkg file",
     reading: "Reading the file…",
     file: "File: {{name}}",
@@ -112,13 +112,16 @@ export const en = {
     words_other: "{{count}} words join the deck.",
     audio_one: "{{count}} sound, {{size}}.",
     audio_other: "{{count}} sounds, {{size}}.",
-    unmatched_one: "{{count}} note has no dictionary match and is skipped",
-    unmatched_other: "{{count}} notes have no dictionary match and are skipped",
+    unmatched_one: "{{count}} note has no dictionary match",
+    unmatched_other: "{{count}} notes have no dictionary match",
     reasons: {
       "not-found": "not in the dictionary",
       "several-readings": "several readings: choose a pinyin field",
       "pinyin-differs": "its pinyin matches none of the readings",
     },
+    noMeaning: "no meaning, skipped",
+    withNotes_one: "Add the note with a meaning as a card of its own",
+    withNotes_other: "Add the {{count}} notes with a meaning as cards of their own",
     ignored_one:
       "{{count}} note is left out: its note type is not imported, or it has no characters.",
     ignored_other:
@@ -127,7 +130,8 @@ export const en = {
     missingAudio_other: "{{count}} sounds are missing from the file: {{names}}",
     notAudio_one: "{{count}} media file is not audio and is dropped: {{names}}",
     notAudio_other: "{{count}} media files are not audio and are dropped: {{names}}",
-    nothingToImport: "No note matches a dictionary word: there is nothing to import.",
+    nothingToImport:
+      "No note matches a dictionary word or is added as a card of its own: there is nothing to import.",
     freeUnknown: "This browser does not tell how much storage space is free.",
     tooBig:
       "Not enough storage space: the sounds need {{size}} and {{free}} is free. Free some space, or set the audio field to “Not used”.",
@@ -135,7 +139,7 @@ export const en = {
     deckName: "Deck name",
     import: "Import",
     importing: "Importing…",
-    imported: "“{{name}}” created with {{words}} words and {{audio}} sounds.",
+    imported: "“{{name}}” created with {{words}} words, {{notes}} notes and {{audio}} sounds.",
     importFailed: "The import failed, nothing was written: {{reason}}",
     mappingNotSaved: "The field choices could not be remembered in this browser: {{reason}}",
     backToLearn: "Back to Learn",
@@ -340,7 +344,7 @@ export const en = {
     import: "Import a backup",
     exported: "Backup exported.",
     imported:
-      "Backup imported: reviews +{{reviews}}, cards +{{cards}}, decks +{{decks}}, filed words +{{words}}.",
+      "Backup imported: reviews +{{reviews}}, cards +{{cards}}, decks +{{decks}}, filed words +{{words}}, updated notes +{{notes}}.",
     exportFailed: "The backup could not be exported: {{reason}}",
     readFailed: "The file could not be read: {{reason}}",
     notJson: "This file is not a backup, it is not JSON: {{reason}}",

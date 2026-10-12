@@ -18,43 +18,67 @@ export type Grade = z.output<typeof Grade>;
 export const Phase = z.enum(["new", "learning", "review", "relearning"]);
 export type Phase = z.output<typeof Phase>;
 
-export type CardKey = {
-  readonly language: LanguageId;
-  readonly headword: string;
-  readonly readingKey: string;
-  readonly type: CardType;
-};
+/** One reading of a word: its cards share it. */
+export type WordKey = { readonly headword: string; readonly readingKey: string };
 
-/** Derived from the entry and type, so a card added on two devices is the same card. */
+/** A note holding its own content; an imported note keeps its Anki guid. */
+export type NoteKey = { readonly note: string };
+
+/** What a card is about: its recognition and recall cards share it. */
+export type Subject = WordKey | NoteKey;
+
+export type CardKey = Subject & { readonly language: LanguageId; readonly type: CardType };
+
+/** The subject's own fields, without the rest of the object it was read from. */
+export const subjectOf = (subject: Subject): Subject =>
+  "note" in subject
+    ? { note: subject.note }
+    : { headword: subject.headword, readingKey: subject.readingKey };
+
+export const isWord = <T extends Subject>(subject: T): subject is Extract<T, WordKey> =>
+  !("note" in subject);
+
+/** Equal for the cards of one subject; a note's never equals a word's. */
+export const subjectId = (subject: Subject): string =>
+  JSON.stringify("note" in subject ? [subject.note] : [subject.headword, subject.readingKey]);
+
+/**
+ * Derived from the subject and type, so a card added on two devices is the same card. Note ids
+ * have one part less than word ids.
+ */
 export const cardId = (key: CardKey): string =>
-  JSON.stringify([key.language, key.headword, key.readingKey, key.type]);
+  JSON.stringify(
+    "note" in key
+      ? [key.language, key.note, key.type]
+      : [key.language, key.headword, key.readingKey, key.type],
+  );
+
+const Language = z.enum(LANGUAGE_IDS);
+const Part = z.string().min(1);
+const CardFields = { id: z.string(), language: Language, type: CardType };
 
 export const Card = z
-  .object({
-    id: z.string(),
-    language: z.enum(LANGUAGE_IDS),
-    headword: z.string().min(1),
-    readingKey: z.string().min(1),
-    type: CardType,
-  })
+  .union([
+    z.object({ ...CardFields, headword: Part, readingKey: Part }),
+    z.object({ ...CardFields, note: Part }),
+  ])
   .refine((card) => card.id === cardId(card), {
-    message: "id does not match the entry and type",
+    message: "id does not match the subject and type",
     path: ["id"],
   });
 export type Card = z.output<typeof Card>;
 
-/** The cards of one reading, created together. */
-export const newCards = (
-  language: LanguageId,
-  headword: string,
-  readingKey: string,
-): readonly Card[] =>
+/** The cards of one subject, created together. */
+export const newCards = (language: LanguageId, subject: Subject): readonly Card[] =>
   CardType.options.map((type) => {
-    const key = { language, headword, readingKey, type };
+    const key = { ...subjectOf(subject), language, type };
     return { ...key, id: cardId(key) };
   });
 
-const CardIdParts = z.tuple([z.enum(LANGUAGE_IDS), z.string().min(1), z.string().min(1), CardType]);
+const CardIdParts = z.union([
+  z.tuple([Language, Part, Part, CardType]),
+  z.tuple([Language, Part, CardType]),
+]);
 
 /** The key a card id derives from, `null` when the id is not one. */
 export const cardKey = (id: string): CardKey | null => {
@@ -66,6 +90,10 @@ export const cardKey = (id: string): CardKey | null => {
   }
   const parsed = CardIdParts.safeParse(parts);
   if (!parsed.success) return null;
+  if (parsed.data.length === 3) {
+    const [language, note, type] = parsed.data;
+    return { language, note, type };
+  }
   const [language, headword, readingKey, type] = parsed.data;
   return { language, headword, readingKey, type };
 };

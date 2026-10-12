@@ -19,7 +19,7 @@ const deck = (page: Page, name: string) =>
     .getByRole("listitem")
     .filter({ has: page.getByRole("heading", { name, exact: true }) });
 
-test("imports an Anki deck with its sounds, lists the notes left out, then plays a sound", async ({
+test("imports an Anki deck with its sounds and notes of its own, then reviews them", async ({
   page,
 }) => {
   const main = page.getByRole("main");
@@ -59,6 +59,9 @@ test("imports an Anki deck with its sounds, lists the notes left out, then plays
   await expect(main.getByRole("listitem").filter({ hasText: "不存在词语" })).toContainText(
     en.ankiImport.reasons["not-found"],
   );
+  await expect(
+    main.getByRole("checkbox", { name: fill(en.ankiImport.withNotes_other, { count: 2 }) }),
+  ).toBeChecked();
   expect(await accessibilityViolations(page)).toEqual([]);
 
   const basic = main.getByRole("region", {
@@ -75,14 +78,19 @@ test("imports an Anki deck with its sounds, lists the notes left out, then plays
   await main.getByRole("button", { name: en.ankiImport.import, exact: true }).click();
   await expect(
     main.getByRole("status").filter({
-      hasText: fill(en.ankiImport.imported, { name: "HSK test::Level 1", words: 6, audio: 4 }),
+      hasText: fill(en.ankiImport.imported, {
+        name: "HSK test::Level 1",
+        words: 6,
+        notes: 2,
+        audio: 5,
+      }),
     }),
   ).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
 
   await main.getByRole("link", { name: en.ankiImport.backToLearn }).click();
   await expect(deck(page, "HSK test::Level 1").getByRole("definition")).toHaveText([
-    "12",
+    "16",
     "0",
     "0",
   ]);
@@ -105,4 +113,22 @@ test("imports an Anki deck with its sounds, lists the notes left out, then plays
   await page.waitForTimeout(1000);
   await expect(main.getByRole("alert")).toHaveCount(0);
   expect(errors).toEqual([]);
+
+  // The notes of its own come after the deck's words, shown as plain text.
+  const showAnswer = main.getByRole("button", { name: en.review.showAnswer });
+  const note = main.getByText("不存在词语", { exact: true });
+  await page.keyboard.press("3");
+  for (let card = 0; card < 8; card++) {
+    await expect(showAnswer).toBeVisible();
+    if ((await note.count()) > 0) break;
+    await page.keyboard.press("Space");
+    await expect(good).toBeVisible();
+    await page.keyboard.press("3");
+  }
+  await expect(note).toBeVisible();
+  await page.keyboard.press("Space");
+  await expect(main.getByText("bù cún zài", { exact: true })).toBeVisible();
+  await expect(main.getByText("made up", { exact: true })).toBeVisible();
+  await expect(main.getByRole("button", { name: en.review.playAudio })).toBeVisible();
+  expect(await accessibilityViolations(page)).toEqual([]);
 });

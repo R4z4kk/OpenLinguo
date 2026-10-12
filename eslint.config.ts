@@ -6,6 +6,7 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const NULL_INSTEAD = "Model absence with `T | null`, not undefined.";
+const PLAIN_TEXT = "Render text as React children: imported content is never parsed as HTML.";
 
 export default defineConfig(
   globalIgnores([
@@ -37,6 +38,12 @@ export default defineConfig(
         { selector: "PropertyDefinition[optional=true]", message: NULL_INSTEAD },
         { selector: ":function > Identifier[optional=true]", message: NULL_INSTEAD },
         { selector: "TSMethodSignature > Identifier[optional=true]", message: NULL_INSTEAD },
+        { selector: "JSXAttribute[name.name='dangerouslySetInnerHTML']", message: PLAIN_TEXT },
+        { selector: "MemberExpression[property.name=/^(inner|outer)HTML$/]", message: PLAIN_TEXT },
+        {
+          selector: "CallExpression[callee.property.name='insertAdjacentHTML']",
+          message: PLAIN_TEXT,
+        },
       ],
       eqeqeq: ["error", "always", { null: "ignore" }],
     },

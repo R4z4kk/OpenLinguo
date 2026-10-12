@@ -3,31 +3,34 @@ import {
   composeSession,
   CURRENT_SCHEDULER,
   dueToday,
+  isWord,
   NEW_CARD_STATE,
   ok,
+  subjectId,
   type CardState,
   type DictEntry,
   type Grade,
   type Grading,
+  type NoteKey,
   type ProgressError,
   type Result,
   type SessionItem,
+  type WordKey,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { todayActivity } from "./daily-goal.ts";
-import type { Database } from "./database.ts";
+import type { Database, NoteContent } from "./database.ts";
 import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks.ts";
 import { toDictEntry } from "./dictionary.ts";
 import { guarded, recordReview, type ReviewLogFailure } from "./review-log.ts";
 
-/** `audio`: the id of audio a deck gives the reading. */
-export type ReviewItem = SessionItem & {
-  readonly entry: DictEntry;
-  readonly state: CardState;
-  readonly audio: string | null;
-};
+/** A word with its entry, or a note with its content; `audio`: the id of audio a deck gives it. */
+export type ReviewItem = (
+  | (Extract<SessionItem, WordKey> & { readonly entry: DictEntry })
+  | (Extract<SessionItem, NoteKey> & { readonly content: NoteContent })
+) & { readonly state: CardState; readonly audio: string | null };
 
-/** `skipped`: cards whose reading left the dictionary. */
+/** `skipped`: cards whose reading left the dictionary, or whose note lost its content. */
 export type Session = { readonly items: readonly ReviewItem[]; readonly skipped: number };
 
 export const loadSession = (
@@ -49,14 +52,27 @@ export const loadSession = (
       utcOffsetMinutes: now.utcOffsetMinutes,
     });
     const states = new Map(cards.map((card) => [card.id, card]));
-    const entries = await db.entries.bulkGet(items.map(entryId));
+    const words = items.filter(isWord);
+    const notes = items.filter((item) => "note" in item);
+    const entries = new Map(
+      (await db.entries.bulkGet(words.map(entryId))).flatMap((row) =>
+        row == null ? [] : [[row.id, row] as const],
+      ),
+    );
+    const contents = new Map(
+      (await db.notes.bulkGet(notes.map((item) => item.note))).flatMap((note) =>
+        note == null ? [] : [[note.id, note] as const],
+      ),
+    );
     const filed = (
       await Promise.all(
         items.map((item) =>
-          db.deckWords
-            .where("[headword+readingKey]")
-            .equals([item.headword, item.readingKey])
-            .toArray(),
+          "note" in item
+            ? db.deckWords.where("note").equals(item.note).toArray()
+            : db.deckWords
+                .where("[headword+readingKey]")
+                .equals([item.headword, item.readingKey])
+                .toArray(),
         ),
       )
     ).flat();
@@ -66,20 +82,23 @@ export const loadSession = (
       ).flat(),
     );
     const audioOf = new Map(
-      filed.filter((word) => voiced.has(word.id)).map((word) => [entryId(word), word.id] as const),
+      filed
+        .filter((word) => voiced.has(word.id))
+        .map((word) => [subjectId(word), word.id] as const),
     );
-    const joined = items.flatMap((item, index) => {
-      const row = entries[index];
-      return row == null
-        ? []
-        : [
-            {
-              ...item,
-              entry: toDictEntry(row, referential),
-              state: states.get(item.cardId) ?? NEW_CARD_STATE,
-              audio: audioOf.get(entryId(item)) ?? null,
-            },
-          ];
+    const joined = items.flatMap((item): ReviewItem[] => {
+      const shared = {
+        state: states.get(item.cardId) ?? NEW_CARD_STATE,
+        audio: audioOf.get(subjectId(item)) ?? null,
+      };
+      if ("note" in item) {
+        const note = contents.get(item.note);
+        if (note == null) return [];
+        const { characters, pinyin, meaning } = note;
+        return [{ ...item, ...shared, content: { characters, pinyin, meaning } }];
+      }
+      const row = entries.get(entryId(item));
+      return row == null ? [] : [{ ...item, ...shared, entry: toDictEntry(row, referential) }];
     });
     return ok({ items: joined, skipped: items.length - joined.length });
   });
