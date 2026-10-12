@@ -1,6 +1,7 @@
 import type { Card, CardState, Review, StrokeData, Subject, WordKey } from "@openlinguo/core";
 import { Dexie, type EntityTable, type Table } from "dexie";
 import { DAILY_GOAL } from "./daily-goal.ts";
+import type { NameKind } from "./format.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
 
 export type StoredEntry = {
@@ -98,8 +99,18 @@ export type StoredExtendedWord = {
   readonly glosses: readonly string[];
 };
 
-/** Kept apart from `meta`, which a new dictionary version clears. */
-export type ExtendedMetaRecord = { readonly key: "version"; readonly value: string };
+/** A proper name from jieba's tags: a proposal for unknown sequences, never segmented. */
+export type StoredName = {
+  /** `word \t kind` */
+  readonly id: string;
+  /** sha256 of the file it was imported from. */
+  readonly file: string;
+  readonly word: string;
+  readonly kind: NameKind;
+};
+
+/** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
+export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
 export type Database = Dexie & {
   entries: EntityTable<StoredEntry, "id">;
@@ -116,7 +127,9 @@ export type Database = Dexie & {
   audio: EntityTable<StoredAudio, "id">;
   notes: EntityTable<StoredNote, "id">;
   extendedWords: EntityTable<StoredExtendedWord, "id">;
-  extendedMeta: EntityTable<ExtendedMetaRecord, "key">;
+  extendedMeta: EntityTable<OnDemandMetaRecord, "key">;
+  names: EntityTable<StoredName, "id">;
+  namesMeta: EntityTable<OnDemandMetaRecord, "key">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -166,6 +179,7 @@ export const openDatabase = (name: string): Database => {
   db.version(8).stores({ audio: "id" });
   db.version(9).stores({ deckWords: "id, deckId, [headword+readingKey], note", notes: "id" });
   db.version(10).stores({ extendedWords: "id, simplified, file", extendedMeta: "key" });
+  db.version(11).stores({ names: "id, word, file", namesMeta: "key" });
   return db;
 };
 

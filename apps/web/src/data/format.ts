@@ -86,12 +86,23 @@ export const ExtendedRow = z.tuple([
 ]);
 export type ExtendedRow = z.output<typeof ExtendedRow>;
 
-export const ExtendedFile = DataFile.omit({ kind: true });
-export type ExtendedFile = z.output<typeof ExtendedFile>;
+export const OnDemandFile = DataFile.omit({ kind: true });
+export type OnDemandFile = z.output<typeof OnDemandFile>;
 
-/** `data/wiktionary-zh/index.json`: the extended lexicon, downloaded on demand. */
-export const ExtendedIndex = z.object({
+/** `index.json` of a dataset downloaded on demand; `version` changes with any file. */
+export const OnDemandIndex = z.object({
   version: z.string().min(1),
-  files: z.array(ExtendedFile).min(1),
+  files: z.array(OnDemandFile).min(1),
 });
-export type ExtendedIndex = z.output<typeof ExtendedIndex>;
+export type OnDemandIndex = z.output<typeof OnDemandIndex>;
+
+/**
+ * What jieba's tags say a proper name is: `name` covers transliterated names of people and places
+ * alike (`nrt`) and other proper names (`nz`).
+ */
+export const NameKind = z.enum(["person", "place", "organization", "name"]);
+export type NameKind = z.output<typeof NameKind>;
+
+/** `[word, kind]`: a proper name of jieba's dictionary that no shipped lexicon has. */
+export const NameRow = z.tuple([z.string().min(1), NameKind]);
+export type NameRow = z.output<typeof NameRow>;

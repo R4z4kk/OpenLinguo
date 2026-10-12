@@ -13,6 +13,7 @@ import {
 import { gf0025Chars, gf0025Words } from "./datasets/gf0025-2021.ts";
 import { hanziWriterData } from "./datasets/hanzi-writer-data.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
+import { jiebaNames } from "./datasets/jieba-names.ts";
 import { makemeahanzi } from "./datasets/makemeahanzi.ts";
 import { wiktionaryFrZh } from "./datasets/wiktionary-fr-zh.ts";
 import { wiktionaryZh } from "./datasets/wiktionary-zh.ts";
@@ -39,6 +40,7 @@ const datasets: ReadonlyMap<string, Dataset> = new Map([
   [cfdict.id, cfdict],
   [wiktionaryFrZh.id, wiktionaryFrZh],
   [wiktionaryZh.id, wiktionaryZh],
+  [jiebaNames.id, jiebaNames],
   [wordfreqZh.id, wordfreqZh],
   [hsk2025Chars.id, hsk2025Chars],
   [hsk2025Words.id, hsk2025Words],

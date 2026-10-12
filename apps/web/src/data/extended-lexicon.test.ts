@@ -4,7 +4,7 @@ import { err, ok } from "@openlinguo/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { openDatabase, type Database } from "./database.ts";
 import { importExtendedLexicon, lookupExtended } from "./extended-lexicon.ts";
-import type { DataIndex, ExtendedIndex, ExtendedRow } from "./format.ts";
+import type { DataIndex, OnDemandIndex, ExtendedRow } from "./format.ts";
 import { importData, type FetchFile, type ImportProgress } from "./import.ts";
 
 const encode = (value: unknown): Uint8Array<ArrayBuffer> =>
@@ -21,7 +21,7 @@ const replaced: ExtendedRow[] = [
 ];
 
 const files = (shards: readonly (readonly [string, ExtendedRow[]])[]) => {
-  const index: ExtendedIndex = {
+  const index: OnDemandIndex = {
     version: shards.map(([, rows]) => hash(rows)).join(":"),
     files: shards.map(([name, rows]) => ({ name, sha256: hash(rows), rows: rows.length })),
   };
