@@ -25,15 +25,20 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 
 ## Fonts
 
-All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), so subsets may keep their names. Served from the project origin only; the license text ships next to each font.
+All OFL-1.1. Atkinson Hyperlegible Next, Noto Sans SC and LXGW WenKai GB have no Reserved Font Name (checked on each `OFL.txt` 2026-10-09), so their subsets keep their names. Plangothic reserves "Plangothic" and "遍黑" (project README, checked 2026-10-12), so its subsets are renamed OpenLinguo Han Fallback. Served from the project origin only; the license text ships next to each font.
 
 | Font | Used for | Source | Shipped as |
 |---|---|---|---|
 | Atkinson Hyperlegible Next (Braille Institute) | Latin interface | npm `@fontsource-variable/atkinson-hyperlegible-next` 5.3.0 | Variable WOFF2, Latin and Latin Extended |
 | Noto Sans SC 400 and 700 (Adobe, Google) | Chinese interface, pinyin | [notofonts/noto-cjk](https://github.com/notofonts/noto-cjk) at commit `f8d1575` (`Sans/SubsetOTF/SC`) | `data/font-noto-sans-sc-400`, `data/font-noto-sans-sc-700`: 40 slices each, HSK 1 slice 39 KB |
 | LXGW WenKai GB v1.522 (LXGW, from Klee One by Fontworks) | Display characters | [lxgw/LxgwWenkaiGB](https://github.com/lxgw/LxgwWenkaiGB/releases/tag/v1.522) | `data/font-lxgw-wenkai-gb`: 40 slices, HSK 1 slice 51 KB |
+| Plangothic P1 and P2 V2.9.5795 (Fitzgerald P. Köeingsegg and the Plangothic Project contributors, from Source Han Sans by Adobe) | Fallback for the dataset characters the fonts above lack (CJK extension planes) | [Plangothic-Project](https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project) release `V2.9.5795` | `data/font-plangothic-p1`, `data/font-plangothic-p2`, renamed OpenLinguo Han Fallback: 1 slice each, 82 characters in 14 KB and 11 in 3 KB |
 
 - The CJK fonts are split by `tools/data-pipeline` (subset-font, HarfBuzz) into slices ordered by HSK 2025 band, then GF0025-2021, then the other characters of the shipped datasets by frequency. Dataset characters a font lacks (93 for Noto Sans SC, 40 for WenKai GB, all rare) are listed in each `missing.tsv` and fall back to the next font.
+- Fallback (#67, decided 2026-10-12): the 93 characters (50 in extension B, 15 C, 2 D, 8 E, 5 F, 11 G, and 2 compatibility ideographs from CFDICT; WenKai's 40 are among them) come from rare CC-CEDICT, CFDICT and French Wiktionary entries and one Make Me a Hanzi hint, none graded. Every font stack ends with OpenLinguo Han Fallback, after Noto Sans SC: Plangothic P1 draws 82 of them, P2 the other 11, and the characters no self-hosted font draws would be listed in `data/font-plangothic-p2/missing.tsv` (none today, tracked by the gap report).
+  - Options measured: Plangothic as one slice per source file (chosen): 14 KB + 3 KB, downloaded only by a page that shows one of these characters, then cached; one file per character: 548 to 904 bytes each (median 704, of which about 480 bytes of font overhead), 66 KB for the 93 and 93 more `@font-face` rules; keeping the system font: no download, but empty boxes wherever the system lacks the glyph. An HSK 1 page loads no fallback slice either way.
+  - Plangothic was chosen because it extends Source Han Sans, of which Noto Sans SC is the Google release, with mainland China glyph forms, and covers extension B to J. Mincho-style fonts covering the planes (GlyphWiki-based Jigmo or HanaMin, BabelStone Han) clash with both stacks, and TW-Kai follows Taiwan forms. No OFL kaishu font covers these planes, so in display text the 40 characters WenKai lacks are drawn in the sans fallback, as they already were by Noto Sans SC for the 53 others.
+  - Plangothic has a Regular weight only: bold text is synthesized by the browser. Its name table states "All rights reserved" next to the OFL 1.1 license fields; the repository `LICENSE-OFL.txt` (pinned in `tools/data-pipeline/licenses/`) and the font's license fields (name ids 13 and 14) grant OFL 1.1, and the copyright notice (name id 0) stays in every subset. The pipeline rewrites name ids 1, 3, 4 and 6, drops the typographic, WWS and trademark names, and refuses to build if a reserved name is left.
 - OpenType alternates (vertical, full-width and proportional forms) are dropped: horizontal simplified Chinese only. This divides the Latin and punctuation slices by 3 to 4.
 - An HSK 1 page (its 246 characters, punctuation and pinyin) loads 67 KB of Noto Sans SC and 51 KB of WenKai GB; the slices published on npm (frequency order) would load 368 KB and 587 KB.
 
@@ -117,7 +122,7 @@ All OFL-1.1 without Reserved Font Name (checked on each `OFL.txt` 2026-10-09), s
 - CFDICT — Chine Informations (chine.in), CC BY-SA 3.0
 - HSK 2025 exam syllabus levels — Center for Language Education and Cooperation / Chinese Testing International (transcription: harukicoder/hsk30, MIT)
 - GF0025-2021 standard levels — Ministry of Education and State Language Commission of the PRC (OCR: Pleco Inc. via elkmovie/hsk30, MIT)
-- Fonts — Atkinson Hyperlegible Next (Braille Institute), Noto Sans SC (Adobe, Google), LXGW WenKai GB (LXGW; Klee One by Fontworks), SIL Open Font License 1.1
+- Fonts — Atkinson Hyperlegible Next (Braille Institute), Noto Sans SC (Adobe, Google), LXGW WenKai GB (LXGW; Klee One by Fontworks), OpenLinguo Han Fallback (modified from Plangothic by Fitzgerald P. Köeingsegg and the Plangothic Project contributors; Source Han Sans by Adobe), SIL Open Font License 1.1
 - Make Me a Hanzi — Shaunak Kishore, LGPL-3.0, with Unihan data © Unicode, Inc.; stroke data from hanzi-writer-data (David Chanin), © Arphic Technology, Arphic Public License
 - Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - wordfreq — Robyn Speer, CC BY-SA 4.0; Chinese list from Wikipedia, OpenSubtitles 2018, SUBTLEX-CH (Cai and Brysbaert, 2010), NewsCrawl, GlobalVoices, Google Books Ngrams, OSCAR, Twitter and the Jieba word list

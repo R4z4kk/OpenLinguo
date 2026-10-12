@@ -33,6 +33,23 @@ test("searches a word, opens it, then reloads it offline", async ({ page, server
   await expectWordPage();
   expect(await accessibilityViolations(page)).toEqual([]);
 
+  // 𫠒 (CJK extension D) is in neither Noto Sans SC nor LXGW WenKai GB: the fallback draws it.
+  await page.goto("/learn/dictionary/𫠒");
+  await expect(page.getByRole("heading", { level: 1, name: "𫠒 zhāng" })).toBeVisible();
+  await expect
+    .poll(
+      () =>
+        page.evaluate(() =>
+          [...document.fonts]
+            .filter((face) => face.family.replaceAll('"', "") === "OpenLinguo Han Fallback")
+            .map((face) => face.status),
+        ),
+      { message: "fallback font loaded" },
+    )
+    .toContain("loaded");
+  await page.goBack();
+  await expectWordPage();
+
   await expect
     .poll(
       () =>

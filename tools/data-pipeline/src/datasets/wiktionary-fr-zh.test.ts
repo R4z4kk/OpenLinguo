@@ -2,6 +2,7 @@ import { gzipSync } from "node:zlib";
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
+import { noFile } from "../testing/readers.ts";
 import { parseWiktionary, wiktionaryFrZh } from "./wiktionary-fr-zh.ts";
 
 const pinyin = (zhPron: string) => ({ zh_pron: zhPron, tags: ["Mandarin", "Pinyin"] });
@@ -71,7 +72,7 @@ describe("parseWiktionary", () => {
 
 describe("wiktionary-fr-zh dataset", () => {
   it("joins the first reading to CC-CEDICT and lists every left-out entry", async () => {
-    const built = await wiktionaryFrZh.build(gzip(`${lines.join("\n")}\n`), cedict);
+    const built = await wiktionaryFrZh.build(gzip(`${lines.join("\n")}\n`), cedict, noFile);
     if (!built.ok) throw new Error(built.error);
     expect(built.value.files.get("glosses-000.json")).toBe(
       '[\n["星期","xing1 qi1",["Semaine."]],\n["电话","dian4 hua4",["Téléphone."]],\n["地","di4",["Sol."]]\n]\n',
@@ -97,12 +98,20 @@ describe("wiktionary-fr-zh dataset", () => {
   });
 
   it("rejects bytes that are not gzip", async () => {
-    const built = await wiktionaryFrZh.build(new TextEncoder().encode(lines[0] ?? ""), cedict);
+    const built = await wiktionaryFrZh.build(
+      new TextEncoder().encode(lines[0] ?? ""),
+      cedict,
+      noFile,
+    );
     expect(built.ok || built.error).toContain("cannot decompress");
   });
 
   it("requires cc-cedict to be built first", async () => {
-    const built = await wiktionaryFrZh.build(gzip(lines[0] ?? ""), () => Promise.resolve(ok([])));
+    const built = await wiktionaryFrZh.build(
+      gzip(lines[0] ?? ""),
+      () => Promise.resolve(ok([])),
+      noFile,
+    );
     expect(built).toEqual(err("cc-cedict must be built before wiktionary-fr-zh"));
   });
 });

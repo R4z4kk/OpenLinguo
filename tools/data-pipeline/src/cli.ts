@@ -3,7 +3,13 @@ import { parseArgs } from "node:util";
 import { err, ok } from "@openlinguo/core";
 import { ccCedict } from "./datasets/cc-cedict.ts";
 import { cfdict } from "./datasets/cfdict.ts";
-import { lxgwWenKaiGb, notoSansSc400, notoSansSc700 } from "./datasets/fonts.ts";
+import {
+  lxgwWenKaiGb,
+  notoSansSc400,
+  notoSansSc700,
+  plangothicP1,
+  plangothicP2,
+} from "./datasets/fonts.ts";
 import { gf0025Chars, gf0025Words } from "./datasets/gf0025-2021.ts";
 import { hanziWriterData } from "./datasets/hanzi-writer-data.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
@@ -18,7 +24,14 @@ import {
   readManifest,
   serializeManifest,
 } from "./manifest.ts";
-import { fetchBytes, formatError, runDataset, type Dataset, type ShardReader } from "./run.ts";
+import {
+  fetchBytes,
+  formatError,
+  runDataset,
+  type Dataset,
+  type FileReader,
+  type ShardReader,
+} from "./run.ts";
 
 const datasets: ReadonlyMap<string, Dataset> = new Map([
   [ccCedict.id, ccCedict],
@@ -34,6 +47,8 @@ const datasets: ReadonlyMap<string, Dataset> = new Map([
   [notoSansSc400.id, notoSansSc400],
   [notoSansSc700.id, notoSansSc700],
   [lxgwWenKaiGb.id, lxgwWenKaiGb],
+  [plangothicP1.id, plangothicP1],
+  [plangothicP2.id, plangothicP2],
 ]);
 
 const fail = (message: string): void => {
@@ -57,6 +72,14 @@ const readShards = async (dir: URL): Promise<string[]> => {
 const readBuiltShards: ShardReader = async (dataset) => {
   try {
     return ok(await readShards(new URL(`${dataset}/`, dataDir)));
+  } catch (error) {
+    return err(String(error));
+  }
+};
+
+const readBuiltFile: FileReader = async (dataset, name) => {
+  try {
+    return ok(await readFile(new URL(`${dataset}/${name}`, dataDir), "utf8"));
   } catch (error) {
     return err(String(error));
   }
@@ -89,6 +112,7 @@ const main = async (): Promise<void> => {
       now: new Date(),
       fetchBytes,
       readShards: readBuiltShards,
+      readFile: readBuiltFile,
     });
     if (!result.ok) {
       fail(formatError(result.error));

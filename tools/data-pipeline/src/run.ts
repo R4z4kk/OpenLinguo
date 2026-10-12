@@ -12,6 +12,9 @@ export type DatasetBuild = {
 /** Shard contents of an already built dataset, read from `data/<dataset>/`. */
 export type ShardReader = (dataset: string) => Promise<Result<readonly string[], string>>;
 
+/** Another file of an already built dataset, read from `data/<dataset>/<name>`. */
+export type FileReader = (dataset: string, name: string) => Promise<Result<string, string>>;
+
 export type Dataset = {
   readonly id: string;
   readonly url: string;
@@ -20,6 +23,7 @@ export type Dataset = {
   readonly build: (
     raw: Uint8Array,
     readShards: ShardReader,
+    readFile: FileReader,
   ) => Result<DatasetBuild, string> | Promise<Result<DatasetBuild, string>>;
 };
 
@@ -41,6 +45,7 @@ export type RunOptions = {
   readonly now: Date;
   readonly fetchBytes: FetchBytes;
   readonly readShards: ShardReader;
+  readonly readFile: FileReader;
 };
 
 export type RunOutput = {
@@ -86,7 +91,7 @@ export const runDataset = async (
     }
   }
 
-  const built = await dataset.build(raw.value, options.readShards);
+  const built = await dataset.build(raw.value, options.readShards, options.readFile);
   if (!built.ok) return err({ kind: "invalid-source", dataset: dataset.id, message: built.error });
 
   return ok({

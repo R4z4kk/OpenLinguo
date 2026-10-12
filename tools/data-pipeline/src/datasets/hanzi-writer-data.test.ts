@@ -2,6 +2,7 @@ import { gzipSync } from "node:zlib";
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
+import { noFile } from "../testing/readers.ts";
 import { file, tar, type TarEntry } from "../testing/tar-fixture.ts";
 import { hanziWriterData } from "./hanzi-writer-data.ts";
 
@@ -47,6 +48,7 @@ describe("hanzi-writer-data dataset", () => {
         file("package/人.json", strokes(2, null)),
       ]),
       referentials,
+      noFile,
     );
     if (!built.ok) throw new Error(built.error);
     expect(built.value.files.get("strokes-000.json")).toBe(
@@ -62,17 +64,18 @@ describe("hanzi-writer-data dataset", () => {
     const built = await hanziWriterData.build(
       archive([file("package/一.json", broken)]),
       referentials,
+      noFile,
     );
     expect(built).toEqual(err("1 characters with invalid stroke data (一)"));
   });
 
   it("requires the license file", async () => {
-    const built = await hanziWriterData.build(gzipSync(tar([])), referentials);
+    const built = await hanziWriterData.build(gzipSync(tar([])), referentials, noFile);
     expect(built).toEqual(err("package has no ARPHICPL.TXT"));
   });
 
   it("requires the referentials to be built first", async () => {
-    const built = await hanziWriterData.build(archive([]), () => Promise.resolve(ok([])));
+    const built = await hanziWriterData.build(archive([]), () => Promise.resolve(ok([])), noFile);
     expect(built).toEqual(err("hsk-2025-chars must be built before hanzi-writer-data"));
   });
 });

@@ -2,6 +2,7 @@ import { gzipSync } from "node:zlib";
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
+import { noFile } from "../testing/readers.ts";
 import { headwordFrequencies, parseCBPack, wordfreqZh } from "./wordfreq-zh.ts";
 
 /** MessagePack of strings, small integers, arrays and string-keyed maps. */
@@ -76,7 +77,7 @@ describe("wordfreq-zh dataset", () => {
 
   it("writes the headword frequencies and an attribution readme", async () => {
     const reader: ShardReader = (dataset) => Promise.resolve(ok(shards[dataset] ?? []));
-    const built = await wordfreqZh.build(pack(...list()), reader);
+    const built = await wordfreqZh.build(pack(...list()), reader, noFile);
     if (!built.ok) throw new Error(built.error);
     expect(built.value.files.get("words-000.json")).toBe('[\n["的",7.79],\n["电话",5.44]\n]\n');
     expect(built.value.summary).toBe(
@@ -86,8 +87,10 @@ describe("wordfreq-zh dataset", () => {
   });
 
   it("requires the dictionaries to be built first", async () => {
-    const built = await wordfreqZh.build(pack(...list()), (dataset) =>
-      Promise.resolve(ok(dataset === "cc-cedict" ? (shards[dataset] ?? []) : [])),
+    const built = await wordfreqZh.build(
+      pack(...list()),
+      (dataset) => Promise.resolve(ok(dataset === "cc-cedict" ? (shards[dataset] ?? []) : [])),
+      noFile,
     );
     expect(built).toEqual(err("cfdict must be built before wordfreq-zh"));
   });

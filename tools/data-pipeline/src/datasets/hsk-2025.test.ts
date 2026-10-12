@@ -1,6 +1,7 @@
 import { ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
+import { noFile } from "../testing/readers.ts";
 import type { Candidate } from "./graded.ts";
 import { hsk2025Chars, hsk2025Words, resolveReadings } from "./hsk-2025.ts";
 
@@ -78,6 +79,7 @@ describe("hsk-2025-chars", () => {
     const built = await hsk2025Chars.build(
       encode(["character\tlevel", ...syntheticCharacters(counts)].join("\n")),
       () => Promise.resolve(ok([])),
+      noFile,
     );
     expect(built.ok && built.value.summary).toBe(
       "3088 recognition characters (246 / 125 / 284 / 441 / 431 / 413 / 1148)",
@@ -86,16 +88,20 @@ describe("hsk-2025-chars", () => {
 
   it("fails when a level count differs", async () => {
     const rows = syntheticCharacters(counts).slice(1);
-    const built = await hsk2025Chars.build(encode(["character\tlevel", ...rows].join("\n")), () =>
-      Promise.resolve(ok([])),
+    const built = await hsk2025Chars.build(
+      encode(["character\tlevel", ...rows].join("\n")),
+      () => Promise.resolve(ok([])),
+      noFile,
     );
     expect(built.ok).toBe(false);
   });
 
   it("fails on a duplicate character or an unknown level", async () => {
     const build = (rows: readonly string[]) =>
-      hsk2025Chars.build(encode(["character\tlevel", ...rows].join("\n")), () =>
-        Promise.resolve(ok([])),
+      hsk2025Chars.build(
+        encode(["character\tlevel", ...rows].join("\n")),
+        () => Promise.resolve(ok([])),
+        noFile,
       );
     expect((await build(["一\t1", "一\t1"])).ok).toBe(false);
     expect((await build(["一\t8"])).ok).toBe(false);
@@ -118,7 +124,7 @@ describe("hsk-2025-words", () => {
 
   it("resolves readings and keeps the lowest level with the other ones", async () => {
     const rows = [header, "东西\t1\t4\tdōngxi\t名", ...filler(10_895)];
-    const built = await hsk2025Words.build(encode(rows.join("\n")), cedict);
+    const built = await hsk2025Words.build(encode(rows.join("\n")), cedict, noFile);
     if (!built.ok) throw new Error(built.error);
     expect(String(built.value.files.get("words-000.json")).split("\n")[1]).toBe(
       '["东西",1,[4],["dong1 xi5"]],',
@@ -127,12 +133,16 @@ describe("hsk-2025-words", () => {
   });
 
   it("fails when the distinct word count differs from the transcription", async () => {
-    const built = await hsk2025Words.build(encode([header, ...filler(10)].join("\n")), cedict);
+    const built = await hsk2025Words.build(
+      encode([header, ...filler(10)].join("\n")),
+      cedict,
+      noFile,
+    );
     expect(built.ok).toBe(false);
   });
 
   it("fails when another level is not above the lowest one", async () => {
     const rows = [header, "东西\t4\t1\tdōngxi\t名", ...filler(10_895)];
-    expect((await hsk2025Words.build(encode(rows.join("\n")), cedict)).ok).toBe(false);
+    expect((await hsk2025Words.build(encode(rows.join("\n")), cedict, noFile)).ok).toBe(false);
   });
 });

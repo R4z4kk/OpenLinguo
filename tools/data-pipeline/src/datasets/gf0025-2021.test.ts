@@ -1,5 +1,6 @@
 import { ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
+import { noFile } from "../testing/readers.ts";
 import { entryForms, gf0025Chars, gf0025Words, parseNumberedList } from "./gf0025-2021.ts";
 
 const list = (sections: readonly (readonly [string, readonly string[]])[]): string =>
@@ -80,8 +81,10 @@ describe("gf0025-2021 datasets", () => {
       next += count;
       return [title, items] as const;
     });
-    const built = await gf0025Chars.build(new TextEncoder().encode(list(sections)), () =>
-      Promise.resolve(ok([])),
+    const built = await gf0025Chars.build(
+      new TextEncoder().encode(list(sections)),
+      () => Promise.resolve(ok([])),
+      noFile,
     );
     expect(built.ok && built.value.summary).toBe(
       "3000 recognition characters (300 / 300 / 300 / 300 / 300 / 300 / 1200), 0 numbering repairs",
@@ -102,8 +105,10 @@ describe("gf0025-2021 datasets", () => {
       ["东西", "東西", "dong1 xi1", ["east and west"]],
       ["东西", "東西", "dong1 xi5", ["thing"]],
     ]);
-    const built = await gf0025Words.build(new TextEncoder().encode(list(sections)), () =>
-      Promise.resolve(ok([cedict])),
+    const built = await gf0025Words.build(
+      new TextEncoder().encode(list(sections)),
+      () => Promise.resolve(ok([cedict])),
+      noFile,
     );
     if (!built.ok) throw new Error(built.error);
     expect(String(built.value.files.get("words-000.json")).split("\n")[1]).toBe(

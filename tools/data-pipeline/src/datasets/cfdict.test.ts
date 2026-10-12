@@ -1,6 +1,7 @@
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
+import { noFile } from "../testing/readers.ts";
 import { cfdict, parseCfdict, repairCfdictBytes } from "./cfdict.ts";
 
 const header = (count: string): string =>
@@ -141,7 +142,7 @@ describe("parseCfdict", () => {
 
 describe("cfdict dataset", () => {
   it("glosses CC-CEDICT entries, keeps French-only words and lists rejected readings", async () => {
-    const built = await cfdict.build(encode(document("5", words)), cedict);
+    const built = await cfdict.build(encode(document("5", words)), cedict, noFile);
     if (!built.ok) throw new Error(built.error);
     expect(built.value.files.get("glosses-000.json")).toBe(
       '[\n["电话","dian4 hua4",["téléphone","appel"]],\n["绿","lu:4",["vert"]]\n]\n',
@@ -158,7 +159,11 @@ describe("cfdict dataset", () => {
   });
 
   it("requires cc-cedict to be built first", async () => {
-    const built = await cfdict.build(encode(document("5", words)), () => Promise.resolve(ok([])));
+    const built = await cfdict.build(
+      encode(document("5", words)),
+      () => Promise.resolve(ok([])),
+      noFile,
+    );
     expect(built).toEqual(err("cc-cedict must be built before cfdict"));
   });
 });
