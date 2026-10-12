@@ -39,6 +39,14 @@ export const CREDITS = {
     license: "CC BY-SA 4.0",
     licenseUrl: CC_BY_SA_4,
   },
+  "wiktionary-en": {
+    name: "Wiktionary",
+    url: "https://kaikki.org/dictionary/Chinese/index.html",
+    holder: "Wiktionary contributors, Wiktextract (Tatu Ylonen), kaikki.org",
+    site: null,
+    license: "CC BY-SA 4.0",
+    licenseUrl: CC_BY_SA_4,
+  },
   "hsk-2025": {
     name: "HSK 2025",
     url: "https://www.chinesetest.cn",

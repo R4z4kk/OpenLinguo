@@ -72,3 +72,26 @@ export type DataFile = z.output<typeof DataFile>;
 /** `data/index.json`: the files to import, in order; `version` changes with any file. */
 export const DataIndex = z.object({ version: z.string().min(1), files: z.array(DataFile).min(1) });
 export type DataIndex = z.output<typeof DataIndex>;
+
+/**
+ * `[simplified, traditional, numbered pinyin, part of speech, English glosses]`: an English
+ * Wiktionary word that CC-CEDICT lacks (`data/wiktionary-zh`); `name` marks proper names.
+ */
+export const ExtendedRow = z.tuple([
+  z.string().min(1),
+  z.string().min(1),
+  z.string().min(1),
+  z.string().min(1),
+  Texts.min(1),
+]);
+export type ExtendedRow = z.output<typeof ExtendedRow>;
+
+export const ExtendedFile = DataFile.omit({ kind: true });
+export type ExtendedFile = z.output<typeof ExtendedFile>;
+
+/** `data/wiktionary-zh/index.json`: the extended lexicon, downloaded on demand. */
+export const ExtendedIndex = z.object({
+  version: z.string().min(1),
+  files: z.array(ExtendedFile).min(1),
+});
+export type ExtendedIndex = z.output<typeof ExtendedIndex>;

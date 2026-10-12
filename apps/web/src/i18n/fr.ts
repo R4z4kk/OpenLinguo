@@ -278,6 +278,7 @@ export const fr: Messages = {
     "cc-cedict": "Traductions anglaises",
     cfdict: "Traductions françaises",
     "wiktionary-fr": "Traductions françaises",
+    "wiktionary-en": "Mots rares et noms propres",
     "hsk-2025": "Niveaux de l’examen",
     "gf0025-2021": "Niveaux du standard",
     wordfreq: "Fréquences des mots",

@@ -15,6 +15,7 @@ import { hanziWriterData } from "./datasets/hanzi-writer-data.ts";
 import { hsk2025Chars, hsk2025Words } from "./datasets/hsk-2025.ts";
 import { makemeahanzi } from "./datasets/makemeahanzi.ts";
 import { wiktionaryFrZh } from "./datasets/wiktionary-fr-zh.ts";
+import { wiktionaryZh } from "./datasets/wiktionary-zh.ts";
 import { wordfreqZh } from "./datasets/wordfreq-zh.ts";
 import { diffRows } from "./diff.ts";
 import {
@@ -37,6 +38,7 @@ const datasets: ReadonlyMap<string, Dataset> = new Map([
   [ccCedict.id, ccCedict],
   [cfdict.id, cfdict],
   [wiktionaryFrZh.id, wiktionaryFrZh],
+  [wiktionaryZh.id, wiktionaryZh],
   [wordfreqZh.id, wordfreqZh],
   [hsk2025Chars.id, hsk2025Chars],
   [hsk2025Words.id, hsk2025Words],

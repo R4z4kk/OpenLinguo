@@ -268,6 +268,7 @@ export const en = {
     "cc-cedict": "English glosses",
     cfdict: "French glosses",
     "wiktionary-fr": "French glosses",
+    "wiktionary-en": "Rare words and names",
     "hsk-2025": "Exam levels",
     "gf0025-2021": "Standard levels",
     wordfreq: "Word frequencies",
