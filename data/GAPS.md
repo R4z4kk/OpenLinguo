@@ -8,7 +8,7 @@ The report proposes and a human validates: nothing is corrected automatically. E
 | :-- | --: | --: | --: | --: | --: | --: | --: | --: | --: |
 | **Missing French translation** | | | | | | | | | |
 | [Graded words (HSK 2025, GF0025-2021)](gaps/missing-french.tsv) | 2 | 2 | 2 | 6 | 11 | 19 | 301 | 292 | 635 |
-| All CC-CEDICT entries | 2 | 2 | 2 | 6 | 11 | 19 | 301 | 73,558 | 73,901 |
+| All CC-CEDICT entries | 2 | 2 | 2 | 6 | 11 | 19 | 301 | 73,557 | 73,900 |
 | **Doubtful translation** | | | | | | | | | |
 | [CFDICT tone conflicts](cfdict/tone-conflicts.tsv) | 2 | 2 | 1 | 1 | 2 | 2 | 9 | 181 | 200 |
 | [Wiktionary tone conflicts](wiktionary-fr-zh/tone-conflicts.tsv) | 1 | 2 | 3 | 12 | 10 | 2 | 10 | 100 | 140 |
@@ -23,14 +23,14 @@ The report proposes and a human validates: nothing is corrected automatically. E
 | [HSK 2025 words](hsk-2025-words/issues.tsv) | 0 | 0 | 0 | 1 | 0 | 0 | 2 | 0 | 3 |
 | [GF0025-2021 words](gf0025-2021-words/issues.tsv) | 41 | 27 | 29 | 54 | 55 | 67 | 105 | 53 | 431 |
 | **Unsupported characters** | | | | | | | | | |
-| [No glyph in Noto Sans SC 400](font-noto-sans-sc-400/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 93 | 93 |
-| [No glyph in Noto Sans SC 700](font-noto-sans-sc-700/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 93 | 93 |
+| [No glyph in Noto Sans SC 400](font-noto-sans-sc-400/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 91 | 91 |
+| [No glyph in Noto Sans SC 700](font-noto-sans-sc-700/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 91 | 91 |
 | [No glyph in LXGW WenKai GB](font-lxgw-wenkai-gb/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 40 | 40 |
 | [No glyph in any self-hosted font](font-plangothic-p2/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [No stroke order](hanzi-writer-data/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [Unknown decomposition component](gaps/unknown-components.tsv) | 39 | 25 | 40 | 39 | 35 | 26 | 42 | 203 | 449 |
 | **Repairs applied to a source** | | | | | | | | | |
-| [CFDICT](cfdict/repairs.tsv) | — | — | — | — | — | — | — | — | 46 |
+| [CFDICT](cfdict/repairs.tsv) | — | — | — | — | — | — | — | — | 50 |
 | [GF0025-2021 characters](gf0025-2021-chars/repairs.tsv) | — | — | — | — | — | — | — | — | 0 |
 | [GF0025-2021 words](gf0025-2021-words/repairs.tsv) | — | — | — | — | — | — | — | — | 1 |
 
