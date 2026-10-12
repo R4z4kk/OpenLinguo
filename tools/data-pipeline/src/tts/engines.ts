@@ -2,7 +2,7 @@ import { err, ok, type Result } from "@openlinguo/core";
 import { z } from "zod";
 import { decodeWav } from "./wav.ts";
 
-export const ENGINE_IDS = ["melotts", "cosyvoice-sft", "cosyvoice3"] as const;
+export const ENGINE_IDS = ["melotts", "cosyvoice-sft", "cosyvoice3", "qwen3-tts"] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 
 /** Ports of `tools/tts/compose.yaml`. */
@@ -10,6 +10,7 @@ const ENGINE_URLS: Readonly<Record<EngineId, string>> = {
   melotts: "http://127.0.0.1:8101",
   "cosyvoice-sft": "http://127.0.0.1:8102",
   cosyvoice3: "http://127.0.0.1:8103",
+  "qwen3-tts": "http://127.0.0.1:8104",
 };
 
 const engineInfoSchema = z.object({

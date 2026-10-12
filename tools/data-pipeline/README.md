@@ -31,6 +31,6 @@ pnpm --filter @openlinguo/data-pipeline tts-bakeoff report
 ```
 
 - `generate` synthesizes the 36 items of `src/tts/bakeoff-set.ts` with every engine into `tools/tts/.bakeoff/` (gitignored, resumable).
-- `serve` opens a local grading page: engines hidden, their order shuffled per item, grades saved on every change.
-- `report` refuses to run until every sample is graded, then prints the tables and writes `tools/tts/bakeoff-results.json`.
-- `tools/tts/melotts/requirements.lock` replaces MeloTTS's unpinned requirements (pip backtracks for hours on them). It is upstream `requirements.txt` without `gradio` (demo UI only), with `torch==2.3.1+cpu`, `torchaudio==2.3.1+cpu` and `setuptools<70`, compiled in `python:3.10-slim` by `uv pip compile --python-version 3.10 --python-platform x86_64-manylinux_2_28 --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match --exclude-newer <7 days ago>`.
+- `serve` opens a local comparison page: each item with every engine's version in a fixed, named order; the maintainer listens to the items they choose and picks the best version (or none), saved on every change.
+- `report` counts the picks per engine, overall and per category, and writes `tools/tts/bakeoff-results.json`.
+- `requirements.lock` files replace unpinned upstream requirements (pip backtracks for hours on MeloTTS's). MeloTTS: upstream `requirements.txt` without `gradio` (demo UI only), plus `torch==2.3.1+cpu`, `torchaudio==2.3.1+cpu` and `setuptools<70`. Qwen3-TTS: the dependencies of `qwen-tts` 0.1.1 without `gradio`, plus `torch==2.6.0+cpu` and `torchaudio==2.6.0+cpu`. Both compiled in `python:3.10-slim` with `uv pip compile --python-version 3.10 --python-platform x86_64-manylinux_2_28 --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match --exclude-newer <7 days ago>`.

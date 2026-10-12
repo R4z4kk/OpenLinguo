@@ -2,15 +2,7 @@ import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { parseArgs } from "node:util";
 import { LISTENING_PAGE } from "./bakeoff-page.ts";
-import {
-  formatReport,
-  gradesSchema,
-  LABELS,
-  makeKey,
-  reveal,
-  type BakeoffKey,
-  type Grades,
-} from "./bakeoff-report.ts";
+import { checkPicks, formatReport, picksSchema, type Picks } from "./bakeoff-report.ts";
 import { BAKEOFF_SET, spokenPinyin } from "./bakeoff-set.ts";
 import { ENGINE_IDS, engineInfo, synthesize, type EngineId, type EngineInfo } from "./engines.ts";
 
@@ -18,7 +10,7 @@ const SEED = 1;
 const MAX_BODY_BYTES = 1_000_000;
 const outDir = new URL("../../../tts/.bakeoff/", import.meta.url);
 const samplesDir = new URL("samples/", outDir);
-const gradesPath = new URL("grades.json", outDir);
+const picksPath = new URL("picks.json", outDir);
 const enginesPath = new URL("engines.json", outDir);
 const resultsPath = new URL("../../../tts/bakeoff-results.json", import.meta.url);
 
@@ -26,6 +18,9 @@ class BakeoffError extends Error {}
 
 const samplePath = (item: string, engine: EngineId): URL =>
   new URL(`${item}.${engine}.wav`, samplesDir);
+
+const isEngine = (value: string): value is EngineId =>
+  (ENGINE_IDS as readonly string[]).includes(value);
 
 const exists = async (url: URL): Promise<boolean> => {
   try {
@@ -89,11 +84,12 @@ const missingSamples = async (): Promise<string[]> => {
   return missing;
 };
 
-const readGrades = async (): Promise<Grades> => {
-  if (!(await exists(gradesPath))) return { grades: [], notes: {} };
-  const parsed = gradesSchema.safeParse(await readJson(gradesPath));
-  if (!parsed.success)
-    throw new BakeoffError(`invalid ${gradesPath.pathname}: ${parsed.error.message}`);
+const readPicks = async (): Promise<Picks> => {
+  if (!(await exists(picksPath))) return { picks: {}, notes: {} };
+  const parsed = picksSchema.safeParse(await readJson(picksPath));
+  if (!parsed.success) {
+    throw new BakeoffError(`invalid ${picksPath.pathname}: ${parsed.error.message}`);
+  }
   return parsed.data;
 };
 
@@ -116,11 +112,7 @@ const readBody = (request: IncomingMessage): Promise<string> =>
     request.on("error", reject);
   });
 
-const handle = async (
-  key: BakeoffKey,
-  request: IncomingMessage,
-  response: ServerResponse,
-): Promise<void> => {
+const handle = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
   const send = (status: number, body: string | Uint8Array, type: string): void => {
     response.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
     response.end(body);
@@ -136,28 +128,26 @@ const handle = async (
       category,
       text,
       spoken: spoken(id),
-      labels: LABELS.filter((label) => key[id]?.[label] != null),
     }));
-    send(200, JSON.stringify(items), "application/json");
+    send(200, JSON.stringify({ engines: ENGINE_IDS, items }), "application/json");
     return;
   }
-  if (request.method === "GET" && path === "/grades") {
-    send(200, JSON.stringify(await readGrades()), "application/json");
+  if (request.method === "GET" && path === "/picks") {
+    send(200, JSON.stringify(await readPicks()), "application/json");
     return;
   }
-  if (request.method === "POST" && path === "/grades") {
-    const parsed = gradesSchema.safeParse(JSON.parse(await readBody(request)) as unknown);
+  if (request.method === "POST" && path === "/picks") {
+    const parsed = picksSchema.safeParse(JSON.parse(await readBody(request)) as unknown);
     if (!parsed.success) {
       send(400, parsed.error.message, "text/plain; charset=utf-8");
       return;
     }
-    await writeAtomic(gradesPath, `${JSON.stringify(parsed.data, null, 2)}\n`);
+    await writeAtomic(picksPath, `${JSON.stringify(parsed.data, null, 2)}\n`);
     send(204, "", "text/plain");
     return;
   }
-  const [, item = "", label = ""] = /^\/audio\/([\w-]+)\/([A-Z])$/u.exec(path) ?? [];
-  const engine = key[item]?.[LABELS.find((candidate) => candidate === label) ?? "A"] ?? null;
-  if (request.method === "GET" && engine !== null) {
+  const [, item = "", engine = ""] = /^\/audio\/([\w-]+)\/([\w-]+)$/u.exec(path) ?? [];
+  if (request.method === "GET" && BAKEOFF_SET.some(({ id }) => id === item) && isEngine(engine)) {
     send(200, await readFile(samplePath(item, engine)), "audio/wav");
     return;
   }
@@ -166,11 +156,11 @@ const handle = async (
 
 const serve = async (port: number): Promise<void> => {
   const missing = await missingSamples();
-  if (missing.length > 0)
+  if (missing.length > 0) {
     throw new BakeoffError(`missing samples, run generate first: ${missing.join(", ")}`);
-  const key = makeKey(BAKEOFF_SET, ENGINE_IDS);
+  }
   const server = createServer((request, response) => {
-    handle(key, request, response).catch((error: unknown) => {
+    handle(request, response).catch((error: unknown) => {
       console.error(error);
       if (!response.headersSent) response.writeHead(500, { "Content-Type": "text/plain" });
       response.end(String(error));
@@ -178,18 +168,17 @@ const serve = async (port: number): Promise<void> => {
   });
   server.listen(port, "127.0.0.1", () => {
     console.log(
-      `Listening page: http://127.0.0.1:${String(port)}/ (grades saved to ${gradesPath.pathname})`,
+      `Listening page: http://127.0.0.1:${String(port)}/ (picks saved to ${picksPath.pathname})`,
     );
   });
   await new Promise((resolve) => server.on("close", resolve));
 };
 
 const report = async (): Promise<void> => {
-  const key = makeKey(BAKEOFF_SET, ENGINE_IDS);
-  const grades = await readGrades();
-  const revealed = reveal(BAKEOFF_SET, key, grades);
-  if (!revealed.ok) throw new BakeoffError(revealed.error);
-  console.log(formatReport(BAKEOFF_SET, ENGINE_IDS, revealed.value));
+  const picks = await readPicks();
+  const checked = checkPicks(BAKEOFF_SET, picks);
+  if (!checked.ok) throw new BakeoffError(checked.error);
+  console.log(formatReport(BAKEOFF_SET, ENGINE_IDS, picks));
   const results = {
     engines: await readEngineInfos(),
     seed: SEED,
@@ -199,15 +188,12 @@ const report = async (): Promise<void> => {
       text,
       spoken: spoken(id),
     })),
-    grades: revealed.value,
-    notes: grades.notes,
+    picks: picks.picks,
+    notes: picks.notes,
   };
   await writeFile(resultsPath, `${JSON.stringify(results, null, 2)}\n`, "utf8");
   console.log(`Results written to ${resultsPath.pathname}`);
 };
-
-const isEngine = (value: string): value is EngineId =>
-  (ENGINE_IDS as readonly string[]).includes(value);
 
 const main = async (): Promise<void> => {
   const { values, positionals } = parseArgs({
