@@ -102,6 +102,17 @@ describe("parseCfdict", () => {
     ]);
   });
 
+  it("replaces compatibility ideographs in headwords by their unified form", () => {
+    const release = parseCfdict(document("1", [word("8", "\uf929\uf929", "lang3 lang3", ["x"])]));
+    expect(release.ok && release.value.entries[0]).toMatchObject({
+      simplified: "\u6717\u6717",
+      traditional: "\u6717\u6717",
+    });
+    expect(release.ok && release.value.repairs).toEqual([
+      { entryId: "8", description: "headword normalized to NFC" },
+    ]);
+  });
+
   it("rejects an entry without any gloss", () => {
     expect(parseCfdict(document("1", [word("8", "放", "fang4", [""])]))).toEqual(
       err("1 malformed entries (8)"),
