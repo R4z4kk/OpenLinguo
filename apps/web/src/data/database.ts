@@ -84,6 +84,23 @@ export type StoredAudio = {
 /** A data file fully imported, by content hash. */
 export type ImportRecord = { readonly sha256: string };
 
+/** An English Wiktionary word CC-CEDICT lacks: looked up for unknown sequences, never segmented. */
+export type StoredExtendedWord = {
+  /** `simplified \t traditional \t reading \t part of speech` */
+  readonly id: string;
+  /** sha256 of the file it was imported from. */
+  readonly file: string;
+  readonly simplified: string;
+  readonly traditional: string;
+  readonly reading: string;
+  /** `name` marks proper names. */
+  readonly pos: string;
+  readonly glosses: readonly string[];
+};
+
+/** Kept apart from `meta`, which a new dictionary version clears. */
+export type ExtendedMetaRecord = { readonly key: "version"; readonly value: string };
+
 export type Database = Dexie & {
   entries: EntityTable<StoredEntry, "id">;
   characters: EntityTable<StoredCharacter, "character">;
@@ -98,6 +115,8 @@ export type Database = Dexie & {
   deckWords: Table<StoredDeckWord, string>;
   audio: EntityTable<StoredAudio, "id">;
   notes: EntityTable<StoredNote, "id">;
+  extendedWords: EntityTable<StoredExtendedWord, "id">;
+  extendedMeta: EntityTable<ExtendedMetaRecord, "key">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -146,6 +165,7 @@ export const openDatabase = (name: string): Database => {
   );
   db.version(8).stores({ audio: "id" });
   db.version(9).stores({ deckWords: "id, deckId, [headword+readingKey], note", notes: "id" });
+  db.version(10).stores({ extendedWords: "id, simplified, file", extendedMeta: "key" });
   return db;
 };
 

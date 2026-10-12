@@ -111,6 +111,14 @@
     "maxAgeDays": 90,
     "sha256": "b24060c79a908fffd25fb94b269ccc4384bc98bbd30c834eba36526997b87eb4"
   },
+  "wiktionary-zh": {
+    "source": "https://kaikki.org/dictionary/Chinese/kaikki.org-dictionary-Chinese.jsonl.gz",
+    "license": "CC-BY-SA-4.0",
+    "version": "sha256 be38ed4cf2ae",
+    "retrievedAt": "2026-10-12T11:18:41.576Z",
+    "maxAgeDays": 90,
+    "sha256": "be38ed4cf2ae0667baa31e25b831b25e0a170fd891cfc212683240c09f08bf38"
+  },
   "wordfreq-zh": {
     "source": "https://raw.githubusercontent.com/rspeer/wordfreq/912caf64b657478d1dff1138efdc078947d54bb1/wordfreq/data/large_zh.msgpack.gz",
     "license": "CC-BY-SA-4.0",

@@ -24,12 +24,12 @@ export const fetchDataFile: FetchFile = async (name) => {
   }
 };
 
-const sha256 = async (bytes: Uint8Array<ArrayBuffer>): Promise<string> =>
+export const sha256 = async (bytes: Uint8Array<ArrayBuffer>): Promise<string> =>
   Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (byte) =>
     byte.toString(16).padStart(2, "0"),
   ).join("");
 
-const readJson = <S extends z.ZodType>(
+export const readJson = <S extends z.ZodType>(
   bytes: Uint8Array,
   schema: S,
   file: string,
