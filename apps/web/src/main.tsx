@@ -10,6 +10,8 @@ import "@fontsource-variable/atkinson-hyperlegible-next";
 import "../../../data/font-noto-sans-sc-400/fonts.css";
 import "../../../data/font-noto-sans-sc-700/fonts.css";
 import "../../../data/font-lxgw-wenkai-gb/fonts.css";
+import "../../../data/font-plangothic-p1/fonts.css";
+import "../../../data/font-plangothic-p2/fonts.css";
 import "./styles.css";
 
 const storage = (): Storage => localStorage;

@@ -39,6 +39,22 @@
     "maxAgeDays": 365,
     "sha256": "c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0"
   },
+  "font-plangothic-p1": {
+    "source": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP1-Regular.ttf",
+    "license": "OFL-1.1",
+    "version": "Plangothic V2.9.5795",
+    "retrievedAt": "2026-10-12T09:37:44.352Z",
+    "maxAgeDays": 365,
+    "sha256": "550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6"
+  },
+  "font-plangothic-p2": {
+    "source": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP2-Regular.ttf",
+    "license": "OFL-1.1",
+    "version": "Plangothic V2.9.5795",
+    "retrievedAt": "2026-10-12T09:37:45.855Z",
+    "maxAgeDays": 365,
+    "sha256": "681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f"
+  },
   "gf0025-2021-chars": {
     "source": "https://raw.githubusercontent.com/elkmovie/hsk30/7f3d4fdcfcb6e826001df062747c943d1fa8160e/charlist.txt",
     "license": "MIT transcription (Pleco Inc.) of the GF0025-2021 standard",

@@ -18,9 +18,12 @@
   --color-tone-4: light-dark(#0619db, #a3b2dd);
   --color-tone-neutral: light-dark(#5f6662, #a3aba6);
 
-  --font-sans: "Atkinson Hyperlegible Next Variable", "Noto Sans SC", system-ui, sans-serif;
-  --font-zh: "Noto Sans SC", sans-serif;
-  --font-display: "LXGW WenKai GB", "Noto Sans SC", serif;
+  /* OpenLinguo Han Fallback draws the rare dataset characters the other fonts lack (#67). */
+  --font-sans:
+    "Atkinson Hyperlegible Next Variable", "Noto Sans SC", "OpenLinguo Han Fallback", system-ui,
+    sans-serif;
+  --font-zh: "Noto Sans SC", "OpenLinguo Han Fallback", sans-serif;
+  --font-display: "LXGW WenKai GB", "Noto Sans SC", "OpenLinguo Han Fallback", serif;
   /* The self-hosted fonts have no IPA glyphs: one system font draws a whole transcription. */
   --font-ipa: system-ui, sans-serif;
 

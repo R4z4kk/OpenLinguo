@@ -1,5 +1,6 @@
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
+import { noFile } from "../testing/readers.ts";
 import { makemeahanzi, parseDictionary } from "./makemeahanzi.ts";
 
 const line = (character: string, extra: object = {}): string =>
@@ -62,8 +63,10 @@ describe("parseDictionary", () => {
 
 describe("makemeahanzi dataset", () => {
   it("writes shards, the license texts and an attribution readme", async () => {
-    const built = await makemeahanzi.build(new TextEncoder().encode(dictionary), () =>
-      Promise.resolve(ok([])),
+    const built = await makemeahanzi.build(
+      new TextEncoder().encode(dictionary),
+      () => Promise.resolve(ok([])),
+      noFile,
     );
     if (!built.ok) throw new Error(built.error);
     expect([...built.value.files.keys()].sort()).toEqual([

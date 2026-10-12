@@ -8,7 +8,7 @@ The report proposes and a human validates: nothing is corrected automatically. E
 | :-- | --: | --: | --: | --: | --: | --: | --: | --: | --: |
 | **Missing French translation** | | | | | | | | | |
 | [Graded words (HSK 2025, GF0025-2021)](gaps/missing-french.tsv) | 2 | 2 | 2 | 6 | 11 | 19 | 301 | 292 | 635 |
-| All CC-CEDICT entries | 2 | 2 | 2 | 6 | 11 | 19 | 301 | 73,558 | 73,901 |
+| All CC-CEDICT entries | 2 | 2 | 2 | 6 | 11 | 19 | 301 | 73,557 | 73,900 |
 | **Doubtful translation** | | | | | | | | | |
 | [CFDICT tone conflicts](cfdict/tone-conflicts.tsv) | 2 | 2 | 1 | 1 | 2 | 2 | 9 | 181 | 200 |
 | [Wiktionary tone conflicts](wiktionary-fr-zh/tone-conflicts.tsv) | 1 | 2 | 3 | 12 | 10 | 2 | 10 | 100 | 140 |
@@ -23,13 +23,14 @@ The report proposes and a human validates: nothing is corrected automatically. E
 | [HSK 2025 words](hsk-2025-words/issues.tsv) | 0 | 0 | 0 | 1 | 0 | 0 | 2 | 0 | 3 |
 | [GF0025-2021 words](gf0025-2021-words/issues.tsv) | 41 | 27 | 29 | 54 | 55 | 67 | 105 | 53 | 431 |
 | **Unsupported characters** | | | | | | | | | |
-| [No glyph in Noto Sans SC 400](font-noto-sans-sc-400/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 93 | 93 |
-| [No glyph in Noto Sans SC 700](font-noto-sans-sc-700/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 93 | 93 |
+| [No glyph in Noto Sans SC 400](font-noto-sans-sc-400/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 91 | 91 |
+| [No glyph in Noto Sans SC 700](font-noto-sans-sc-700/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 91 | 91 |
 | [No glyph in LXGW WenKai GB](font-lxgw-wenkai-gb/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 40 | 40 |
+| [No glyph in any self-hosted font](font-plangothic-p2/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [No stroke order](hanzi-writer-data/missing.tsv) | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
 | [Unknown decomposition component](gaps/unknown-components.tsv) | 39 | 25 | 40 | 39 | 35 | 26 | 42 | 203 | 449 |
 | **Repairs applied to a source** | | | | | | | | | |
-| [CFDICT](cfdict/repairs.tsv) | — | — | — | — | — | — | — | — | 46 |
+| [CFDICT](cfdict/repairs.tsv) | — | — | — | — | — | — | — | — | 50 |
 | [GF0025-2021 characters](gf0025-2021-chars/repairs.tsv) | — | — | — | — | — | — | — | — | 0 |
 | [GF0025-2021 words](gf0025-2021-words/repairs.tsv) | — | — | — | — | — | — | — | — | 1 |
 
@@ -72,9 +73,9 @@ How gaps get fixed: take the reading from another source (the official syllabus 
 
 ## Unsupported characters
 
-Characters a font has no glyph for (they fall back to the next font), without stroke order, or whose decomposition has an unknown component (？).
+Characters a font has no glyph for (they fall back to the next font, down to OpenLinguo Han Fallback for the CJK extension planes), that no self-hosted font draws, without stroke order, or whose decomposition has an unknown component (？).
 
-How gaps get fixed: a fallback font (#67), or the data upstream (Make Me a Hanzi, hanzi-writer-data).
+How gaps get fixed: another self-hosted fallback font (#67), or the data upstream (Make Me a Hanzi, hanzi-writer-data).
 
 - [Unknown decomposition component](gaps/unknown-components.tsv): 246 HSK characters: 㠯 (HSK 1), 一 (HSK 1), 不 (HSK 1), 也 (HSK 1), 习 (HSK 1), 书 (HSK 1), 五 (HSK 1), 人 (HSK 1), 今 (HSK 1), 以 (HSK 1), 先 (HSK 1), 八 (HSK 1), 友 (HSK 1), 司 (HSK 1), 后 (HSK 1), 士 (HSK 1), 女 (HSK 1), 學 (HSK 1), 年 (HSK 1), 弟 (HSK 1), and 226 more.
 

@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 
 const data = new URL("../../../../data/", import.meta.url);
 const FONTS = ["font-noto-sans-sc-400", "font-noto-sans-sc-700", "font-lxgw-wenkai-gb"];
+/** OpenLinguo Han Fallback, in fallback order: each draws what the fonts before it lack. */
+const FALLBACKS = ["font-plangothic-p1", "font-plangothic-p2"];
 
 type Face = { readonly url: string; readonly ranges: readonly (readonly [number, number])[] };
 
@@ -17,6 +19,19 @@ const faces = (font: string): readonly Face[] =>
       }),
     }),
   );
+
+const missing = (font: string): readonly string[] =>
+  readFileSync(new URL(`${font}/missing.tsv`, data), "utf8")
+    .split("\n")
+    .slice(1)
+    .filter((line) => line !== "");
+
+const covers = (font: string, char: string): boolean => {
+  const codePoint = char.codePointAt(0) ?? 0;
+  return faces(font).some(({ ranges }) =>
+    ranges.some(([start, end]) => codePoint >= start && codePoint <= end),
+  );
+};
 
 /** Bytes the browser downloads to render `text` with this font. */
 const payload = (font: string, text: string): number => {
@@ -57,7 +72,18 @@ describe("self-hosted CJK fonts", () => {
     expect(payload("font-lxgw-wenkai-gb", hsk1)).toBeLessThanOrEqual(56 * KB);
   });
 
-  it.each(FONTS)("serves %s from the project origin only", (font) => {
+  it("loads no fallback slice for an HSK 1 page", () => {
+    for (const font of FALLBACKS) expect(payload(font, hsk1 + PUNCTUATION + PINYIN)).toBe(0);
+  });
+
+  it("draws every dataset character the other fonts lack, or lists it in the last missing.tsv", () => {
+    const lacking = [...new Set(FONTS.flatMap(missing))];
+    const last = FALLBACKS.at(-1) ?? "";
+    const undrawn = lacking.filter((char) => !FALLBACKS.some((font) => covers(font, char)));
+    expect(undrawn).toEqual(missing(last));
+  });
+
+  it.each([...FONTS, ...FALLBACKS])("serves %s from the project origin only", (font) => {
     for (const { url } of faces(font)) expect(url).toMatch(/^\.\/[a-z0-9-]+\.woff2$/u);
   });
 });

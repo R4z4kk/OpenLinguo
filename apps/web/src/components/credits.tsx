@@ -82,9 +82,10 @@ export const CREDITS = {
     licenseUrl: "/data/licenses/hanzi-writer-data/ARPHICPL.txt",
   },
   fonts: {
-    name: "Atkinson Hyperlegible Next, Noto Sans SC, LXGW WenKai GB",
+    name: "Atkinson Hyperlegible Next, Noto Sans SC, LXGW WenKai GB, OpenLinguo Han Fallback",
     url: "https://openfontlicense.org",
-    holder: "Braille Institute; Adobe, Google; LXGW, from Klee One by Fontworks",
+    holder:
+      "Braille Institute; Adobe, Google; LXGW, from Klee One by Fontworks; modified from Plangothic by Fitzgerald P. Köeingsegg and the Plangothic Project contributors",
     site: null,
     license: "SIL Open Font License 1.1",
     licenseUrl: "https://openfontlicense.org/open-font-license-official-text/",

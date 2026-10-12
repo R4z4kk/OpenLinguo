@@ -70,8 +70,8 @@ const CATEGORIES = [
     id: "characters",
     title: "Unsupported characters",
     description:
-      "Characters a font has no glyph for (they fall back to the next font), without stroke order, or whose decomposition has an unknown component (？).",
-    fix: "a fallback font (#67), or the data upstream (Make Me a Hanzi, hanzi-writer-data).",
+      "Characters a font has no glyph for (they fall back to the next font, down to OpenLinguo Han Fallback for the CJK extension planes), that no self-hosted font draws, without stroke order, or whose decomposition has an unknown component (？).",
+    fix: "another self-hosted fallback font (#67), or the data upstream (Make Me a Hanzi, hanzi-writer-data).",
   },
   {
     id: "repairs",
@@ -161,6 +161,13 @@ const TSV_LISTS: readonly TsvList[] = [
     category: "characters",
     label: "No glyph in LXGW WenKai GB",
     path: "font-lxgw-wenkai-gb/missing.tsv",
+    column: character,
+    issue: null,
+  },
+  {
+    category: "characters",
+    label: "No glyph in any self-hosted font",
+    path: "font-plangothic-p2/missing.tsv",
     column: character,
     issue: null,
   },

@@ -51,6 +51,7 @@ For comparison, an Okabe-Ito-derived starting palette dropped to 8.6 under prota
 | Chinese interface and pinyin (all tone diacritics) | Noto Sans SC | OFL-1.1 |
 | Display characters (word page, cards, strokes) | LXGW WenKai GB, a Kai face close to handwriting with the mainland standard character forms (通用规范汉字表) taught for the HSK (v1.522, decision 2026-10-09) | OFL-1.1 |
 | Fallback display | Noto Sans SC (already loaded; Noto Serif SC dropped, 2026-10-09) | OFL-1.1 |
+| Rare characters of the CJK extension planes that the fonts above lack (end of every stack) | OpenLinguo Han Fallback, modified from Plangothic (Source Han Sans with mainland forms), Regular only (decision 2026-10-12, #67) | OFL-1.1 |
 | Phonetic transcriptions (IPA) | The device's system font: Atkinson Hyperlegible Next and the Noto Sans SC slices have no IPA glyphs (checked 2026-10-11), so a transcription is drawn by one font rather than mixed | — |
 
 All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fonts are cut by `tools/data-pipeline` into `unicode-range` slices that follow the HSK 2025 bands (Latin and pinyin, punctuation, symbols, HSK 1 … 7-9, GF0025-2021, then the other dataset characters by frequency), so an HSK 1 page loads 67 KB of Noto Sans SC and 51 KB of LXGW WenKai GB, against 368 KB and 587 KB with frequency-ordered slices (measured 2026-10-09, budget checked in CI by `apps/web/src/design/fonts.test.ts`).

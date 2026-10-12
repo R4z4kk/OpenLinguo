@@ -22,6 +22,7 @@ const HEADERS: Readonly<Record<string, string>> = {
   "font-noto-sans-sc-400/missing.tsv": "character",
   "font-noto-sans-sc-700/missing.tsv": "character",
   "font-lxgw-wenkai-gb/missing.tsv": "character",
+  "font-plangothic-p2/missing.tsv": "character",
   "hanzi-writer-data/missing.tsv": "character",
   "cfdict/repairs.tsv": "entry_id\trepair",
   "gf0025-2021-chars/repairs.tsv": "section\tline\trepair",

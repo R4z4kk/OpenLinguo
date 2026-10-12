@@ -1,7 +1,7 @@
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { ShardReader } from "../run.ts";
-import { loadCharacters, planSlices, unicodeRange } from "./fonts.ts";
+import { loadCharacters, parseMissing, planFallback, planSlices, unicodeRange } from "./fonts.ts";
 
 const code = (chars: string): number[] => Array.from(chars, (char) => char.codePointAt(0) ?? 0);
 
@@ -65,5 +65,25 @@ describe("loadCharacters", () => {
     expect(await loadCharacters(() => Promise.resolve(ok([])))).toEqual(
       err("hsk-2025-chars must be built before the fonts"),
     );
+  });
+});
+
+describe("fallback fonts", () => {
+  it("reads the characters of missing.tsv lists once, in list order", () => {
+    expect(parseMissing(["character\n𣸨\n𪢌\n", "character\n𪢌\n𫶕\n", "character\n"])).toEqual([
+      "𣸨",
+      "𪢌",
+      "𫶕",
+    ]);
+  });
+
+  it("keeps the characters the font has and lists the others", () => {
+    const plan = planFallback(["𫶕", "𣸨", "𪢌"], new Set(code("𣸨𫶕")));
+    expect(plan.slices).toEqual([{ name: "01", codePoints: code("𣸨𫶕") }]);
+    expect(plan.missing).toEqual(["𪢌"]);
+  });
+
+  it("has no slice when the font has none of the characters", () => {
+    expect(planFallback(["𪢌"], new Set(code("a")))).toEqual({ slices: [], missing: ["𪢌"] });
   });
 });

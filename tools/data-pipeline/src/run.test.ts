@@ -1,7 +1,14 @@
 import { err, ok } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import type { Manifest } from "./manifest.ts";
-import { runDataset, sha256, type Dataset, type FetchBytes, type ShardReader } from "./run.ts";
+import {
+  runDataset,
+  sha256,
+  type Dataset,
+  type FetchBytes,
+  type FileReader,
+  type ShardReader,
+} from "./run.ts";
 
 const bytes = new TextEncoder().encode("release 1");
 const now = new Date("2026-10-09T12:00:00Z");
@@ -17,6 +24,7 @@ const dataset: Dataset = {
 
 const serve: FetchBytes = () => Promise.resolve(ok(bytes));
 const readShards: ShardReader = () => Promise.resolve(ok([]));
+const readFile: FileReader = () => Promise.resolve(err("no file"));
 
 const pinned = (sha: string): Manifest => ({
   sample: {
@@ -34,7 +42,7 @@ describe("runDataset", () => {
     const result = await runDataset(
       dataset,
       {},
-      { refresh: false, now, fetchBytes: serve, readShards },
+      { refresh: false, now, fetchBytes: serve, readShards, readFile },
     );
     expect(result).toEqual(err({ kind: "not-pinned", dataset: "sample" }));
   });
@@ -45,6 +53,7 @@ describe("runDataset", () => {
       now,
       fetchBytes: serve,
       readShards,
+      readFile,
     });
     expect(result.ok || result.error.kind).toBe("checksum-mismatch");
   });
@@ -55,6 +64,7 @@ describe("runDataset", () => {
       now,
       fetchBytes: serve,
       readShards,
+      readFile,
     });
     expect(result.ok && result.value.entry.retrievedAt).toBe("2026-09-01T00:00:00.000Z");
   });
@@ -65,6 +75,7 @@ describe("runDataset", () => {
       now,
       fetchBytes: serve,
       readShards,
+      readFile,
     });
     expect(result.ok && result.value.entry).toEqual({
       source: dataset.url,
@@ -80,11 +91,17 @@ describe("runDataset", () => {
     const down: FetchBytes = (url) =>
       Promise.resolve(err({ kind: "download-failed", url, message: "HTTP 503" }));
     expect(
-      (await runDataset(dataset, {}, { refresh: true, now, fetchBytes: down, readShards })).ok,
+      (
+        await runDataset(
+          dataset,
+          {},
+          { refresh: true, now, fetchBytes: down, readShards, readFile },
+        )
+      ).ok,
     ).toBe(false);
     const broken: Dataset = { ...dataset, build: () => err("bad header") };
     expect(
-      await runDataset(broken, {}, { refresh: true, now, fetchBytes: serve, readShards }),
+      await runDataset(broken, {}, { refresh: true, now, fetchBytes: serve, readShards, readFile }),
     ).toEqual(err({ kind: "invalid-source", dataset: "sample", message: "bad header" }));
   });
 });
