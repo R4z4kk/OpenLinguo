@@ -93,6 +93,9 @@ export const en = {
     choose: "Choose an .apkg file",
     reading: "Reading the file…",
     file: "File: {{name}}",
+    withHistory: "Import the review history, so the cards continue where they were in Anki",
+    noHistoryInFile:
+      "This file has no review history. To bring it, export it from Anki with “Include scheduling information” checked.",
     notApkg: "This file is not an Anki package (.apkg).",
     tooNew:
       "This package comes from a newer Anki version (format {{version}}). In Anki, export it again with “Support older Anki versions” checked.",
@@ -105,6 +108,11 @@ export const en = {
     roles: { characters: "Characters", pinyin: "Pinyin", meaning: "Meaning", audio: "Audio" },
     notUsed: "Not used",
     leftOut: "Not imported",
+    cards: {
+      recognition: "Recognition history (characters to meaning)",
+      recall: "Recall history (meaning to characters)",
+    },
+    noHistory: "None",
     preview: "First notes",
     summary: "Summary",
     checking: "Matching the notes with the dictionary…",
@@ -122,6 +130,14 @@ export const en = {
     noMeaning: "no meaning, skipped",
     withNotes_one: "Add the note with a meaning as a card of its own",
     withNotes_other: "Add the {{count}} notes with a meaning as cards of their own",
+    history_one: "{{count, number}} review from Anki joins the history ({{dates}}).",
+    history_other: "{{count, number}} reviews from Anki join the history ({{dates}}).",
+    noAnswers:
+      "None of the chosen cards has a review in this file: choose which Anki cards give each history.",
+    timeZone:
+      "Anki does not record time zones: the reviews are dated in the time zone of this device, {{zone}}.",
+    historyCounts:
+      "Like reviews made here, they count toward XP, streak and achievements; the goal of a past day is met when its reviews reach your current daily goal, {{goal}}.",
     ignored_one:
       "{{count}} note is left out: its note type is not imported, or it has no characters.",
     ignored_other:
@@ -140,6 +156,9 @@ export const en = {
     import: "Import",
     importing: "Importing…",
     imported: "“{{name}}” created with {{words}} words, {{notes}} notes and {{audio}} sounds.",
+    importedReviews_one: "{{count, number}} review added to the history.",
+    importedReviews_other: "{{count, number}} reviews added to the history.",
+    noNewReviews: "No review added: they were already in the history.",
     importFailed: "The import failed, nothing was written: {{reason}}",
     mappingNotSaved: "The field choices could not be remembered in this browser: {{reason}}",
     backToLearn: "Back to Learn",

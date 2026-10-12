@@ -10,20 +10,26 @@ Small `.apkg` files written by Anki's own exporters, so the reader is tested aga
 | `anki-23.12.1-legacy2.apkg` | `anki` 23.12.1, "Support older Anki versions" | Legacy2 with `meta` |
 | `anki-2.1.50-python-exporter.apkg` | `anki` 2.1.50, Python `AnkiPackageExporter` | Legacy2 without `meta` |
 | `genanki-0.13.1.apkg` | `genanki` 0.13.1 | Legacy1: `collection.anki2` |
+| `anki-26.09.3-history-latest.apkg` | `anki` 26.9.3, with scheduling | Latest, with a review log |
+| `anki-26.09.3-history-legacy2.apkg` | `anki` 26.9.3, with scheduling, "Support older Anki versions" | Legacy2 with `meta`, with a review log |
+| `anki-2.1.44-v1-history.apkg` | `anki` 2.1.44 on the v1 scheduler, Python `AnkiPackageExporter` with scheduling | Legacy1: `collection.anki2`, 3-button learning steps |
 | `too-new.apkg` | Python `zipfile` | `meta` with version 4 only |
 | `no-collection.apkg` | Python `zipfile` | `meta` with version 3 only |
 | `corrupt-collection.apkg` | Python `zipfile` | version 3, `collection.anki21b` not zstd |
 
-The Anki packages hold a "Chinese test" note type (Hanzi, Pinyin, Meaning, Audio) with eight notes, among them a missing sound, a script, an image and an unknown word, and a "Basic test" note type with one note, in the deck `HSK test::Level 1`. `nihao.wav` is a valid 0.2 s WAV; the other sounds are fake MP3 bytes.
+The packages without a review log hold a "Chinese test" note type (Hanzi, Pinyin, Meaning, Audio) with eight notes, among them a missing sound, a script, an image and an unknown word, and a "Basic test" note type with one note, in the deck `HSK test::Level 1`. `nihao.wav` is a valid 0.2 s WAV; the other sounds are fake MP3 bytes.
+
+The packages with a review log hold a "Chinese history" note type (Hanzi, Pinyin, Meaning) with a "Reading" template (`{{Hanzi}}`) and a "Writing" one (`{{Meaning}}<br>{{type:Hanzi}}`), and four notes in the deck `History test`: 你好, 谢谢, 学习 and the unknown 不存在词语, without media. Their cards were answered by Anki's own scheduler, so the log holds real rows, all a few seconds apart: learning steps and reviews, a due date set by hand, a reset ("Forget") followed by a new learning step, and a preview in a filtered deck without rescheduling (cramming). On the v1 scheduler, 你好 is answered again, good, good and 谢谢 easy, then easy as a review.
 
 ## Regenerating
 
-Anki 26.9.3 and genanki run in a local virtual environment; Anki 23.12.1 and 2.1.50 need Python 3.9 (`docker run --rm -v "$PWD:/work" -w /work python:3.9-slim`, with `protobuf==3.20.3` for 2.1.50).
+Anki 26.9.3, 2.1.44 and genanki run in a local virtual environment (2.1.44 with `protobuf==3.20.3`); Anki 23.12.1 and 2.1.50 need Python 3.9 (`docker run --rm -v "$PWD:/work" -w /work python:3.9-slim`, with `protobuf==3.20.3` for 2.1.50).
 
 ```sh
 pip install anki==26.9.3 genanki==0.13.1
 python generate_anki.py out
 python generate_genanki.py out
+python generate_history.py out  # also with anki==2.1.44 for the v1 scheduler package
 ```
 
 `generate_anki.py`:
@@ -148,6 +154,118 @@ package = genanki.Package(deck)
 package.media_files = [media]
 package.write_to_file(os.path.join(out, f"genanki-{genanki.__version__}.apkg"))
 print("genanki", genanki.__version__)
+```
+
+`generate_history.py`:
+
+```python
+"""Writes .apkg files with a review history: python generate_history.py <out-dir>.
+
+Anki 26.9.3 writes Latest and Legacy2 packages; Anki 2.1.44 on the v1 scheduler writes a Legacy1
+package with its Python exporter, whose learning steps had 3 buttons."""
+import os, shutil, sys, tempfile
+
+from anki.collection import Collection
+import anki.buildinfo
+
+try:
+    from anki.collection import DeckIdLimit, ExportAnkiPackageOptions
+except ImportError:  # Anki 2.1.44: Python exporter, v1 scheduler
+    DeckIdLimit = ExportAnkiPackageOptions = None
+
+out = os.path.abspath(sys.argv[1])
+version = anki.buildinfo.version
+os.makedirs(out, exist_ok=True)
+work = tempfile.mkdtemp()
+col = Collection(os.path.join(work, "collection.anki2"))
+v1 = DeckIdLimit is None
+if v1:
+    col.set_config("schedVer", 1)
+    col._loadScheduler()
+mm = col.models
+m = mm.new("Chinese history")
+for field in ["Hanzi", "Pinyin", "Meaning"]:
+    mm.add_field(m, mm.new_field(field))
+for name, qfmt in [("Reading", "{{Hanzi}}"), ("Writing", "{{Meaning}}<br>{{type:Hanzi}}")]:
+    t = mm.new_template(name)
+    t["qfmt"] = qfmt
+    t["afmt"] = "{{FrontSide}}<hr id=answer>{{Hanzi}} {{Pinyin}}"
+    mm.add_template(m, t)
+mm.add(m)
+m = (getattr(mm, "by_name", None) or mm.byName)("Chinese history")
+deck = col.decks.id("History test")
+col.decks.select(deck)
+
+notes = {}
+for hanzi, pinyin, meaning in [
+    ("你好", "nǐ hǎo", "hello"),
+    ("谢谢", "xièxie", "thanks"),
+    ("学习", "xuéxí", "to study"),
+    ("不存在词语", "bù cún zài", "made up"),
+]:
+    n = (getattr(col, "new_note", None) or col.newNote)(m)
+    n["Hanzi"], n["Pinyin"], n["Meaning"] = hanzi, pinyin, meaning
+    col.add_note(n, deck)
+    notes[hanzi] = n
+
+
+def card(hanzi, ord):
+    c = next(c for c in notes[hanzi].cards() if c.ord == ord)
+    (getattr(c, "start_timer", None) or c.startTimer)()
+    return c
+
+
+def answer(hanzi, ord, *eases):
+    for ease in eases:
+        col.sched.answerCard(card(hanzi, ord), ease)
+
+
+if v1:
+    col.sched.reset()
+    # v1 learning: 1 again, 2 good, 3 easy; reviews keep 4 buttons.
+    answer("你好", 0, 1, 2, 2)
+    answer("谢谢", 0, 3)
+    answer("谢谢", 0, 4)
+else:
+    answer("你好", 0, 1, 3, 3, 3)
+    answer("你好", 1, 3, 3)
+    answer("谢谢", 0, 3, 3)
+    col.sched.set_due_date([card("谢谢", 0).id], "0")
+    answer("谢谢", 0, 2)
+    answer("学习", 0, 3, 3)
+    col.sched.schedule_cards_as_new([card("学习", 0).id], restore_position=False, reset_counts=False)
+    answer("学习", 0, 3)
+    answer("不存在词语", 0, 2, 4)
+    filtered = col.sched.get_or_create_filtered_deck(0)
+    filtered.config.search_terms[0].search = '"Hanzi:你好" card:Writing'
+    filtered.config.reschedule = False
+    filtered.name = "Cram"
+    col.sched.add_or_update_filtered_deck(filtered)
+    answer("你好", 1, 1)
+    col.sched.empty_filtered_deck(col.decks.id("Cram"))
+    col.decks.remove([col.decks.id("Cram")])
+
+print([(r[3], r[8], r[6]) for r in col.db.all("select * from revlog order by id")])
+if v1:
+    from anki.exporting import AnkiPackageExporter
+
+    exporter = AnkiPackageExporter(col)
+    exporter.did = deck
+    exporter.includeSched = True
+    exporter.includeMedia = False
+    exporter.exportInto(os.path.join(out, f"anki-{version}-v1-history.apkg"))
+else:
+    for legacy in [False, True]:
+        col.export_anki_package(
+            out_path=os.path.join(out, f"anki-{version}-history-{'legacy2' if legacy else 'latest'}.apkg"),
+            options=ExportAnkiPackageOptions(
+                with_scheduling=True, with_deck_configs=False, with_media=False, legacy=legacy
+            ),
+            limit=DeckIdLimit(deck),
+        )
+col.close()
+shutil.rmtree(work, ignore_errors=True)
+print("anki", version, sorted(os.listdir(out)))
 ```
 
 The three broken packages:

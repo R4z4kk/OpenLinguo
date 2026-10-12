@@ -1,25 +1,41 @@
-import type { Result } from "@openlinguo/core";
+import { CardType, type Result } from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { Upload } from "lucide-react";
-import { Suspense, use, useId, useRef, useState, useTransition, type ReactNode } from "react";
+import {
+  Suspense,
+  use,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { NameField } from "@/components/name-field";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   audioBytes,
+  deviceOffset,
   freeSpace,
+  guessCards,
   guessMapping,
+  historyReviews,
   importPlan,
   isQuotaShort,
+  loadCards,
   loadMapping,
   noteText,
+  planHistory,
   planImport,
   ROLES,
   saveMappings,
   type AnkiImportFailure,
+  type CardMapping,
   type FieldMapping,
   type ImportPlan,
+  type PlannedReview,
   type Role,
 } from "@/data/anki-import";
 import {
@@ -28,6 +44,7 @@ import {
   type AnkiNoteType,
   type AnkiPackage,
 } from "@/data/anki-package";
+import { currentSetting, DAILY_GOAL } from "@/data/daily-goal";
 import { database } from "@/data/database";
 import { DECK_NAME_MAX, describeDeckFailure } from "@/data/decks";
 import { browserStorage } from "@/data/persistence";
@@ -135,16 +152,64 @@ const RoleSelect = ({
   );
 };
 
+/** The template whose Anki cards give a card type its history; the other type's is not offered. */
+const CardSelect = ({
+  type,
+  noteType,
+  cards,
+  onChange,
+}: {
+  readonly type: CardType;
+  readonly noteType: AnkiNoteType;
+  readonly cards: CardMapping;
+  readonly onChange: (cards: CardMapping) => void;
+}) => {
+  const { t } = useTranslation();
+  const id = useId();
+  const value = cards[type];
+  const taken = cards[type === "recognition" ? "recall" : "recognition"];
+  return (
+    <div>
+      <label htmlFor={id} className="font-semibold">
+        {t(`ankiImport.cards.${type}`)}
+      </label>
+      <select
+        id={id}
+        value={value === null ? "" : String(value)}
+        onChange={(event) => {
+          const index = event.target.value === "" ? null : Number(event.target.value);
+          onChange({ ...cards, [type]: index });
+        }}
+        className="mt-2 min-h-11 w-full rounded-control border border-border-strong bg-surface px-3 text-body"
+      >
+        <option value="">{t("ankiImport.noHistory")}</option>
+        {noteType.templates.map((template, index) =>
+          index === taken ? null : (
+            <option key={index} value={index}>
+              {template.name}
+            </option>
+          ),
+        )}
+      </select>
+    </div>
+  );
+};
+
 const NoteTypeMapping = ({
   noteType,
   ankiPackage,
   mapping,
   onChange,
+  cards,
+  onCards,
 }: {
   readonly noteType: AnkiNoteType;
   readonly ankiPackage: AnkiPackage;
   readonly mapping: FieldMapping;
   readonly onChange: (mapping: FieldMapping) => void;
+  /** `null` when the review history is not imported. */
+  readonly cards: CardMapping | null;
+  readonly onCards: (cards: CardMapping) => void;
 }) => {
   const { t } = useTranslation();
   const headingId = useId();
@@ -168,6 +233,17 @@ const NoteTypeMapping = ({
             }}
           />
         ))}
+        {cards !== null &&
+          mapping.characters !== null &&
+          CardType.options.map((type) => (
+            <CardSelect
+              key={type}
+              type={type}
+              noteType={noteType}
+              cards={cards}
+              onChange={onCards}
+            />
+          ))}
       </div>
       {mapping.characters !== null && (
         <div className="mt-4 overflow-x-auto">
@@ -206,27 +282,75 @@ type Checked = Promise<{
   readonly free: number | null;
 }>;
 
-/** The plan's counts and lists; `action` gets the chosen words and notes when they can be imported. */
+/**
+ * What the history brings and how it is dated and counted, told before importing: answers keep
+ * their time but not their time zone, and count toward the goal, XP, streak and achievements.
+ */
+const HistorySummary = ({
+  answers,
+  goal,
+}: {
+  readonly answers: readonly PlannedReview[];
+  readonly goal: number;
+}) => {
+  const { t, i18n } = useTranslation();
+  const [first] = answers;
+  if (first == null) return <p>{t("ankiImport.noAnswers")}</p>;
+  // Not Math.min(...times): a long history exceeds the argument limit.
+  const [from, to] = answers.reduce(
+    ([min, max], { at }) => [Math.min(min, at), Math.max(max, at)],
+    [first.at, first.at],
+  );
+  const dates = new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium" }).formatRange(
+    from,
+    to,
+  );
+  const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return (
+    <>
+      <p>{t("ankiImport.history", { count: answers.length, dates })}</p>
+      <p>{t("ankiImport.timeZone", { zone })}</p>
+      <p>{t("ankiImport.historyCounts", { goal })}</p>
+    </>
+  );
+};
+
+/**
+ * The plan's counts and lists; `action` gets the chosen words and notes when they can be imported,
+ * with the answers they take from the history when it is imported.
+ */
 const Summary = ({
   checked,
+  ankiPackage,
   withNotes,
   onWithNotes,
+  cardMappings,
+  goal,
   action,
 }: {
   readonly checked: Checked;
+  readonly ankiPackage: AnkiPackage;
   readonly withNotes: boolean;
   readonly onWithNotes: (withNotes: boolean) => void;
-  readonly action: (plan: ImportPlan | null) => ReactNode;
+  /** `null` when the review history is not imported. */
+  readonly cardMappings: ReadonlyMap<string, CardMapping> | null;
+  readonly goal: number;
+  readonly action: (plan: ImportPlan | null, answers: readonly PlannedReview[]) => ReactNode;
 }) => {
   const { t, i18n } = useTranslation();
   const { plan, free } = use(checked);
+  const answers = useMemo(() => {
+    if (!plan.ok || cardMappings === null) return [];
+    const { words, notes } = plan.value;
+    return planHistory(ankiPackage, withNotes ? [...words, ...notes] : words, cardMappings);
+  }, [ankiPackage, plan, withNotes, cardMappings]);
   if (!plan.ok)
     return (
       <>
         <p role="alert" className="mt-4 text-danger">
           {t("ankiImport.planFailed", { reason: describeFailure(plan.error) })}
         </p>
-        {action(null)}
+        {action(null, [])}
       </>
     );
   const { unmatched, ignored, missingAudio, notAudio } = plan.value;
@@ -270,6 +394,7 @@ const Summary = ({
         </label>
       )}
       {voiced > 0 && <p>{t("ankiImport.audio", { count: voiced, size })}</p>}
+      {cardMappings !== null && <HistorySummary answers={answers} goal={goal} />}
       {ignored > 0 && <p>{t("ankiImport.ignored", { count: ignored })}</p>}
       {missingAudio.length > 0 && (
         <p>
@@ -286,7 +411,7 @@ const Summary = ({
           {t("ankiImport.tooBig", { size, free: formatSize(free, i18n.language) })}
         </p>
       )}
-      {action(short || empty ? null : chosen)}
+      {action(short || empty ? null : chosen, answers)}
     </div>
   );
 };
@@ -302,6 +427,19 @@ const initialMappings = (ankiPackage: AnkiPackage): Map<string, FieldMapping> =>
     }),
   );
 
+const initialCards = (
+  ankiPackage: AnkiPackage,
+  mappings: ReadonlyMap<string, FieldMapping>,
+): Map<string, CardMapping> =>
+  new Map(
+    ankiPackage.noteTypes.flatMap((noteType) => {
+      const mapping = mappings.get(noteType.id);
+      if (mapping == null) return [];
+      const stored = loadCards(storage, noteType);
+      return [[noteType.id, (stored.ok ? stored.value : null) ?? guessCards(noteType, mapping)]];
+    }),
+  );
+
 type Outcome =
   | {
       readonly kind: "imported";
@@ -309,6 +447,8 @@ type Outcome =
       readonly words: number;
       readonly notes: number;
       readonly audio: number;
+      /** Reviews added, `null` when no answer was to be imported. */
+      readonly reviews: number | null;
       readonly unsaved: string | null;
     }
   | { readonly kind: "failed"; readonly message: string };
@@ -318,6 +458,9 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
   const { ankiPackage, fileName } = loaded;
   const summaryId = useId();
   const [mappings, setMappings] = useState(() => initialMappings(ankiPackage));
+  const [cardMappings, setCardMappings] = useState(() => initialCards(ankiPackage, mappings));
+  const [withHistory, setWithHistory] = useState(false);
+  const [goal] = useState(() => currentSetting(storage, DAILY_GOAL));
   const check = (next: ReadonlyMap<string, FieldMapping>): Checked =>
     Promise.all([planImport(database, ankiPackage, next), freeSpace(browserStorage())]).then(
       ([plan, free]) => ({ plan, free }),
@@ -340,11 +483,12 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
     });
   };
 
-  const submit = async (plan: ImportPlan): Promise<void> => {
+  const submit = async (plan: ImportPlan, answers: readonly PlannedReview[]): Promise<void> => {
     if (busy) return;
     setBusy(true);
     setOutcome(null);
-    const result = await importPlan(database, ankiPackage, plan, name);
+    const reviews = await historyReviews(answers, goal, deviceOffset);
+    const result = await importPlan(database, ankiPackage, plan, name, reviews);
     setBusy(false);
     if (!result.ok) {
       if (result.error.kind === "deck-name") setProblem(importFailure(t, result.error));
@@ -352,14 +496,27 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
       return;
     }
     setProblem(null);
-    const saved = saveMappings(storage, ankiPackage.noteTypes, mappings);
-    setOutcome({ kind: "imported", ...result.value, unsaved: saved.ok ? null : saved.error });
+    const saved = saveMappings(storage, ankiPackage.noteTypes, mappings, cardMappings);
+    setOutcome({
+      kind: "imported",
+      ...result.value,
+      reviews: answers.length === 0 ? null : result.value.reviews,
+      unsaved: saved.ok ? null : saved.error,
+    });
   };
 
   if (outcome?.kind === "imported")
     return (
       <div className="mt-6 flex flex-col items-start gap-4">
-        <p role="status">{t("ankiImport.imported", outcome)}</p>
+        <p role="status">
+          {t("ankiImport.imported", outcome)}
+          {outcome.reviews !== null &&
+            ` ${
+              outcome.reviews === 0
+                ? t("ankiImport.noNewReviews")
+                : t("ankiImport.importedReviews", { count: outcome.reviews })
+            }`}
+        </p>
         {outcome.unsaved !== null && (
           <p role="alert" className="text-danger">
             {t("ankiImport.mappingNotSaved", { reason: outcome.unsaved })}
@@ -374,17 +531,41 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
   return (
     <>
       <p className="mt-6 text-muted">{t("ankiImport.file", { name: fileName })}</p>
-      {ankiPackage.noteTypes.map((noteType) => (
-        <NoteTypeMapping
-          key={noteType.id}
-          noteType={noteType}
-          ankiPackage={ankiPackage}
-          mapping={mappings.get(noteType.id) ?? guessMapping(noteType, ankiPackage)}
-          onChange={(mapping) => {
-            remap(noteType, mapping);
-          }}
-        />
-      ))}
+      {ankiPackage.reviews.length > 0 ? (
+        <label className="mt-4 flex min-h-11 cursor-pointer items-center gap-2">
+          <input
+            type="checkbox"
+            checked={withHistory}
+            onChange={(event) => {
+              setWithHistory(event.target.checked);
+            }}
+            className="size-5 accent-ink"
+          />
+          {t("ankiImport.withHistory")}
+        </label>
+      ) : (
+        <p className="mt-2 text-muted">{t("ankiImport.noHistoryInFile")}</p>
+      )}
+      {ankiPackage.noteTypes.map((noteType) => {
+        const mapping = mappings.get(noteType.id) ?? guessMapping(noteType, ankiPackage);
+        return (
+          <NoteTypeMapping
+            key={noteType.id}
+            noteType={noteType}
+            ankiPackage={ankiPackage}
+            mapping={mapping}
+            onChange={(next) => {
+              remap(noteType, next);
+            }}
+            cards={
+              withHistory ? (cardMappings.get(noteType.id) ?? guessCards(noteType, mapping)) : null
+            }
+            onCards={(cards) => {
+              setCardMappings(new Map(cardMappings).set(noteType.id, cards));
+            }}
+          />
+        );
+      })}
       <section aria-labelledby={summaryId} className="mt-8">
         <h2 id={summaryId} className="text-subtitle">
           {t("ankiImport.summary")}
@@ -392,13 +573,16 @@ const ImportForm = ({ loaded }: { readonly loaded: Loaded }) => {
         <Suspense fallback={<p className="mt-4 text-muted">{t("ankiImport.checking")}</p>}>
           <Summary
             checked={checked}
+            ankiPackage={ankiPackage}
             withNotes={withNotes}
             onWithNotes={setWithNotes}
-            action={(plan) => (
+            cardMappings={withHistory ? cardMappings : null}
+            goal={goal}
+            action={(plan, answers) => (
               <form
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (plan !== null) void submit(plan);
+                  if (plan !== null) void submit(plan, answers);
                 }}
                 className="mt-6"
               >
