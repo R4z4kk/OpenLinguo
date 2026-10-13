@@ -47,9 +47,12 @@ const spoken = (id: string): string => {
   return result.value;
 };
 
-/** MOSS-TTS maintainers advise a final period so the model knows where speech ends (OpenMOSS/MOSS-TTS#19). */
-const textFor = (engine: EngineId, item: BakeoffItem): string =>
-  engine === "moss-tts-period" && item.end === "" ? `${item.text}。` : item.text;
+/**
+ * MOSS-TTS stops reliably only after punctuation: a final 。 after isolated words (its maintainers' advice,
+ * OpenMOSS/MOSS-TTS#19) cut runaway outputs from 7 to 2 of the 36 bake-off items.
+ */
+const synthesisText = (item: BakeoffItem): string =>
+  item.end === "" ? `${item.text}。` : item.text;
 
 const readEngineInfos = async (): Promise<Partial<Record<EngineId, EngineInfo>>> =>
   (await exists(enginesPath))
@@ -70,7 +73,7 @@ const generate = async (engines: readonly EngineId[]): Promise<void> => {
       const path = samplePath(item.id, engine);
       if (await exists(path)) continue;
       const started = Date.now();
-      const audio = await synthesize(engine, textFor(engine, item), SEED);
+      const audio = await synthesize(engine, synthesisText(item), SEED);
       if (!audio.ok) throw new BakeoffError(audio.error);
       await writeAtomic(path, audio.value);
       console.log(`${engine} ${item.id} ${((Date.now() - started) / 1000).toFixed(1)} s`);

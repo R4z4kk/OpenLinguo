@@ -2,14 +2,12 @@ import { err, ok, type Result } from "@openlinguo/core";
 import { z } from "zod";
 import { decodeWav } from "./wav.ts";
 
-export const ENGINE_IDS = ["moss-tts", "moss-tts-period", "voxcpm2"] as const;
+export const ENGINE_IDS = ["moss-tts"] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 
-/** Ports of `tools/tts/compose.yaml`; moss-tts-period is the same server with a final 。 after words. */
+/** Ports of `tools/tts/compose.yaml`. */
 const ENGINE_URLS: Readonly<Record<EngineId, string>> = {
   "moss-tts": "http://127.0.0.1:8106",
-  "moss-tts-period": "http://127.0.0.1:8106",
-  voxcpm2: "http://127.0.0.1:8109",
 };
 
 const engineInfoSchema = z.object({

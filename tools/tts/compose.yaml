@@ -1,5 +1,5 @@
-# Mandarin TTS engines for the pipeline (ADR 0007), ports bound to localhost. They need the Radeon through WSL2
-# (see rocm-wsl/Dockerfile) and fit the 24 GB card one at a time.
+# Mandarin TTS for the pipeline (ADR 0007), ports bound to localhost. It needs the Radeon through WSL2
+# (see rocm-wsl/Dockerfile); run one service at a time on the 24 GB card.
 x-radeon: &radeon
   devices: ["/dev/dxg"]
   volumes:
@@ -34,16 +34,6 @@ services:
       CODEC_DTYPE: bfloat16
       PYTORCH_HIP_ALLOC_CONF: expandable_segments:True
     ports: ["127.0.0.1:8106:8000"]
-
-  voxcpm2:
-    build: { context: ./voxcpm2, dockerfile: Dockerfile }
-    image: openlinguo-tts-voxcpm2
-    <<: *radeon
-    environment:
-      MODEL_REPO: openbmb/VoxCPM2
-      MODEL_REVISION: 32279effe8c19989596f05d353d1447f51d9e915
-      REFERENCE_WAV: /voices/designed-zh-female.wav
-    ports: ["127.0.0.1:8109:8000"]
 
 volumes:
   models:
