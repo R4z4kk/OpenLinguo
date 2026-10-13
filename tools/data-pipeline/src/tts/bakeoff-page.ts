@@ -113,7 +113,7 @@ const start = async () => {
     const [data, saved] = await Promise.all(
       ["/items", "/picks"].map(async (url) => {
         const response = await fetch(url);
-        if (!response.ok) throw new Error(url + ": HTTP " + response.status);
+        if (!response.ok) throw new Error(url + ": HTTP " + response.status + " " + (await response.text()));
         return response.json();
       }),
     );
