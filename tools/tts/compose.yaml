@@ -1,0 +1,40 @@
+# Mandarin TTS for the pipeline (ADR 0007), ports bound to localhost. It needs the Radeon through WSL2
+# (see rocm-wsl/Dockerfile); run one service at a time on the 24 GB card.
+x-radeon: &radeon
+  devices: ["/dev/dxg"]
+  volumes:
+    - "/usr/lib/wsl/lib:/usr/lib/wsl/lib:ro"
+    - "./voices:/voices:ro"
+    - "models:/models"
+    - "hf-cache:/root/.cache"
+
+services:
+  moss-voice-generator:
+    build: { context: ./moss-tts, dockerfile: Dockerfile }
+    image: openlinguo-tts-moss
+    <<: *radeon
+    environment:
+      MODEL_KIND: voice-generator
+      MODEL_REPO: OpenMOSS-Team/MOSS-VoiceGenerator
+      MODEL_REVISION: 97521ec2b6f3ec5026ac1f5751f8fc302d82c2d4
+      CODEC_REPO: OpenMOSS-Team/MOSS-Audio-Tokenizer
+      CODEC_REVISION: 3cd226ba2947efa357ef453bcad111b6eafba782
+    ports: ["127.0.0.1:8105:8000"]
+
+  moss-tts:
+    image: openlinguo-tts-moss
+    <<: *radeon
+    environment:
+      MODEL_KIND: tts
+      MODEL_REPO: OpenMOSS-Team/MOSS-TTS-v1.5
+      MODEL_REVISION: cdd3b911b1585e3f2dbc7775ef10f9926f58850a
+      CODEC_REPO: OpenMOSS-Team/MOSS-Audio-Tokenizer
+      CODEC_REVISION: 3cd226ba2947efa357ef453bcad111b6eafba782
+      REFERENCE_WAV: /voices/designed-zh-female.wav
+      CODEC_DTYPE: bfloat16
+      PYTORCH_HIP_ALLOC_CONF: expandable_segments:True
+    ports: ["127.0.0.1:8106:8000"]
+
+volumes:
+  models:
+  hf-cache:
