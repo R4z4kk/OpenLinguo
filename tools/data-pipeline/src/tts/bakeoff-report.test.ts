@@ -22,10 +22,12 @@ describe("checkPicks", () => {
 describe("formatReport", () => {
   it("counts the best versions per engine, overall and per listened category", () => {
     const report = formatReport(BAKEOFF_SET, ENGINE_IDS, picks);
-    expect(report).toContain("| Best version | moss-tts | moss-tts-pinyin | glm-tts | none |");
-    expect(report).toContain("| all (4 items) | 0 | 2 | 1 | 1 |");
-    expect(report).toContain("| syllable | 0 | 2 | 0 | 0 |");
-    expect(report).toContain("| yi | 0 | 0 | 0 | 1 |");
+    expect(report).toContain(
+      "| Best version | moss-tts | moss-tts-pinyin | glm-tts | glm-tts-phoneme | none |",
+    );
+    expect(report).toContain("| all (4 items) | 0 | 2 | 1 | 0 | 1 |");
+    expect(report).toContain("| syllable | 0 | 2 | 0 | 0 | 0 |");
+    expect(report).toContain("| yi | 0 | 0 | 0 | 0 | 1 |");
     expect(report).not.toContain("| erhua |");
   });
 });
