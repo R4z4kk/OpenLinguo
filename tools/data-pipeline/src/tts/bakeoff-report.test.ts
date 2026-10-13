@@ -21,7 +21,7 @@ describe("checkPicks", () => {
 
 describe("formatReport", () => {
   it("counts the best versions per engine, overall and per listened category", () => {
-    const report = formatReport(BAKEOFF_SET, ENGINE_IDS, picks);
+    const report = formatReport(BAKEOFF_SET, ENGINE_IDS.slice(0, 4), picks);
     expect(report).toContain(
       "| Best version | melotts | cosyvoice-sft | cosyvoice3 | qwen3-tts | none |",
     );

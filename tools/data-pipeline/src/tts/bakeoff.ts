@@ -74,14 +74,14 @@ const generate = async (engines: readonly EngineId[]): Promise<void> => {
   }
 };
 
-const missingSamples = async (): Promise<string[]> => {
-  const missing: string[] = [];
-  for (const item of BAKEOFF_SET) {
-    for (const engine of ENGINE_IDS) {
-      if (!(await exists(samplePath(item.id, engine)))) missing.push(`${item.id}.${engine}`);
-    }
+/** Engines with every sample generated, in the fixed display order. */
+const completeEngines = async (): Promise<EngineId[]> => {
+  const complete: EngineId[] = [];
+  for (const engine of ENGINE_IDS) {
+    const present = await Promise.all(BAKEOFF_SET.map(({ id }) => exists(samplePath(id, engine))));
+    if (present.every(Boolean)) complete.push(engine);
   }
-  return missing;
+  return complete;
 };
 
 const readPicks = async (): Promise<Picks> => {
@@ -129,7 +129,7 @@ const handle = async (request: IncomingMessage, response: ServerResponse): Promi
       text,
       spoken: spoken(id),
     }));
-    send(200, JSON.stringify({ engines: ENGINE_IDS, items }), "application/json");
+    send(200, JSON.stringify({ engines: await completeEngines(), items }), "application/json");
     return;
   }
   if (request.method === "GET" && path === "/picks") {
@@ -155,10 +155,11 @@ const handle = async (request: IncomingMessage, response: ServerResponse): Promi
 };
 
 const serve = async (port: number): Promise<void> => {
-  const missing = await missingSamples();
-  if (missing.length > 0) {
-    throw new BakeoffError(`missing samples, run generate first: ${missing.join(", ")}`);
-  }
+  const complete = await completeEngines();
+  if (complete.length === 0)
+    throw new BakeoffError("no engine has all its samples, run generate first");
+  const pending = ENGINE_IDS.filter((engine) => !complete.includes(engine));
+  if (pending.length > 0) console.log(`Not shown until generated: ${pending.join(", ")}`);
   const server = createServer((request, response) => {
     handle(request, response).catch((error: unknown) => {
       console.error(error);
