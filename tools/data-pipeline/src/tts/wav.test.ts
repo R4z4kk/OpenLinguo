@@ -1,37 +1,33 @@
 import { describe, expect, it } from "vitest";
-import { decodeWav } from "./wav.ts";
+import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
 
 const SAMPLE_RATE = 24_000;
 
-const wav = (samples: Float32Array, sampleRate = SAMPLE_RATE): Uint8Array => {
-  const bytes = new Uint8Array(44 + samples.length * 2);
-  const view = new DataView(bytes.buffer);
-  const text = (offset: number, value: string): void => {
-    for (let index = 0; index < value.length; index++)
-      bytes[offset + index] = value.charCodeAt(index);
-  };
-  text(0, "RIFF");
-  view.setUint32(4, 36 + samples.length * 2, true);
-  text(8, "WAVE");
-  text(12, "fmt ");
-  view.setUint32(16, 16, true);
-  view.setUint16(20, 1, true);
-  view.setUint16(22, 1, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * 2, true);
-  view.setUint16(32, 2, true);
-  view.setUint16(34, 16, true);
-  text(36, "data");
-  view.setUint32(40, samples.length * 2, true);
-  samples.forEach((sample, index) => {
-    view.setInt16(44 + index * 2, Math.round(sample * 32767), true);
-  });
-  return bytes;
+/** Segments of [seconds, sound]: a 220 Hz tone at half scale, or silence. */
+const signal = (
+  ...segments: readonly (readonly [seconds: number, sound: boolean])[]
+): Float32Array => {
+  const parts = segments.map(([seconds, sound]) =>
+    Float32Array.from({ length: Math.round(seconds * SAMPLE_RATE) }, (_, index) =>
+      sound ? 0.5 * Math.sin((2 * Math.PI * 220 * index) / SAMPLE_RATE) : 0,
+    ),
+  );
+  const out = new Float32Array(parts.reduce((total, part) => total + part.length, 0));
+  let offset = 0;
+  for (const part of parts) {
+    out.set(part, offset);
+    offset += part.length;
+  }
+  return out;
 };
 
+const seconds = (samples: Float32Array): number => samples.length / SAMPLE_RATE;
+
 describe("decodeWav", () => {
-  it("reads mono 16-bit PCM", () => {
-    const decoded = decodeWav(wav(new Float32Array([0, 0.5, -0.5])));
+  it("reads what encodeWav writes", () => {
+    const decoded = decodeWav(
+      encodeWav({ samples: new Float32Array([0, 0.5, -0.5]), sampleRate: SAMPLE_RATE }),
+    );
     expect(decoded.ok && decoded.value.sampleRate).toBe(SAMPLE_RATE);
     expect(decoded.ok && [...decoded.value.samples].map((value) => value.toFixed(2))).toEqual([
       "0.00",
@@ -42,5 +38,26 @@ describe("decodeWav", () => {
 
   it("refuses other files", () => {
     expect(decodeWav(new TextEncoder().encode("not audio at all")).ok).toBe(false);
+  });
+});
+
+describe("trimUtterance", () => {
+  const trim = (samples: Float32Array): number =>
+    seconds(trimUtterance({ samples, sampleRate: SAMPLE_RATE }).samples);
+
+  it("trims silence around the sound to 0.1 s", () => {
+    expect(trim(signal([0.5, false], [0.3, true], [2.4, false]))).toBeCloseTo(0.5, 1);
+  });
+
+  it("drops a sound that comes after a pause longer than 0.7 s", () => {
+    expect(trim(signal([0.5, true], [3, false], [0.45, true], [0.2, false]))).toBeCloseTo(0.6, 1);
+  });
+
+  it("keeps sounds separated by a short pause", () => {
+    expect(trim(signal([0.3, true], [0.3, false], [0.3, true]))).toBeCloseTo(0.9, 1);
+  });
+
+  it("leaves audio without any sound unchanged", () => {
+    expect(trim(signal([1, false]))).toBe(1);
   });
 });

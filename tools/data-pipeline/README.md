@@ -31,7 +31,7 @@ pnpm --filter @openlinguo/data-pipeline tts-bakeoff serve
 ```
 
 - `tools/tts/voices/designed-zh-female.wav` is a synthetic voice made by `moss-voice-generator` from a text description (no real speaker); MOSS-TTS clones it.
-- Isolated words are sent with a final 。, without which MOSS-TTS often does not stop; its server also caps the length at about 2 s per syllable.
+- Isolated words are sent with a final 。, without which MOSS-TTS often does not stop; its server also caps the length at about 2 s per syllable, and every file keeps only its first utterance (audio after a pause longer than 0.7 s is dropped, silence trimmed to 0.1 s).
 - `generate` synthesizes the 36 bake-off items of `src/tts/bakeoff-set.ts` into `tools/tts/.bakeoff/` (gitignored, resumable).
 - `serve` opens a local listening page: each item with every engine's version in a fixed, named order and a pick for the best one, saved on every change; `report` counts the picks and writes `tools/tts/bakeoff-results.json`.
 - Each image's `requirements.lock` is a `uv pip compile` of its upstream dependencies without demo-only packages (gradio) and without torch, whose ROCm wheel comes from `download.pytorch.org/whl/rocm6.4`; compiled in `python:3.10-slim` with `--python-version 3.10 --python-platform x86_64-manylinux_2_28 --exclude-newer <7 days ago>`.

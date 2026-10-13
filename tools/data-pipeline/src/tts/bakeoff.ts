@@ -5,6 +5,7 @@ import { LISTENING_PAGE } from "./bakeoff-page.ts";
 import { checkPicks, formatReport, picksSchema, type Picks } from "./bakeoff-report.ts";
 import { BAKEOFF_SET, spokenPinyin, type BakeoffItem } from "./bakeoff-set.ts";
 import { ENGINE_IDS, engineInfo, synthesize, type EngineId, type EngineInfo } from "./engines.ts";
+import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
 
 const SEED = 1;
 const MAX_BODY_BYTES = 1_000_000;
@@ -75,7 +76,9 @@ const generate = async (engines: readonly EngineId[]): Promise<void> => {
       const started = Date.now();
       const audio = await synthesize(engine, synthesisText(item), SEED);
       if (!audio.ok) throw new BakeoffError(audio.error);
-      await writeAtomic(path, audio.value);
+      const pcm = decodeWav(audio.value);
+      if (!pcm.ok) throw new BakeoffError(`${engine} ${item.id}: ${pcm.error}`);
+      await writeAtomic(path, encodeWav(trimUtterance(pcm.value)));
       console.log(`${engine} ${item.id} ${((Date.now() - started) / 1000).toFixed(1)} s`);
     }
   }
