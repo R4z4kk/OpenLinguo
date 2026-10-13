@@ -58,8 +58,11 @@ All OFL-1.1. Atkinson Hyperlegible Next, Noto Sans SC and LXGW WenKai GB have no
 | Model | Language | License | Status |
 |---|---|---|---|
 | Kokoro-82M | en | Apache-2.0 | Verified — zh voices rejected (graded D) |
-| Fun-CosyVoice3-0.5B-2512 | zh candidate | Apache-2.0 (weights tag); the model card's "academic purposes only" disclaimer refers to its demo content | Verified |
-| MeloTTS-Chinese | zh candidate | MIT (code and weights) | Verified |
+| [GLM-TTS](https://huggingface.co/zai-org/GLM-TTS) (Zhipu AI) | zh isolated syllables and words | Weights MIT (model card metadata, no LICENSE file in the model repository); code Apache-2.0 ([zai-org/GLM-TTS](https://github.com/zai-org/GLM-TTS)) | Verified 2026-10-13 — revision `b3feb69`, chosen in the bake-off #112 |
+| [MOSS-TTS v1.5](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-v1.5) and [MOSS-Audio-Tokenizer](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer) (OpenMOSS) | zh sentences | Apache-2.0 (model cards; code [OpenMOSS/MOSS-TTS](https://github.com/OpenMOSS/MOSS-TTS) Apache-2.0) | Verified 2026-10-13 — revisions `cdd3b91` and `3cd226b`, chosen in the bake-off #112 |
+| [MOSS-VoiceGenerator](https://huggingface.co/OpenMOSS-Team/MOSS-VoiceGenerator) (OpenMOSS) | the synthetic reference voice `tools/tts/voices/designed-zh-female.wav`, designed from a text description (no real speaker) | Apache-2.0 (model card) | Verified 2026-10-13 — revision `97521ec` |
+
+Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots.tts-soar, CosyVoice-300M-SFT, Fun-CosyVoice3-0.5B-2512, Qwen3-TTS-12Hz-1.7B-CustomVoice.
 
 ## Audio recordings (M3 candidates, not imported)
 
