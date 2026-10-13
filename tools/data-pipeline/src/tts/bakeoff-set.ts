@@ -118,50 +118,6 @@ export const BAKEOFF_SET: readonly BakeoffItem[] = [
   ),
 ];
 
-/** Extra sentences for the mix cards, each containing a word of the set. */
-export const MIX_SENTENCES: readonly BakeoffItem[] = [
-  item(
-    "sentence-nihao",
-    "sentence",
-    [
-      ["你好", "ni3 hao3"],
-      ["吗", "ma5"],
-    ],
-    "？",
-  ),
-  item(
-    "sentence-yinhang",
-    "sentence",
-    [
-      ["银行", "yin2 hang2"],
-      ["几点", "ji3 dian3"],
-      ["开门", "kai1 men2"],
-    ],
-    "？",
-  ),
-  item(
-    "sentence-xiexie",
-    "sentence",
-    [
-      ["谢谢", "xie4 xie5"],
-      ["你", "ni3"],
-      ["的", "de5"],
-      ["帮助", "bang1 zhu4"],
-    ],
-    "。",
-  ),
-];
-
-/** Flashcards for the GLM-TTS word + MOSS-TTS sentence mix: a word of the set, then a sentence containing it. */
-export const MIX_CARDS: readonly { readonly word: string; readonly sentence: string }[] = [
-  { word: "yiqi", sentence: "sentence-chifan" },
-  { word: "bushi", sentence: "sentence-laoshi" },
-  { word: "yidianr", sentence: "sentence-shuiguo" },
-  { word: "nihao", sentence: "sentence-nihao" },
-  { word: "yinhang", sentence: "sentence-yinhang" },
-  { word: "xiexie", sentence: "sentence-xiexie" },
-];
-
 /** Expected spoken pinyin with tone marks, after tone sandhi, one group per word. */
 export const spokenPinyin = (item: BakeoffItem): Result<string, SandhiError> => {
   const spoken = applySandhi(item.words);

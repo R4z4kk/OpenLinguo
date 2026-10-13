@@ -103,15 +103,3 @@ export const trimUtterance = ({ samples, sampleRate }: Pcm): Pcm => {
   const to = Math.min(samples.length, (last + 1) * frame + pad);
   return { samples: samples.slice(from, to), sampleRate };
 };
-
-/** Two recordings of the same sample rate, one after the other, with a pause between them. */
-export const joinPcm = (first: Pcm, second: Pcm, pauseSeconds: number): Result<Pcm, string> => {
-  if (first.sampleRate !== second.sampleRate) {
-    return err(`sample rates differ: ${String(first.sampleRate)} and ${String(second.sampleRate)}`);
-  }
-  const pause = Math.round(pauseSeconds * first.sampleRate);
-  const samples = new Float32Array(first.samples.length + pause + second.samples.length);
-  samples.set(first.samples, 0);
-  samples.set(second.samples, first.samples.length + pause);
-  return ok({ samples, sampleRate: first.sampleRate });
-};

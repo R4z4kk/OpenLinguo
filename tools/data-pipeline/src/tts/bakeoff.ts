@@ -1,17 +1,11 @@
 import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { parseArgs } from "node:util";
-import { LISTENING_PAGE, MIX_PAGE } from "./bakeoff-page.ts";
+import { LISTENING_PAGE } from "./bakeoff-page.ts";
 import { checkPicks, formatReport, picksSchema, type Picks } from "./bakeoff-report.ts";
-import {
-  BAKEOFF_SET,
-  MIX_CARDS,
-  MIX_SENTENCES,
-  spokenPinyin,
-  type BakeoffItem,
-} from "./bakeoff-set.ts";
+import { BAKEOFF_SET, spokenPinyin, type BakeoffItem } from "./bakeoff-set.ts";
 import { ENGINE_IDS, engineInfo, synthesize, type EngineId, type EngineInfo } from "./engines.ts";
-import { decodeWav, encodeWav, joinPcm, trimUtterance, type Pcm } from "./wav.ts";
+import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
 
 const SEED = 1;
 const MAX_BODY_BYTES = 1_000_000;
@@ -47,15 +41,8 @@ const writeAtomic = async (url: URL, content: string | Uint8Array): Promise<void
   await rename(temporary, url);
 };
 
-/** GLM-TTS samples from round 1 (revision b3feb69, rejected 2026-10-13), kept on disk for the mix cards only. */
-const GLM_SAMPLE_SUFFIX = "glm-tts";
-const MIX_PAUSE_SECONDS = 0.6;
-
-const findItem = (id: string): BakeoffItem | null =>
-  [...BAKEOFF_SET, ...MIX_SENTENCES].find((candidate) => candidate.id === id) ?? null;
-
 const spoken = (id: string): string => {
-  const item = findItem(id);
+  const item = BAKEOFF_SET.find((candidate) => candidate.id === id) ?? null;
   const result = item === null ? null : spokenPinyin(item);
   if (result === null || !result.ok) throw new BakeoffError(`no spoken pinyin for ${id}`);
   return result.value;
@@ -83,7 +70,7 @@ const generate = async (engines: readonly EngineId[]): Promise<void> => {
   await mkdir(samplesDir, { recursive: true });
   await writeAtomic(enginesPath, `${JSON.stringify(infos, null, 2)}\n`);
   for (const engine of engines) {
-    for (const item of [...BAKEOFF_SET, ...MIX_SENTENCES]) {
+    for (const item of BAKEOFF_SET) {
       const path = samplePath(item.id, engine);
       if (await exists(path)) continue;
       const started = Date.now();
@@ -135,28 +122,6 @@ const readBody = (request: IncomingMessage): Promise<string> =>
     request.on("error", reject);
   });
 
-const readPcm = async (url: URL): Promise<Pcm> => {
-  const pcm = decodeWav(new Uint8Array(await readFile(url)));
-  if (!pcm.ok) throw new BakeoffError(`${url.pathname}: ${pcm.error}`);
-  return pcm.value;
-};
-
-/** A mix card as heard: the word (GLM-TTS or MOSS-TTS), a pause, then the MOSS-TTS sentence. */
-const mixAudio = async (
-  card: (typeof MIX_CARDS)[number],
-  wordEngine: "glm" | "moss",
-): Promise<Uint8Array> => {
-  const word = await readPcm(
-    wordEngine === "glm"
-      ? new URL(`${card.word}.${GLM_SAMPLE_SUFFIX}.wav`, samplesDir)
-      : samplePath(card.word, "moss-tts"),
-  );
-  const sentence = await readPcm(samplePath(card.sentence, "moss-tts"));
-  const joined = joinPcm(trimUtterance(word), sentence, MIX_PAUSE_SECONDS);
-  if (!joined.ok) throw new BakeoffError(`${card.word}: ${joined.error}`);
-  return encodeWav(joined.value);
-};
-
 const handle = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
   const send = (status: number, body: string | Uint8Array, type: string): void => {
     response.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
@@ -175,32 +140,6 @@ const handle = async (request: IncomingMessage, response: ServerResponse): Promi
       spoken: spoken(id),
     }));
     send(200, JSON.stringify({ engines: await completeEngines(), items }), "application/json");
-    return;
-  }
-  if (request.method === "GET" && path === "/mix") {
-    send(200, MIX_PAGE, "text/html; charset=utf-8");
-    return;
-  }
-  if (request.method === "GET" && path === "/mix/cards") {
-    const cards = MIX_CARDS.map((card) => ({
-      word: card.word,
-      wordText: findItem(card.word)?.text ?? "",
-      wordSpoken: spoken(card.word),
-      sentenceText: findItem(card.sentence)?.text ?? "",
-      sentenceSpoken: spoken(card.sentence),
-    }));
-    send(200, JSON.stringify(cards), "application/json");
-    return;
-  }
-  const [, mixWord = "", wordEngine = ""] =
-    /^\/mix\/audio\/([\w-]+)\/(glm|moss)$/u.exec(path) ?? [];
-  const card = MIX_CARDS.find((candidate) => candidate.word === mixWord) ?? null;
-  if (
-    request.method === "GET" &&
-    card !== null &&
-    (wordEngine === "glm" || wordEngine === "moss")
-  ) {
-    send(200, await mixAudio(card, wordEngine), "audio/wav");
     return;
   }
   if (request.method === "GET" && path === "/picks") {
