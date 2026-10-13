@@ -130,3 +130,116 @@ start();
 </body>
 </html>
 `;
+
+/** Files a speech recognizer flags, labelled by ear (`bakeoff.ts serve`, /asr); saved on every change. */
+export const ASR_PAGE = `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASR check</title>
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 52rem; padding: 1rem; background: #fff; color: #111; }
+  header { position: sticky; top: 0; z-index: 1; background: #fff; padding: .5rem 0; border-bottom: 1px solid #ccc; }
+  section { border-bottom: 1px solid #ddd; padding: .75rem 0; display: grid; grid-template-columns: 1fr 1fr; gap: .25rem 1rem; align-items: center; }
+  h2 { font-size: 1.5rem; margin: 0; }
+  .pinyin { margin: 0; color: #333; }
+  audio { width: 100%; }
+  fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem 1rem; }
+  label { cursor: pointer; }
+</style>
+</head>
+<body>
+<header>
+  <h1>ASR check</h1>
+  <p>Does the audio say exactly the text, nothing added, nothing missing? Tones do not matter here. Nothing plays by itself.</p>
+  <p><span id="progress"></span> · <span id="status" role="status"></span></p>
+</header>
+<main id="files"></main>
+<script>
+let labels = {};
+let total = 0;
+let timer = null;
+const status = document.getElementById("status");
+const progress = document.getElementById("progress");
+
+const el = (tag, props = {}, children = []) => {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children);
+  return node;
+};
+
+const updateProgress = () => {
+  progress.textContent = Object.keys(labels).length + " of " + total + " labelled";
+};
+
+const save = () => {
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    try {
+      const response = await fetch("/asr/labels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(labels),
+      });
+      status.textContent = response.ok ? "Saved" : "Save failed: HTTP " + response.status + " " + (await response.text());
+    } catch (error) {
+      status.textContent = "Save failed: " + error;
+    }
+  }, 300);
+};
+
+const start = async () => {
+  try {
+    const [files, saved] = await Promise.all(
+      ["/asr/files", "/asr/labels"].map(async (url) => {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(url + ": HTTP " + response.status + " " + (await response.text()));
+        return response.json();
+      }),
+    );
+    labels = saved;
+    total = files.length;
+    const main = document.getElementById("files");
+    for (const { file, text, spoken } of files) {
+      const choice = (value, label) =>
+        el("label", {}, [
+          el("input", {
+            type: "radio",
+            name: file,
+            value,
+            checked: labels[file] === value,
+            onchange: () => {
+              labels[file] = value;
+              updateProgress();
+              save();
+            },
+          }),
+          " " + label,
+        ]);
+      main.append(
+        el("section", { ariaLabel: text }, [
+          el("div", {}, [
+            el("h2", { lang: "zh-CN", textContent: text }),
+            el("p", { className: "pinyin", lang: "zh-Latn-pinyin", textContent: spoken }),
+          ]),
+          el("audio", { controls: true, preload: "none", src: "/asr/audio/" + file, ariaLabel: text }),
+          el("fieldset", {}, [
+            el("legend", { className: "pinyin", textContent: "Says exactly the text?" }),
+            choice("clean", "yes"),
+            choice("wrong", "no: added, missing or other word"),
+          ]),
+        ]),
+      );
+    }
+    updateProgress();
+  } catch (error) {
+    status.textContent = "Could not load the files: " + error;
+  }
+};
+
+start();
+</script>
+</body>
+</html>
+`;

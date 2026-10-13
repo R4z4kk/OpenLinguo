@@ -1,7 +1,11 @@
-import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { access, mkdir, readdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { parseArgs } from "node:util";
-import { LISTENING_PAGE } from "./bakeoff-page.ts";
+import { z } from "zod";
+import { loadCharSyllables, transcriptMatches } from "./asr-check.ts";
+import { filesToLabel, labelsSchema, scoreAsr, type Labels, type Verdicts } from "./asr-report.ts";
+import { ASR_IDS, asrInfo, asrInfoSchema, transcribe, type AsrId } from "./asr.ts";
+import { ASR_PAGE, LISTENING_PAGE } from "./bakeoff-page.ts";
 import { checkPicks, formatReport, picksSchema, type Picks } from "./bakeoff-report.ts";
 import { BAKEOFF_SET, spokenPinyin, type BakeoffItem } from "./bakeoff-set.ts";
 import { ENGINE_IDS, engineInfo, synthesize, type EngineId, type EngineInfo } from "./engines.ts";
@@ -122,6 +126,96 @@ const readBody = (request: IncomingMessage): Promise<string> =>
     request.on("error", reject);
   });
 
+const asrDir = new URL("asr/", outDir);
+const labelsPath = new URL("labels.json", asrDir);
+const transcriptsPath = (asr: AsrId): URL => new URL(`${asr}.json`, asrDir);
+const transcriptsSchema = z.object({
+  info: asrInfoSchema,
+  transcripts: z.record(z.string(), z.string()),
+});
+type Transcripts = z.infer<typeof transcriptsSchema>;
+const SAMPLE_FILE = /^([\w-]+)\.[\w-]+\.wav$/u;
+
+const isAsr = (value: string): value is AsrId => (ASR_IDS as readonly string[]).includes(value);
+
+const readingOf = (item: BakeoffItem): string => item.words.map(({ reading }) => reading).join(" ");
+
+/** Every sample of a bake-off item on disk, rejected engines included: their failures test the recognizers. */
+const asrSamples = async (): Promise<{ readonly file: string; readonly item: BakeoffItem }[]> =>
+  (await readdir(samplesDir)).sort().flatMap((file) => {
+    const id = SAMPLE_FILE.exec(file)?.[1] ?? "";
+    const item = BAKEOFF_SET.find((candidate) => candidate.id === id) ?? null;
+    return item === null ? [] : [{ file, item }];
+  });
+
+const readTranscripts = async (asr: AsrId): Promise<Transcripts | null> => {
+  if (!(await exists(transcriptsPath(asr)))) return null;
+  const parsed = transcriptsSchema.safeParse(await readJson(transcriptsPath(asr)));
+  if (!parsed.success) throw new BakeoffError(`invalid ${asr}.json: ${parsed.error.message}`);
+  return parsed.data;
+};
+
+const readLabels = async (): Promise<Labels> => {
+  if (!(await exists(labelsPath))) return {};
+  const parsed = labelsSchema.safeParse(await readJson(labelsPath));
+  if (!parsed.success) throw new BakeoffError(`invalid labels.json: ${parsed.error.message}`);
+  return parsed.data;
+};
+
+const transcribeSamples = async (asrs: readonly AsrId[]): Promise<void> => {
+  await mkdir(asrDir, { recursive: true });
+  const samples = await asrSamples();
+  for (const asr of asrs) {
+    const info = await asrInfo(asr);
+    if (!info.ok) throw new BakeoffError(info.error);
+    const saved = await readTranscripts(asr);
+    const transcripts: Record<string, string> =
+      saved?.info.revision === info.value.revision ? { ...saved.transcripts } : {};
+    for (const { file } of samples) {
+      if (file in transcripts) continue;
+      const text = await transcribe(asr, new Uint8Array(await readFile(new URL(file, samplesDir))));
+      if (!text.ok) throw new BakeoffError(`${file}: ${text.error}`);
+      transcripts[file] = text.value;
+      const content = { info: info.value, transcripts };
+      await writeAtomic(transcriptsPath(asr), `${JSON.stringify(content, null, 2)}\n`);
+    }
+    console.log(`${asr}: ${String(samples.length)} files transcribed`);
+  }
+};
+
+const readVerdicts = async (): Promise<Verdicts> => {
+  const chars = await loadCharSyllables();
+  const samples = await asrSamples();
+  const verdicts = new Map<string, Partial<Record<AsrId, boolean>>>(
+    samples.map(({ file }) => [file, {}]),
+  );
+  for (const asr of ASR_IDS) {
+    const saved = await readTranscripts(asr);
+    if (saved === null) continue;
+    for (const { file, item } of samples) {
+      const byAsr = verdicts.get(file) ?? null;
+      if (byAsr === null || !(file in saved.transcripts)) continue;
+      byAsr[asr] = transcriptMatches(chars, readingOf(item), saved.transcripts[file] ?? "");
+    }
+  }
+  return verdicts;
+};
+
+const asrReport = async (): Promise<void> => {
+  const verdicts = await readVerdicts();
+  const labels = await readLabels();
+  const toLabel = filesToLabel(verdicts);
+  const unlabeled = toLabel.filter((file) => !(file in labels));
+  console.log(
+    `${String(verdicts.size)} files, ${String(toLabel.length)} where the recognizers disagree, ${String(unlabeled.length)} still to label`,
+  );
+  console.log("| Recognizer | Flagged | Caught | Missed | False alarms |\n|---|---|---|---|---|");
+  for (const asr of ASR_IDS) {
+    const { flagged, caught, missed, falseAlarms } = scoreAsr(asr, verdicts, labels);
+    console.log(`| ${asr} | ${[flagged, caught, missed, falseAlarms].join(" | ")} |`);
+  }
+};
+
 const handle = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
   const send = (status: number, body: string | Uint8Array, type: string): void => {
     response.writeHead(status, { "Content-Type": type, "Cache-Control": "no-store" });
@@ -154,6 +248,40 @@ const handle = async (request: IncomingMessage, response: ServerResponse): Promi
     }
     await writeAtomic(picksPath, `${JSON.stringify(parsed.data, null, 2)}\n`);
     send(204, "", "text/plain");
+    return;
+  }
+  if (request.method === "GET" && path === "/asr") {
+    send(200, ASR_PAGE, "text/html; charset=utf-8");
+    return;
+  }
+  if (request.method === "GET" && path === "/asr/files") {
+    const items = new Map((await asrSamples()).map(({ file, item }) => [file, item]));
+    const files = filesToLabel(await readVerdicts()).map((file) => ({
+      file,
+      text: items.get(file)?.text ?? "",
+      spoken: spoken(items.get(file)?.id ?? ""),
+    }));
+    send(200, JSON.stringify(files), "application/json");
+    return;
+  }
+  if (request.method === "GET" && path === "/asr/labels") {
+    send(200, JSON.stringify(await readLabels()), "application/json");
+    return;
+  }
+  if (request.method === "POST" && path === "/asr/labels") {
+    const parsed = labelsSchema.safeParse(JSON.parse(await readBody(request)) as unknown);
+    if (!parsed.success) {
+      send(400, parsed.error.message, "text/plain; charset=utf-8");
+      return;
+    }
+    await mkdir(asrDir, { recursive: true });
+    await writeAtomic(labelsPath, `${JSON.stringify(parsed.data, null, 2)}\n`);
+    send(204, "", "text/plain");
+    return;
+  }
+  const [, sample = ""] = /^\/asr\/audio\/([\w.-]+)$/u.exec(path) ?? [];
+  if (request.method === "GET" && (await asrSamples()).some(({ file }) => file === sample)) {
+    send(200, await readFile(new URL(sample, samplesDir)), "audio/wav");
     return;
   }
   const [, item = "", engine = ""] = /^\/audio\/([\w-]+)\/([\w-]+)$/u.exec(path) ?? [];
@@ -210,12 +338,17 @@ const main = async (): Promise<void> => {
   const { values, positionals } = parseArgs({
     options: {
       engines: { type: "string", default: ENGINE_IDS.join(",") },
+      asr: { type: "string", default: ASR_IDS.join(",") },
       port: { type: "string", default: "8110" },
     },
     allowPositionals: true,
   });
   const engines = values.engines.split(",");
-  const unknown = engines.filter((engine) => !isEngine(engine));
+  const asrs = values.asr.split(",");
+  const unknown = [
+    ...engines.filter((engine) => !isEngine(engine)),
+    ...asrs.filter((asr) => !isAsr(asr)),
+  ];
   if (unknown.length > 0) throw new BakeoffError(`unknown engine(s): ${unknown.join(", ")}`);
   switch (positionals[0]) {
     case "generate":
@@ -227,9 +360,15 @@ const main = async (): Promise<void> => {
     case "report":
       await report();
       return;
+    case "transcribe":
+      await transcribeSamples(asrs.filter(isAsr));
+      return;
+    case "asr-report":
+      await asrReport();
+      return;
     default:
       throw new BakeoffError(
-        "usage: bakeoff.ts generate [--engines a,b] | serve [--port n] | report",
+        "usage: bakeoff.ts generate [--engines a,b] | serve [--port n] | report | transcribe [--asr a,b] | asr-report",
       );
   }
 };
