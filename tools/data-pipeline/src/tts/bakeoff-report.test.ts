@@ -4,7 +4,7 @@ import { BAKEOFF_SET } from "./bakeoff-set.ts";
 import { ENGINE_IDS } from "./engines.ts";
 
 const picks: Picks = {
-  picks: { ma1: "qwen3-tts", ma2: "qwen3-tts", nihao: "cosyvoice3", yige: "none" },
+  picks: { ma1: "moss-tts-pinyin", ma2: "moss-tts-pinyin", nihao: "glm-tts", yige: "none" },
   notes: { yige: "all read yī gè" },
 };
 
@@ -14,20 +14,18 @@ describe("checkPicks", () => {
   });
 
   it("refuses unknown items and an empty listening", () => {
-    expect(checkPicks(BAKEOFF_SET, { picks: { nope: "melotts" }, notes: {} }).ok).toBe(false);
+    expect(checkPicks(BAKEOFF_SET, { picks: { nope: "glm-tts" }, notes: {} }).ok).toBe(false);
     expect(checkPicks(BAKEOFF_SET, { picks: {}, notes: {} }).ok).toBe(false);
   });
 });
 
 describe("formatReport", () => {
   it("counts the best versions per engine, overall and per listened category", () => {
-    const report = formatReport(BAKEOFF_SET, ENGINE_IDS.slice(0, 4), picks);
-    expect(report).toContain(
-      "| Best version | melotts | cosyvoice-sft | cosyvoice3 | qwen3-tts | none |",
-    );
-    expect(report).toContain("| all (4 items) | 0 | 0 | 1 | 2 | 1 |");
-    expect(report).toContain("| syllable | 0 | 0 | 0 | 2 | 0 |");
-    expect(report).toContain("| yi | 0 | 0 | 0 | 0 | 1 |");
+    const report = formatReport(BAKEOFF_SET, ENGINE_IDS, picks);
+    expect(report).toContain("| Best version | moss-tts | moss-tts-pinyin | glm-tts | none |");
+    expect(report).toContain("| all (4 items) | 0 | 2 | 1 | 1 |");
+    expect(report).toContain("| syllable | 0 | 2 | 0 | 0 |");
+    expect(report).toContain("| yi | 0 | 0 | 0 | 1 |");
     expect(report).not.toContain("| erhua |");
   });
 });

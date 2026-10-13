@@ -21,16 +21,21 @@ CI fails when a dataset is older than its `maxAgeDays` or has a `retrievedAt` in
 
 ## Mandarin TTS bake-off
 
-The engines run as Docker containers on CPU (`tools/tts/compose.yaml`, ports on localhost only). Models are downloaded at their pinned revision on first start.
+The engines run as Docker containers on the Radeon through WSL2 (`tools/tts/compose.yaml`, ports on localhost only), one at a time on a 24 GB card. Models are downloaded at their pinned revision on first start.
 
 ```bash
-docker compose -f tools/tts/compose.yaml up -d
-pnpm --filter @openlinguo/data-pipeline tts-bakeoff generate
+docker build -t openlinguo-rocm-wsl:6.4.2 tools/tts/rocm-wsl
+docker compose -f tools/tts/compose.yaml up -d moss-tts
+pnpm --filter @openlinguo/data-pipeline tts-bakeoff generate --engines moss-tts,moss-tts-pinyin
+docker compose -f tools/tts/compose.yaml stop moss-tts
+docker compose -f tools/tts/compose.yaml up -d glm-tts
+pnpm --filter @openlinguo/data-pipeline tts-bakeoff generate --engines glm-tts
 pnpm --filter @openlinguo/data-pipeline tts-bakeoff serve
 pnpm --filter @openlinguo/data-pipeline tts-bakeoff report
 ```
 
-- `generate` synthesizes the 36 items of `src/tts/bakeoff-set.ts` with every engine into `tools/tts/.bakeoff/` (gitignored, resumable).
+- `tools/tts/voices/designed-zh-female.wav` is a synthetic voice made by `moss-voice-generator` from a text description (no real speaker); the cloning engines use it as their reference.
+- `generate` synthesizes the 36 items of `src/tts/bakeoff-set.ts` into `tools/tts/.bakeoff/` (gitignored, resumable). `moss-tts-pinyin` sends MOSS-TTS tone-numbered pinyin with the spoken tones instead of characters.
 - `serve` opens a local comparison page: each item with every engine's version in a fixed, named order; the maintainer listens to the items they choose and picks the best version (or none), saved on every change.
 - `report` counts the picks per engine, overall and per category, and writes `tools/tts/bakeoff-results.json`.
-- `requirements.lock` files replace unpinned upstream requirements (pip backtracks for hours on MeloTTS's). MeloTTS: upstream `requirements.txt` without `gradio` (demo UI only), plus `torch==2.3.1+cpu`, `torchaudio==2.3.1+cpu` and `setuptools<70`. Qwen3-TTS: the dependencies of `qwen-tts` 0.1.1 without `gradio`, plus `torch==2.6.0+cpu` and `torchaudio==2.6.0+cpu`. Both compiled in `python:3.10-slim` with `uv pip compile --python-version 3.10 --python-platform x86_64-manylinux_2_28 --extra-index-url https://download.pytorch.org/whl/cpu --index-strategy unsafe-best-match --exclude-newer <7 days ago>`.
+- Each engine's `requirements.lock` is a `uv pip compile` of its upstream dependencies without demo-only packages (gradio) and without torch, whose ROCm wheel comes from `download.pytorch.org/whl/rocm6.4`; compiled in `python:3.10-slim` with `--python-version 3.10 --python-platform x86_64-manylinux_2_28 --exclude-newer <7 days ago>`.

@@ -1,5 +1,5 @@
-# Mandarin TTS engines for the pipeline (ADR 0007), ports bound to localhost. The first four run on CPU; the
-# others need the Radeon through WSL2 (see rocm-wsl/Dockerfile) and fit the 24 GB card one at a time.
+# Mandarin TTS engines for the pipeline (ADR 0007), ports bound to localhost. They need the Radeon through WSL2
+# (see rocm-wsl/Dockerfile) and fit the 24 GB card one at a time.
 x-radeon: &radeon
   devices: ["/dev/dxg"]
   volumes:
@@ -9,44 +9,6 @@ x-radeon: &radeon
     - "hf-cache:/root/.cache"
 
 services:
-  melotts:
-    build: ./melotts
-    image: openlinguo-tts-melotts
-    environment:
-      MODEL_REPO: myshell-ai/MeloTTS-Chinese
-      MODEL_REVISION: af5d207a364ea4208c6f589c89f57f88414bdd16
-    ports: ["127.0.0.1:8101:8000"]
-    volumes: ["hf-cache:/root/.cache"]
-
-  cosyvoice-sft:
-    build: ./cosyvoice
-    image: openlinguo-tts-cosyvoice
-    environment:
-      MODEL_REPO: FunAudioLLM/CosyVoice-300M-SFT
-      MODEL_REVISION: fbb71de2afe387ed854eebd80b9f3d078c6b9869
-      SPEAKER: 中文女
-    ports: ["127.0.0.1:8102:8000"]
-    volumes: ["models:/models", "hf-cache:/root/.cache"]
-
-  cosyvoice3:
-    build: ./cosyvoice
-    image: openlinguo-tts-cosyvoice
-    environment:
-      MODEL_REPO: FunAudioLLM/Fun-CosyVoice3-0.5B-2512
-      MODEL_REVISION: 29e01c4e8d000f4bcd70751be16fa94bf3d85a18
-    ports: ["127.0.0.1:8103:8000"]
-    volumes: ["models:/models", "hf-cache:/root/.cache"]
-
-  qwen3-tts:
-    build: ./qwen3-tts
-    image: openlinguo-tts-qwen3
-    environment:
-      MODEL_REPO: Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice
-      MODEL_REVISION: 0c0e3051f131929182e2c023b9537f8b1c68adfe
-      SPEAKER: serena
-    ports: ["127.0.0.1:8104:8000"]
-    volumes: ["models:/models", "hf-cache:/root/.cache"]
-
   moss-voice-generator:
     build: { context: ./moss-tts, dockerfile: Dockerfile }
     image: openlinguo-tts-moss
@@ -72,17 +34,6 @@ services:
       CODEC_DTYPE: bfloat16
       PYTORCH_HIP_ALLOC_CONF: expandable_segments:True
     ports: ["127.0.0.1:8106:8000"]
-
-  dots-tts:
-    build: { context: ./dots-tts, dockerfile: Dockerfile }
-    image: openlinguo-tts-dots
-    <<: *radeon
-    environment:
-      MODEL_REPO: dots-studio/dots.tts-soar
-      MODEL_REVISION: 2f9b3e18d70d670d4c701da2dc55ded5755815ce
-      REFERENCE_WAV: /voices/designed-zh-female.wav
-      REFERENCE_TEXT: 大家好，欢迎来到中文发音练习。我们一起慢慢读，注意每个字的声调。
-    ports: ["127.0.0.1:8107:8000"]
 
   glm-tts:
     build: { context: ./glm-tts, dockerfile: Dockerfile }

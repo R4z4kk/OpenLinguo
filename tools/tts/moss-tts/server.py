@@ -1,6 +1,7 @@
 import io
 import json
 import os
+import re
 import wave
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -20,6 +21,7 @@ REFERENCE_WAV = os.environ.get("REFERENCE_WAV", "")
 # The 8B model and the 1.6B codec in float32 overflow a 24 GB card next to the desktop: CODEC_DTYPE=bfloat16.
 CODEC_DTYPE = getattr(torch, os.environ.get("CODEC_DTYPE", "float32"))
 DEVICE = "cuda"
+SYLLABLE = re.compile(r"[一-鿿]|[a-zü]+[1-5]?", re.IGNORECASE)
 
 torch.backends.cuda.enable_cudnn_sdp(False)
 model_dir = snapshot_download(REPO, revision=REVISION, local_dir=f"/models/{REPO.split('/')[1]}")
@@ -60,9 +62,9 @@ def synthesize(text: str, seed: int, instruction: str) -> bytes:
         outputs = model.generate(
             input_ids=batch["input_ids"].to(DEVICE),
             attention_mask=batch["attention_mask"].to(DEVICE),
-            # 12.5 audio frames per second: about 2 s per character, so a model that never stops on a short
-            # input (seen with a single character) yields an audible failure instead of minutes of audio.
-            max_new_tokens=min(4096, 40 + 25 * len(text)),
+            # 12.5 audio frames per second: about 2 s per syllable (a character or a pinyin syllable), so a model
+            # that never stops on a short input yields an audible failure instead of minutes of audio.
+            max_new_tokens=min(4096, 40 + 25 * len(SYLLABLE.findall(text))),
         )
         audio = next(iter(processor.decode(outputs))).audio_codes_list[0].detach().float().cpu()
     speech = (audio.mean(dim=0) if audio.ndim == 2 else audio).numpy()

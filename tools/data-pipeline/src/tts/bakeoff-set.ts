@@ -1,5 +1,11 @@
 import { ok, type Result } from "@openlinguo/core";
-import { applySandhi, toDiacritic, type ReadingWord, type SandhiError } from "@openlinguo/lang-zh";
+import {
+  applySandhi,
+  parseNumbered,
+  toDiacritic,
+  type ReadingWord,
+  type SandhiError,
+} from "@openlinguo/lang-zh";
 
 export type BakeoffCategory =
   | "syllable"
@@ -17,6 +23,7 @@ export type BakeoffItem = {
   readonly category: BakeoffCategory;
   readonly text: string;
   readonly words: readonly ReadingWord[];
+  readonly end: string;
 };
 
 const item = (
@@ -29,6 +36,7 @@ const item = (
   category,
   text: words.map(([text]) => text).join("") + end,
   words: words.map(([text, reading]) => ({ text, reading })),
+  end,
 });
 
 /** Readings are CC-CEDICT readings; the test checks each one against the dataset. */
@@ -127,4 +135,26 @@ export const spokenPinyin = (item: BakeoffItem): Result<string, SandhiError> => 
     words.push(marked.value.replaceAll(" ", ""));
   }
   return ok(words.join(" "));
+};
+
+/**
+ * Tone-numbered pinyin for MOSS-TTS, in the pypinyin TONE3 form it was trained on: spoken tones after
+ * sandhi, neutral tone without a digit, ü as v. Erhua keeps the character 儿, which MOSS reads inside pinyin,
+ * because pypinyin's "er2" would be read as a full syllable.
+ */
+export const mossPinyin = (item: BakeoffItem): Result<string, SandhiError> => {
+  const spoken = applySandhi(item.words);
+  if (!spoken.ok) return spoken;
+  const syllables: string[] = [];
+  for (const reading of spoken.value) {
+    const tokens = parseNumbered(reading);
+    if (!tokens.ok) return tokens;
+    for (const token of tokens.value) {
+      if (token.kind === "other") continue;
+      const letters = token.letters.toLowerCase().replaceAll("ü", "v");
+      if (letters === "r" && token.tone === 5) syllables.push("儿");
+      else syllables.push(token.tone === 5 ? letters : `${letters}${String(token.tone)}`);
+    }
+  }
+  return ok(syllables.join(" ") + item.end);
 };

@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { dataDir } from "../manifest.ts";
-import { BAKEOFF_SET, spokenPinyin } from "./bakeoff-set.ts";
+import { BAKEOFF_SET, mossPinyin, spokenPinyin } from "./bakeoff-set.ts";
 
 type CedictRow = readonly [simplified: string, traditional: string, reading: string];
 
@@ -50,6 +50,23 @@ describe("TTS bake-off set", () => {
     expect(spoken("diyi")).toBe("dìyī");
     expect(spoken("bushi")).toBe("búshì");
     expect(spoken("buhao")).toBe("bùhǎo");
+  });
+
+  it("writes MOSS pinyin with spoken tones, bare neutral tones and erhua as 儿", () => {
+    const moss = (id: string): string => {
+      const item = BAKEOFF_SET.find((candidate) => candidate.id === id) ?? null;
+      if (item === null) throw new Error(`no item ${id}`);
+      const result = mossPinyin(item);
+      if (!result.ok) throw new Error(JSON.stringify(result.error));
+      return result.value;
+    };
+    expect(moss("ma3")).toBe("ma3");
+    expect(moss("nihao")).toBe("ni2 hao3");
+    expect(moss("mama")).toBe("ma1 ma");
+    expect(moss("yidianr")).toBe("yi4 dian3 儿");
+    expect(moss("changcheng")).toBe("chang2 cheng2");
+    expect(moss("sentence-laoshi")).toBe("ni3 bu2 shi4 lao3 shi1 ma？");
+    expect(BAKEOFF_SET.filter((item) => !mossPinyin(item).ok).map(({ id }) => id)).toEqual([]);
   });
 
   it("converts every item", () => {

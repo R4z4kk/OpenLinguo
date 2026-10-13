@@ -2,25 +2,13 @@ import { err, ok, type Result } from "@openlinguo/core";
 import { z } from "zod";
 import { decodeWav } from "./wav.ts";
 
-export const ENGINE_IDS = [
-  "melotts",
-  "cosyvoice-sft",
-  "cosyvoice3",
-  "qwen3-tts",
-  "moss-tts",
-  "dots-tts",
-  "glm-tts",
-] as const;
+export const ENGINE_IDS = ["moss-tts", "moss-tts-pinyin", "glm-tts"] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 
-/** Ports of `tools/tts/compose.yaml`. */
+/** Ports of `tools/tts/compose.yaml`; moss-tts-pinyin is the same server fed tone-numbered pinyin. */
 const ENGINE_URLS: Readonly<Record<EngineId, string>> = {
-  melotts: "http://127.0.0.1:8101",
-  "cosyvoice-sft": "http://127.0.0.1:8102",
-  cosyvoice3: "http://127.0.0.1:8103",
-  "qwen3-tts": "http://127.0.0.1:8104",
   "moss-tts": "http://127.0.0.1:8106",
-  "dots-tts": "http://127.0.0.1:8107",
+  "moss-tts-pinyin": "http://127.0.0.1:8106",
   "glm-tts": "http://127.0.0.1:8108",
 };
 
@@ -32,8 +20,7 @@ const engineInfoSchema = z.object({
 });
 export type EngineInfo = z.infer<typeof engineInfoSchema>;
 
-// CosyVoice 3 on CPU needs minutes for a sentence.
-const SYNTHESIS_TIMEOUT_MS = 15 * 60_000;
+const SYNTHESIS_TIMEOUT_MS = 5 * 60_000;
 
 export const engineInfo = async (engine: EngineId): Promise<Result<EngineInfo, string>> => {
   const url = `${ENGINE_URLS[engine]}/health`;
