@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { dataDir } from "../manifest.ts";
-import { BAKEOFF_SET, glmPhonemes, mossPinyin, spokenPinyin } from "./bakeoff-set.ts";
+import { BAKEOFF_SET, mossPinyin, spokenPinyin } from "./bakeoff-set.ts";
 
 type CedictRow = readonly [simplified: string, traditional: string, reading: string];
 
@@ -67,26 +67,6 @@ describe("TTS bake-off set", () => {
     expect(moss("changcheng")).toBe("chang2 cheng2");
     expect(moss("sentence-laoshi")).toBe("ni3 bu2 shi4 lao3 shi1 ma？");
     expect(BAKEOFF_SET.filter((item) => !mossPinyin(item).ok).map(({ id }) => id)).toEqual([]);
-  });
-
-  it("writes GLM phoneme tokens with spoken tones and pypinyin strict finals", () => {
-    const glm = (id: string): string => {
-      const item = BAKEOFF_SET.find((candidate) => candidate.id === id) ?? null;
-      if (item === null) throw new Error(`no item ${id}`);
-      const result = glmPhonemes(item);
-      if (!result.ok) throw new Error(JSON.stringify(result.error));
-      return result.value;
-    };
-    expect(glm("nihao")).toBe("<|N|><|I2|><|H|><|AO3|>");
-    expect(glm("changcheng")).toBe("<|CH|><|ANG2|><|CH|><|ENG2|>");
-    expect(glm("xiexie")).toBe("<|X|><|IE4|><|X|><|IE5|>");
-    expect(glm("yinhang")).toBe("<|IN2|><|H|><|ANG2|>");
-    expect(glm("wanr")).toBe("<|UAN2|>儿");
-    expect(glm("yidianr")).toBe("<|I4|><|D|><|IAN3|>儿");
-    expect(glm("sentence-laoshi")).toBe(
-      "<|N|><|I3|><|B|><|U2|><|SH|><|III4|><|L|><|AO3|><|SH|><|III1|><|M|><|A5|>？",
-    );
-    expect(BAKEOFF_SET.filter((item) => !glmPhonemes(item).ok).map(({ id }) => id)).toEqual([]);
   });
 
   it("converts every item", () => {

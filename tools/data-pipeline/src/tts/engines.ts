@@ -2,15 +2,14 @@ import { err, ok, type Result } from "@openlinguo/core";
 import { z } from "zod";
 import { decodeWav } from "./wav.ts";
 
-export const ENGINE_IDS = ["moss-tts", "moss-tts-pinyin", "glm-tts", "glm-tts-phoneme"] as const;
+export const ENGINE_IDS = ["moss-tts", "moss-tts-pinyin", "glm-tts"] as const;
 export type EngineId = (typeof ENGINE_IDS)[number];
 
-/** Ports of `tools/tts/compose.yaml`; the -pinyin / -phoneme variants are the same servers fed phonetic input. */
+/** Ports of `tools/tts/compose.yaml`; moss-tts-pinyin is the same server fed tone-numbered pinyin. */
 const ENGINE_URLS: Readonly<Record<EngineId, string>> = {
   "moss-tts": "http://127.0.0.1:8106",
   "moss-tts-pinyin": "http://127.0.0.1:8106",
   "glm-tts": "http://127.0.0.1:8108",
-  "glm-tts-phoneme": "http://127.0.0.1:8108",
 };
 
 const engineInfoSchema = z.object({

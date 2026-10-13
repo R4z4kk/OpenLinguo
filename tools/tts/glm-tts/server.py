@@ -38,22 +38,6 @@ embedding = frontend._extract_spk_embedding(REFERENCE_WAV)
 flow_prompt_token = torch.tensor([prompt_speech_token], dtype=torch.int32).to(DEVICE)
 
 
-class PhonemeFrontEnd:
-    """Text already made of <|INITIAL|><|FINAL5|> tokens: normalizing or splitting at 60 characters would cut them."""
-
-    def __init__(self, base) -> None:
-        self.base = base
-
-    def text_normalize(self, text: str) -> str:
-        return text
-
-    def split_by_len(self, text: str) -> list:
-        return [text]
-
-    def __getattr__(self, name: str):
-        return getattr(self.base, name)
-
-
 def synthesize(text: str, seed: int) -> bytes:
     cache = {
         "cache_text": [prompt_text],
@@ -61,15 +45,13 @@ def synthesize(text: str, seed: int) -> bytes:
         "cache_speech_token": [prompt_speech_token],
         "use_cache": True,
     }
-    phonemes = "<|" in text
-    request_frontend = PhonemeFrontEnd(text_frontend) if phonemes else text_frontend
     with torch.no_grad():
         speech, _, _, _ = generate_long(
             frontend=frontend,
-            text_frontend=request_frontend,
+            text_frontend=text_frontend,
             llm=llm,
             flow=flow,
-            text_info=["request", text if phonemes else text_frontend.text_normalize(text)],
+            text_info=["request", text_frontend.text_normalize(text)],
             cache=cache,
             embedding=embedding,
             seed=seed,

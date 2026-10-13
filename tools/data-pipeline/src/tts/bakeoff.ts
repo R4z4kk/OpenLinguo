@@ -3,13 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { parseArgs } from "node:util";
 import { LISTENING_PAGE } from "./bakeoff-page.ts";
 import { checkPicks, formatReport, picksSchema, type Picks } from "./bakeoff-report.ts";
-import {
-  BAKEOFF_SET,
-  glmPhonemes,
-  mossPinyin,
-  spokenPinyin,
-  type BakeoffItem,
-} from "./bakeoff-set.ts";
+import { BAKEOFF_SET, mossPinyin, spokenPinyin, type BakeoffItem } from "./bakeoff-set.ts";
 import { ENGINE_IDS, engineInfo, synthesize, type EngineId, type EngineInfo } from "./engines.ts";
 
 const SEED = 1;
@@ -54,15 +48,10 @@ const spoken = (id: string): string => {
 };
 
 const textFor = (engine: EngineId, item: BakeoffItem): string => {
-  const phonetic =
-    engine === "moss-tts-pinyin"
-      ? mossPinyin(item)
-      : engine === "glm-tts-phoneme"
-        ? glmPhonemes(item)
-        : null;
-  if (phonetic === null) return item.text;
-  if (!phonetic.ok) throw new BakeoffError(`no ${engine} input for ${item.id}`);
-  return phonetic.value;
+  if (engine !== "moss-tts-pinyin") return item.text;
+  const pinyin = mossPinyin(item);
+  if (!pinyin.ok) throw new BakeoffError(`no MOSS pinyin for ${item.id}`);
+  return pinyin.value;
 };
 
 const readEngineInfos = async (): Promise<Partial<Record<EngineId, EngineInfo>>> =>
