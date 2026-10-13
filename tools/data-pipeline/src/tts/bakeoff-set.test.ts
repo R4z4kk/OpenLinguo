@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { dataDir } from "../manifest.ts";
-import { BAKEOFF_SET, spokenPinyin } from "./bakeoff-set.ts";
+import { BAKEOFF_SET, MIX_CARDS, MIX_SENTENCES, spokenPinyin } from "./bakeoff-set.ts";
 
 type CedictRow = readonly [simplified: string, traditional: string, reading: string];
 
@@ -34,7 +34,8 @@ describe("TTS bake-off set", () => {
 
   it("uses CC-CEDICT readings only", async () => {
     const readings = await cedictReadings();
-    const missing = BAKEOFF_SET.flatMap(({ words }) => words)
+    const missing = [...BAKEOFF_SET, ...MIX_SENTENCES]
+      .flatMap(({ words }) => words)
       .map(({ text, reading }) => `${text}\t${reading}`)
       .filter((key) => !readings.has(key));
     expect(missing).toEqual([]);
@@ -50,6 +51,15 @@ describe("TTS bake-off set", () => {
     expect(spoken("diyi")).toBe("dìyī");
     expect(spoken("bushi")).toBe("búshì");
     expect(spoken("buhao")).toBe("bùhǎo");
+  });
+
+  it("pairs each mix card's word with a sentence that contains it", () => {
+    const items = new Map([...BAKEOFF_SET, ...MIX_SENTENCES].map((item) => [item.id, item]));
+    for (const card of MIX_CARDS) {
+      const word = items.get(card.word) ?? null;
+      const sentence = items.get(card.sentence) ?? null;
+      expect(word !== null && sentence !== null && sentence.text.includes(word.text)).toBe(true);
+    }
   });
 
   it("converts every item", () => {

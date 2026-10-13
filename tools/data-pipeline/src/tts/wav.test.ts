@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
+import { decodeWav, encodeWav, joinPcm, trimUtterance } from "./wav.ts";
 
 const SAMPLE_RATE = 24_000;
 
@@ -59,5 +59,21 @@ describe("trimUtterance", () => {
 
   it("leaves audio without any sound unchanged", () => {
     expect(trim(signal([1, false]))).toBe(1);
+  });
+});
+
+describe("joinPcm", () => {
+  it("puts the second recording after the first, with a pause", () => {
+    const joined = joinPcm(
+      { samples: signal([0.3, true]), sampleRate: SAMPLE_RATE },
+      { samples: signal([0.5, true]), sampleRate: SAMPLE_RATE },
+      0.6,
+    );
+    expect(joined.ok && seconds(joined.value.samples)).toBeCloseTo(1.4, 2);
+  });
+
+  it("refuses different sample rates", () => {
+    const pcm = { samples: signal([0.1, true]), sampleRate: SAMPLE_RATE };
+    expect(joinPcm(pcm, { ...pcm, sampleRate: 48_000 }, 0.6).ok).toBe(false);
   });
 });
