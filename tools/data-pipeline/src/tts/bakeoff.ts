@@ -3,7 +3,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import { parseArgs } from "node:util";
 import { LISTENING_PAGE } from "./bakeoff-page.ts";
 import { checkPicks, formatReport, picksSchema, type Picks } from "./bakeoff-report.ts";
-import { BAKEOFF_SET, mossPinyin, spokenPinyin, type BakeoffItem } from "./bakeoff-set.ts";
+import { BAKEOFF_SET, spokenPinyin, type BakeoffItem } from "./bakeoff-set.ts";
 import { ENGINE_IDS, engineInfo, synthesize, type EngineId, type EngineInfo } from "./engines.ts";
 
 const SEED = 1;
@@ -47,12 +47,9 @@ const spoken = (id: string): string => {
   return result.value;
 };
 
-const textFor = (engine: EngineId, item: BakeoffItem): string => {
-  if (engine !== "moss-tts-pinyin") return item.text;
-  const pinyin = mossPinyin(item);
-  if (!pinyin.ok) throw new BakeoffError(`no MOSS pinyin for ${item.id}`);
-  return pinyin.value;
-};
+/** MOSS-TTS maintainers advise a final period so the model knows where speech ends (OpenMOSS/MOSS-TTS#19). */
+const textFor = (engine: EngineId, item: BakeoffItem): string =>
+  engine === "moss-tts-period" && item.end === "" ? `${item.text}。` : item.text;
 
 const readEngineInfos = async (): Promise<Partial<Record<EngineId, EngineInfo>>> =>
   (await exists(enginesPath))

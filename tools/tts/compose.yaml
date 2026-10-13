@@ -35,16 +35,15 @@ services:
       PYTORCH_HIP_ALLOC_CONF: expandable_segments:True
     ports: ["127.0.0.1:8106:8000"]
 
-  glm-tts:
-    build: { context: ./glm-tts, dockerfile: Dockerfile }
-    image: openlinguo-tts-glm
+  voxcpm2:
+    build: { context: ./voxcpm2, dockerfile: Dockerfile }
+    image: openlinguo-tts-voxcpm2
     <<: *radeon
     environment:
-      MODEL_REPO: zai-org/GLM-TTS
-      MODEL_REVISION: b3feb691fa4cf590eec4418f6275f95220e58844
+      MODEL_REPO: openbmb/VoxCPM2
+      MODEL_REVISION: 32279effe8c19989596f05d353d1447f51d9e915
       REFERENCE_WAV: /voices/designed-zh-female.wav
-      REFERENCE_TEXT: 大家好，欢迎来到中文发音练习。我们一起慢慢读，注意每个字的声调。
-    ports: ["127.0.0.1:8108:8000"]
+    ports: ["127.0.0.1:8109:8000"]
 
 volumes:
   models:
