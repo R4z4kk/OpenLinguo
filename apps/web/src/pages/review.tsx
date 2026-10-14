@@ -84,7 +84,7 @@ const Card = ({
         size="display"
       />
     );
-  const audio = item.audio === null ? null : <PlayAudio audioId={item.audio} />;
+  const audio = item.audio === null ? null : <PlayAudio source={item.audio} align="center" />;
   const focus = {
     ref: focusTarget,
     tabIndex: -1,

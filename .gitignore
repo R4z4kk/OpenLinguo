@@ -8,6 +8,8 @@ dist/
 .env.*
 # Generated from data/ by apps/web/scripts/pack-data.ts
 apps/web/public/data/
+# Audio packs downloaded from their GitHub release by apps/web/scripts/audio-packs.ts
+apps/web/.cache/
 # TTS bake-off samples and grades (tools/data-pipeline/src/tts/bakeoff.ts)
 tools/tts/.bakeoff/
 # Audio pack recordings, checks and reviews (tools/data-pipeline/src/tts/packs.ts)

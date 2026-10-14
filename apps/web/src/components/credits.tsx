@@ -97,6 +97,15 @@ export const CREDITS = {
     license: "MIT",
     licenseUrl: "/data/licenses/jieba/LICENSE.txt",
   },
+  "audio-zh": {
+    name: "OpenLinguo Mandarin audio",
+    url: "https://github.com/R4z4kk/OpenLinguo/blob/main/data/SOURCES.md",
+    holder:
+      "synthetic voice made with MOSS-TTS v1.5 and MOSS-VoiceGenerator (OpenMOSS, Apache-2.0), checked with Qwen3-ASR (Qwen, Apache-2.0)",
+    site: null,
+    license: "CC0 1.0",
+    licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
+  },
   fonts: {
     name: "Atkinson Hyperlegible Next, Noto Sans SC, LXGW WenKai GB, OpenLinguo Han Fallback",
     url: "https://openfontlicense.org",

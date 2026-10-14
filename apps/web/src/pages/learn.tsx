@@ -4,9 +4,11 @@ import { Link } from "@tanstack/react-router";
 import { BookA, Grid3x3, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Suspense, use, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { BandAudio, describeAudioFailure } from "@/components/band-audio";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NameField } from "@/components/name-field";
 import { Dialog } from "@/components/ui/dialog";
+import { bandId, loadAudioPacks, type AudioFailure, type AudioPacks } from "@/data/audio-packs";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import {
@@ -22,6 +24,7 @@ import {
   type Decks,
   type PersonalDeck,
 } from "@/data/decks";
+import { fetchDataFile } from "@/data/import";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 
 const COUNTS = ["new", "learning", "due"] as const;
@@ -366,23 +369,52 @@ const PersonalDecks = ({
 
 const BandList = ({
   decks,
+  audio,
   referential,
+  refreshAudio,
 }: {
   readonly decks: Loaded;
+  readonly audio: Promise<Result<AudioPacks, AudioFailure>>;
   readonly referential: ZhProficiency;
+  readonly refreshAudio: () => void;
 }) => {
   const { t } = useTranslation();
   const result = use(decks);
+  const packs = use(audio);
   // A read failure is shown once, with the personal decks.
   if (!result.ok) return null;
   const levels = proficiencyFrameworks[referential];
+  const audioOf = (level: number) => {
+    if (!packs.ok) return null;
+    const { index, states } = packs.value;
+    const band =
+      index.bands.find((entry) => entry.referential === referential && entry.level === level) ??
+      null;
+    if (band === null) return null;
+    return (headingId: string) => (
+      <BandAudio
+        release={index.release}
+        band={band}
+        state={states.get(bandId(band)) ?? "absent"}
+        describedBy={headingId}
+        onChange={refreshAudio}
+      />
+    );
+  };
   return (
-    <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-      {result.value.bands.map((counts, index) => {
-        const name = t("dictionary.level", { level: levels[index] ?? String(index + 1) });
-        return <DeckItem key={name} name={name} counts={counts} actions={null} />;
-      })}
-    </ul>
+    <>
+      <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+        {result.value.bands.map((counts, index) => {
+          const name = t("dictionary.level", { level: levels[index] ?? String(index + 1) });
+          return <DeckItem key={name} name={name} counts={counts} actions={audioOf(index + 1)} />;
+        })}
+      </ul>
+      {!packs.ok && packs.error.kind !== "cancelled" && (
+        <p role="alert" className="mt-4 text-danger">
+          {t("audio.unavailable", { reason: describeAudioFailure(t, packs.error) })}
+        </p>
+      )}
+    </>
   );
 };
 
@@ -399,6 +431,13 @@ const DeckSections = ({ referential }: { readonly referential: ZhProficiency }) 
       setDecks(load());
     });
   };
+  const loadAudio = () => loadAudioPacks(database, fetchDataFile);
+  const [audio, setAudio] = useState(loadAudio);
+  const refreshAudio = (): void => {
+    startTransition(() => {
+      setAudio(loadAudio());
+    });
+  };
   return (
     <>
       <PersonalDecks decks={decks} referential={referential} refresh={refresh} />
@@ -410,7 +449,12 @@ const DeckSections = ({ referential }: { readonly referential: ZhProficiency }) 
           {t("decks.bandsIntro", { referential: t(`referential.${referential}`) })}
         </p>
         <Suspense fallback={null}>
-          <BandList decks={decks} referential={referential} />
+          <BandList
+            decks={decks}
+            audio={audio}
+            referential={referential}
+            refreshAudio={refreshAudio}
+          />
         </Suspense>
       </section>
     </>

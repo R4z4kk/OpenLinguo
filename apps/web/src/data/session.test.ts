@@ -1,6 +1,7 @@
 import "fake-indexeddb/auto";
 import { cardId, ok, type CardType, type Subject, type WordKey } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { wordAudioId } from "./audio-packs.ts";
 import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
 import { fileWord, putCards, type LocalTime } from "./decks.ts";
 import { todayActivity } from "./daily-goal.ts";
@@ -72,8 +73,26 @@ describe("loadSession", () => {
     await db.audio.add({ id, type: "audio/wav", data: new ArrayBuffer(4) });
     const { items } = await session(NOON);
     expect(items.map((item) => ["note" in item ? item.note : item.headword, item.audio])).toEqual([
-      ["天", id],
+      ["天", { table: "audio", id }],
       ["你", null],
+    ]);
+  });
+
+  it("falls back to the audio pack's recording, after a deck's own audio", async () => {
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
+    const id = deckWordId(MY_WORDS, TIAN);
+    await db.audio.add({ id, type: "audio/wav", data: new ArrayBuffer(4) });
+    const packed = (headword: string, readingKey: string) => ({
+      id: wordAudioId(headword, readingKey),
+      type: "audio/mpeg",
+      data: new ArrayBuffer(4),
+      bands: ["hsk-2025:1"],
+    });
+    await db.wordAudio.bulkAdd([packed("天", TIAN.readingKey), packed("你", NI.readingKey)]);
+    const { items } = await session(NOON);
+    expect(items.map((item) => item.audio)).toEqual([
+      { table: "audio", id },
+      { table: "wordAudio", id: wordAudioId("你", NI.readingKey) },
     ]);
   });
 
@@ -97,7 +116,12 @@ describe("loadSession", () => {
     ]);
     expect(skipped).toBe(1);
     const [, shown] = items;
-    expect(shown).toMatchObject({ ...note, content, audio, state: { phase: "new" } });
+    expect(shown).toMatchObject({
+      ...note,
+      content,
+      audio: { table: "audio", id: audio },
+      state: { phase: "new" },
+    });
     if (shown == null) throw new Error("no note");
     expect(await gradeItem(db, shown, "easy", NOON, 20, false)).toEqual(ok(null));
     expect(await db.cards.get(idOf(note, "recognition"))).toMatchObject({ phase: "review" });

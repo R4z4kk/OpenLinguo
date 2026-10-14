@@ -49,20 +49,13 @@ import { database } from "@/data/database";
 import { DECK_NAME_MAX, describeDeckFailure } from "@/data/decks";
 import { browserStorage } from "@/data/persistence";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
+import { formatSize } from "@/lib/format-size";
 
 const storage = (): Storage => localStorage;
 const PREVIEW_NOTES = 3;
 const SHOWN_NAMES = 5;
-const MEGABYTE = 1_000_000;
 
 type Loaded = { readonly ankiPackage: AnkiPackage; readonly fileName: string };
-
-const formatSize = (bytes: number, language: string): string =>
-  new Intl.NumberFormat(language, {
-    style: "unit",
-    unit: bytes >= MEGABYTE ? "megabyte" : "kilobyte",
-    maximumFractionDigits: 1,
-  }).format(bytes / (bytes >= MEGABYTE ? MEGABYTE : 1000));
 
 const names = (list: readonly string[]): string =>
   list.length > SHOWN_NAMES ? `${list.slice(0, SHOWN_NAMES).join(", ")}…` : list.join(", ");

@@ -5,6 +5,7 @@ import {
   type DictEntry,
   type LanguagePack,
   type LookupError,
+  ok,
   type Result,
   type StrokeData,
 } from "@openlinguo/core";
@@ -15,14 +16,16 @@ import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "reac
 import { useTranslation } from "react-i18next";
 import { CREDITS, Credits } from "@/components/credits";
 import { DecompositionTree } from "@/components/decomposition-tree";
+import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
 import { SegmentedControl } from "@/components/segmented-control";
 import { StrokeOrder } from "@/components/stroke-order";
+import { wordAudioId } from "@/data/audio-packs";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { describeDeckFailure, fileWord, wordDecks, type WordDecks } from "@/data/decks";
 import { groupGlosses } from "@/data/gloss-summary";
-import { describeFailure } from "@/data/review-log";
+import { describeFailure, guarded, type ReviewLogFailure } from "@/data/review-log";
 import { languages, type Language } from "@/i18n/language";
 
 const HAN = /\p{Script=Han}/u;
@@ -95,6 +98,45 @@ const Glosses = ({
 };
 
 /** One checkbox per personal deck: native keyboard and screen reader support. */
+/** The audio pack recording of a reading, once its band is downloaded (Learn). */
+const WordAudio = ({
+  headword,
+  reading,
+}: {
+  readonly headword: string;
+  readonly reading: string;
+}) => {
+  const { t } = useTranslation();
+  const key = readingKey(reading);
+  const id = key.ok ? wordAudioId(headword, key.value) : null;
+  const [found, setFound] = useState<Result<boolean, ReviewLogFailure> | null>(null);
+  useEffect(() => {
+    if (id === null) return;
+    let current = true;
+    void guarded(async () =>
+      ok((await database.wordAudio.where(":id").equals(id).count()) > 0),
+    ).then((result) => {
+      if (current) setFound(result);
+    });
+    return () => {
+      current = false;
+    };
+  }, [id]);
+  if (id === null || found === null) return null;
+  if (!found.ok) {
+    return (
+      <p role="alert" className="mt-3 text-danger">
+        {t("review.audioFailed", { reason: describeFailure(found.error) })}
+      </p>
+    );
+  }
+  return found.value ? (
+    <div className="mt-3">
+      <PlayAudio source={{ table: "wordAudio", id }} align="start" />
+    </div>
+  ) : null;
+};
+
 const DeckPicker = ({
   headword,
   reading,
@@ -255,6 +297,9 @@ const Entries = ({
                 </span>{" "}
                 {t(`referential.${referential}`)}
               </p>
+            )}
+            {entry.reading !== null && (
+              <WordAudio headword={entry.headword} reading={entry.reading} />
             )}
             {entry.reading !== null && (
               <DeckPicker
