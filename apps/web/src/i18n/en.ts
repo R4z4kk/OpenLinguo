@@ -439,6 +439,38 @@ export const en = {
     synthetic: "Synthetic voice",
     gone: "it was deleted with its audio download.",
   },
+  speak: {
+    title: "Say it",
+    notice:
+      "Your voice is analysed on this device, never uploaded or kept. Your browser asks for the microphone the first time.",
+    chart: "Pitch curves of the model and of your voice. The result is written below.",
+    legend:
+      "Dashed line: the model. Solid line: your voice. Each is drawn around its own middle pitch.",
+    record: "Record",
+    again: "Record again",
+    stop: "Stop",
+    opening: "Opening the microphone…",
+    recording: "Listening: say the word. Recording stops when you finish.",
+    right: "sounds like {{tone}}, as expected",
+    other: "sounds like {{tone}}, expected {{expected}}",
+    unsure: "tone not recognised for sure, expected {{expected}}",
+    neutral: "neutral tone, not judged",
+    unvoiced: "nothing heard, expected {{expected}}",
+    distance: "{{distance}} semitones from the model",
+    nothingHeard: "Nothing was heard. Check that the microphone is not muted, then try again.",
+    interrupted: "Recording stopped when the page was hidden. Nothing was kept.",
+    scoreFailed: "The result could not be computed: {{reason}}",
+    referenceFailed: "The pitch of the model could not be read: {{reason}}",
+    microphoneFailed: "The microphone could not be opened: {{reason}}",
+    microphone: {
+      unsupported: "This browser cannot record here. Use the listening mode instead.",
+      denied:
+        "The microphone is blocked. Allow it in your browser's settings for this site, then try again, or use the listening mode.",
+      "no-device": "No microphone was found. Connect one and try again, or use the listening mode.",
+      busy: "The microphone is in use by another app. Close it and try again.",
+    },
+    listenInstead: "Can't speak now? Listen and pick the tone",
+  },
   moduleError: { title: "This section failed to load", retry: "Try again" },
   notFound: { title: "Page not found", back: "Back to Today" },
 } as const;

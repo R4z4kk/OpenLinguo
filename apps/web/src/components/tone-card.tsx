@@ -7,11 +7,10 @@ import { PlayAudio } from "@/components/play-audio";
 import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
 import type { AudioSource } from "@/data/audio-packs";
-import { spokenReading, toneSyllables } from "@/data/tone-card";
+import { spokenReading, toneLabel, toneSyllables } from "@/data/tone-card";
 import type { Language } from "@/i18n/language";
 
 const TONES = [1, 2, 3, 4, 5] as const;
-const MARKS = ["ā", "á", "ǎ", "à", "a"] as const;
 const PINYIN = "zh-Latn-pinyin";
 
 type Props = {
@@ -22,8 +21,11 @@ type Props = {
   readonly features: PinyinFeatures;
   readonly language: Language;
   readonly focusTarget: RefObject<HTMLDivElement | null>;
-  /** Stores the grade; `false` when it could not be stored (the failure is shown by the caller). */
-  readonly onGrade: (grade: Grade) => Promise<boolean>;
+  /**
+   * Stores the grade; `false` when it could not be stored (the failure is shown by the caller).
+   * `null` for practice on the word page: nothing graded, the word itself left to the page.
+   */
+  readonly onGrade: ((grade: Grade) => Promise<boolean>) | null;
   readonly onContinue: () => void;
 };
 
@@ -64,8 +66,7 @@ export const ToneCard = ({
     );
   }
 
-  const label = (tone: number): string =>
-    tone === 5 ? `${t("review.toneNeutral")} 5` : `${MARKS[tone - 1] ?? ""} ${String(tone)}`;
+  const label = (tone: number): string => toneLabel(tone, t("review.toneNeutral"));
   const characters = Array.from(headword);
   const incomplete = picks.some((pick) => pick === 0);
 
@@ -78,6 +79,10 @@ export const ToneCard = ({
     );
     if (!graded.ok) {
       setFailure(t("review.toneFailed", { reason: graded.error.kind }));
+      return;
+    }
+    if (onGrade === null) {
+      setResult(graded.value);
       return;
     }
     setBusy(true);
@@ -116,10 +121,18 @@ export const ToneCard = ({
       className="flex flex-col items-center gap-4 rounded-control"
     >
       <p className="text-small text-muted">{t("review.tone")}</p>
-      <p lang="zh-Hans" className="font-display text-display">
-        {headword}
-      </p>
-      <GlossSummary glosses={glosses} language={language} className="text-subtitle font-normal" />
+      {onGrade !== null && (
+        <>
+          <p lang="zh-Hans" className="font-display text-display">
+            {headword}
+          </p>
+          <GlossSummary
+            glosses={glosses}
+            language={language}
+            className="text-subtitle font-normal"
+          />
+        </>
+      )}
       {audio !== null && <PlayAudio source={audio} align="center" />}
       <div className="flex flex-wrap justify-center gap-4">
         {syllables.map(({ letters }, index) => (
@@ -167,9 +180,11 @@ export const ToneCard = ({
       ) : (
         <div className="flex w-full flex-col items-center gap-3">
           <div role="status" className="flex flex-col items-center gap-2">
-            <p className="font-semibold">
-              {t("review.toneGraded", { grade: t(`review.grades.${result.grade}`) })}
-            </p>
+            {onGrade !== null && (
+              <p className="font-semibold">
+                {t("review.toneGraded", { grade: t(`review.grades.${result.grade}`) })}
+              </p>
+            )}
             <ul className="flex flex-col gap-1">
               {syllables.map(({ letters, tone }, index) => {
                 const said = spoken.tones[index] ?? tone;

@@ -18,6 +18,7 @@ import { CREDITS, Credits } from "@/components/credits";
 import { DecompositionTree } from "@/components/decomposition-tree";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
+import { SayIt } from "@/components/say-it";
 import { SegmentedControl } from "@/components/segmented-control";
 import { StrokeOrder } from "@/components/stroke-order";
 import { wordAudioId } from "@/data/audio-packs";
@@ -97,15 +98,21 @@ const Glosses = ({
   );
 };
 
-/** One checkbox per personal deck: native keyboard and screen reader support. */
-/** The audio pack recording of a reading, once its band is downloaded (Learn). */
+/** The audio pack recording of a reading, once its band is downloaded (Learn), and saying it. */
 const WordAudio = ({
-  headword,
+  entry,
   reading,
+  features,
+  language,
+  heading,
 }: {
-  readonly headword: string;
+  readonly entry: DictEntry;
   readonly reading: string;
+  readonly features: LanguagePack["features"];
+  readonly language: Language;
+  readonly heading: "h2" | "h3";
 }) => {
+  const { headword } = entry;
   const { t } = useTranslation();
   const key = readingKey(reading);
   const id = key.ok ? wordAudioId(headword, key.value) : null;
@@ -130,13 +137,23 @@ const WordAudio = ({
       </p>
     );
   }
-  return found.value ? (
+  return found.value && key.ok ? (
     <div className="mt-3">
       <PlayAudio source={{ table: "wordAudio", id }} align="start" />
+      <SayIt
+        headword={headword}
+        readingKey={key.value}
+        audioId={id}
+        glosses={entry.glosses}
+        features={features}
+        language={language}
+        heading={heading}
+      />
     </div>
   ) : null;
 };
 
+/** One checkbox per personal deck: native keyboard and screen reader support. */
 const DeckPicker = ({
   headword,
   reading,
@@ -299,7 +316,13 @@ const Entries = ({
               </p>
             )}
             {entry.reading !== null && (
-              <WordAudio headword={entry.headword} reading={entry.reading} />
+              <WordAudio
+                entry={entry}
+                reading={entry.reading}
+                features={pack.features}
+                language={language}
+                heading={titled ? "h3" : "h2"}
+              />
             )}
             {entry.reading !== null && (
               <DeckPicker
