@@ -35,6 +35,16 @@ services:
       PYTORCH_HIP_ALLOC_CONF: expandable_segments:True
     ports: ["127.0.0.1:8106:8000"]
 
+  # Speech recognition that catches words the TTS adds or drops (#113, ADR 0007)
+  qwen3-asr:
+    build: { context: ./qwen3-asr, dockerfile: Dockerfile }
+    image: openlinguo-asr-qwen3
+    <<: *radeon
+    environment:
+      MODEL_REPO: Qwen/Qwen3-ASR-1.7B
+      MODEL_REVISION: 7278e1e70fe206f11671096ffdd38061171dd6e5
+    ports: ["127.0.0.1:8121:8000"]
+
 volumes:
   models:
   hf-cache:

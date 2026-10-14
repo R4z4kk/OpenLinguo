@@ -237,7 +237,7 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 6. BYOK CORS differs by provider → documented tested providers; CSP `connect-src` must allow user endpoints (trade-off in ADR).
 7. User submissions copyright → attestation, moderation, takedown.
 8. Homelab exposure → API only, TLS via Traefik, rate limits, backups, monitoring.
-9. Open choices deferred to their milestone: SMTP provider (M7), audio hosting Pages vs R2 vs self-hosted S3 (M3), model download mirroring (M3).
+9. Open choices deferred to their milestone: SMTP provider (M7), model download mirroring (M3). Audio hosting decided in #113: GitHub release assets served by Pages (ADR 0007).
 10. Legal basis verified on primary texts, but not legal advice; watch items re-checked at M10.
 11. Visual-only widgets (pitch curve, decomposition tree, heatmap) need text alternatives (numeric score, tone label, list view).
 

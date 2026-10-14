@@ -42,9 +42,34 @@ Tone training needs reference audio with an analyzable pitch contour. Browser sp
 - Findings carried to the audio packs (#113): a word added without a pause is not caught by trimming. Mitigations to choose there: duration control, and a speech-recognition check that regenerates with another seed and lists the remaining failures for human validation.
 - Other open Mandarin models checked 2026-10-12/13 and excluded by license: F5-TTS, Fish-Speech / Fish Audio S2 Pro, Spark-TTS, ChatTTS, MaskGCT, Llasa, Breeze-TTS-2, Raon-OpenTTS (non-commercial), IndexTTS-2.5 (bilibili license, cloning only).
 
+## Speech-recognition check (#113)
+
+Every generated recording is transcribed by **Qwen3-ASR-1.7B** (Qwen, Apache-2.0, revision `7278e1e`) before it ships. A file passes when the transcript has one character per syllable, each one readable as the expected syllable, tones aside (CC-CEDICT readings; homophones, traditional forms, digits and erhua written without 儿 pass; any other word fails). Tones are left to the pitch module (#114, #115). Qwen3-ASR runs in the pipeline only; the app's speech recognition is decided in #119.
+
+Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones included for their failures). The maintainer labelled by ear the 51 files the recognizers disagreed on; 5 had a word added, missing or changed.
+
+| Recognizer (revision) | License | Wrong files caught (of 5) | False alarms (of 46) | MOSS-TTS samples flagged (of 36) |
+|---|---|---|---|---|
+| Whisper large-v3 (`06f233f`) | Apache-2.0 | 2 | 36 | 4 |
+| **Qwen3-ASR-1.7B** (`7278e1e`) | Apache-2.0 | **5** | 12 | 2 |
+| FireRedASR2-AED (`2304afe`, code FireRedASR2S `4e7d9aa`) | Apache-2.0 | 4 | 10 | 1 |
+
+- Qwen3-ASR missed none. A false alarm costs a regeneration with another seed, at worst a listen; a miss ships a wrong recording.
+- Files all three passed, or all three flagged, were not labelled, and 5 failures is a small sample.
+- All three hear MOSS-TTS's isolated 烫 tàng as 胖 pàng.
+
 ## Consequences
 
 - Recordings never leave the device.
 - Generating audio needs the GPU: about 2–3 s per item on the RX 7900 XTX.
 - One engine to maintain, one voice file pinned in the repository.
-- Audio pack hosting (Pages, R2 or self-hosted S3) and model mirroring are decided in M3 (#113, #119).
+- Model mirroring is decided in #119.
+
+## Audio packs (#113)
+
+- One pack per referential band, one recording per word reading, built by `tts-packs` and checked as above. Words with several readings (405 words, 874 readings in HSK 2025 and GF0025) get no audio for now: MOSS-TTS reads characters only and cannot be told which reading to say. They are listed in `data/gaps/audio-zh.tsv` until the tone classifier (#115) can check what was said.
+- MP3, 48 kbps, mono. Measured on the bake-off words (0.78 s on average): about 5.2 KB per word, against 2.4 KB in Opus at 24 kbps. Opus is fully supported on iOS only since Safari 18.4 ([caniuse](https://caniuse.com/opus), 2026-10-14), and only in CAF before that ([MDN](https://developer.mozilla.org/en-US/docs/Web/Media/Guides/Formats/Audio_codecs)); AAC depends on the system's decoders in Firefox. MP3 plays everywhere.
+- Hosting: zip parts of at most 20 MiB attached to a GitHub release, fetched and checked against their sha256 at build time, then served by Cloudflare Pages from `openlinguo.razakk.fr` (CSP unchanged, no third-party request at runtime). Pages serves files up to 25 MiB and 20,000 files per site on the Free plan ([limits](https://developers.cloudflare.com/pages/platform/limits/), 2026-10-14). Committing the packs would add about 100 MB to the repository at each rebuild; GitHub recommends repositories under 1 GB and releases for large binaries ([GitHub](https://docs.github.com/en/repositories/working-with-files/managing-large-files/about-large-files-on-github)). R2 behind a Worker route was the alternative, at the cost of Cloudflare configuration.
+- License: CC0 1.0. The audio is machine-generated from Apache-2.0 models and a synthetic voice.
+- Machine-readable marking (AI Act art. 50(2), applicable since 2 August 2026; checked on the consolidated text of 27 July 2026, after Regulation (EU) 2026/1744): running MOSS-TTS for our own recordings likely makes the project a provider (art. 3(3), « puts the AI system into service under its own name »; art. 3(11), « for own use »). Each MP3 carries ID3 tags, the pack index too: the IPTC digital source type `trainedAlgorithmicMedia` (« Created using Generative AI », [IPTC](https://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia)) and a « synthetic voice » note. Metadata is one of the techniques recital 133 lists; it can be stripped, so a robust audio watermark (such as AudioSeal) stays an option if this falls short. Not legal advice.
+- `data/audio-zh/packs.json` records the generator, the voice's sha256, the checker, the encoder and the sha256 of the word lists; a test fails when a word list changes after the packs were built.

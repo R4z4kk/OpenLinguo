@@ -7,7 +7,8 @@
     "freshness": "node src/check-freshness.ts",
     "pipeline": "node src/cli.ts",
     "tts-bakeoff": "node src/tts/bakeoff.ts",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "tts-packs": "node src/tts/packs.ts"
   },
   "dependencies": {
     "@openlinguo/core": "workspace:*",

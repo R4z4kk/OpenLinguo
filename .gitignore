@@ -10,3 +10,5 @@ dist/
 apps/web/public/data/
 # TTS bake-off samples and grades (tools/data-pipeline/src/tts/bakeoff.ts)
 tools/tts/.bakeoff/
+# Audio pack recordings, checks and reviews (tools/data-pipeline/src/tts/packs.ts)
+tools/tts/.packs/
