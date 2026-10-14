@@ -60,7 +60,11 @@ const storedZip = (
   return out;
 };
 
-const pack = (words: readonly [word: string, reading: string][]): Uint8Array<ArrayBuffer> =>
+/** `contours` by word; a word without one is written as a pack built before contours existed. */
+const pack = (
+  words: readonly [word: string, reading: string][],
+  contours: ReadonlyMap<string, readonly (number | null)[] | null> = new Map(),
+): Uint8Array<ArrayBuffer> =>
   storedZip([
     {
       name: "index.json",
@@ -73,6 +77,7 @@ const pack = (words: readonly [word: string, reading: string][]): Uint8Array<Arr
             file: `${String(index)}.mp3`,
             word,
             reading,
+            ...(contours.has(word) ? { f0: contours.get(word) } : {}),
           })),
         }),
       ),
@@ -152,6 +157,38 @@ describe("audio packs", () => {
     const index: AudioPackIndex = { release: RELEASE, bands: [hsk1] };
     const states = await bandStates(db, index);
     expect(states.ok && states.value.get("hsk-2025:1")).toBe("installed");
+  });
+
+  it("keeps each recording's pitch contour, null when the pack has none or nothing is voiced", async () => {
+    const contours = new Map([
+      ["你好", [12, null, -30]],
+      ["一", null],
+    ]);
+    const part = pack(
+      [
+        ["你好", "ni3 hao3"],
+        ["一", "yi1"],
+        ["二", "er4"],
+      ],
+      contours,
+    );
+    const hsk1 = await band("hsk-2025", 1, [part]);
+    const name = `audio-zh/${hsk1.parts[0]?.file ?? ""}`;
+    const result = await installBand(
+      db,
+      RELEASE,
+      hsk1,
+      server(new Map([[name, part]])).fetchPart,
+      noProgress,
+      new AbortController().signal,
+    );
+    expect(result).toEqual(ok(null));
+    const stored = await db.wordAudio.bulkGet([
+      wordAudioId("你好", "ni3 hao3"),
+      wordAudioId("一", "yi1"),
+      wordAudioId("二", "er4"),
+    ]);
+    expect(stored.map((row) => row?.f0)).toEqual([[12, null, -30], null, null]);
   });
 
   it("resumes at the part that failed", async () => {

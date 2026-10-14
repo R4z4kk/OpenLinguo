@@ -4,7 +4,7 @@ import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 import { parseArgs, promisify } from "node:util";
-import type { Result } from "@openlinguo/core";
+import { contour, F0_VERSION, type Result } from "@openlinguo/core";
 import { z } from "zod";
 import { dataDir, manifestPath, readManifest, serializeManifest } from "../manifest.ts";
 import { loadCharSyllables, transcriptMatches, type CharSyllables } from "./asr-check.ts";
@@ -20,6 +20,7 @@ import {
   loadWordLists,
   REFERENTIALS,
   severalReadings,
+  syllableCount,
   type Band,
   type Gap,
   type PackItem,
@@ -398,6 +399,16 @@ const encodeMp3 = async (item: PackItem): Promise<Uint8Array> => {
   return new Uint8Array(await readFile(mp3));
 };
 
+/** The recording's pitch contour (core f0.ts); `null` when nothing in it is voiced. */
+const contourOf = async (item: PackItem): Promise<(number | null)[] | null> => {
+  const pcm = decodeWav(new Uint8Array(await readFile(wavPath(item))));
+  if (!pcm.ok) throw new PacksError(`${item.word}: ${pcm.error}`);
+  const result = contour(pcm.value.samples, pcm.value.sampleRate, syllableCount(item));
+  if (result.ok) return [...result.value];
+  if (result.error === "no-voice") return null;
+  throw new PacksError(`${item.word} ${item.reading}: ${result.error}`);
+};
+
 const packBand = async (
   band: Band,
   entries: readonly PackItem[],
@@ -416,18 +427,18 @@ const packBand = async (
   }
   const written = [];
   for (const [index, part] of parts.entries()) {
-    const files = part.map(({ item, mp3 }, at) => ({
-      name: `${String(at)}.mp3`,
-      item,
-      bytes: mp3,
-    }));
+    const files = [];
+    for (const [at, { item, mp3 }] of part.entries()) {
+      files.push({ name: `${String(at)}.mp3`, item, bytes: mp3, f0: await contourOf(item) });
+    }
     const list = {
       digitalSourceType: AI_GENERATED,
       note: SYNTHETIC_NOTE,
-      files: files.map(({ name, item }) => ({
+      files: files.map(({ name, item, f0 }) => ({
         file: name,
         word: item.word,
         reading: item.reading,
+        f0,
       })),
     };
     const zip = storedZip([
@@ -484,6 +495,7 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     voiceSha256: state.voiceSha256,
     asr: state.asr,
     encoder: `${await ffmpegVersion()}, libmp3lame ${MP3_BITRATE} mono, ID3 marked AI-generated`,
+    f0: F0_VERSION,
   };
   const previous = await readParsed(packIndexPath, packIndexSchema.nullable(), null);
   if (
@@ -548,7 +560,7 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     [AUDIO_DATASET]: {
       source: RELEASE_URL,
       license: "CC0-1.0",
-      version: `${RELEASE}: ${generator.tts}, voice ${generator.voiceSha256.slice(0, 12)}, checked by ${generator.asr}, ${generator.encoder}`,
+      version: `${RELEASE}: ${generator.tts}, voice ${generator.voiceSha256.slice(0, 12)}, checked by ${generator.asr}, ${generator.encoder}, contours ${generator.f0}`,
       retrievedAt: new Date().toISOString(),
       maxAgeDays: 365,
       sha256: sha256(indexJson),

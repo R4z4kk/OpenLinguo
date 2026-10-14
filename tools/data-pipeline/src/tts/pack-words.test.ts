@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bandItems, severalReadings, type WordLists } from "./pack-words.ts";
+import { bandItems, severalReadings, syllableCount, type WordLists } from "./pack-words.ts";
 
 const lists: WordLists = {
   "hsk-2025": [
@@ -30,5 +30,12 @@ describe("audio pack words", () => {
       { word: "东西", reading: "dong1 xi5", reason: "several-readings" },
       { word: "㐀", reading: "", reason: "no-reading" },
     ]);
+  });
+
+  it("counts the syllables said, the erhua suffix being said inside the previous one", () => {
+    expect(syllableCount({ word: "一", reading: "yi1" })).toBe(1);
+    expect(syllableCount({ word: "东西", reading: "dong1 xi5" })).toBe(2);
+    expect(syllableCount({ word: "一点儿", reading: "yi1 dian3 r5" })).toBe(2);
+    expect(syllableCount({ word: "女儿", reading: "nu:3 er2" })).toBe(2);
   });
 });

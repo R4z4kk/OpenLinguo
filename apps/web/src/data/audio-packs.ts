@@ -130,13 +130,14 @@ const readPart = async (
   const content = readJson(indexBytes.value, AudioPackContent, `${file}/index.json`);
   if (!content.ok) return content;
   const recordings: Recording[] = [];
-  for (const { file: name, word, reading } of content.value.files) {
+  for (const { file: name, word, reading, f0 } of content.value.files) {
     const audio = await read(name);
     if (!audio.ok) return audio;
     recordings.push({
       id: wordAudioId(word, reading),
       type: "audio/mpeg",
       data: new Uint8Array(audio.value).buffer,
+      f0,
     });
   }
   return ok(recordings);

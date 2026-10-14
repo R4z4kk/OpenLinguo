@@ -86,6 +86,7 @@ describe("loadSession", () => {
       id: wordAudioId(headword, readingKey),
       type: "audio/mpeg",
       data: new ArrayBuffer(4),
+      f0: null,
       bands: ["hsk-2025:1"],
     });
     await db.wordAudio.bulkAdd([packed("天", TIAN.readingKey), packed("你", NI.readingKey)]);

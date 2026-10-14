@@ -13,6 +13,8 @@ export const packIndexSchema = z.strictObject({
     voiceSha256: sha256,
     asr: z.string().min(1),
     encoder: z.string().min(1),
+    /** Pitch contours in each part's index.json (core F0_VERSION); an index built before them holds null. */
+    f0: z.string().min(1).nullable().default(null),
   }),
   /** sha256 in data/manifest.json of each word list when the packs were built. */
   words: z.record(z.enum(Object.values(REFERENTIALS)), sha256),

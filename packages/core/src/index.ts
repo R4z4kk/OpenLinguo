@@ -6,6 +6,7 @@ export {
   type SchedulerFailure,
   type SchedulerVersion,
 } from "./fsrs.ts";
+export { contour, F0_VERSION, POINTS_PER_SYLLABLE, type Contour, type F0Error } from "./f0.ts";
 export {
   LANGUAGE_IDS,
   proficiencyFrameworks,

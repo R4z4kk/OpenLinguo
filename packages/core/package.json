@@ -11,6 +11,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "pitchy": "4.1.0",
     "ts-fsrs": "5.4.2",
     "zod": "^4.6.5"
   }
