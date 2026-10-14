@@ -119,7 +119,9 @@ export const BAKEOFF_SET: readonly BakeoffItem[] = [
 ];
 
 /** Expected spoken pinyin with tone marks, after tone sandhi, one group per word. */
-export const spokenPinyin = (item: BakeoffItem): Result<string, SandhiError> => {
+export const spokenPinyin = (item: {
+  readonly words: readonly ReadingWord[];
+}): Result<string, SandhiError> => {
   const spoken = applySandhi(item.words);
   if (!spoken.ok) return spoken;
   const words: string[] = [];
