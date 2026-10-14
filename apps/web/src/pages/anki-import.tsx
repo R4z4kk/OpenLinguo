@@ -1,4 +1,4 @@
-import { CardType, type Result } from "@openlinguo/core";
+import { PAIRED_TYPES, type PairedType, type Result } from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { Upload } from "lucide-react";
@@ -152,7 +152,7 @@ const CardSelect = ({
   cards,
   onChange,
 }: {
-  readonly type: CardType;
+  readonly type: PairedType;
   readonly noteType: AnkiNoteType;
   readonly cards: CardMapping;
   readonly onChange: (cards: CardMapping) => void;
@@ -228,7 +228,7 @@ const NoteTypeMapping = ({
         ))}
         {cards !== null &&
           mapping.characters !== null &&
-          CardType.options.map((type) => (
+          PAIRED_TYPES.map((type) => (
             <CardSelect
               key={type}
               type={type}

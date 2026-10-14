@@ -9,8 +9,12 @@ const ROLLOVER = 4 * 60 * MINUTE;
 /** Milliseconds since the Unix epoch (UTC), within the `Date` range. */
 const Epoch = z.number().int().min(0).max(8_640_000_000_000_000);
 
-export const CardType = z.enum(["recognition", "recall"]);
+export const CardType = z.enum(["recognition", "recall", "tone"]);
 export type CardType = z.output<typeof CardType>;
+
+/** The cards of a subject created together; a word's tone card comes once its reading has audio. */
+export const PAIRED_TYPES = ["recognition", "recall"] as const satisfies readonly CardType[];
+export type PairedType = (typeof PAIRED_TYPES)[number];
 
 export const Grade = z.enum(["again", "hard", "good", "easy"]);
 export type Grade = z.output<typeof Grade>;
@@ -24,7 +28,7 @@ export type WordKey = { readonly headword: string; readonly readingKey: string }
 /** A note holding its own content; an imported note keeps its Anki guid. */
 export type NoteKey = { readonly note: string };
 
-/** What a card is about: its recognition and recall cards share it. */
+/** What a card is about: its cards share it. */
 export type Subject = WordKey | NoteKey;
 
 export type CardKey = Subject & { readonly language: LanguageId; readonly type: CardType };
@@ -68,9 +72,13 @@ export const Card = z
   });
 export type Card = z.output<typeof Card>;
 
-/** The cards of one subject, created together. */
-export const newCards = (language: LanguageId, subject: Subject): readonly Card[] =>
-  CardType.options.map((type) => {
+/** The cards of one subject of the given types, created together. */
+export const newCards = (
+  language: LanguageId,
+  subject: Subject,
+  types: readonly CardType[] = PAIRED_TYPES,
+): readonly Card[] =>
+  types.map((type) => {
     const key = { ...subjectOf(subject), language, type };
     return { ...key, id: cardId(key) };
   });

@@ -9,6 +9,7 @@ import {
   type CardState,
   type CardType,
   type Subject,
+  type WordKey,
 } from "./srs.ts";
 
 /** What the composer reads of a stored card. */
@@ -28,25 +29,31 @@ export type SessionInput = {
   readonly cards: readonly SessionCard[];
   /** Readings and notes without a started card, in new-card order (personal, level, frequency). */
   readonly newReadings: readonly Subject[];
+  /**
+   * Readings with a recording installed and a tone to hear: only they have a tone card, stored or
+   * new. One without a stored tone card gets one once its first card is started.
+   */
+  readonly toneWords: readonly WordKey[];
   /** New cards per learning day, those already started today included. */
   readonly newLimit: number;
   readonly at: number;
   readonly utcOffsetMinutes: number;
 };
 
-const byId = (a: SessionCard, b: SessionCard): number => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+const byId = (a: { readonly id: string }, b: { readonly id: string }): number =>
+  a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 
 /**
  * Today's session: due cards, most overdue first, then new cards up to the daily limit: the
- * second card of a started subject, then new subjects, recognition first. A subject shows one
- * card per learning day.
+ * other cards of a started subject (recall, tone), then new subjects, recognition first. A subject
+ * shows one card per learning day. A tone card is only offered while its reading has audio.
  */
 export const composeSession = (input: SessionInput): readonly SessionItem[] => {
   const today = learningDay(input.at, input.utcOffsetMinutes);
+  const toned = new Set(input.toneWords.map(subjectId));
+  const cards = input.cards.filter((card) => card.type !== "tone" || toned.has(subjectId(card)));
   const reviewedToday = new Map(
-    input.cards
-      .filter((card) => card.lastReviewDay === today)
-      .map((card) => [subjectId(card), card.id]),
+    cards.filter((card) => card.lastReviewDay === today).map((card) => [subjectId(card), card.id]),
   );
   const taken = new Set<string>();
   const items: SessionItem[] = [];
@@ -62,24 +69,33 @@ export const composeSession = (input: SessionInput): readonly SessionItem[] => {
     return true;
   };
 
-  const started = input.cards.filter((card) => card.phase !== "new");
+  const started = cards.filter((card) => card.phase !== "new");
   for (const card of started
     .filter((card) => dueToday(card.due, input.at, input.utcOffsetMinutes))
     .sort((a, b) => (a.due ?? 0) - (b.due ?? 0) || byId(a, b))) {
     take(card, false);
   }
 
-  let budget = input.newLimit - input.cards.filter((card) => card.firstReviewDay === today).length;
+  let budget = input.newLimit - cards.filter((card) => card.firstReviewDay === today).length;
   const startedOn = new Map<string, string>();
   for (const card of started) {
     const day = startedOn.get(subjectId(card));
     if (card.firstReviewDay !== null && (day == null || card.firstReviewDay < day))
       startedOn.set(subjectId(card), card.firstReviewDay);
   }
-  const waiting = input.cards
-    .filter((card) => card.phase === "new" && startedOn.has(subjectId(card)))
-    .map((card) => ({ card, day: startedOn.get(subjectId(card)) ?? today }))
-    .sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : byId(a.card, b.card)));
+  const hasTone = new Set(cards.filter((card) => card.type === "tone").map(subjectId));
+  const missingTones = input.toneWords
+    .filter((word) => startedOn.has(subjectId(word)) && !hasTone.has(subjectId(word)))
+    .map((word) => {
+      const key = { ...subjectOf(word), language: input.language, type: "tone" } as const;
+      return { card: { ...key, id: cardId(key) }, day: startedOn.get(subjectId(word)) ?? today };
+    });
+  const waiting = [
+    ...cards
+      .filter((card) => card.phase === "new" && startedOn.has(subjectId(card)))
+      .map((card) => ({ card, day: startedOn.get(subjectId(card)) ?? today })),
+    ...missingTones,
+  ].sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : byId(a.card, b.card)));
   for (const { card } of waiting) {
     if (budget <= 0) break;
     if (take(card, true)) budget -= 1;

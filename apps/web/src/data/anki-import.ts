@@ -1,12 +1,13 @@
 import {
   cardId,
-  CardType,
   CURRENT_SCHEDULER,
   err,
   Grade,
   ok,
+  PAIRED_TYPES,
   subjectOf,
   type NoteKey,
+  type PairedType,
   type Result,
   type Review,
   type WordKey,
@@ -38,7 +39,7 @@ export type Role = (typeof ROLES)[number];
 export type FieldMapping = Readonly<Record<Role, number | null>>;
 
 /** Template index whose cards give each card type its review history; `null` gives none. */
-export type CardMapping = Readonly<Record<CardType, number | null>>;
+export type CardMapping = Readonly<Record<PairedType, number | null>>;
 
 /** Media types kept, by file extension; any other media is dropped. */
 const AUDIO_TYPES: ReadonlyMap<string, string> = new Map([
@@ -255,7 +256,7 @@ export const saveMappings = (
       return index === null ? null : (noteType.fields[index] ?? null);
     };
     const cards = cardMappings.get(noteType.id) ?? null;
-    const template = (type: CardType): string | null => {
+    const template = (type: PairedType): string | null => {
       const index = cards?.[type] ?? null;
       return index === null ? null : (noteType.templates[index]?.name ?? null);
     };
@@ -519,7 +520,7 @@ export const planHistory = (
   const cards = Map.groupBy(ankiPackage.cards, (card) => card.noteId);
   const logs = Map.groupBy(ankiPackage.reviews, (review) => review.cardId);
   return items.flatMap((item) =>
-    CardType.options.flatMap((type) => {
+    PAIRED_TYPES.flatMap((type) => {
       let longest: readonly AnkiAnswer[] = [];
       for (const noteId of item.noteIds) {
         const noteType = noteTypes.get(notes.get(noteId)?.noteTypeId ?? "") ?? null;

@@ -5,6 +5,7 @@ import {
   isWord,
   newCards,
   ok,
+  PAIRED_TYPES,
   proficiencyFrameworks,
   replay,
   subjectId,
@@ -76,7 +77,8 @@ export const sameDeckName = (a: string, b: string): boolean => names.compare(a, 
 
 export const entryId = ({ headword, readingKey }: WordKey): string => `${headword}\t${readingKey}`;
 
-const cardIds = (subject: Subject): string[] => newCards("zh", subject).map((card) => card.id);
+const cardIds = (subject: Subject): string[] =>
+  newCards("zh", subject, CardType.options).map((card) => card.id);
 
 /** « My words » first, then the learner's decks by name. */
 const listDecks = async (db: Database): Promise<Deck[]> => [
@@ -131,16 +133,17 @@ export const renameDeck = (
   );
 
 /**
- * Stores the missing cards of readings and notes, and the reviews of their cards not yet in the
- * log, with every card they touch replayed from its merged log. Nothing is written unless every
- * replay succeeds. Returns the number of reviews added.
+ * Stores the missing cards of the given types for readings and notes, and the reviews of their
+ * cards not yet in the log, with every card they touch replayed from its merged log. Nothing is
+ * written unless every replay succeeds. Returns the number of reviews added.
  */
 export const putCards = async (
   db: Database,
   subjects: readonly Subject[],
   reviews: readonly Review[] = [],
+  types: readonly CardType[] = PAIRED_TYPES,
 ): Promise<Result<number, ReviewLogFailure>> => {
-  const cards = subjects.flatMap((subject) => newCards("zh", subject));
+  const cards = subjects.flatMap((subject) => newCards("zh", subject, types));
   const stored = await db.cards.bulkGet(cards.map((card) => card.id));
   const logged = await db.reviews.bulkGet(reviews.map((review) => review.id));
   const added = Map.groupBy(
@@ -189,14 +192,15 @@ const dropUnfiled = async (
   if (filed === 0 && level === null) await db.cards.bulkDelete(cardIds(subject));
 };
 
-/** Stores the cards of a band word the session shows for the first time. */
+/** Stores the cards the session shows for the first time: a band word's, or a reading's tone card. */
 export const introduceWord = (
   db: Database,
   subject: Subject,
+  types: readonly CardType[] = PAIRED_TYPES,
 ): Promise<Result<null, ReviewLogFailure>> =>
   guarded(() =>
     db.transaction("rw", [db.cards, db.reviews], async () => {
-      const stored = await putCards(db, [subject]);
+      const stored = await putCards(db, [subject], [], types);
       return stored.ok ? ok(null) : stored;
     }),
   );
@@ -301,7 +305,7 @@ export const deckCounts = (
           (await db.entries
             .where(field)
             .equals(index + 1)
-            .count()) * CardType.options.length,
+            .count()) * PAIRED_TYPES.length,
         learning: 0,
         due: 0,
       })),
