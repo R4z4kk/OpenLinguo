@@ -1,5 +1,6 @@
 // Packs the committed datasets into the files the app imports on first run (public/data/),
-// and the datasets it downloads on demand (public/data/wiktionary-zh/, public/data/jieba-names/).
+// and the datasets it downloads on demand (public/data/wiktionary-zh/, public/data/jieba-names/,
+// public/data/audio-zh/).
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
@@ -14,6 +15,7 @@ import {
   type OnDemandFile,
   type OnDemandIndex,
 } from "../src/data/format.ts";
+import { publishAudioPacks } from "./audio-packs.ts";
 import { DATA, loadDictionary, readRows } from "./sources.ts";
 
 const OUT = new URL("../public/data/", import.meta.url);
@@ -127,6 +129,7 @@ const main = async (): Promise<void> => {
   await writeFile(new URL("index.json", OUT), `${JSON.stringify(index, null, 2)}\n`, "utf8");
   await writeOnDemand(extended);
   await writeOnDemand(names);
+  const audio = await publishAudioPacks(OUT);
   for (const [source, published] of LICENSES) {
     const target = new URL(`licenses/${published}`, OUT);
     await mkdir(new URL(".", target), { recursive: true });
@@ -139,6 +142,7 @@ const main = async (): Promise<void> => {
   console.log(
     `data: proper names ${String(names.rows)} in ${payloadOf(names)}, downloaded on demand`,
   );
+  console.log(audio);
   const skipped = dictionary.skipped.map(([simplified, , reading]) => `${simplified} [${reading}]`);
   console.log(
     `data: ${String(entries.length)} entries (${String(dictionary.lexicon.length)} lexicon headwords), ${String(characters.length)} characters, ${String(strokes.data.length)} stroke orders, ${String(files.length)} files, version ${index.version.slice(0, 12)}`,

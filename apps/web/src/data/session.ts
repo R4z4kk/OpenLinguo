@@ -18,17 +18,18 @@ import {
   type WordKey,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
+import { wordAudioId, type AudioSource } from "./audio-packs.ts";
 import { todayActivity } from "./daily-goal.ts";
 import type { Database, NoteContent } from "./database.ts";
 import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks.ts";
 import { toDictEntry } from "./dictionary.ts";
 import { guarded, recordReview, type ReviewLogFailure } from "./review-log.ts";
 
-/** A word with its entry, or a note with its content; `audio`: the id of audio a deck gives it. */
+/** A word with its entry, or a note with its content; `audio`: what plays it (see AudioSource). */
 export type ReviewItem = (
   | (Extract<SessionItem, WordKey> & { readonly entry: DictEntry })
   | (Extract<SessionItem, NoteKey> & { readonly content: NoteContent })
-) & { readonly state: CardState; readonly audio: string | null };
+) & { readonly state: CardState; readonly audio: AudioSource | null };
 
 /** `skipped`: cards whose reading left the dictionary, or whose note lost its content. */
 export type Session = { readonly items: readonly ReviewItem[]; readonly skipped: number };
@@ -86,10 +87,31 @@ export const loadSession = (
         .filter((word) => voiced.has(word.id))
         .map((word) => [subjectId(word), word.id] as const),
     );
+    // One `equals` per key: `anyOf` walks the whole index in WebKit.
+    const packVoiced = new Set(
+      (
+        await Promise.all(
+          words.map((word) =>
+            db.wordAudio
+              .where(":id")
+              .equals(wordAudioId(word.headword, word.readingKey))
+              .primaryKeys(),
+          ),
+        )
+      ).flat(),
+    );
+    /** A deck's own audio comes first, then the audio pack's recording of the reading. */
+    const sourceOf = (item: SessionItem): AudioSource | null => {
+      const deck = audioOf.get(subjectId(item)) ?? null;
+      if (deck !== null) return { table: "audio", id: deck };
+      if ("note" in item) return null;
+      const pack = wordAudioId(item.headword, item.readingKey);
+      return packVoiced.has(pack) ? { table: "wordAudio", id: pack } : null;
+    };
     const joined = items.flatMap((item): ReviewItem[] => {
       const shared = {
         state: states.get(item.cardId) ?? NEW_CARD_STATE,
-        audio: audioOf.get(subjectId(item)) ?? null,
+        audio: sourceOf(item),
       };
       if ("note" in item) {
         const note = contents.get(item.note);

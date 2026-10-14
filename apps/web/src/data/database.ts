@@ -82,6 +82,24 @@ export type StoredAudio = {
   readonly data: ArrayBuffer;
 };
 
+/** A word reading's recording from an audio pack, kept while one of its bands is installed. */
+export type StoredWordAudio = {
+  /** `headword \t readingKey` */
+  readonly id: string;
+  readonly type: string;
+  readonly data: ArrayBuffer;
+  /** Installed bands holding it: `hsk-2025:1`. */
+  readonly bands: readonly string[];
+};
+
+/** An audio pack band being installed or installed: the parts stored so far, by sha256. */
+export type StoredAudioBand = {
+  /** `hsk-2025:1` */
+  readonly id: string;
+  readonly release: string;
+  readonly parts: readonly string[];
+};
+
 /** A data file fully imported, by content hash. */
 export type ImportRecord = { readonly sha256: string };
 
@@ -130,6 +148,8 @@ export type Database = Dexie & {
   extendedMeta: EntityTable<OnDemandMetaRecord, "key">;
   names: EntityTable<StoredName, "id">;
   namesMeta: EntityTable<OnDemandMetaRecord, "key">;
+  wordAudio: EntityTable<StoredWordAudio, "id">;
+  audioBands: EntityTable<StoredAudioBand, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -180,6 +200,7 @@ export const openDatabase = (name: string): Database => {
   db.version(9).stores({ deckWords: "id, deckId, [headword+readingKey], note", notes: "id" });
   db.version(10).stores({ extendedWords: "id, simplified, file", extendedMeta: "key" });
   db.version(11).stores({ names: "id, word, file", namesMeta: "key" });
+  db.version(12).stores({ wordAudio: "id, *bands", audioBands: "id" });
   return db;
 };
 

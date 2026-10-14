@@ -106,3 +106,37 @@ export type NameKind = z.output<typeof NameKind>;
 /** `[word, kind]`: a proper name of jieba's dictionary that no shipped lexicon has. */
 export const NameRow = z.tuple([z.string().min(1), NameKind]);
 export type NameRow = z.output<typeof NameRow>;
+
+const Sha256 = z.string().regex(/^[0-9a-f]{64}$/u);
+
+/** `data/audio-zh/index.json`: the word audio pack of each referential band, downloaded on request. */
+export const AudioPackIndex = z.object({
+  release: z.string().min(1),
+  bands: z.array(
+    z.object({
+      referential: z.enum(["hsk-2025", "gf0025-2021"]),
+      level: z.number().int().min(1),
+      entries: z.number().int().nonnegative(),
+      parts: z
+        .array(
+          z.object({
+            file: z.string().regex(/^audio-zh-[a-z0-9-]+\.zip$/u),
+            bytes: z.number().int().positive(),
+            sha256: Sha256,
+          }),
+        )
+        .min(1),
+    }),
+  ),
+});
+export type AudioPackIndex = z.output<typeof AudioPackIndex>;
+export type AudioPackBand = AudioPackIndex["bands"][number];
+
+/** `index.json` in a pack part: its recordings, marked as AI-generated (AI Act art. 50(2), ADR 0007). */
+export const AudioPackContent = z.object({
+  digitalSourceType: z.string().min(1),
+  note: z.string(),
+  files: z.array(
+    z.object({ file: z.string().min(1), word: z.string().min(1), reading: z.string().min(1) }),
+  ),
+});
