@@ -359,7 +359,8 @@ const review = async (port: number): Promise<void> => {
 
 const ffmpegVersion = async (): Promise<string> => {
   try {
-    return (await run("ffmpeg", ["-version"])).stdout.split("\n")[0]?.trim() ?? "ffmpeg";
+    const { stdout } = await run("ffmpeg", ["-version"]);
+    return /^ffmpeg version \S+/u.exec(stdout)?.[0] ?? "ffmpeg";
   } catch (error) {
     throw new PacksError(
       `ffmpeg is needed to encode the packs (not found on PATH): ${String(error)}`,
