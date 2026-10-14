@@ -87,9 +87,9 @@ Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots
 - Levels come from the transcription [harukicoder/hsk30](https://github.com/harukicoder/hsk30) (MIT, created 2026-09-01) pinned at commit `36c0d11`, which extracted the PDF and validated its per-level entry counts against the published totals (300 / 500 / 1,000 / 2,000 / 3,600 / 5,400 / 11,000).
 - What we verify ourselves: 3,088 recognition characters with the per-level counts 246 / 125 / 284 / 441 / 431 / 413 / 1,148; 10,896 distinct words (the 11,000 entries include homographs); levels 1–7 with the lowest level kept; every graded reading exists in CC-CEDICT. The exact per-level entry totals cannot be recomputed from the collapsed transcription.
 - The transcription's pinyin is truncated for some words (下雨 → `xià`); it is only used to choose between CC-CEDICT readings of polyphones, and unresolved words are listed in `data/hsk-2025-words/issues.tsv`.
-- Permission to extract and redistribute the word → level and character → level facts has been requested from CTI (kaoshi@chinesetest.cn). If granted, the pipeline switches to the official PDF with exact validation.
+- Permission to extract and redistribute the word → level and character → level facts was requested from CTI (kaoshi@chinesetest.cn). CTI declined (reply logged 2026-10-14): any use of HSK content needs official authorization, and no such service is offered for now. The reply asks for no removal, so the transcription stays and the official PDF is not used.
 - The GF0025-2021 national standard (Ministry of Education PDF, no restriction, scanned pages) is a different list: 41.5% of shared words change level in the 2025 syllabus, so it is not used for exam levels.
-- Only the factual word→level and character→level mapping is stored, with attribution. No editorial content, tasks, topics or grammar material is reproduced. Takedown on request from the issuing body.
+- Only the factual word→level and character→level mapping is stored, with attribution. No editorial content, tasks, topics or grammar material is reproduced. The about page states that OpenLinguo is not affiliated with nor endorsed by CTI or CLEC. Takedown on request from the issuing body.
 
 ### GF0025-2021 standard
 

@@ -291,6 +291,8 @@ export const en = {
     credits: "Data and fonts",
     shareAlike:
       "The dictionary combines share-alike sources and is distributed under CC BY-SA 4.0. The license texts of the bundled data are linked below.",
+    notAffiliated:
+      "OpenLinguo is not affiliated with, nor endorsed by, Chinese Testing International (CTI) or the Center for Language Education and Cooperation (CLEC). HSK levels are given for reference only.",
   },
   read: { title: "Read", intro: "Graded texts and the reader." },
   progress: {

@@ -301,6 +301,8 @@ export const fr: Messages = {
     credits: "Données et polices",
     shareAlike:
       "Le dictionnaire combine des sources en partage à l’identique et est distribué sous CC BY-SA 4.0. Les textes des licences des données incluses sont liés ci-dessous.",
+    notAffiliated:
+      "OpenLinguo n’est pas affilié à Chinese Testing International (CTI) ni au Center for Language Education and Cooperation (CLEC), et n’est pas approuvé par eux. Les niveaux HSK sont indiqués à titre de référence.",
   },
   read: { title: "Lire", intro: "Textes gradués et lecteur." },
   progress: {
