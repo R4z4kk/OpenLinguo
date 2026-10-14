@@ -37,6 +37,11 @@ describe("transcriptMatches", () => {
     expect(transcriptMatches(chars, "yi1 ge5", "")).toBe(false);
   });
 
+  it("counts other letters as a word", () => {
+    expect(transcriptMatches(chars, "ma3", "a吗")).toBe(false);
+    expect(transcriptMatches(chars, "ma3", "town")).toBe(false);
+  });
+
   it("refuses another syllable", () => {
     expect(transcriptMatches(chars, "ma1", "点")).toBe(false);
   });

@@ -6,7 +6,6 @@ type CedictRow = readonly [simplified: string, traditional: string, reading: str
 /** Toneless syllables of every one-character CC-CEDICT headword, simplified and traditional forms. */
 export type CharSyllables = ReadonlyMap<string, ReadonlySet<string>>;
 
-const HAN = /\p{Script=Han}/u;
 const DIGITS = "零一二三四五六七八九";
 
 /** "lu:4" and "lü4" give "lü"; the erhua suffix "r5" counts as 儿's own "er". */
@@ -39,10 +38,11 @@ export const loadCharSyllables = async (): Promise<CharSyllables> => {
   return charSyllables(shards.flatMap((shard) => JSON.parse(shard) as CedictRow[]));
 };
 
-const hanOf = (text: string): string[] =>
-  Array.from(text)
-    .map((char) => (/[0-9]/u.test(char) ? (DIGITS[Number(char)] ?? char) : char))
-    .filter((char) => HAN.test(char));
+/** One token per Chinese character or digit; a run of other letters ("a吗", "town") is one word that never matches. */
+const tokensOf = (text: string): string[] =>
+  (text.match(/\p{Script=Han}|[0-9]|[^\p{Script=Han}\P{L}]+/gu) ?? []).map((token) =>
+    /^[0-9]$/u.test(token) ? (DIGITS[Number(token)] ?? token) : token,
+  );
 
 const sameSyllables = (
   chars: CharSyllables,
@@ -63,7 +63,7 @@ export const transcriptMatches = (
   transcript: string,
 ): boolean => {
   const syllables = reading.split(" ");
-  const heard = hanOf(transcript);
+  const heard = tokensOf(transcript);
   return (
     sameSyllables(chars, heard, syllables.map(toneless)) ||
     sameSyllables(chars, heard, syllables.filter((syllable) => syllable !== "r5").map(toneless))
