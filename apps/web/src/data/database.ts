@@ -88,6 +88,8 @@ export type StoredWordAudio = {
   readonly id: string;
   readonly type: string;
   readonly data: ArrayBuffer;
+  /** Reference pitch contour (core f0.ts), kept for the pitch exercises; null when the pack has none. */
+  readonly f0: readonly (number | null)[] | null;
   /** Installed bands holding it: `hsk-2025:1`. */
   readonly bands: readonly string[];
 };

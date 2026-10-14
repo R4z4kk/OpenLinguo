@@ -17,6 +17,10 @@ export const isReferential = (value: string): value is Referential => value in R
 
 export const itemKey = ({ word, reading }: PackItem): string => `${word}\t${reading}`;
 
+/** Spoken syllables: the erhua "r5" is said inside the syllable before it. */
+export const syllableCount = ({ reading }: PackItem): number =>
+  reading.split(" ").filter((syllable) => syllable !== "r5").length;
+
 export const loadWordLists = async (): Promise<WordLists> => {
   const load = async (dataset: string): Promise<GradedWord[]> => {
     const dir = new URL(`${dataset}/`, dataDir);

@@ -137,6 +137,12 @@ export const AudioPackContent = z.object({
   digitalSourceType: z.string().min(1),
   note: z.string(),
   files: z.array(
-    z.object({ file: z.string().min(1), word: z.string().min(1), reading: z.string().min(1) }),
+    z.object({
+      file: z.string().min(1),
+      word: z.string().min(1),
+      reading: z.string().min(1),
+      /** Pitch contour (core f0.ts): null when nothing in the recording is voiced or the pack predates it. */
+      f0: z.array(z.number().int().nullable()).nullable().default(null),
+    }),
   ),
 });
