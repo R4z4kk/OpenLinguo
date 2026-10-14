@@ -35,34 +35,15 @@ services:
       PYTORCH_HIP_ALLOC_CONF: expandable_segments:True
     ports: ["127.0.0.1:8106:8000"]
 
-  # Speech recognition to catch words the TTS adds (#113)
-  whisper:
-    build: { context: ./asr-hf, dockerfile: Dockerfile }
-    image: openlinguo-asr-hf
-    <<: *radeon
-    environment:
-      MODEL_KIND: whisper
-      MODEL_REPO: openai/whisper-large-v3
-      MODEL_REVISION: 06f233fe06e710322aca913c1bc4249a0d71fce1
-    ports: ["127.0.0.1:8120:8000"]
-
+  # Speech recognition that catches words the TTS adds or drops (#113, ADR 0007)
   qwen3-asr:
-    image: openlinguo-asr-hf
+    build: { context: ./qwen3-asr, dockerfile: Dockerfile }
+    image: openlinguo-asr-qwen3
     <<: *radeon
     environment:
-      MODEL_KIND: qwen3-asr
       MODEL_REPO: Qwen/Qwen3-ASR-1.7B
       MODEL_REVISION: 7278e1e70fe206f11671096ffdd38061171dd6e5
     ports: ["127.0.0.1:8121:8000"]
-
-  firered-asr:
-    build: { context: ./firered-asr, dockerfile: Dockerfile }
-    image: openlinguo-asr-firered
-    <<: *radeon
-    environment:
-      MODEL_REPO: FireRedTeam/FireRedASR2-AED
-      MODEL_REVISION: 2304afed56eacfee6256dee5937ed22ffa0b64ec
-    ports: ["127.0.0.1:8122:8000"]
 
 volumes:
   models:
