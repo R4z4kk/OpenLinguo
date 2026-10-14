@@ -111,7 +111,8 @@ const startService = async <T>(
   service: string,
   health: () => Promise<Result<T, string>>,
 ): Promise<T> => {
-  await compose("up", "-d", service);
+  // The images are built locally (tools/tts), never pulled from a registry.
+  await compose("up", "-d", "--pull", "never", service);
   const deadline = Date.now() + SERVICE_TIMEOUT_MS;
   let last = "";
   while (Date.now() < deadline) {
