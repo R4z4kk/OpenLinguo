@@ -6,9 +6,11 @@
   "scripts": {
     "freshness": "node src/check-freshness.ts",
     "pipeline": "node src/cli.ts",
+    "tone-model": "node src/tones/tones.ts model",
+    "tones": "node src/tones/tones.ts",
     "tts-bakeoff": "node src/tts/bakeoff.ts",
-    "typecheck": "tsc -p tsconfig.json",
-    "tts-packs": "node src/tts/packs.ts"
+    "tts-packs": "node src/tts/packs.ts",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@openlinguo/core": "workspace:*",

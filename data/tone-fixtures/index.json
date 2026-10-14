@@ -1,0 +1,2609 @@
+{
+  "license": "CC0-1.0",
+  "source": "Lingua Libre recordings of Mandarin on Wikimedia Commons, Category:Lingua_Libre_pronunciation-cmn",
+  "retrievedAt": "2026-10-14",
+  "processing": "original WAV 48 kHz mono; silence trimmed to 0.1 s around the first utterance; mean of 3 samples to 16 kHz",
+  "recordings": [
+    {
+      "file": "001a12176800.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "姓",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%A7%93.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "02b7b83471d1.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "俩",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BF%A9.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "03c66a95ff9f.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "去",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8E%BB.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "05532f5e2b7f.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "贵",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%B4%B5.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "05ee240c12b7.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "而",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%80%8C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "075f170e9695.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "表",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%A1%A8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "07fc4e0fa8c7.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "坠",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%9D%A0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "08350df6a6e3.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "棵",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%A3%B5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "098fc08d2fea.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "满",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%BB%A1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "0b2feef086a8.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "纸",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%BA%B8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "0b923ce570ef.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "厚",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%8E%9A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "0eac58591b0f.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "新",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%96%B0.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "1105589f2aa6.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "系",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%B3%BB.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "11377fea2f2e.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "做",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%81%9A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1170526b7e19.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "他",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BB%96.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "11a28c65095f.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "淡",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%B7%A1.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "134e2de78e05.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "毛",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%AF%9B.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "149a68de9e93.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "找",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%89%BE.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "156ab2003c3f.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "遍",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%81%8D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "16612eccc49c.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "条",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9D%A1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "16d61149a4e9.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "烧",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%83%A7.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "171ee4734ba4.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "使",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BD%BF.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "18658615844c.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "敢",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%95%A2.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "18ab02f075ed.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "寄",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%AF%84.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1900e9d923d3.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "这",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%BF%99.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "198ddf16570c.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "无",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%97%A0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1a15977e26ed.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "零",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E9%9B%B6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1aa974e04490.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "都",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E9%83%BD.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1b7104976655.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "件",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BB%B6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1bb426e45c9a.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "以",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BB%A5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1d034a5bb3d9.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "面",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E9%9D%A2.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1d42a080d4c6.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "挺",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8C%BA.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "1ec8ce4a6c25.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "位",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BD%8D.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "1efd67a2c66b.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "猜",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%8C%9C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "209a5893b487.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "停",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%81%9C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "20d46c3946c2.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "笔",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%AC%94.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "2139ad3914d6.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "会",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BC%9A.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "241f6e366050.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "张",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%BC%A0.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "245c3ddb3881.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "尝",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%B0%9D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "2460a6b4c0b8.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "懒",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%87%92.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "2501276120e4.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "早",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%97%A9.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "269922cf9c59.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "桥",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%A1%A5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "2743432c6c43.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "朱",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9C%B1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "27af6873f4f1.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "狗",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%8B%97.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "2955ec8e7d67.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "学",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%AD%A6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "29bb03b810a6.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "之",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%B9%8B.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "29ecd1ecab6a.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "找",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%89%BE.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "2a70b5b357c1.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "家",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%AE%B6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "2ad105c6ce75.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "早",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%97%A9.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "2d026fa241de.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "篇",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%AF%87.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "2d7f97b46395.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "朱",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9C%B1.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "2e13f3a1da8a.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "先",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%85%88.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "3158c17c71e5.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "辆",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%BE%86.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "32154153326e.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "糖",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%B3%96.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "3235626cda06.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "苦",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%8B%A6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "327272b3a3ce.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "卖",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8D%96.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "32fa9dcce003.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "破",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%A0%B4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "334fd3da0738.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "却",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%8D%B4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "337adae772c6.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "先",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%85%88.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "34a45352c4c2.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "再",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%86%8D.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "34c720c4a682.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "辣",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%BE%A3.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "35a14467a20a.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "面",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%9D%A2.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "36d43bc75858.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "倍",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%80%8D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "37a4cf4a832f.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "去",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8E%BB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "3a1d1e0c0268.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "林",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9E%97.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "3de5c09c59e6.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "死",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%AD%BB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "402037c026c4.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "举",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%B8%BE.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "42d21384a6c1.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "日",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%97%A5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "45555448fd80.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "连",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%BF%9E.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "45825c1157d6.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "输",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%BE%93.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "471578be5b1e.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "贵",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%B4%B5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "476c2fa24daa.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "饿",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%A5%BF.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "48412ad810b4.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "见",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%A7%81.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "494b3bfadcd6.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "碗",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%A2%97.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "498551f795ee.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "忙",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%BF%99.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "4a5b34463c7c.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "五",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BA%94.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "4c0c0aa0958d.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "十",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8D%81.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "4c54154a6031.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "青",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E9%9D%92.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "4c9c95e01014.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "省",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%9C%81.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "4e537b2b3b25.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "双",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8F%8C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "4ee560405098.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "试",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%AF%95.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "4ef0487f4a89.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "方",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%96%B9.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "4f2ae6a52ccc.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "鹹",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%B9%B9.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "4f7b44b82884.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "使",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BD%BF.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "501312183204.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "来",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9D%A5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "51e732c59cda.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "咸",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%92%B8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "52572e240a26.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "就",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%B0%B1.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "53462f74e531.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "辣",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%BE%A3.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "554ae6627dbc.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "完",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%AE%8C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "5557cc0436bb.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "会",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BC%9A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5700c3ef5688.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "四",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%9B%9B.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "57d2b2a5b5da.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "有",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9C%89.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "58e1c42375f6.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "试",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%AF%95.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "59627834c267.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "双",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8F%8C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "597e55b3f82d.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "做",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%81%9A.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "5aaa37785446.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "晚",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%99%9A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5b2feb01cc55.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "富",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%AF%8C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5b4806a42246.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "在",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%9C%A8.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "5bbe3ad2ca3f.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "二",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BA%8C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5bc2731978c3.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "脱",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%84%B1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5bfd8ec67181.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "或",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%88%96.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5eb7a7ed2692.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "响",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%93%8D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5f70b0eb9dcb.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "谁",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%B0%81.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "5fb684637202.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "见",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%A7%81.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "5fe7cac39a3d.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "系",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%B3%BB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "609212a39e42.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "田",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%94%B0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "6667977150a6.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "本",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9C%AC.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "6675231afd34.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "由",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%94%B1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "683a9f629f62.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "想",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%83%B3.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "68880f3087f6.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "菜",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%8F%9C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "68e27d520252.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "有",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9C%89.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "6959f5cc8a9b.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "戴",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%88%B4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "6e6013399953.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "赶",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%B5%B6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "6f3749557447.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "忙",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%BF%99.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7157ed3819e5.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "等",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%AD%89.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "734d92897020.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "各",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%90%84.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "74c0279beb5f.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "汤",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%B1%A4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "74e6649cf742.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "丢",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%B8%A2.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "7517908ce31d.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "也",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%B9%9F.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "793fd61b490d.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "十",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8D%81.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "798745f09e49.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "大",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%A4%A7.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7a211866c2fb.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "方",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%96%B9.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7a333bb5bdd7.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "年",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%B9%B4.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7aca2a27c713.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "课",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%AF%BE.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7d036332153b.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "买",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%B9%B0.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7d30f8552032.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "事",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BA%8B.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "7d879e06bcf2.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "二",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BA%8C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "7e94921bf078.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "刚",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%88%9A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "815f380b30d3.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "光",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%85%89.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "81b18724de75.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "及",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8F%8A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "837e10ad931a.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "云",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BA%91.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "85ac44b648d7.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "晚",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%99%9A.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "87b9cfd8b099.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "取",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%8F%96.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "88aff90409de.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "够",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%A4%9F.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "88cbb9c84eb2.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "困",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%9B%B0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "88d61c08e30c.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "叁",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8F%81.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "891adfd7d64f.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "您",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%82%A8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "895d0dc924d9.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "谁",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%B0%81.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "897d686d2187.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "事",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BA%8B.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "89f50192b075.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "掉",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8E%89.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8a05b9eadf79.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "份",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BB%BD.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8ba7c47dd258.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "还",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%BF%98.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8bcad493e9a9.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "啥",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%95%A5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8c28201f0a07.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "菜",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%8F%9C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "8d0f37dbafcf.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "段",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%AE%B5.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8d2ae6cc2a08.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "七",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%B8%83.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "8d5700f83d17.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "热",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%83%AD.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "8d9690541ec4.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "收",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%94%B6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8dbc5e5e8fa1.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "九",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%B9%9D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "8e6e0a6bc85c.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "能",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%83%BD.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "8f13e5f8c646.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "元",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%85%83.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "902411433ab1.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "是",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%98%AF.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "90fa5d10e007.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "茶",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%8C%B6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "91b8a86516b0.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "家",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%AE%B6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "929621119b01.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "弄",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%BC%84.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "92dbc7830340.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "卖",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8D%96.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "934b990ed533.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "後",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%BE%8C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "938dbda5c2fa.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "青",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%9D%92.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "945ebea9f2fe.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "叁",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8F%81.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "975f83c7401c.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "跟",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%B7%9F.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "9814b9db8806.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "八",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%85%AB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "98a166b7dbd3.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "再",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%86%8D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "9902f09193b8.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "来",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9D%A5.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "9940498fb5b0.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "给",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%BB%99.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "99ab41669bc4.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "白",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%99%BD.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "9a0df2bc81c4.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "吃",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%90%83.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "9af93c950f44.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "辆",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%BE%86.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "9b708753db5e.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "年",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%B9%B4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "9ce2ebf249ae.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "扔",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%89%94.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "9ecbd73a62a0.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "都",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%83%BD.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "9ef3f0af4b9d.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "穿",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%A9%BF.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "9f1c2c00fd29.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "交",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BA%A4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "9f5e51060ed3.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "刻",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%88%BB.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "9fe4fd3928d5.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "低",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%BD%8E.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "a0e30216fe81.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "半",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8D%8A.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "a236b96b97df.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "我",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%88%91.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "a2c1e2795d2b.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "叫",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8F%AB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "a35f40b6a26c.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "课",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%AF%BE.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "a36fc730d226.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "林",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9E%97.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "a4a36a4d3418.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "吃",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%90%83.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "a594fd6a25a7.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "表",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%A1%A8.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "a6dbcf3aa5fa.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "笨",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%AC%A8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "a8f091c7ffb5.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "田",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%94%B0.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "a9d665fd75ce.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "在",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%9C%A8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "a9f3ad820b8b.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "甜",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%94%9C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "aa1db2a07a12.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "乱",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E4%B9%B1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "aa9d9b44565b.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "本",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9C%AC.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "aac12c380702.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "四",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%9B%9B.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "aacfe87c4c43.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "新",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%96%B0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ab659babe46a.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "赢",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%B5%A2.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "abdceb8c2c13.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "钟",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%92%9F.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "accc6b44f016.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "坏",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%9D%8F.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "ad1ed90cd4db.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "叫",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8F%AB.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "ade50531998f.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "剩",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%89%A9.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ae243838294f.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "件",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BB%B6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "aefb901d3764.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "枝",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9E%9D.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "af581e4ee4fe.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "是",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%98%AF.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "af95f616c11e.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "等",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%AD%89.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "b03dceba2985.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "敲",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%95%B2.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b08393ec822a.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "内",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%86%85.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b11af84fb203.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "荤",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%8D%A4.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b13f39a17810.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "五",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BA%94.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b18341292876.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "躺",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%BA%BA.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b19ff4222188.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "钟",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E9%92%9F.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b25118b7d6a7.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "跟",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%B7%9F.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b4a52681c641.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "抱",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8A%B1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b64e4b34ea95.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "算",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%AE%97.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "b769af9455c8.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "你",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%BD%A0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b7d49282393a.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "零",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%9B%B6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "b81da58c1073.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "白",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%99%BD.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "b86ab9601944.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "买",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%B9%B0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "b974a299133f.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "帅",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%B8%85.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bb5a2356e5e0.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "或",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%88%96.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "bc14e83cfacf.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "笔",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%AC%94.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bc6039aeb573.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "刻",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%88%BB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bc68889187bf.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "陪",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%99%AA.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bd4f9b1c2b10.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "想",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%83%B3.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "be3198b04986.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "照",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%85%A7.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bf010972b956.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "棒",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%A3%92.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bf12c01e5cc3.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "汤",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%B1%A4.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "bf302f456f30.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "酸",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%85%B8.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "bf34575d7b8c.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "嗨",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%97%A8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "bf8096bf239d.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "也",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%B9%9F.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c0a1a12ffaba.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "舔",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%88%94.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c1365a34e075.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "我",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%88%91.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c33b7ef6314f.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "指",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8C%87.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c4f9b9c08c0f.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "他",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BB%96.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "c55bdfd69d26.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "坏",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%9D%8F.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c56b5e817547.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "盐",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%9B%90.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c575e8c0df98.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "您",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%82%A8.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "c76c0851b6e2.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "穿",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%A9%BF.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "c84d0b3a1db2.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "橙",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%A9%99.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ca55f996ae7c.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "词",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%AF%8D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "caa82bd9de04.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "八",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%85%AB.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "cb17ec0bd73b.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "谈",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%B0%88.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "cca5770266f2.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "火",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%81%AB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "cd965d5fc3fe.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "太",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%A4%AA.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "cde3258384bc.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "秒",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%A7%92.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ce9f60d24fa2.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "轻",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%BD%BB.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "cf0fb9adbf1e.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "段",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%AE%B5.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "d45f6e82ef22.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "逛",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%80%9B.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d48b3c65a83d.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "你",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%BD%A0.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "d5699eec79f2.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "绿",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%BB%BF.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "d5c6eae9616f.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "赚",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%B5%9A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d67bea3e94a9.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "等",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%AD%89.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d6b8ef23f51a.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "剑",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%89%91.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d70807305d68.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "苦",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%8B%A6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d71884c0f6dc.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "租",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%A7%9F.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d8b7c856d1ef.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "留",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%95%99.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "d936460f4e32.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "这",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E8%BF%99.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "da9f924921e6.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "後",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%BE%8C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "dacf01b43475.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "还",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%BF%98.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "dc1dd051a1a8.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "及",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E5%8F%8A.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "dd61d5480549.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "七",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E4%B8%83.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ddac9d25dafa.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "张",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%BC%A0.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "de251823af65.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "肉",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%82%89.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "dfd19d7eda33.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "大",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%A4%A7.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e04115f99a22.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "酸",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%85%B8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e090da463a86.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "推",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8E%A8.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e11ba0bc3471.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "条",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%9D%A1.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "e12fc3f59d68.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "瓜",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%93%9C.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "e1f052905dc6.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "书",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%B9%A6.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "e2bd99204e25.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "狗",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%8B%97.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e39d259972ec.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "给",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%BB%99.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "e3a3deafed1c.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "鱼",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E9%B1%BC.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "e4c4ff7174ca.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "醒",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%86%92.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e52f47b438cb.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "座",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%BA%A7.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e6f125726150.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "存",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%AD%98.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e7c08e9c897c.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "万",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%B8%87.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "e7caa772d952.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "香",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%A6%99.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "e82fb7ad6d32.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "九",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E4%B9%9D.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "ea0626065cef.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "词",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E8%AF%8D.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "ec761a4d70e7.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "骗",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E9%AA%97.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ee64e9417a1d.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "学",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%AD%A6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "eeae3856af19.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "半",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%8D%8A.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "ef44450ad239.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "热",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%83%AD.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f0b9623cee1a.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "碗",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E7%A2%97.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f0bfc49460bf.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "抬",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8A%AC.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f1ea271e0713.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "刀",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E5%88%80.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f23a6424cd1f.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "姓",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E5%A7%93.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f2d6c70e4137.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "深",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%B7%B1.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f6424a61cc63.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "行",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E8%A1%8C.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "f9c3ef3faf97.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "纸",
+      "tone": 3,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E7%BA%B8.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    },
+    {
+      "file": "fafc908a2448.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "梦",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%A2%A6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "fb1803c37c02.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "挂",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%8C%82.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "fb5e11efdc07.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "穷",
+      "tone": 2,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E7%A9%B7.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "fba71dbdee50.wav",
+      "speaker": "CanonNi",
+      "gender": "male",
+      "word": "擦",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-CanonNi-%E6%93%A6.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "fc05613ffd0d.wav",
+      "speaker": "Levi Highway",
+      "gender": "male",
+      "word": "枝",
+      "tone": 1,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Levi_Highway_(%E5%88%97%E7%BB%B4%E5%8A%B3%E5%BE%B7)-%E6%9E%9D.wav",
+      "offered": "cc-zero"
+    },
+    {
+      "file": "fd08ee1ad3d0.wav",
+      "speaker": "Luilui6666",
+      "gender": "female",
+      "word": "日",
+      "tone": 4,
+      "commons": "https://commons.wikimedia.org/wiki/File:LL-Q9192_(cmn)-Luilui6666-%E6%97%A5.wav",
+      "offered": "cc-by-sa-4.0+cc-0"
+    }
+  ]
+}

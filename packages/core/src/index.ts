@@ -95,4 +95,25 @@ export {
   type WordKey,
 } from "./srs.ts";
 export { gradeTones, type ToneAnswerError, type ToneGrading } from "./tone-answer.ts";
+export {
+  classifyTone,
+  MIN_CONFIDENCE,
+  TONE_CLASSES,
+  toneFeatures,
+  trainToneModel,
+  type ToneClass,
+  type ToneError,
+  type ToneGuess,
+  type ToneModel,
+  type ToneTrainingError,
+} from "./tone-classifier.ts";
+export { TONE_MODEL } from "./tone-model.ts";
+export {
+  ACCURACY_FLOOR,
+  CONFIDENT_ACCURACY_FLOOR,
+  CONFIDENT_COVERAGE_FLOOR,
+  leaveOneSpeakerOut,
+  type ToneExample,
+  type ToneRates,
+} from "./tone-evaluation.ts";
 export { parseWith, type ValidationError, type ValidationIssue } from "./validation.ts";
