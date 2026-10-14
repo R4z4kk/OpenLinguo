@@ -21,6 +21,7 @@ export const AboutPage = () => {
       </p>
       <h2 className="mt-8 text-subtitle">{t("about.credits")}</h2>
       <p className="mt-2 text-small text-muted">{t("about.shareAlike")}</p>
+      <p className="mt-2 text-small text-muted">{t("about.notAffiliated")}</p>
       <CreditList ids={ALL} />
     </section>
   );
