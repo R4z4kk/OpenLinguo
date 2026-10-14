@@ -1,5 +1,14 @@
 import "fake-indexeddb/auto";
-import { cardId, ok, type CardType, type Subject, type WordKey } from "@openlinguo/core";
+import {
+  cardId,
+  NEW_CARD_STATE,
+  newCards,
+  ok,
+  type CardState,
+  type CardType,
+  type Subject,
+  type WordKey,
+} from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { wordAudioId } from "./audio-packs.ts";
 import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
@@ -136,6 +145,90 @@ describe("loadSession", () => {
       [idOf(TIAN, "recognition"), true],
     ]);
     expect(skipped).toBe(1);
+  });
+});
+
+describe("tone cards", () => {
+  const recording = (word: WordKey) => ({
+    id: wordAudioId(word.headword, word.readingKey),
+    type: "audio/mpeg",
+    data: new ArrayBuffer(4),
+    f0: null,
+    bands: ["hsk-2025:1"],
+  });
+  const started = (due: number): Partial<CardState> => ({
+    phase: "review",
+    due,
+    firstReviewDay: "2026-10-15",
+    lastReviewDay: "2026-10-15",
+  });
+  const startCards = async (word: WordKey, types: readonly CardType[], due: number) => {
+    await db.cards.bulkPut(
+      newCards("zh", word, types).map((card) => ({ ...card, ...NEW_CARD_STATE, ...started(due) })),
+    );
+  };
+
+  it("offers a new tone card for a started reading with a recording, and stores it when graded", async () => {
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
+    await startCards(TIAN, ["recognition", "recall"], NOON.at + 5 * 24 * 60 * MINUTE);
+    await db.wordAudio.add(recording(TIAN));
+    const { items, toneHeldBack } = await session(NOON);
+    expect(ids(items)).toEqual([
+      [idOf(TIAN, "tone"), true],
+      [idOf(NI, "recognition"), true],
+    ]);
+    expect(items[0]?.audio).toEqual({ table: "wordAudio", id: wordAudioId("天", "tian1") });
+    expect(toneHeldBack).toBe(0);
+    expect(await db.cards.get(idOf(TIAN, "tone"))).toBeUndefined();
+    const [tone] = items;
+    if (tone == null) throw new Error("no tone card");
+    await gradeItem(db, tone, "good", NOON, 20, false);
+    expect(await db.cards.get(idOf(TIAN, "tone"))).toMatchObject({
+      type: "tone",
+      phase: "learning",
+    });
+    expect(await db.reviews.toArray()).toMatchObject([{ cardId: idOf(TIAN, "tone") }]);
+  });
+
+  it("plays the pack's recording, never a deck's own audio", async () => {
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
+    await db.audio.add({
+      id: deckWordId(MY_WORDS, TIAN),
+      type: "audio/wav",
+      data: new ArrayBuffer(4),
+    });
+    await startCards(TIAN, ["recognition", "recall"], NOON.at + 5 * 24 * 60 * MINUTE);
+    await db.wordAudio.add(recording(TIAN));
+    const { items } = await session(NOON);
+    expect(items[0]).toMatchObject({
+      type: "tone",
+      audio: { table: "wordAudio", id: wordAudioId("天", "tian1") },
+    });
+  });
+
+  it("offers none without the recording, and counts a due tone card it holds back", async () => {
+    await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
+    await startCards(TIAN, ["recognition", "recall", "tone"], NOON.at - 60 * MINUTE);
+    const { items, toneHeldBack } = await session(NOON);
+    expect(ids(items)).toEqual([
+      [idOf(TIAN, "recall"), false],
+      [idOf(NI, "recognition"), true],
+    ]);
+    expect(toneHeldBack).toBe(1);
+    await db.cards.update(idOf(TIAN, "tone"), { due: NOON.at - 2 * 60 * MINUTE });
+    await db.wordAudio.add(recording(TIAN));
+    const served = await session(NOON);
+    expect(served.toneHeldBack).toBe(0);
+    expect(ids(served.items)[0]).toEqual([idOf(TIAN, "tone"), false]);
+  });
+
+  it("offers none for a reading with no tone to hear", async () => {
+    const neutral: WordKey = { headword: "吗", readingKey: "ma5" };
+    await db.entries.add(entry("吗", "ma5", 1));
+    await startCards(neutral, ["recognition", "recall"], NOON.at + 5 * 24 * 60 * MINUTE);
+    await db.wordAudio.add(recording(neutral));
+    const { items } = await session(NOON);
+    expect(items.some((item) => item.type === "tone")).toBe(false);
   });
 });
 

@@ -78,6 +78,7 @@ export {
   learningDay,
   NEW_CARD_STATE,
   newCards,
+  PAIRED_TYPES,
   Phase,
   previewGrades,
   replay,
@@ -88,8 +89,10 @@ export {
   type GradeOutcome,
   type Grading,
   type NoteKey,
+  type PairedType,
   type ReplayError,
   type Subject,
   type WordKey,
 } from "./srs.ts";
+export { gradeTones, type ToneAnswerError, type ToneGrading } from "./tone-answer.ts";
 export { parseWith, type ValidationError, type ValidationIssue } from "./validation.ts";

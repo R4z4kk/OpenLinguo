@@ -6,6 +6,7 @@ import {
   isWord,
   NEW_CARD_STATE,
   ok,
+  PAIRED_TYPES,
   subjectId,
   type CardState,
   type DictEntry,
@@ -24,6 +25,7 @@ import type { Database, NoteContent } from "./database.ts";
 import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks.ts";
 import { toDictEntry } from "./dictionary.ts";
 import { guarded, recordReview, type ReviewLogFailure } from "./review-log.ts";
+import { toneSyllables } from "./tone-card.ts";
 
 /** A word with its entry, or a note with its content; `audio`: what plays it (see AudioSource). */
 export type ReviewItem = (
@@ -31,8 +33,15 @@ export type ReviewItem = (
   | (Extract<SessionItem, NoteKey> & { readonly content: NoteContent })
 ) & { readonly state: CardState; readonly audio: AudioSource | null };
 
-/** `skipped`: cards whose reading left the dictionary, or whose note lost its content. */
-export type Session = { readonly items: readonly ReviewItem[]; readonly skipped: number };
+/**
+ * `skipped`: cards whose reading left the dictionary, or whose note lost its content.
+ * `toneHeldBack`: tone cards due today whose reading has no audio installed.
+ */
+export type Session = {
+  readonly items: readonly ReviewItem[];
+  readonly skipped: number;
+  readonly toneHeldBack: number;
+};
 
 export const loadSession = (
   db: Database,
@@ -44,10 +53,34 @@ export const loadSession = (
     const newReadings = await nextNewReadings(db, referential, newLimit);
     if (!newReadings.ok) return newReadings;
     const cards = await db.cards.toArray();
+    const recorded = new Set(await db.wordAudio.toCollection().primaryKeys());
+    const toneWords = [
+      ...new Map(
+        cards
+          .filter(isWord)
+          .map((card) => [
+            subjectId(card),
+            { headword: card.headword, readingKey: card.readingKey },
+          ]),
+      ).values(),
+    ].filter(
+      (word) =>
+        recorded.has(wordAudioId(word.headword, word.readingKey)) &&
+        toneSyllables(word.readingKey) !== null,
+    );
+    const toned = new Set(toneWords.map(subjectId));
+    const toneHeldBack = cards.filter(
+      (card) =>
+        card.type === "tone" &&
+        card.phase !== "new" &&
+        dueToday(card.due, now.at, now.utcOffsetMinutes) &&
+        !toned.has(subjectId(card)),
+    ).length;
     const items = composeSession({
       language: "zh",
       cards,
       newReadings: newReadings.value,
+      toneWords,
       newLimit,
       at: now.at,
       utcOffsetMinutes: now.utcOffsetMinutes,
@@ -102,7 +135,7 @@ export const loadSession = (
     );
     /** A deck's own audio comes first, then the audio pack's recording of the reading. */
     const sourceOf = (item: SessionItem): AudioSource | null => {
-      const deck = audioOf.get(subjectId(item)) ?? null;
+      const deck = item.type === "tone" ? null : (audioOf.get(subjectId(item)) ?? null);
       if (deck !== null) return { table: "audio", id: deck };
       if ("note" in item) return null;
       const pack = wordAudioId(item.headword, item.readingKey);
@@ -122,7 +155,7 @@ export const loadSession = (
       const row = entries.get(entryId(item));
       return row == null ? [] : [{ ...item, ...shared, entry: toDictEntry(row, referential) }];
     });
-    return ok({ items: joined, skipped: items.length - joined.length });
+    return ok({ items: joined, skipped: items.length - joined.length, toneHeldBack });
   });
 
 const comesBack = (state: CardState, now: LocalTime): boolean =>
@@ -167,7 +200,7 @@ export const gradeItem = async (
   const goal = await goalToStamp(db, item, grading, now, dailyGoal, last);
   if (!goal.ok) return goal;
   if (item.new) {
-    const stored = await introduceWord(db, item);
+    const stored = await introduceWord(db, item, item.type === "tone" ? ["tone"] : PAIRED_TYPES);
     if (!stored.ok) return stored;
   }
   const state = await recordReview(db, {

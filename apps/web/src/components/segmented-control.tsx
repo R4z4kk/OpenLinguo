@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 export type SegmentedOption<Value extends string | number> = {
   readonly value: Value;
   readonly label: string;
@@ -6,7 +8,7 @@ export type SegmentedOption<Value extends string | number> = {
 };
 
 type Props<Value extends string | number> = {
-  readonly legend: string;
+  readonly legend: ReactNode;
   readonly name: string;
   readonly options: readonly SegmentedOption<Value>[];
   readonly value: Value;

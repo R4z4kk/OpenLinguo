@@ -52,6 +52,7 @@ const compose = (input: Partial<SessionInput>) =>
     language: "zh",
     cards: [],
     newReadings: [],
+    toneWords: [],
     newLimit: 20,
     at: NOON,
     utcOffsetMinutes: OFFSET,
@@ -132,6 +133,70 @@ describe("composeSession", () => {
       }),
     ).toEqual([[idOf(TIAN, "recognition"), true]]);
     expect(compose({ newReadings: [TIAN], newLimit: 0 })).toEqual([]);
+  });
+
+  test("a started word with audio gets its tone card among the waiting cards, before new words", () => {
+    expect(
+      compose({
+        cards: [
+          card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+          card(NI, "recall", review(NOON + 3 * DAY, "2026-10-19")),
+          card(HAO, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+          card(HAO, "recall", {}),
+        ],
+        newReadings: [TIAN],
+        toneWords: [NI, HAO],
+      }),
+    ).toEqual([
+      [idOf(NI, "tone"), true],
+      [idOf(HAO, "recall"), true],
+      [idOf(TIAN, "recognition"), true],
+    ]);
+  });
+
+  test("no tone card for a word that is not started, or has no audio or tone", () => {
+    expect(
+      compose({
+        cards: [
+          card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+          card(HAO, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+        ],
+        newReadings: [TIAN],
+        toneWords: [NI, TIAN],
+      }),
+    ).toEqual([
+      [idOf(NI, "tone"), true],
+      [idOf(TIAN, "recognition"), true],
+    ]);
+  });
+
+  test("a stored tone card waits for its audio: not offered, due or not", () => {
+    const cards = [
+      card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+      card(NI, "tone", review(NOON - HOUR, "2026-10-19")),
+      card(HAO, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+      card(HAO, "tone", {}),
+    ];
+    expect(compose({ cards, toneWords: [] })).toEqual([]);
+    expect(compose({ cards, toneWords: [NI] })).toEqual([[idOf(NI, "tone"), false]]);
+    expect(compose({ cards, toneWords: [NI, HAO] })).toEqual([
+      [idOf(NI, "tone"), false],
+      [idOf(HAO, "tone"), true],
+    ]);
+  });
+
+  test("a tone card counts in the daily limit and shares the one card per day", () => {
+    expect(
+      compose({
+        cards: [
+          card(NI, "recognition", review(NOON + 3 * DAY, TODAY)),
+          card(HAO, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+          card(SHUI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+        ],
+        toneWords: [NI, HAO, SHUI],
+        newLimit: 2,
+      }),
+    ).toEqual([[idOf(HAO, "tone"), true]]);
   });
 
   test("a note is composed like a word, one card per learning day", () => {

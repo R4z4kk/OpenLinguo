@@ -75,6 +75,20 @@ describe("cards", () => {
     ]);
   });
 
+  test("a tone card is only created when asked for, with its type in the id", () => {
+    const word = { headword: "好", readingKey: "hao3" };
+    expect(newCards("zh", word).map((card) => card.type)).toEqual(["recognition", "recall"]);
+    expect(newCards("zh", word, ["tone"])).toEqual([
+      {
+        id: '["zh","好","hao3","tone"]',
+        language: "zh",
+        headword: "好",
+        readingKey: "hao3",
+        type: "tone",
+      },
+    ]);
+  });
+
   test("a note's cards derive from its id alone, and keep nothing else of the subject", () => {
     const note = { note: "Fx4k]?Lb!e", deckId: "d1" };
     expect(newCards("zh", note)).toEqual([

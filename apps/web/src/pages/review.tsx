@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { GlossSummary } from "@/components/gloss-summary";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
+import { ToneCard } from "@/components/tone-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
@@ -142,6 +143,8 @@ const Runner = ({
   const [done, setDone] = useState(0);
   const [revealedAt, setRevealedAt] = useState<LocalTime | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
+  /** A tone card's stored grade, while its answer is shown: what the queue takes at Continue. */
+  const [landed, setLanded] = useState<{ readonly again: ReviewItem | null } | null>(null);
   const pending = useRef(false);
   const focusTarget = useRef<HTMLDivElement>(null);
   const current = queue[0] ?? null;
@@ -158,8 +161,9 @@ const Runner = ({
     [current, revealedAt],
   );
 
-  const submit = async (grade: Grade): Promise<void> => {
-    if (current === null || revealedAt === null || pending.current) return;
+  /** Stores the grade; `again` is the item if it comes back today. `null`: not stored. */
+  const record = async (grade: Grade): Promise<{ readonly again: ReviewItem | null } | null> => {
+    if (current === null || pending.current) return null;
     pending.current = true;
     const result = await gradeItem(
       database,
@@ -172,15 +176,27 @@ const Runner = ({
     pending.current = false;
     if (!result.ok) {
       setFailure(describeFailure(result.error));
-      return;
+      return null;
     }
     setFailure(null);
-    setQueue(([, ...rest]) => (result.value === null ? rest : [...rest, result.value]));
+    return { again: result.value };
+  };
+
+  const advance = ({ again }: { readonly again: ReviewItem | null }): void => {
+    setQueue(([, ...rest]) => (again === null ? rest : [...rest, again]));
     setDone((count) => count + 1);
     setRevealedAt(null);
+    setLanded(null);
+  };
+
+  const submit = async (grade: Grade): Promise<void> => {
+    if (revealedAt === null) return;
+    const recorded = await record(grade);
+    if (recorded !== null) advance(recorded);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (current?.type === "tone") return;
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === " " && revealedAt === null) {
       event.preventDefault();
@@ -194,8 +210,22 @@ const Runner = ({
     void submit(grade);
   };
 
-  const skipped = initial.skipped > 0 && (
-    <p className="mt-4 text-small text-muted">{t("review.skipped", { count: initial.skipped })}</p>
+  const skipped = (
+    <>
+      {initial.skipped > 0 && (
+        <p className="mt-4 text-small text-muted">
+          {t("review.skipped", { count: initial.skipped })}
+        </p>
+      )}
+      {initial.toneHeldBack > 0 && (
+        <p className="mt-4 text-small text-muted">
+          {t("review.toneHeldBack", { count: initial.toneHeldBack })}{" "}
+          <Link to="/learn" className="underline">
+            {t("review.toneHeldBackLink")}
+          </Link>
+        </p>
+      )}
+    </>
   );
 
   if (current === null)
@@ -239,16 +269,38 @@ const Runner = ({
       </div>
       {skipped}
       <div className="mt-6 rounded-card border border-hairline bg-surface p-6 text-center">
-        <Card
-          key={done}
-          item={current}
-          revealed={revealedAt !== null}
-          pack={pack}
-          language={language}
-          focusTarget={focusTarget}
-        />
+        {current.type === "tone" && !("note" in current) ? (
+          <ToneCard
+            key={done}
+            headword={current.headword}
+            readingKey={current.readingKey}
+            glosses={current.entry.glosses}
+            audio={current.audio}
+            features={pack.features}
+            language={language}
+            focusTarget={focusTarget}
+            onGrade={async (grade) => {
+              const recorded = await record(grade);
+              if (recorded === null) return false;
+              setLanded(recorded);
+              return true;
+            }}
+            onContinue={() => {
+              if (landed !== null) advance(landed);
+            }}
+          />
+        ) : (
+          <Card
+            key={done}
+            item={current}
+            revealed={revealedAt !== null}
+            pack={pack}
+            language={language}
+            focusTarget={focusTarget}
+          />
+        )}
       </div>
-      {revealedAt === null ? (
+      {current.type === "tone" ? null : revealedAt === null ? (
         <Button
           className="mt-6 w-full"
           aria-keyshortcuts="Space"
@@ -276,7 +328,9 @@ const Runner = ({
           ))}
         </div>
       ) : null}
-      <p className="mt-4 text-small text-muted">{t("review.keys")}</p>
+      <p className="mt-4 text-small text-muted">
+        {t(current.type === "tone" ? "review.toneKeys" : "review.keys")}
+      </p>
       {(failure !== null || outcomes?.ok === false) && (
         <p role="alert" className="mt-4 text-danger">
           {t("review.gradeFailed", {
