@@ -38,7 +38,7 @@ pnpm --filter @openlinguo/data-pipeline tts-bakeoff serve
 
 ## Mandarin audio packs
 
-One pack per referential band: every word reading recorded by MOSS-TTS, checked by Qwen3-ASR (ADR 0007), encoded as MP3 and stored in zip parts of at most 20 MiB, released under CC0 1.0. Docker and `ffmpeg` (on `PATH`) are needed; the script starts and stops each container itself, since the 24 GB card holds one model at a time.
+One pack per referential band: every word reading recorded by MOSS-TTS, checked by Qwen3-ASR (ADR 0007), encoded as MP3 marked AI-generated (ID3, AI Act art. 50(2)) and stored in zip parts of at most 20 MiB, released under CC0 1.0. Docker and `ffmpeg` (on `PATH`) are needed; the script starts and stops each container itself, since the 24 GB card holds one model at a time.
 
 ```bash
 pnpm --filter @openlinguo/data-pipeline tts-packs build --band hsk-2025:1

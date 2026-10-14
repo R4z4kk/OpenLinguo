@@ -5,7 +5,7 @@
     "tts": "OpenMOSS-Team/MOSS-TTS-v1.5@cdd3b911b1585e3f2dbc7775ef10f9926f58850a",
     "voiceSha256": "c78d7c51cc88c1ded15ff3f381acba9d80a0c8d80beb0cab1cfb0eb5d94f8feb",
     "asr": "Qwen/Qwen3-ASR-1.7B@7278e1e70fe206f11671096ffdd38061171dd6e5",
-    "encoder": "ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono"
+    "encoder": "ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated"
   },
   "words": {
     "hsk-2025-words": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2",
@@ -20,8 +20,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-1-1.zip",
-          "bytes": 1165894,
-          "sha256": "977b022eb15c2fbf48146ecf6f0987bc58c62f79d3bb3c0ca9fb01ce1d8ae477"
+          "bytes": 1214061,
+          "sha256": "f6649145504472f642c53ae78bbe970d48bc61136639b0edcc39655f68990d16"
         }
       ]
     }
