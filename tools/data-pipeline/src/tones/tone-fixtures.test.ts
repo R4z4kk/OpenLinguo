@@ -12,9 +12,10 @@ import { fixturesDir, loadFixtures, type Fixture } from "./fixtures.ts";
 
 let fixtures: readonly Fixture[] = [];
 
+/** 289 recordings decoded and analysed: slower under coverage on a shared CI worker. */
 beforeAll(async () => {
   fixtures = await loadFixtures();
-});
+}, 60_000);
 
 describe("tone fixtures", () => {
   it("are human recordings of several speakers of both genders, every tone well covered", () => {
