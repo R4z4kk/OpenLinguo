@@ -3,7 +3,7 @@ import { dataDir } from "../manifest.ts";
 
 type CedictRow = readonly [simplified: string, traditional: string, reading: string];
 
-/** Toneless syllables of every one-character CC-CEDICT headword, simplified and traditional forms. */
+/** Toneless syllables of every character in CC-CEDICT headwords, simplified and traditional forms. */
 export type CharSyllables = ReadonlyMap<string, ReadonlySet<string>>;
 
 const DIGITS = "零一二三四五六七八九";
@@ -18,14 +18,22 @@ const toneless = (syllable: string): string => {
   return letters === "r" ? "er" : letters;
 };
 
+/**
+ * Every syllable a character takes in CC-CEDICT, words included: a one-character entry can miss the reading
+ * a word uses (钥 is only yue4 alone, yao4 in 钥匙).
+ */
 export const charSyllables = (rows: readonly CedictRow[]): CharSyllables => {
   const map = new Map<string, Set<string>>();
   for (const [simplified, traditional, reading] of rows) {
-    if (Array.from(simplified).length !== 1 || reading.includes(" ")) continue;
-    for (const char of new Set([simplified, traditional])) {
-      const syllables = map.get(char) ?? new Set<string>();
-      syllables.add(toneless(reading));
-      map.set(char, syllables);
+    const syllables = reading.split(" ");
+    for (const form of new Set([simplified, traditional])) {
+      const chars = Array.from(form);
+      if (chars.length !== syllables.length) continue;
+      chars.forEach((char, index) => {
+        const known = map.get(char) ?? new Set<string>();
+        known.add(toneless(syllables[index] ?? ""));
+        map.set(char, known);
+      });
     }
   }
   return map;

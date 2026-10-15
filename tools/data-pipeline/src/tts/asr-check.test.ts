@@ -42,6 +42,15 @@ describe("transcriptMatches", () => {
     expect(transcriptMatches(chars, "ma3", "town")).toBe(false);
   });
 
+  it("reads a character as it is read in words", () => {
+    const words = charSyllables([
+      ["钥", "鑰", "yue4"],
+      ["匙", "匙", "shi5"],
+      ["钥匙", "鑰匙", "yao4 shi5"],
+    ]);
+    expect(transcriptMatches(words, "yao4 shi5", "钥匙")).toBe(true);
+  });
+
   it("refuses another syllable", () => {
     expect(transcriptMatches(chars, "ma1", "点")).toBe(false);
   });

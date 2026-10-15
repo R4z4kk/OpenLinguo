@@ -244,6 +244,16 @@ const build = async (bands: readonly Band[]): Promise<void> => {
   const state = await loadState();
   const chars = await loadCharSyllables();
   await mkdir(workDir, { recursive: true });
+  // The check is code and the transcripts are kept: a changed check applies to them without the GPU.
+  for (const item of items) {
+    const saved = state.items[itemKey(item)] ?? null;
+    if (saved?.transcript == null) continue;
+    state.items[itemKey(item)] = {
+      ...saved,
+      pass: transcriptMatches(chars, item.reading, saved.transcript),
+    };
+  }
+  await saveState(state);
   for (const seed of SEEDS) {
     await generate(items, state, seed);
     await check(items, state, chars);
