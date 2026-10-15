@@ -110,6 +110,18 @@ describe("contour", () => {
     }
   });
 
+  it("is not thrown by a DC offset", () => {
+    const result = contour(
+      voice(() => 200, 0.4).map((value) => value + 0.5),
+      RATE,
+      1,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(values(result.value)).toHaveLength(POINTS_PER_SYLLABLE);
+    for (const point of values(result.value)) expect(Math.abs(point)).toBeLessThanOrEqual(8);
+  });
+
   it("refuses an input it cannot analyse", () => {
     expect(
       contour(

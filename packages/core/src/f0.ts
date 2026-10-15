@@ -2,7 +2,7 @@ import { PitchDetector } from "pitchy";
 import { err, ok, type Result } from "./result.ts";
 
 /** Changes with the contour of a given signal: stored in the audio pack index, a different value means a rebuild. */
-export const F0_VERSION = "pitchy-4.1.0/v1";
+export const F0_VERSION = "pitchy-4.1.0/v2";
 
 export const POINTS_PER_SYLLABLE = 10;
 
@@ -28,6 +28,11 @@ const MAX_HZ = 500;
 const MAX_JUMP_SEMITONES = 8;
 /** Share of a syllable's duration its boundary may move to reach a quieter frame. */
 const SNAP_RATIO = 0.25;
+/**
+ * pitchy reads a low-passed copy: where the fundamental is weak (a microphone light on bass, an open vowel),
+ * it otherwise locks on the first formant (~600 Hz) or a spurious 25 Hz peak (ADR 0007, #114).
+ */
+const LOWPASS_HZ = 150;
 
 const inRange = (hz: number): boolean => hz >= MIN_HZ && hz <= MAX_HZ;
 
@@ -72,18 +77,39 @@ export const unfoldOctaves = (raw: readonly (number | null)[]): (number | null)[
 
 type Frames = { readonly levels: number[]; readonly raw: (number | null)[] };
 
-const analyse = (samples: Float32Array, sampleRate: number): Frames => {
+/** A DC offset would pass the low-pass and the level gate as if it were voice. */
+const centred = (samples: Float32Array): Float32Array => {
+  let mean = 0;
+  for (const value of samples) mean += value;
+  mean /= Math.max(1, samples.length);
+  return samples.map((value) => value - mean);
+};
+
+/** One pole: a second one also keeps mains hum while it cuts the voice, and pitchy then reads the hum. */
+const lowpass = (samples: Float32Array, sampleRate: number): Float32Array => {
+  const decay = Math.exp((-2 * Math.PI * LOWPASS_HZ) / sampleRate);
+  const out = new Float32Array(samples.length);
+  let level = 0;
+  for (let index = 0; index < samples.length; index++) {
+    level = (1 - decay) * (samples[index] ?? 0) + decay * level;
+    out[index] = level;
+  }
+  return out;
+};
+
+const analyse = (input: Float32Array, sampleRate: number): Frames => {
   const window = Math.round(sampleRate * WINDOW_SECONDS);
   const hop = Math.round(sampleRate * HOP_SECONDS);
   const detector = PitchDetector.forFloat32Array(window);
+  const samples = centred(input);
+  const filtered = lowpass(samples, sampleRate);
   const levels: number[] = [];
   const pitches: { hz: number; clarity: number }[] = [];
   for (let at = 0; at + window <= samples.length; at += hop) {
-    const frame = samples.subarray(at, at + window);
     let energy = 0;
-    for (const value of frame) energy += value * value;
+    for (const value of samples.subarray(at, at + window)) energy += value * value;
     levels.push(Math.sqrt(energy / window));
-    const [hz, clarity] = detector.findPitch(frame, sampleRate);
+    const [hz, clarity] = detector.findPitch(filtered.subarray(at, at + window), sampleRate);
     pitches.push({ hz, clarity });
   }
   const threshold = Math.max(0, ...levels) * MIN_LEVEL;
