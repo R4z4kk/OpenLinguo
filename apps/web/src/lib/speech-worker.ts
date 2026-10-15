@@ -69,7 +69,7 @@ const load = async (
   wasm.wasmBinary = await (await read(url(config.runtime))).arrayBuffer();
   // No `mjs`: ONNX Runtime uses the factory bundled with it instead of importing one.
   wasm.wasmPaths = { wasm: url(config.runtime) };
-  wasm.numThreads = 1;
+  // `numThreads` left to ONNX Runtime: one thread unless the page is cross-origin isolated.
   return pipeline("automatic-speech-recognition", index.model, {
     device: backend,
     dtype: config.dtype,

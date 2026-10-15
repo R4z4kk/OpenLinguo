@@ -86,6 +86,9 @@ test("offers speech recognition, downloads it on request, checks a sentence and 
   expect(requested.filter((path) => path !== "/models/index.json")).toEqual([]);
   expect(await accessibilityViolations(page)).toEqual([]);
 
+  // Cross-origin isolated: ONNX Runtime runs WebAssembly on several threads.
+  expect(await page.evaluate(() => crossOriginIsolated)).toBe(true);
+
   await downloadButton(page).click();
   await expect(main.getByText(/^Speech recognition downloaded \(/u)).toBeVisible({
     timeout: 120_000,
