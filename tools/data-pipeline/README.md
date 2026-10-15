@@ -46,7 +46,7 @@ pnpm --filter @openlinguo/data-pipeline tts-packs review
 pnpm --filter @openlinguo/data-pipeline tts-packs pack --band hsk-2025:1
 ```
 
-- `build` records each reading (seed 1), transcribes it and checks that the transcript has one character per syllable, each readable as the expected syllable, tones aside; a failing recording is redone with seeds 2 and 3. State lives in `tools/tts/.packs/` (gitignored, resumable).
-- `review` opens a local page with the recordings that fail with every seed: each is validated by ear or rejected (no audio).
-- `pack` refuses a band with recordings not built, not checked or not reviewed. It writes the zip parts to `tools/tts/.packs/out/`, the index `data/audio-zh/packs.json` (pinned in `data/manifest.json`), and `data/gaps/audio-zh.tsv`: words with several readings (MOSS-TTS cannot be told which one to say), words without a reading, rejected recordings.
+- `build` records each reading (seed 1), transcribes it and checks that the transcript has one character per syllable, each readable as the expected syllable (any reading CC-CEDICT gives the character, words included), tones aside. An isolated syllable is also doubted when the character heard has another tone and a tone model of this voice confidently hears another tone. A failing recording is redone with seeds 2 to 5. Transcripts are kept, so a changed check applies without the GPU. State lives in `tools/tts/.packs/` (gitignored, resumable).
+- `review` opens a local page with the recordings whose word fails with every seed: each can be validated by ear or rejected. Without a verdict, a recording that fails with every seed ships without audio.
+- `pack` refuses a band with recordings not built or not checked. It writes the zip parts to `tools/tts/.packs/out/`, the index `data/audio-zh/packs.json` (pinned in `data/manifest.json`), and `data/gaps/audio-zh.tsv`: words with several readings (MOSS-TTS cannot be told which one to say), words without a reading, recordings rejected by ear or failing every seed.
 - The parts are uploaded to the GitHub release named in `packs.json`; a test fails when the word lists change after the packs were built.

@@ -57,6 +57,16 @@ Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones 
 - Qwen3-ASR missed none. A false alarm costs a regeneration with another seed, at worst a listen; a miss ships a wrong recording.
 - Files all three passed, or all three flagged, were not labelled, and 5 failures is a small sample.
 - All three hear MOSS-TTS's isolated 烫 tàng as 胖 pàng.
+- A character reads as any syllable CC-CEDICT gives it, words included: alone, 钥 is only yuè, while 钥匙 is yàoshi.
+
+### Tone of isolated syllables (2026-10-15)
+
+The recognizer checks words, not tones, and no open recognizer outputs toned pinyin. Two weak signals point the same way on the 1,276 single-syllable recordings:
+
+- The character Qwen3-ASR hears for an isolated syllable is chosen from the sound alone: it carries the expected tone for 92 % of the recordings that pass. Its misses lean towards frequent characters (右 heard 有, 移 heard 一), so it cannot decide alone.
+- A tone model of this voice (the #115 classifier's features, trained on the recordings whose character agrees) confirms the expected tone for 82 % of its confident answers when the character agrees, 52 % when it does not. On the words reviewed by ear it confidently heard another tone for 4 of the rejected (勿, 愈, 暨, 熨) and agreed with 10 of the 11 accepted.
+
+A syllable is doubted when both point to another tone; it is redone with seeds up to 5. On the packs, 27 were doubted and all found a recording that passes by seed 5. A recording that fails any check with every seed, with no verdict by ear, ships without audio (`unverified` in `data/gaps/audio-zh.tsv`); reviewing by ear is optional. Words of two or more syllables keep the word check only: the recognizer's language model knows the word whatever its tones.
 
 ## Consequences
 

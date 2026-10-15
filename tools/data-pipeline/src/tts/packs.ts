@@ -47,7 +47,7 @@ const TONE_CLASS: Readonly<Record<string, ToneClass>> = { "1": 1, "2": 2, "3": 3
 const PART_BYTES = 20 * 1024 * 1024;
 const MP3_BITRATE = "48k";
 /** Bump for every rebuild: release assets are immutable once the app points to them. */
-const RELEASE = "audio-zh-1";
+const RELEASE = "audio-zh-2";
 const RELEASE_URL = `https://github.com/R4z4kk/OpenLinguo/releases/tag/${RELEASE}`;
 const SERVICE_TIMEOUT_MS = 20 * 60_000;
 const SAVE_EVERY = 50;
@@ -318,11 +318,9 @@ const build = async (bands: readonly Band[]): Promise<void> => {
   const reviews = await readParsed(reviewsPath, reviewsSchema, {});
   const failing = items.filter((item) => state.items[itemKey(item)]?.pass === false);
   const doubted = failing.filter((item) => state.items[itemKey(item)]?.toneDoubt === true);
-  const unreviewed = failing.filter(
-    (item) => !(itemKey(item) in reviews) && state.items[itemKey(item)]?.toneDoubt !== true,
-  );
+  const unreviewed = failing.filter((item) => !(itemKey(item) in reviews));
   console.log(
-    `${String(items.length)} recordings, ${String(items.length - failing.length)} pass the checks, ${String(failing.length)} fail with every seed: ${String(doubted.length)} doubted tones (no audio), ${String(unreviewed.length)} words not reviewed yet (tts-packs review)`,
+    `${String(items.length)} recordings, ${String(items.length - failing.length)} pass the checks, ${String(failing.length)} fail with every seed (${String(doubted.length)} for their tone); ${String(unreviewed.length)} without a verdict by ear ship without audio (tts-packs review to validate words)`,
   );
 };
 
@@ -587,15 +585,9 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
   const packed = [];
   for (const { band, items, gaps } of await loadBands(bands)) {
     const pending = items.filter((item) => (state.items[itemKey(item)]?.pass ?? null) === null);
-    const doubted = (item: PackItem): boolean =>
-      state.items[itemKey(item)]?.toneDoubt === true && !(itemKey(item) in reviews);
-    const unreviewed = items.filter(
-      (item) =>
-        state.items[itemKey(item)]?.pass === false && !(itemKey(item) in reviews) && !doubted(item),
-    );
-    if (pending.length > 0 || unreviewed.length > 0) {
+    if (pending.length > 0) {
       throw new PacksError(
-        `${band.referential} ${String(band.level)}: ${String(pending.length)} recordings not built or checked (tts-packs build), ${String(unreviewed.length)} waiting for review (tts-packs review)`,
+        `${band.referential} ${String(band.level)}: ${String(pending.length)} recordings not built or checked (tts-packs build)`,
       );
     }
     const kept = items.filter(
@@ -604,9 +596,10 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     const rejected = items
       .filter((item) => reviews[itemKey(item)] === "bad")
       .map((item): Gap => ({ ...item, reason: "rejected" }));
+    // Failing every seed with no verdict by ear: no audio rather than an unchecked one.
     const unverified = items
-      .filter(doubted)
-      .map((item): Gap => ({ ...item, reason: "tone-unverified" }));
+      .filter((item) => state.items[itemKey(item)]?.pass === false && !(itemKey(item) in reviews))
+      .map((item): Gap => ({ ...item, reason: "unverified" }));
     const parts = await packBand(band, kept);
     const validatedByEar = kept.filter((item) => state.items[itemKey(item)]?.pass === false).length;
     packed.push({
