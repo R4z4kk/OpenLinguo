@@ -16,7 +16,7 @@ import {
   type OnDemandIndex,
 } from "../src/data/format.ts";
 import { publishAudioPacks } from "./audio-packs.ts";
-import { publishSpeechModel } from "./whisper-model.ts";
+import { publishSpeechModel } from "./speech-model.ts";
 import { DATA, loadDictionary, readRows } from "./sources.ts";
 
 const OUT = new URL("../public/data/", import.meta.url);
@@ -35,7 +35,7 @@ const LICENSES = [
   ["makemeahanzi/GPL-3.0.txt", "makemeahanzi/GPL-3.0.txt"],
   ["hanzi-writer-data/ARPHICPL.TXT", "hanzi-writer-data/ARPHICPL.txt"],
   ["jieba-names/jieba-MIT.txt", "jieba/LICENSE.txt"],
-  ["whisper/whisper-MIT.txt", "whisper/LICENSE.txt"],
+  ["paraformer/THIRD-PARTY-LICENSES.txt", "paraformer/THIRD-PARTY-LICENSES.txt"],
 ] as const;
 
 const sha256 = (content: string): string => createHash("sha256").update(content).digest("hex");

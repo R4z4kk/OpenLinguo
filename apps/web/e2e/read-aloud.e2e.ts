@@ -7,14 +7,14 @@ import { test } from "./app.ts";
 const SENTENCE = "我们一起去吃饭吧";
 
 /**
- * Replaces the microphone with a recording of the sentence (the self-check one, data/whisper), played once
+ * Replaces the microphone with a recording of the sentence (MOSS-TTS, CC0 like the audio packs), played once
  * after 0.3 s of silence; the stream stays silent afterwards, so the recording stops by itself.
  * Patched on the prototype: WebKit ignores an assignment to `navigator.mediaDevices.getUserMedia`.
  * The recording comes with the script: in WebKit, a request from a page the service worker controls
  * escapes `page.route`.
  */
 const fakeMicrophone = async (page: Page): Promise<void> => {
-  const wav = await readFile(new URL("../../../data/whisper/self-check.wav", import.meta.url));
+  const wav = await readFile(new URL("fixtures/sentence.wav", import.meta.url));
   await page.addInitScript(
     (bytes: number[]) => {
       const getUserMedia = async (): Promise<MediaStream> => {
@@ -61,7 +61,7 @@ test.beforeEach(({ browserName }) => {
 const downloadButton = (page: Page) =>
   page.getByRole("main").getByRole("button", { name: /^Download speech recognition \(/u });
 
-/** One model download for the whole flow: each test downloads it again (about 170 MB with WebGPU). */
+/** One model download for the whole flow: each test downloads it again (about 90 MB). */
 test("offers speech recognition, downloads it on request, checks a sentence and a word, works offline, deletes it", async ({
   page,
   server,
@@ -84,9 +84,6 @@ test("offers speech recognition, downloads it on request, checks a sentence and 
   // Nothing of the model is fetched before the learner asks: only its index, for the size.
   expect(requested.filter((path) => path !== "/models/index.json")).toEqual([]);
   expect(await accessibilityViolations(page)).toEqual([]);
-
-  // Cross-origin isolated: ONNX Runtime runs WebAssembly on several threads.
-  expect(await page.evaluate(() => crossOriginIsolated)).toBe(true);
 
   await downloadButton(page).click();
   await expect(main.getByText(/^Speech recognition downloaded \(/u)).toBeVisible({
@@ -147,7 +144,7 @@ test("deletes speech recognition and offers it again", async ({ page }) => {
 });
 
 test("shows a failed download, and the button retries", async ({ page }) => {
-  await page.route("**/models/*/onnx/**", (route) => route.abort());
+  await page.route("**/models/*/model.int8.onnx.*", (route) => route.abort());
   await page.goto("/read");
   const main = page.getByRole("main");
   await expect(downloadButton(page)).toBeVisible({ timeout: 90_000 });

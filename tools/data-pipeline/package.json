@@ -10,7 +10,7 @@
     "tones": "node src/tones/tones.ts",
     "tts-bakeoff": "node src/tts/bakeoff.ts",
     "tts-packs": "node src/tts/packs.ts",
-    "whisper": "node src/asr/whisper.ts",
+    "paraformer": "node src/asr/paraformer.ts",
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {

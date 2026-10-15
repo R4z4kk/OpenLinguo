@@ -4,3 +4,4 @@ LICENSE
 coverage/
 data/*/
 apps/web/public/data/
+apps/web/src/lib/sherpa-onnx/sherpa-onnx-asr.mjs

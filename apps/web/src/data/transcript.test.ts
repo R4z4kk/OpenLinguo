@@ -30,7 +30,7 @@ const pack = createZhPack({
 });
 
 describe("toSimplified", () => {
-  it("converts Whisper's traditional characters", () => {
+  it("converts traditional characters", () => {
     expect(toSimplified("我們一起去吃飯吧")).toBe("我们一起去吃饭吧");
   });
 });

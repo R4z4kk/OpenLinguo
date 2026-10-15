@@ -18,7 +18,7 @@ type Hint =
 
 /**
  * What speech recognition heard when the word was said, once the learner downloaded it (Read page).
- * A hint only: Whisper often mishears a word said alone (ADR 0007), the tone result above is the check.
+ * A hint only: speech recognition may mishear a word said alone (ADR 0007), the tone result above is the check.
  */
 export const HeardWord = ({
   headword,
@@ -52,7 +52,7 @@ export const HeardWord = ({
     if (said === null || !installed || pack === null || words === null) return;
     const replaced = new AbortController();
     const check = async (): Promise<Hint> => {
-      const heard = await transcribe(said.samples, said.sampleRate, words.length);
+      const heard = await transcribe(said.samples, said.sampleRate);
       if (!heard.ok) {
         if (heard.error.kind !== "failed") refresh();
         return { kind: "failed", message: recognizerFailure(t, heard.error) };

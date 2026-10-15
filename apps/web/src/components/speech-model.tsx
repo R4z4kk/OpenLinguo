@@ -1,44 +1,30 @@
 import { err, type Result } from "@openlinguo/core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DownloadControls } from "@/components/download-controls";
 import { fetchFrom } from "@/data/audio-packs";
-import type { SpeechBackend, SpeechModelIndex } from "@/data/format";
+import type { SpeechModelIndex } from "@/data/format";
 import { MODELS } from "@/data/speech-files";
 import {
-  chooseBackend,
   downloadBytes,
   installSpeechModel,
   loadSpeechIndex,
-  removeBackendFiles,
   removeSpeechModel,
   speechModelState,
-  webgpuVerdict,
   type SpeechFailure,
   type SpeechModelState,
 } from "@/data/speech-model";
-import {
-  checkRecognizer,
-  startRecognizer,
-  startTrusted,
-  type Recognizer,
-  type RecognizerError,
-} from "@/lib/speech-recognizer";
-
-const storage = (): Storage => localStorage;
+import { speechRecognizer, type RecognizerError } from "@/lib/speech-recognizer";
 
 export type SpeechModel =
   | { readonly status: "loading" }
-  | { readonly status: "unavailable"; readonly failure: SpeechFailure | null }
+  | { readonly status: "unavailable"; readonly failure: SpeechFailure }
   | {
       readonly status: "ready";
       readonly index: SpeechModelIndex;
-      readonly backend: SpeechBackend;
       readonly state: SpeechModelState;
-      /** WebGPU got the self-check sentence wrong on this device, so WebAssembly is used. */
-      readonly webgpuSetAside: boolean;
     };
 
-/** The model this device would use and whether it is stored; `refresh` after a change. */
+/** The model and whether it is stored; `refresh` after a change. */
 export const useSpeechModel = (): { readonly model: SpeechModel; readonly refresh: () => void } => {
   const [model, setModel] = useState<SpeechModel>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -47,17 +33,9 @@ export const useSpeechModel = (): { readonly model: SpeechModel; readonly refres
     const load = async (): Promise<SpeechModel> => {
       const index = await loadSpeechIndex();
       if (!index.ok) return { status: "unavailable", failure: index.error };
-      const backend = await chooseBackend(index.value, storage);
-      if (backend === null) return { status: "unavailable", failure: null };
-      const state = await speechModelState(index.value, backend);
+      const state = await speechModelState(index.value);
       return state.ok
-        ? {
-            status: "ready",
-            index: index.value,
-            backend,
-            state: state.value,
-            webgpuSetAside: webgpuVerdict(storage, index.value) === "wrong",
-          }
+        ? { status: "ready", index: index.value, state: state.value }
         : { status: "unavailable", failure: state.error };
     };
     void load().then((loaded) => {
@@ -76,76 +54,51 @@ export const useSpeechModel = (): { readonly model: SpeechModel; readonly refres
 /** Downloads, cancels or deletes the speech-recognition model, on the learner's request only. */
 export const SpeechModelControls = ({
   index,
-  backend,
   state,
   describedBy,
   onChange,
 }: {
   readonly index: SpeechModelIndex;
-  readonly backend: SpeechBackend;
   readonly state: SpeechModelState;
   readonly describedBy: string;
   readonly onChange: () => void;
 }) => (
   <DownloadControls
     labels="speech"
-    bytes={downloadBytes(index, backend)}
+    bytes={downloadBytes(index)}
     state={state}
     describedBy={describedBy}
     install={(onProgress, signal) =>
-      installSpeechModel(index, backend, fetchFrom(MODELS), onProgress, signal)
+      installSpeechModel(index, fetchFrom(MODELS), onProgress, signal)
     }
     remove={removeSpeechModel}
     onChange={onChange}
   />
 );
 
-/** Whisper spends one to two tokens per character; the margin lets an added word through. */
-const maxTokens = (characters: number): number => Math.min(200, 2 * characters + 10);
-
 export type Transcribe = (
   samples: Float32Array,
   sampleRate: number,
-  expectedCharacters: number,
 ) => Promise<Result<string, RecognizerError>>;
 
-/** Transcribes with the stored model: the worker starts on first use and stops with the component. */
+/**
+ * Transcribes with the stored model. The recognizer starts when a page using it opens, so that it
+ * is ready by the end of the first recording, and stays for the next page; it stops once the model
+ * is no longer stored.
+ */
 export const useTranscriber = (model: SpeechModel): Transcribe => {
-  const recognizer = useRef<Promise<Result<Recognizer, RecognizerError>> | null>(null);
-  useEffect(
-    () => () => {
-      void recognizer.current?.then((started) => {
-        if (started.ok) started.value.close();
-      });
-      recognizer.current = null;
-    },
-    [model],
-  );
+  const index = model.status === "ready" ? model.index : null;
+  const installed = model.status === "ready" && model.state === "installed";
+  useEffect(() => {
+    if (index === null) return;
+    if (installed) speechRecognizer.warm(index);
+    else speechRecognizer.close();
+  }, [index, installed]);
   return useCallback(
-    async (samples, sampleRate, expectedCharacters) => {
-      if (model.status !== "ready" || model.state !== "installed") return err({ kind: "missing" });
-      recognizer.current ??= startTrusted(model.index, model.backend, {
-        start: startRecognizer,
-        check: checkRecognizer,
-        storage,
-        removeWebgpuFiles: (index) => removeBackendFiles(index, "webgpu"),
-      });
-      const started = await recognizer.current;
-      if (!started.ok) {
-        recognizer.current = null;
-        return started;
-      }
-      const text = await started.value.transcribe(
-        samples,
-        sampleRate,
-        maxTokens(expectedCharacters),
-      );
-      if (!text.ok) {
-        started.value.close();
-        recognizer.current = null;
-      }
-      return text;
-    },
-    [model],
+    (samples, sampleRate) =>
+      index === null || !installed
+        ? Promise.resolve(err({ kind: "missing" }))
+        : speechRecognizer.transcribe(index, samples, sampleRate),
+    [index, installed],
   );
 };

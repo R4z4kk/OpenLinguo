@@ -50,3 +50,15 @@ pnpm --filter @openlinguo/data-pipeline tts-packs pack --band hsk-2025:1
 - `review` opens a local page with the recordings whose word fails with every seed: each can be validated by ear or rejected. Without a verdict, a recording that fails with every seed ships without audio.
 - `pack` refuses a band with recordings not built or not checked. It writes the zip parts to `tools/tts/.packs/out/`, the index `data/audio-zh/packs.json` (pinned in `data/manifest.json`), and `data/gaps/audio-zh.tsv`: words with several readings (MOSS-TTS cannot be told which one to say), words without a reading, recordings rejected by ear or failing every seed.
 - The parts are uploaded to the GitHub release named in `packs.json`; a test fails when the word lists change after the packs were built.
+
+## Speech recognition model
+
+Paraformer-small, run in the app by sherpa-onnx compiled to WebAssembly (ADR 0007, #119). Docker is needed for the build; its versions are pinned in `tools/sherpa-onnx/Dockerfile`.
+
+```bash
+docker build --output type=local,dest=tools/sherpa-onnx/out tools/sherpa-onnx
+pnpm --filter @openlinguo/data-pipeline paraformer
+```
+
+- The build writes the binary, its JavaScript, `build.json` (versions), the licenses of everything compiled in and their `SHA256SUMS` to `tools/sherpa-onnx/out/` (gitignored).
+- `paraformer` downloads the pinned model files from Hugging Face, checks them and the build's files against their hashes, then writes `data/paraformer/` (pinned in `data/manifest.json`) and the JavaScript in `apps/web/src/lib/sherpa-onnx/`, and prints the command uploading the release assets. Bump `RELEASE` in `src/asr/paraformer.ts` for any change: the app refuses JavaScript that does not match the binary.

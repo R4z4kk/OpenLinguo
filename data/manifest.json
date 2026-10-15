@@ -119,13 +119,13 @@
     "maxAgeDays": 365,
     "sha256": "744bb05d5b0742e9ee35c37791f94d56a173349b3367569e7ca11e510364d203"
   },
-  "whisper": {
-    "source": "https://github.com/R4z4kk/OpenLinguo/releases/tag/whisper-1",
-    "license": "MIT",
-    "version": "whisper-1: onnx-community/whisper-base@1846881b6b3a3024392c1eea3ad983695bc23925",
-    "retrievedAt": "2026-10-15T08:31:05.124Z",
+  "paraformer": {
+    "source": "https://github.com/R4z4kk/OpenLinguo/releases/tag/paraformer-1",
+    "license": "Apache-2.0",
+    "version": "paraformer-1: csukuangfj/sherpa-onnx-paraformer-zh-small-2024-03-09@63ddc3cd0f2810b68289a7b3876e62ef5d53d6df, sherpa-onnx v1.13.8 (ONNX Runtime 1.28.2, Emscripten 4.0.23)",
+    "retrievedAt": "2026-10-15T16:03:15.365Z",
     "maxAgeDays": 365,
-    "sha256": "a99b29ac6b75b4daa679cd2529872139ede07c333bee9ef0a045d340a6fdf891"
+    "sha256": "e1ea58fbbd19e7177bf855a79d5e9a7b218e4eab076954c68e600f94bf7ba3bd"
   },
   "wiktionary-fr-zh": {
     "source": "https://kaikki.org/frwiktionary/Chinois/kaikki.org-dictionary-Chinois.jsonl.gz",

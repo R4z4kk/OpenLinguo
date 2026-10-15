@@ -134,13 +134,10 @@ export const AudioPackIndex = z.object({
 export type AudioPackIndex = z.output<typeof AudioPackIndex>;
 export type AudioPackBand = AudioPackIndex["bands"][number];
 
-export const SpeechBackend = z.enum(["webgpu", "wasm"]);
-export type SpeechBackend = z.output<typeof SpeechBackend>;
-
-const Dtype = z.enum(["fp32", "fp16", "q8", "q4"]);
+const ServedPath = z.string().regex(/^[\w./-]+$/u);
 const ServedFile = z.object({
   /** Relative to `/models/`. */
-  path: z.string().regex(/^[\w./-]+$/u),
+  path: ServedPath,
   bytes: z.number().int().positive(),
   sha256: Sha256,
 });
@@ -151,25 +148,11 @@ const ServedFile = z.object({
  */
 export const SpeechModelIndex = z.object({
   release: z.string().min(1),
-  /** Directory of the model under `/models/`, the model id transformers.js loads. */
-  model: z.string().regex(/^[\w.-]+$/u),
-  backends: z.partialRecord(
-    SpeechBackend,
-    z.object({
-      dtype: z.object({ encoder_model: Dtype, decoder_model_merged: Dtype }),
-      /** The ONNX Runtime WebAssembly binary, one of `files`. */
-      runtime: z.string().min(1),
-    }),
-  ),
-  files: z.array(
-    ServedFile.extend({
-      /** Backends that load the file; absent when every backend does. */
-      backends: z.array(SpeechBackend).min(1).optional(),
-      parts: z.array(ServedFile).min(2).optional(),
-    }),
-  ),
-  /** A recording of `text`, transcribed once on WebGPU before it is trusted. */
-  check: z.object({ path: z.string().regex(/^[\w./-]+$/u), text: z.string().min(1) }),
+  /** The Paraformer model, its tokens and the sherpa-onnx WebAssembly binary, each one of `files`. */
+  model: ServedPath,
+  tokens: ServedPath,
+  runtime: ServedPath,
+  files: z.array(ServedFile.extend({ parts: z.array(ServedFile).min(2).optional() })),
 });
 export type SpeechModelIndex = z.output<typeof SpeechModelIndex>;
 export type SpeechModelFile = SpeechModelIndex["files"][number];
