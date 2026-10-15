@@ -3,6 +3,7 @@ import { expect, type Page } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
+import { countPlayback } from "./playback.ts";
 
 /** What the fake microphone does: a falling then rising voice and quiet, or a voice that goes on. */
 type Voice = "word" | "endless" | "denied";
@@ -50,24 +51,6 @@ const fakeMicrophone = async (page: Page, voice: Voice): Promise<void> => {
       },
     });
   }, voice);
-};
-
-/** Counts the clips played on the speakers in `data-played` (offline rendering is not playing). */
-const countPlayback = async (page: Page): Promise<void> => {
-  await page.addInitScript(() => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method -- Called below with the node as `this`.
-    const start = AudioBufferSourceNode.prototype.start;
-    Object.defineProperty(AudioBufferSourceNode.prototype, "start", {
-      configurable: true,
-      value: function played(this: AudioBufferSourceNode, ...args: [number?]) {
-        if (this.context instanceof AudioContext) {
-          const root = document.documentElement;
-          root.dataset["played"] = String(Number(root.dataset["played"] ?? "0") + 1);
-        }
-        start.apply(this, args);
-      },
-    });
-  });
 };
 
 /** A kept recording of 你好, a tenth of a second of silence, as Say it stores one. */
