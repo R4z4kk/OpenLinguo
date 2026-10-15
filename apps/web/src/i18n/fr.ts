@@ -454,6 +454,38 @@ export const fr: Messages = {
     synthetic: "Voix synthétique",
     gone: "il a été supprimé avec son téléchargement audio.",
   },
+  speak: {
+    title: "Prononcez-le",
+    notice:
+      "Votre voix est analysée sur cet appareil, jamais envoyée ni conservée. Le navigateur demande l’accès au micro la première fois.",
+    chart: "Courbes de hauteur du modèle et de votre voix. Le résultat est écrit dessous.",
+    legend:
+      "Trait pointillé\u00a0: le modèle. Trait plein\u00a0: votre voix. Chacune est tracée autour de sa propre hauteur médiane.",
+    record: "Enregistrer",
+    again: "Enregistrer à nouveau",
+    stop: "Arrêter",
+    opening: "Ouverture du micro…",
+    recording: "À l’écoute\u00a0: dites le mot. L’enregistrement s’arrête quand vous avez fini.",
+    right: "on entend {{tone}}, comme attendu",
+    other: "on entend {{tone}}, attendu {{expected}}",
+    unsure: "ton non reconnu avec certitude, attendu {{expected}}",
+    neutral: "ton neutre, non évalué",
+    unvoiced: "rien entendu, attendu {{expected}}",
+    distance: "à {{distance}} demi-tons du modèle",
+    nothingHeard: "Rien n’a été entendu. Vérifiez que le micro n’est pas coupé, puis réessayez.",
+    interrupted: "Enregistrement arrêté quand la page a été masquée. Rien n’a été gardé.",
+    scoreFailed: "Le résultat n’a pas pu être calculé\u00a0: {{reason}}",
+    referenceFailed: "La hauteur du modèle n’a pas pu être lue\u00a0: {{reason}}",
+    microphoneFailed: "Le micro n’a pas pu être ouvert\u00a0: {{reason}}",
+    microphone: {
+      unsupported: "Ce navigateur ne peut pas enregistrer ici. Utilisez le mode écoute.",
+      denied:
+        "Le micro est bloqué. Autorisez-le dans les réglages de votre navigateur pour ce site, puis réessayez, ou utilisez le mode écoute.",
+      "no-device": "Aucun micro trouvé. Branchez-en un et réessayez, ou utilisez le mode écoute.",
+      busy: "Le micro est utilisé par une autre application. Fermez-la et réessayez.",
+    },
+    listenInstead: "Impossible de parler maintenant\u00a0? Écoutez et choisissez le ton",
+  },
   moduleError: { title: "Cette section n’a pas pu se charger", retry: "Réessayer" },
   notFound: { title: "Page introuvable", back: "Retour à Aujourd’hui" },
 };

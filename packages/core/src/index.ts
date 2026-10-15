@@ -49,6 +49,14 @@ export {
   type Progress,
   type ProgressError,
 } from "./progress.ts";
+export {
+  OTHER_CONFIDENCE,
+  RIGHT_CONFIDENCE,
+  scorePronunciation,
+  type PronunciationError,
+  type SyllableScore,
+  type SyllableVerdict,
+} from "./pronunciation.ts";
 export { err, isErr, isOk, ok, type Err, type Ok, type Result } from "./result.ts";
 export {
   HEATMAP_WEEKS,

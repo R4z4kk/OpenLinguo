@@ -1,5 +1,11 @@
 import { applySandhi, parseNumbered } from "@openlinguo/lang-zh";
 
+const MARKS = ["ā", "á", "ǎ", "à", "a"] as const;
+
+/** A tone as its mark and number, `neutral` naming the fifth: never colour alone. */
+export const toneLabel = (tone: number, neutral: string): string =>
+  tone === 5 ? `${neutral} 5` : `${MARKS[tone - 1] ?? ""} ${String(tone)}`;
+
 /** One syllable to answer on: its letters without tone, its citation tone (5 is neutral). */
 export type ToneSyllable = { readonly letters: string; readonly tone: number };
 
