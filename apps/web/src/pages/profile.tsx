@@ -5,6 +5,7 @@ import { currentSetting } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { SHOW_PROGRESS } from "@/data/progress";
 import { BackupControls } from "@/shell/backup-controls";
+import { RecordingsControls } from "@/shell/recordings-controls";
 import { GoalSwitcher } from "@/shell/goal-switcher";
 import { LanguageSwitcher } from "@/shell/language-switcher";
 import { LearningStats } from "@/shell/learning-stats";
@@ -52,6 +53,7 @@ export const ProfilePage = () => {
           setShowProgress(currentSetting(storage, SHOW_PROGRESS));
         }}
       />
+      <RecordingsControls />
       <p className="mt-8">
         <Link to="/profile/about" className="inline-flex min-h-11 items-center underline">
           {t("about.title")}

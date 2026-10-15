@@ -58,7 +58,8 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   page,
 }, testInfo) => {
   const main = page.getByRole("main");
-  const status = main.getByRole("status");
+  // The backup's, above the recordings'.
+  const status = main.getByRole("status").first();
   const counts = main.getByRole("definition");
   const dark = main.getByRole("radio", { name: en.theme.dark });
   const noNewCards = main

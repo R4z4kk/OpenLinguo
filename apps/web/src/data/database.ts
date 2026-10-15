@@ -96,6 +96,18 @@ export type StoredWordAudio = {
   readonly bands: readonly string[];
 };
 
+/** The recording the learner kept of a word reading (Say it), one per reading, never in the backup. */
+export type StoredRecording = {
+  /** `headword \t readingKey`, as in `wordAudio`. */
+  readonly id: string;
+  readonly headword: string;
+  readonly readingKey: string;
+  readonly recordedAt: number;
+  readonly sampleRate: number;
+  /** 16-bit mono samples. */
+  readonly data: ArrayBuffer;
+};
+
 /** An audio pack band being installed or installed: the parts stored so far, by sha256. */
 export type StoredAudioBand = {
   /** `hsk-2025:1` */
@@ -154,6 +166,7 @@ export type Database = Dexie & {
   namesMeta: EntityTable<OnDemandMetaRecord, "key">;
   wordAudio: EntityTable<StoredWordAudio, "id">;
   audioBands: EntityTable<StoredAudioBand, "id">;
+  recordings: EntityTable<StoredRecording, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -214,6 +227,7 @@ export const openDatabase = (name: string): Database => {
         Object.assign(row, { f0Version: null });
       }),
   );
+  db.version(14).stores({ recordings: "id" });
   return db;
 };
 

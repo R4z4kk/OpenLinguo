@@ -1,28 +1,41 @@
 import {
   contour,
+  err,
+  ok,
   scorePronunciation,
   type Contour,
   type Gloss,
   type Result,
   type SyllableScore,
 } from "@openlinguo/core";
-import { Mic, Square } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { Headphones, Mic, Save, Square, Trash2 } from "lucide-react";
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { HeardWord, type Said } from "@/components/heard-word";
 import { PitchChart } from "@/components/pitch-chart";
 import { Pinyin, type PinyinFeatures } from "@/components/pinyin";
 import { ToneCard } from "@/components/tone-card";
 import { Button } from "@/components/ui/button";
+import { database, type StoredRecording } from "@/data/database";
+import { browserStorage, requestPersistence } from "@/data/persistence";
 import { referenceContour, type ReferenceError } from "@/data/pronunciation";
+import { deleteRecording, fromPcm16, keepRecording, keptRecording } from "@/data/recordings";
+import { describeFailure, guarded, type ReviewLogFailure } from "@/data/review-log";
 import { spokenReading, toneLabel, toneSyllables } from "@/data/tone-card";
 import type { Language } from "@/i18n/language";
 import { openMicrophone, type Microphone, type MicrophoneError } from "@/lib/microphone";
+import { playInTurn, type Clip } from "@/lib/playback";
 import { useReducedMotion } from "@/lib/reduced-motion";
 import { joinSamples, maxSeconds, speechEnded } from "@/lib/recording";
+import { resample, SAMPLE_RATE } from "@/lib/speech-recognizer";
 
 const PINYIN = "zh-Latn-pinyin";
 const TICK_MS = 100;
+
+/** The voice played after the model: the recording just made, or the one kept. */
+type Voice = "said" | "kept";
+
+type Notice = { readonly text: string; readonly failed: boolean };
 
 type Phase =
   | { readonly kind: "idle" }
@@ -50,8 +63,10 @@ type Props = {
 
 /**
  * Say the word, see your pitch over the reference recording's, get a result per syllable, and what
- * speech recognition heard once downloaded. The voice stays in memory on the device until the next
- * recording; the microphone is open only while recording. A listening mode is always offered (EN 301 549 4.2.6).
+ * speech recognition heard once downloaded; replay the model then your voice (shadowing). The voice
+ * stays in memory on the device until the next recording, unless kept: one kept recording per
+ * reading, on the device only. The microphone is open only while recording. R and A work only while
+ * focus is in the section (WCAG 2.1.4). A listening mode is always offered (EN 301 549 4.2.6).
  */
 export const SayIt = ({
   headword,
@@ -72,10 +87,17 @@ export const SayIt = ({
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [listening, setListening] = useState(false);
   const [said, setSaid] = useState<Said | null>(null);
+  const [kept, setKept] = useState<Result<StoredRecording | null, ReviewLogFailure> | null>(null);
+  /** The recording just made, once kept: Keep is not offered twice. */
+  const [keptSaid, setKeptSaid] = useState<Said | null>(null);
+  const [playing, setPlaying] = useState<Voice | null>(null);
+  const [notice, setNotice] = useState<Notice | null>(null);
   const recording = useRef<Recording | null>(null);
+  const playback = useRef<AbortController | null>(null);
   const opening = useRef(false);
   const mounted = useRef(true);
   const toneCard = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   const headingId = useId();
 
   useEffect(() => {
@@ -88,6 +110,16 @@ export const SayIt = ({
       current = false;
     };
   }, [audioId, count]);
+
+  useEffect(() => {
+    let current = true;
+    void keptRecording(database, audioId).then((result) => {
+      if (current) setKept(result);
+    });
+    return () => {
+      current = false;
+    };
+  }, [audioId]);
 
   /** Releases the microphone and hands back what was recorded. */
   const close = (): Float32Array | null => {
@@ -112,6 +144,7 @@ export const SayIt = ({
       mounted.current = false;
       document.removeEventListener("visibilitychange", onHidden);
       close();
+      playback.current?.abort();
     };
   }, [t]);
 
@@ -156,9 +189,12 @@ export const SayIt = ({
   const record = async (): Promise<void> => {
     if (recording.current !== null || opening.current) return;
     opening.current = true;
+    // The model played aloud would be recorded too.
+    playback.current?.abort();
     setPhase({ kind: "opening" });
     setVoice(null);
     setSaid(null);
+    setNotice(null);
     const blocks: Float32Array[] = [];
     const opened = await openMicrophone((block) => {
       blocks.push(block);
@@ -193,6 +229,107 @@ export const SayIt = ({
     if (samples !== null && sampleRate !== null) finish(samples, sampleRate);
   };
 
+  const keptValue = kept?.ok === true ? kept.value : null;
+
+  /** Plays the model then the voice; pressed again while playing, stops. */
+  const compare = async (which: Voice): Promise<void> => {
+    if (playback.current !== null) {
+      playback.current.abort();
+      return;
+    }
+    const voiceClip: Clip | null =
+      which === "said"
+        ? said === null
+          ? null
+          : { kind: "samples", ...said }
+        : keptValue === null
+          ? null
+          : {
+              kind: "samples",
+              samples: fromPcm16(keptValue.data),
+              sampleRate: keptValue.sampleRate,
+            };
+    if (voiceClip === null) return;
+    const controller = new AbortController();
+    playback.current = controller;
+    setPlaying(which);
+    const played = await playInTurn(async () => {
+      const model = await guarded(async () => ok((await database.wordAudio.get(audioId)) ?? null));
+      if (!model.ok) return err(describeFailure(model.error));
+      if (model.value === null) return err(t("audio.gone"));
+      return ok([{ kind: "encoded", data: model.value.data }, voiceClip]);
+    }, controller.signal);
+    playback.current = null;
+    if (!mounted.current) return;
+    setPlaying(null);
+    if (!played.ok) {
+      setNotice({ text: t("review.audioFailed", { reason: played.error }), failed: true });
+    }
+  };
+
+  const keep = async (): Promise<void> => {
+    if (said === null) return;
+    let samples: Float32Array;
+    try {
+      samples = await resample(said.samples, said.sampleRate);
+    } catch (error) {
+      setNotice({ text: t("speak.keepFailed", { reason: String(error) }), failed: true });
+      return;
+    }
+    await requestPersistence(browserStorage());
+    const stored = await keepRecording(database, {
+      headword,
+      readingKey,
+      recordedAt: Date.now(),
+      sampleRate: SAMPLE_RATE,
+      samples,
+    });
+    if (!mounted.current) return;
+    if (!stored.ok) {
+      setNotice({
+        text: t("speak.keepFailed", { reason: describeFailure(stored.error) }),
+        failed: true,
+      });
+      return;
+    }
+    setKeptSaid(said);
+    setNotice({ text: t("speak.keptNotice"), failed: false });
+    setKept(await keptRecording(database, audioId));
+  };
+
+  const removeKept = async (): Promise<void> => {
+    playback.current?.abort();
+    const removed = await deleteRecording(database, audioId);
+    if (!mounted.current) return;
+    if (!removed.ok) {
+      setNotice({
+        text: t("speak.deleteFailed", { reason: describeFailure(removed.error) }),
+        failed: true,
+      });
+      return;
+    }
+    setKeptSaid(null);
+    setKept(ok(null));
+    setNotice({ text: t("speak.keptDeleted"), failed: false });
+    heading.current?.focus();
+  };
+
+  /** The voice A plays: the recording just made, else the kept one. */
+  const shortcutVoice: Voice | null = said !== null ? "said" : keptValue !== null ? "kept" : null;
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
+    if (event.altKey || event.ctrlKey || event.metaKey || event.repeat) return;
+    const key = event.key.toLowerCase();
+    if (key === "r") {
+      event.preventDefault();
+      if (phase.kind === "recording") stop();
+      else void record();
+    } else if (key === "a" && shortcutVoice !== null) {
+      event.preventDefault();
+      void compare(shortcutVoice);
+    }
+  };
+
   const result = (score: SyllableScore, index: number): string => {
     const expected = tone(spoken.tones[index] ?? 0);
     const { verdict } = score;
@@ -216,9 +353,26 @@ export const SayIt = ({
           ? phase.message
           : null;
 
+  const compareButton = (which: Voice) => (
+    <Button
+      variant="outline"
+      {...(shortcutVoice === which ? { "aria-keyshortcuts": "A" } : {})}
+      onClick={() => void compare(which)}
+    >
+      {playing === which ? (
+        <Square aria-hidden="true" className="size-4" />
+      ) : (
+        <Headphones aria-hidden="true" className="size-4" />
+      )}
+      {t(playing === which ? "speak.stopPlaying" : `speak.compare.${which}`)}
+    </Button>
+  );
+
+  const dateTime = new Intl.DateTimeFormat(language, { dateStyle: "medium", timeStyle: "short" });
+
   return (
     <section aria-labelledby={headingId} className="mt-4 flex flex-col items-start gap-3">
-      <Heading id={headingId} className="text-small text-muted">
+      <Heading id={headingId} ref={heading} tabIndex={-1} className="text-small text-muted">
         {t("speak.title")}
       </Heading>
       <p className="text-small">{t("speak.notice")}</p>
@@ -236,29 +390,61 @@ export const SayIt = ({
         </p>
       )}
       {reference?.ok === true && (
-        <>
+        // eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- Shortcuts bubble from the buttons inside, so they only work while focus is there (WCAG 2.1.4).
+        <div className="flex w-full flex-col items-start gap-3" onKeyDown={onKeyDown}>
           <PitchChart reference={reference.value} voice={voice} labels={labels} />
-          {phase.kind === "recording" ? (
-            <Button variant="outline" onClick={stop}>
-              <Square aria-hidden="true" className="size-4" />
-              {t("speak.stop")}
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              aria-disabled={phase.kind === "opening"}
-              onClick={() => void record()}
-            >
-              <Mic aria-hidden="true" className="size-4" />
-              {t(phase.kind === "scored" ? "speak.again" : "speak.record")}
-            </Button>
+          <div className="flex flex-wrap gap-2">
+            {phase.kind === "recording" ? (
+              <Button variant="outline" aria-keyshortcuts="R" onClick={stop}>
+                <Square aria-hidden="true" className="size-4" />
+                {t("speak.stop")}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                aria-keyshortcuts="R"
+                aria-disabled={phase.kind === "opening"}
+                onClick={() => void record()}
+              >
+                <Mic aria-hidden="true" className="size-4" />
+                {t(phase.kind === "scored" ? "speak.again" : "speak.record")}
+              </Button>
+            )}
+            {said !== null && compareButton("said")}
+            {said !== null && keptSaid !== said && (
+              <Button variant="outline" onClick={() => void keep()}>
+                <Save aria-hidden="true" className="size-4" />
+                {t("speak.keep")}
+              </Button>
+            )}
+          </div>
+          {keptValue !== null && (
+            <div className="flex flex-col items-start gap-2">
+              <p className="text-small">
+                {t("speak.kept", { date: dateTime.format(keptValue.recordedAt) })}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {compareButton("kept")}
+                <Button variant="ghost" onClick={() => void removeKept()}>
+                  <Trash2 aria-hidden="true" className="size-4" />
+                  {t("speak.deleteKept")}
+                </Button>
+              </div>
+            </div>
           )}
-        </>
+          <p className="text-small text-muted">{t("speak.keys")}</p>
+        </div>
+      )}
+      {kept !== null && !kept.ok && (
+        <p role="alert" className="text-danger">
+          {t("speak.keptFailed", { reason: describeFailure(kept.error) })}
+        </p>
       )}
       <div role="status" className="flex flex-col gap-1">
         {status !== null && (
           <p className={phase.kind === "failed" ? "text-danger" : ""}>{status}</p>
         )}
+        {notice !== null && <p className={notice.failed ? "text-danger" : ""}>{notice.text}</p>}
         {phase.kind === "scored" && (
           <ul className="flex flex-col gap-1">
             {phase.scores.map((score, index) => (
