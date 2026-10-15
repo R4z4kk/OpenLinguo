@@ -166,7 +166,7 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 - **Data map**: on-device only → cards, review logs, recordings, journal, AI key (never reaches our servers). Server → account (email, pseudonym, password hash, OAuth ids), sessions, submissions (text + attribution + license attestation), synced logs, league XP, security logs (IP).
 - **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
-- **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, Whisper models served from our own origin/CDN (mirroring vs informing the user for model downloads decided in M3).
+- **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, Whisper models and the ONNX Runtime binary served from our own origin (decided in #119, ADR 0007).
 - **BYOK AI**: clear notice before first call naming the endpoint the user configured; data flows device → provider, never through us.
 - **Voice**: processed on-device (Whisper, pitch), recordings stored locally and deletable, never uploaded.
 - **Minors**: app usable without account by anyone; accounts 15+ (age declaration, France digital majority). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
@@ -237,7 +237,7 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 6. BYOK CORS differs by provider → documented tested providers; CSP `connect-src` must allow user endpoints (trade-off in ADR).
 7. User submissions copyright → attestation, moderation, takedown.
 8. Homelab exposure → API only, TLS via Traefik, rate limits, backups, monitoring.
-9. Open choices deferred to their milestone: SMTP provider (M7), model download mirroring (M3). Audio hosting decided in #113: GitHub release assets served by Pages (ADR 0007).
+9. Open choices deferred to their milestone: SMTP provider (M7). Audio hosting decided in #113 and Whisper model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
 10. Legal basis verified on primary texts, but not legal advice; watch items re-checked at M10.
 11. Visual-only widgets (pitch curve, decomposition tree, heatmap) need text alternatives (numeric score, tone label, list view).
 
