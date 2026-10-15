@@ -7,16 +7,14 @@ import { test } from "./app.ts";
 const SENTENCE = "我们一起去吃饭吧";
 
 /**
- * Replaces the microphone with a recording of the sentence (MOSS-TTS, fixtures/speech), played once
+ * Replaces the microphone with a recording of the sentence (the self-check one, data/whisper), played once
  * after 0.3 s of silence; the stream stays silent afterwards, so the recording stops by itself.
  * Patched on the prototype: WebKit ignores an assignment to `navigator.mediaDevices.getUserMedia`.
  * The recording comes with the script: in WebKit, a request from a page the service worker controls
  * escapes `page.route`.
  */
 const fakeMicrophone = async (page: Page): Promise<void> => {
-  const wav = await readFile(
-    new URL("../fixtures/speech/women-yiqi-qu-chifan-ba.wav", import.meta.url),
-  );
+  const wav = await readFile(new URL("../../../data/whisper/self-check.wav", import.meta.url));
   await page.addInitScript(
     (bytes: number[]) => {
       const getUserMedia = async (): Promise<MediaStream> => {
