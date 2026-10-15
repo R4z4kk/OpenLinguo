@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { charSyllables, transcriptMatches } from "./asr-check.ts";
+import { charSyllables, charTones, heardToneMatches, transcriptMatches } from "./asr-check.ts";
 
 const chars = charSyllables([
   ["一", "一", "yi1"],
@@ -49,6 +49,17 @@ describe("transcriptMatches", () => {
       ["钥匙", "鑰匙", "yao4 shi5"],
     ]);
     expect(transcriptMatches(words, "yao4 shi5", "钥匙")).toBe(true);
+  });
+
+  it("tells whether the character heard for a syllable can carry its tone", () => {
+    const tones = charTones([
+      ["马", "馬", "ma3"],
+      ["妈", "媽", "ma1"],
+      ["吗", "嗎", "ma5"],
+    ]);
+    expect(heardToneMatches(tones, "ma3", "马。")).toBe(true);
+    expect(heardToneMatches(tones, "ma3", "妈")).toBe(false);
+    expect(heardToneMatches(tones, "ma5", "妈")).toBe(true);
   });
 
   it("refuses another syllable", () => {

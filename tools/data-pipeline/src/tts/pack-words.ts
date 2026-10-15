@@ -11,7 +11,9 @@ export type WordLists = Readonly<Record<Referential, readonly GradedWord[]>>;
 
 export type Band = { readonly referential: Referential; readonly level: number };
 export type PackItem = { readonly word: string; readonly reading: string };
-export type Gap = PackItem & { readonly reason: "several-readings" | "no-reading" | "rejected" };
+export type Gap = PackItem & {
+  readonly reason: "several-readings" | "no-reading" | "rejected" | "tone-unverified";
+};
 
 export const isReferential = (value: string): value is Referential => value in REFERENTIALS;
 

@@ -39,11 +39,35 @@ export const charSyllables = (rows: readonly CedictRow[]): CharSyllables => {
   return map;
 };
 
-export const loadCharSyllables = async (): Promise<CharSyllables> => {
+/** Every tone (1–5) a character takes in CC-CEDICT, words included. */
+export type CharTones = ReadonlyMap<string, ReadonlySet<string>>;
+
+export const charTones = (rows: readonly CedictRow[]): CharTones => {
+  const map = new Map<string, Set<string>>();
+  for (const [simplified, traditional, reading] of rows) {
+    const syllables = reading.split(" ");
+    for (const form of new Set([simplified, traditional])) {
+      const chars = Array.from(form);
+      if (chars.length !== syllables.length) continue;
+      chars.forEach((char, index) => {
+        const known = map.get(char) ?? new Set<string>();
+        known.add(/[1-5]$/u.exec(syllables[index] ?? "")?.[0] ?? "5");
+        map.set(char, known);
+      });
+    }
+  }
+  return map;
+};
+
+export const loadCedictChars = async (): Promise<{
+  readonly syllables: CharSyllables;
+  readonly tones: CharTones;
+}> => {
   const dir = new URL("cc-cedict/", dataDir);
   const names = (await readdir(dir)).filter((name) => name.startsWith("entries-"));
   const shards = await Promise.all(names.map((name) => readFile(new URL(name, dir), "utf8")));
-  return charSyllables(shards.flatMap((shard) => JSON.parse(shard) as CedictRow[]));
+  const rows = shards.flatMap((shard) => JSON.parse(shard) as CedictRow[]);
+  return { syllables: charSyllables(rows), tones: charTones(rows) };
 };
 
 /** One token per Chinese character or digit; a run of other letters ("a吗", "town") is one word that never matches. */
@@ -76,4 +100,18 @@ export const transcriptMatches = (
     sameSyllables(chars, heard, syllables.map(toneless)) ||
     sameSyllables(chars, heard, syllables.filter((syllable) => syllable !== "r5").map(toneless))
   );
+};
+
+/**
+ * True when the one character heard for an isolated syllable can carry its tone. Alone, a recognizer picks the
+ * character from the sound, tone included, so another tone is a hint that the recording missed it.
+ */
+export const heardToneMatches = (
+  tones: CharTones,
+  reading: string,
+  transcript: string,
+): boolean => {
+  const [heard = "", ...rest] = tokensOf(transcript);
+  const expected = /[1-5]$/u.exec(reading)?.[0] ?? "5";
+  return rest.length === 0 && (expected === "5" || tones.get(heard)?.has(expected) === true);
 };

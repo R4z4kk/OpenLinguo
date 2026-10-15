@@ -4,10 +4,16 @@ import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 import { parseArgs, promisify } from "node:util";
-import { contour, F0_VERSION, type Result } from "@openlinguo/core";
+import { contour, F0_VERSION, type Result, type ToneClass } from "@openlinguo/core";
 import { z } from "zod";
 import { dataDir, manifestPath, readManifest, serializeManifest } from "../manifest.ts";
-import { loadCharSyllables, transcriptMatches, type CharSyllables } from "./asr-check.ts";
+import {
+  heardToneMatches,
+  loadCedictChars,
+  transcriptMatches,
+  type CharSyllables,
+  type CharTones,
+} from "./asr-check.ts";
 import { asrInfo, transcribe } from "./asr.ts";
 import { spokenPinyin } from "./bakeoff-set.ts";
 import { engineInfo, synthesize } from "./engines.ts";
@@ -26,12 +32,17 @@ import {
   type PackItem,
 } from "./pack-words.ts";
 import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
+import { toneDoubts, type SyllableRecording } from "./tone-doubt.ts";
 import { storedZip } from "./zip.ts";
 
 const run = promisify(execFile);
 
-/** Seeds tried before a recording that fails the check goes to human review. */
-const SEEDS = [1, 2, 3] as const;
+/**
+ * Seeds tried before a recording that still fails: a wrong word goes to human review, a doubted tone ships
+ * without audio (ADR 0007).
+ */
+const SEEDS = [1, 2, 3, 4, 5] as const;
+const TONE_CLASS: Readonly<Record<string, ToneClass>> = { "1": 1, "2": 2, "3": 3, "4": 4 };
 /** Pages serves files up to 25 MiB (developers.cloudflare.com/pages/platform/limits, checked 2026-10-14). */
 const PART_BYTES = 20 * 1024 * 1024;
 const MP3_BITRATE = "48k";
@@ -58,6 +69,8 @@ const itemStateSchema = z.strictObject({
   seed: z.number().int().positive(),
   transcript: z.string().nullable(),
   pass: z.boolean().nullable(),
+  /** An isolated syllable whose tone the transcript and the pitch both doubt (tone-doubt.ts). */
+  toneDoubt: z.boolean().default(false),
 });
 const stateSchema = z.strictObject({
   tts: z.string(),
@@ -197,7 +210,7 @@ const generate = async (items: readonly PackItem[], state: State, seed: number):
     const pcm = decodeWav(audio.value);
     if (!pcm.ok) throw new PacksError(`${item.word}: ${pcm.error}`);
     await writeAtomic(wavPath(item), encodeWav(trimUtterance(pcm.value)));
-    state.items[itemKey(item)] = { seed, transcript: null, pass: null };
+    state.items[itemKey(item)] = { seed, transcript: null, pass: null, toneDoubt: false };
     if ((index + 1) % SAVE_EVERY === 0 || index === todo.length - 1) {
       await saveState(state);
       console.log(`moss-tts seed ${String(seed)}: ${String(index + 1)} of ${String(todo.length)}`);
@@ -239,30 +252,77 @@ const check = async (
   await compose("stop", "qwen3-asr");
 };
 
+/**
+ * Doubts the tone of isolated syllables (tone-doubt.ts) among the band's recordings that pass the word check;
+ * every isolated syllable in the state trains the tone model of this voice. A reviewed recording keeps its verdict.
+ */
+const toneCheck = async (
+  items: readonly PackItem[],
+  state: State,
+  tones: CharTones,
+): Promise<void> => {
+  const reviews = await readParsed(reviewsPath, reviewsSchema, {});
+  const recordings: SyllableRecording[] = [];
+  for (const [key, saved] of Object.entries(state.items)) {
+    const [word = "", reading = ""] = key.split("\t");
+    const tone = TONE_CLASS[/[1-5]$/u.exec(reading)?.[0] ?? ""] ?? null;
+    const checked = saved.pass === true || saved.toneDoubt;
+    if (reading.includes(" ") || tone === null || saved.transcript === null || !checked) continue;
+    if (key in reviews) continue;
+    const pcm = decodeWav(new Uint8Array(await readFile(wavPath({ word, reading }))));
+    if (!pcm.ok) throw new PacksError(`${word}: ${pcm.error}`);
+    const curve = contour(pcm.value.samples, pcm.value.sampleRate, 1);
+    if (!curve.ok) continue;
+    recordings.push({
+      key,
+      tone,
+      contour: curve.value,
+      heardTone: heardToneMatches(tones, reading, saved.transcript),
+    });
+  }
+  const doubts = toneDoubts(recordings);
+  if (!doubts.ok) throw new PacksError(`tone model: ${JSON.stringify(doubts.error)}`);
+  const inBands = new Set(items.map(itemKey));
+  for (const { key } of recordings) {
+    const saved = state.items[key] ?? null;
+    if (saved === null || !inBands.has(key)) continue;
+    const doubt = doubts.value.has(key);
+    state.items[key] = { ...saved, pass: !doubt, toneDoubt: doubt };
+  }
+  await saveState(state);
+  const inBand = [...doubts.value].filter((key) => inBands.has(key)).length;
+  console.log(`tone check: ${String(inBand)} isolated syllables doubted`);
+};
+
 const build = async (bands: readonly Band[]): Promise<void> => {
   const items = unique((await loadBands(bands)).flatMap(({ items: bandOnes }) => bandOnes));
   const state = await loadState();
-  const chars = await loadCharSyllables();
+  const { syllables, tones } = await loadCedictChars();
   await mkdir(workDir, { recursive: true });
-  // The check is code and the transcripts are kept: a changed check applies to them without the GPU.
+  // The checks are code and the transcripts are kept: a changed check applies to them without the GPU.
   for (const item of items) {
     const saved = state.items[itemKey(item)] ?? null;
     if (saved?.transcript == null) continue;
     state.items[itemKey(item)] = {
       ...saved,
-      pass: transcriptMatches(chars, item.reading, saved.transcript),
+      pass: transcriptMatches(syllables, item.reading, saved.transcript),
+      toneDoubt: false,
     };
   }
   await saveState(state);
   for (const seed of SEEDS) {
     await generate(items, state, seed);
-    await check(items, state, chars);
+    await check(items, state, syllables);
+    await toneCheck(items, state, tones);
   }
   const reviews = await readParsed(reviewsPath, reviewsSchema, {});
   const failing = items.filter((item) => state.items[itemKey(item)]?.pass === false);
-  const unreviewed = failing.filter((item) => !(itemKey(item) in reviews));
+  const doubted = failing.filter((item) => state.items[itemKey(item)]?.toneDoubt === true);
+  const unreviewed = failing.filter(
+    (item) => !(itemKey(item) in reviews) && state.items[itemKey(item)]?.toneDoubt !== true,
+  );
   console.log(
-    `${String(items.length)} recordings, ${String(items.length - failing.length)} pass the check, ${String(failing.length)} fail with every seed (${String(unreviewed.length)} not reviewed yet: tts-packs review)`,
+    `${String(items.length)} recordings, ${String(items.length - failing.length)} pass the checks, ${String(failing.length)} fail with every seed: ${String(doubted.length)} doubted tones (no audio), ${String(unreviewed.length)} words not reviewed yet (tts-packs review)`,
   );
 };
 
@@ -271,7 +331,11 @@ const failingItems = async (state: State): Promise<PackItem[]> => {
   const all = Object.values(lists).flatMap((rows) =>
     rows.flatMap(([word, , , readings]) => readings.map((reading) => ({ word, reading }))),
   );
-  return unique(all).filter((item) => state.items[itemKey(item)]?.pass === false);
+  // A doubted tone ships without audio: only wrong words are reviewed by ear.
+  return unique(all).filter((item) => {
+    const saved = state.items[itemKey(item)] ?? null;
+    return saved?.pass === false && !saved.toneDoubt;
+  });
 };
 
 const readBody = (request: IncomingMessage): Promise<string> =>
@@ -523,8 +587,11 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
   const packed = [];
   for (const { band, items, gaps } of await loadBands(bands)) {
     const pending = items.filter((item) => (state.items[itemKey(item)]?.pass ?? null) === null);
+    const doubted = (item: PackItem): boolean =>
+      state.items[itemKey(item)]?.toneDoubt === true && !(itemKey(item) in reviews);
     const unreviewed = items.filter(
-      (item) => state.items[itemKey(item)]?.pass === false && !(itemKey(item) in reviews),
+      (item) =>
+        state.items[itemKey(item)]?.pass === false && !(itemKey(item) in reviews) && !doubted(item),
     );
     if (pending.length > 0 || unreviewed.length > 0) {
       throw new PacksError(
@@ -537,11 +604,14 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     const rejected = items
       .filter((item) => reviews[itemKey(item)] === "bad")
       .map((item): Gap => ({ ...item, reason: "rejected" }));
+    const unverified = items
+      .filter(doubted)
+      .map((item): Gap => ({ ...item, reason: "tone-unverified" }));
     const parts = await packBand(band, kept);
     const validatedByEar = kept.filter((item) => state.items[itemKey(item)]?.pass === false).length;
     packed.push({
       band,
-      gaps: [...gaps, ...rejected],
+      gaps: [...gaps, ...rejected, ...unverified],
       entry: { ...band, entries: kept.length, validatedByEar, parts },
     });
     console.log(
