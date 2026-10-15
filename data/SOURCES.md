@@ -53,7 +53,7 @@ All OFL-1.1. Atkinson Hyperlegible Next, Noto Sans SC and LXGW WenKai GB have no
 | opencc-js | 1.4.2 | MIT AND Apache-2.0 (OpenCC dictionaries) |
 | ts-fsrs | 5.4.2 | MIT |
 
-## Speech models (offline pipeline; generated audio is shipped)
+## Speech models (offline pipeline, generated audio shipped; Whisper downloaded by the app)
 
 | Model | Language | License | Status |
 |---|---|---|---|
@@ -61,6 +61,9 @@ All OFL-1.1. Atkinson Hyperlegible Next, Noto Sans SC and LXGW WenKai GB have no
 | [MOSS-TTS v1.5](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-v1.5) and [MOSS-Audio-Tokenizer](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer) (OpenMOSS) | zh syllables, words and sentences | Apache-2.0 (model cards; code [OpenMOSS/MOSS-TTS](https://github.com/OpenMOSS/MOSS-TTS) Apache-2.0) | Verified 2026-10-13 — revisions `cdd3b91` and `3cd226b`, chosen in the bake-off #112 |
 | [MOSS-VoiceGenerator](https://huggingface.co/OpenMOSS-Team/MOSS-VoiceGenerator) (OpenMOSS) | the synthetic reference voice `tools/tts/voices/designed-zh-female.wav`, designed from a text description (no real speaker) | Apache-2.0 (model card) | Verified 2026-10-13 — revision `97521ec` |
 | [Qwen3-ASR-1.7B](https://huggingface.co/Qwen/Qwen3-ASR-1.7B) (Qwen) | checks every generated zh recording for added or missing words; not shipped | Apache-2.0 (model card; package `qwen-asr` 0.0.6 Apache-2.0) | Verified 2026-10-14 — revision `7278e1e`, chosen over Whisper large-v3 and FireRedASR2-AED (ADR 0007) |
+| [Whisper](https://github.com/openai/whisper) (OpenAI), ONNX conversion by [onnx-community](https://huggingface.co/onnx-community) | zh speech recognition in the app (Read aloud, a hint on the word page), downloaded only on request and run on the device | MIT for the weights ([LICENSE](https://github.com/openai/whisper/blob/86098128c0b4f24f0e2aa2994de830614b474227/LICENSE), shipped as `data/whisper/whisper-MIT.txt`); the onnx-community conversions declare no license | Verified 2026-10-15 — model and revision in `data/whisper/model.json`, chosen by the benchmark of ADR 0007 (#119); files copied byte for byte to the GitHub release it names, checked against the hashes Hugging Face publishes |
+
+The Whisper benchmark (ADR 0007) also read 50 sentences of [FLEURS](https://huggingface.co/datasets/google/fleurs) (Google, CC BY 4.0, `cmn_hans_cn` dev split at revision `70bb2e8`); they are not shipped. transformers.js 4.3.1 (Hugging Face, Apache-2.0) and the ONNX Runtime WebAssembly binary of onnxruntime-web 1.31.0-dev.20260914 (Microsoft, MIT) run the model.
 
 Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots.tts-soar, CosyVoice-300M-SFT, Fun-CosyVoice3-0.5B-2512, Qwen3-TTS-12Hz-1.7B-CustomVoice, GLM-TTS, VoxCPM2.
 
@@ -164,6 +167,7 @@ Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots
 - CEFR-J Wordlist Version 1.6 — compiled by Yukio Tono, Tokyo University of Foreign Studies
 - Octanove Vocabulary Profile — CC BY-SA 4.0
 - Tatoeba sentences — tatoeba.org contributors, CC BY 2.0 FR
+- Whisper — OpenAI, MIT (speech recognition, downloaded on request); ONNX conversion by onnx-community
 
 ## Excluded
 

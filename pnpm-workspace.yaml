@@ -10,3 +10,12 @@ minimumReleaseAge: 10080
 # an unreviewed one fails the install (https://pnpm.io/settings/build). Already pnpm 12's
 # default, stated here so a default change cannot weaken it silently.
 strictDepBuilds: true
+
+# transformers.js (apps/web) lists its Node backends as dependencies; the browser bundle imports
+# neither, and both run install scripts.
+overrides:
+  onnxruntime-node: "-"
+  sharp: "-"
+# onnxruntime-web's protobufjs: its postinstall only checks protobufjs's own CLI.
+allowBuilds:
+  protobufjs: false

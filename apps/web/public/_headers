@@ -6,3 +6,9 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Cross-Origin-Opener-Policy: same-origin
+
+# The speech-recognition worker alone may compile WebAssembly (ONNX Runtime, ADR 0007): a dedicated
+# worker gets its policy from its own response, so the pages keep script-src 'self'.
+/assets/speech-worker-*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'

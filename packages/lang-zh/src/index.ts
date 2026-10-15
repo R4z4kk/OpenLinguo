@@ -38,6 +38,7 @@ export {
 } from "./pinyin-search.ts";
 export { applySandhi, type ReadingWord, type SandhiError } from "./sandhi.ts";
 export { createSegmenter } from "./segment.ts";
+export { alignChars, readingChars, type CharMatch, type SpokenChar } from "./transcript.ts";
 
 export type ZhProficiency = Extract<ProficiencyFramework, "hsk-2025" | "gf0025-2021">;
 

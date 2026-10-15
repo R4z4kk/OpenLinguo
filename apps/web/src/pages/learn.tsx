@@ -4,7 +4,8 @@ import { Link } from "@tanstack/react-router";
 import { BookA, Grid3x3, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { Suspense, use, useId, useRef, useState, useTransition, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { BandAudio, describeAudioFailure } from "@/components/band-audio";
+import { BandAudio } from "@/components/band-audio";
+import { describeDownloadFailure } from "@/components/download-controls";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { NameField } from "@/components/name-field";
 import { Dialog } from "@/components/ui/dialog";
@@ -411,7 +412,7 @@ const BandList = ({
       </ul>
       {!packs.ok && packs.error.kind !== "cancelled" && (
         <p role="alert" className="mt-4 text-danger">
-          {t("audio.unavailable", { reason: describeAudioFailure(t, packs.error) })}
+          {t("audio.unavailable", { reason: describeDownloadFailure(t, packs.error) })}
         </p>
       )}
     </>

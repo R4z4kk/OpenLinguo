@@ -9,38 +9,42 @@ export type AudioFailure = ImportFailure | { readonly kind: "cancelled" };
 /** Stored audio to play: a deck's own (`audio`, from an Anki import) or an audio pack's recording (`wordAudio`). */
 export type AudioSource = { readonly table: "audio" | "wordAudio"; readonly id: string };
 
-/** Downloads `/data/<name>`, reporting the bytes received so far. */
+/** Downloads `<base><name>`, reporting the bytes received so far. */
 export type FetchProgress = (
   name: string,
   signal: AbortSignal,
   onBytes: (received: number) => void,
 ) => Promise<Result<Uint8Array<ArrayBuffer>, string>>;
 
-export const fetchWithProgress: FetchProgress = async (name, signal, onBytes) => {
-  try {
-    const response = await fetch(`/data/${name}`, { cache: "no-store", signal });
-    if (!response.ok || response.body === null) return err(`HTTP ${String(response.status)}`);
-    const reader = response.body.getReader();
-    const chunks: Uint8Array[] = [];
-    let received = 0;
-    for (;;) {
-      const chunk = await reader.read();
-      if (chunk.done) break;
-      chunks.push(chunk.value);
-      received += chunk.value.length;
-      onBytes(received);
+export const fetchFrom =
+  (base: string): FetchProgress =>
+  async (name, signal, onBytes) => {
+    try {
+      const response = await fetch(`${base}${name}`, { cache: "no-store", signal });
+      if (!response.ok || response.body === null) return err(`HTTP ${String(response.status)}`);
+      const reader = response.body.getReader();
+      const chunks: Uint8Array[] = [];
+      let received = 0;
+      for (;;) {
+        const chunk = await reader.read();
+        if (chunk.done) break;
+        chunks.push(chunk.value);
+        received += chunk.value.length;
+        onBytes(received);
+      }
+      const bytes = new Uint8Array(received);
+      let at = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, at);
+        at += chunk.length;
+      }
+      return ok(bytes);
+    } catch (error) {
+      return err(String(error));
     }
-    const bytes = new Uint8Array(received);
-    let at = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, at);
-      at += chunk.length;
-    }
-    return ok(bytes);
-  } catch (error) {
-    return err(String(error));
-  }
-};
+  };
+
+export const fetchWithProgress = fetchFrom("/data/");
 
 const INDEX = "audio-zh/index.json";
 
