@@ -10,13 +10,14 @@ import {
 } from "./tone-classifier.ts";
 
 /**
- * Measured 2026-10-14 on 289 isolated syllables of 3 speakers, one left out: 58.1 % right, and
- * 77.4 % right on the 42.9 % of guesses at or above `MIN_CONFIDENCE` (ADR 0007). The floors sit a
- * few points under; the fixture tests, in Node and in the browsers, fail below them.
+ * Measured 2026-10-15 on 289 isolated syllables of 3 speakers, one left out, with the low-passed
+ * contours (`F0_VERSION` v2): 64.7 % right, and 80.5 % right on the 55.0 % of guesses at or above
+ * `MIN_CONFIDENCE` (ADR 0007). The floors sit a few points under; the fixture tests, in Node and in
+ * the browsers, fail below them.
  */
-export const ACCURACY_FLOOR = 0.53;
-export const CONFIDENT_COVERAGE_FLOOR = 0.35;
-export const CONFIDENT_ACCURACY_FLOOR = 0.7;
+export const ACCURACY_FLOOR = 0.6;
+export const CONFIDENT_COVERAGE_FLOOR = 0.48;
+export const CONFIDENT_ACCURACY_FLOOR = 0.74;
 
 export type ToneExample = {
   readonly speaker: string;
