@@ -38,21 +38,13 @@ describe("public/_headers", () => {
     expect(headers["Permissions-Policy"]).toContain("microphone=(self)");
   });
 
-  it("isolates the app across origins, so WebAssembly may run on several threads", () => {
-    expect(headers["Cross-Origin-Opener-Policy"]).toBe("same-origin");
-    expect(headers["Cross-Origin-Embedder-Policy"]).toBe("require-corp");
-  });
-
-  it("lets the speech worker and its thread workers alone compile WebAssembly, with one policy", () => {
-    for (const path of ["/assets/speech-worker-AbC123.js", "/assets/transformers.web-AbC123.js"]) {
-      const worker = headersFor(rules.value, path);
-      expect(directivesOf(worker["Content-Security-Policy"] ?? null).get("script-src")).toBe(
-        "'self' 'wasm-unsafe-eval'",
-      );
-      expect(worker["Content-Security-Policy"]).not.toContain(",");
-      expect(worker["Cross-Origin-Embedder-Policy"]).toBe("require-corp");
-      expect(worker["Strict-Transport-Security"]).toBe(headers["Strict-Transport-Security"]);
-    }
+  it("lets the speech worker alone compile WebAssembly, with one policy", () => {
+    const worker = headersFor(rules.value, "/assets/speech-worker-AbC123.js");
+    expect(directivesOf(worker["Content-Security-Policy"] ?? null).get("script-src")).toBe(
+      "'self' 'wasm-unsafe-eval'",
+    );
+    expect(worker["Content-Security-Policy"]).not.toContain(",");
+    expect(worker["Strict-Transport-Security"]).toBe(headers["Strict-Transport-Security"]);
     const other = headersFor(rules.value, "/assets/index-AbC123.js");
     expect(other["Content-Security-Policy"]).toBe(headers["Content-Security-Policy"]);
   });

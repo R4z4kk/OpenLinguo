@@ -12,7 +12,7 @@ import { maxSeconds } from "@/lib/recording";
 import type { RecognizerError } from "@/lib/speech-recognizer";
 import { useRecording, type RecordingPhase } from "@/lib/use-recording";
 
-/** Sentences longer than this are not checked: Whisper hears 30 s at a time. */
+/** Sentences longer than this are not checked: recognition time grows with the recording (ADR 0007). */
 const MAX_CHARACTERS = 60;
 const MAX_SECONDS = 30;
 
@@ -23,9 +23,7 @@ type Check =
   | { readonly kind: "failed"; readonly message: string };
 
 export const recognizerFailure = (t: TFunction, error: RecognizerError): string =>
-  error.kind === "failed"
-    ? t("hear.failed", { reason: error.message })
-    : t(error.kind === "missing" ? "hear.missingModel" : "hear.unreliable");
+  error.kind === "failed" ? t("hear.failed", { reason: error.message }) : t("hear.missingModel");
 
 export const recordingStatus = (
   t: TFunction,
@@ -49,7 +47,7 @@ export const recordingStatus = (
 };
 
 /**
- * Type a sentence, read it aloud, see what speech recognition heard (Whisper, on the device, after
+ * Type a sentence, read it aloud, see what speech recognition heard (Paraformer, on the device, after
  * the learner downloads it). Optional: nothing else in the app needs a voice (EN 301 549 4.2.6).
  */
 export const ReadAloud = ({ pack }: { readonly pack: LanguagePack }) => {
@@ -69,7 +67,7 @@ export const ReadAloud = ({ pack }: { readonly pack: LanguagePack }) => {
       setCheck({ kind: "failed", message: t("hear.failed", { reason: expected.error.kind }) });
       return;
     }
-    const heard = await transcribe(samples, sampleRate, expected.value.length);
+    const heard = await transcribe(samples, sampleRate);
     if (!heard.ok) {
       setCheck({ kind: "failed", message: recognizerFailure(t, heard.error) });
       if (heard.error.kind !== "failed") refresh();
@@ -113,20 +111,14 @@ export const ReadAloud = ({ pack }: { readonly pack: LanguagePack }) => {
       <p className="text-small">{t("readAloud.notice")}</p>
       {model.status === "unavailable" && (
         <p role="alert" className="text-danger">
-          {model.failure === null
-            ? t("readAloud.unsupported")
-            : model.failure.kind === "cancelled"
-              ? null
-              : t("readAloud.unavailable", { reason: describeDownloadFailure(t, model.failure) })}
+          {model.failure.kind === "cancelled"
+            ? null
+            : t("readAloud.unavailable", { reason: describeDownloadFailure(t, model.failure) })}
         </p>
-      )}
-      {model.status === "ready" && model.webgpuSetAside && model.state !== "installed" && (
-        <p>{t("hear.unreliable")}</p>
       )}
       {model.status === "ready" && (
         <SpeechModelControls
           index={model.index}
-          backend={model.backend}
           state={model.state}
           describedBy={headingId}
           onChange={refresh}

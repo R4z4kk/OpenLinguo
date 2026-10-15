@@ -9,8 +9,8 @@ const HAN = /\p{Script=Han}/u;
 const DIGITS = "零一二三四五六七八九";
 
 /**
- * Whisper writes Mandarin in traditional characters more often than not (ADR 0007). `tw`: on the
- * benchmark's transcripts it scored as well as `t` and `hk`, or better.
+ * Paraformer writes simplified characters; Whisper, used before it, wrote traditional ones more often
+ * than not (ADR 0007). `tw`: on Whisper's transcripts it scored as well as `t` and `hk`, or better.
  */
 export const toSimplified: (text: string) => string = Converter({ from: "tw", to: "cn" });
 

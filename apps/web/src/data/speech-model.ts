@@ -1,7 +1,6 @@
 import { err, ok, type Result } from "@openlinguo/core";
-import { readStored, writeStored } from "@/lib/stored";
 import type { FetchProgress } from "./audio-packs.ts";
-import { SpeechModelIndex, type SpeechBackend, type SpeechModelFile } from "./format.ts";
+import { SpeechModelIndex } from "./format.ts";
 import { readJson, sha256, type ImportFailure } from "./import.ts";
 import { CACHE_PREFIX, cacheName, INDEX, pieces, url } from "./speech-files.ts";
 
@@ -10,14 +9,8 @@ export type SpeechFailure = ImportFailure | { readonly kind: "cancelled" };
 /** `installed`: every file of the current release is stored; `partial`: an interrupted download. */
 export type SpeechModelState = "absent" | "partial" | "installed";
 
-export const backendFiles = (
-  index: SpeechModelIndex,
-  backend: SpeechBackend,
-): readonly SpeechModelFile[] =>
-  index.files.filter((file) => (file.backends ?? [backend]).includes(backend));
-
-export const downloadBytes = (index: SpeechModelIndex, backend: SpeechBackend): number =>
-  backendFiles(index, backend).reduce((sum, file) => sum + file.bytes, 0);
+export const downloadBytes = (index: SpeechModelIndex): number =>
+  index.files.reduce((sum, file) => sum + file.bytes, 0);
 
 const storageFailure = (file: string, error: unknown): SpeechFailure => ({
   kind: "storage",
@@ -49,79 +42,17 @@ const storedIndex = async (): Promise<Uint8Array | null> => {
   }
 };
 
-const VERDICT_KEY = "openlinguo.speechWebgpu";
-
-/** Whether WebGPU transcribed the self-check sentence right on this device: `null` until tried. */
-export type WebgpuVerdict = "right" | "wrong";
-
-export const webgpuVerdict = (
-  storage: () => Storage,
-  index: SpeechModelIndex,
-): WebgpuVerdict | null => {
-  const stored = readStored(storage, VERDICT_KEY);
-  if (!stored.ok || stored.value === null) return null;
-  const [release, verdict] = stored.value.split(" ");
-  return release === index.release && (verdict === "right" || verdict === "wrong") ? verdict : null;
-};
-
-export const recordWebgpuVerdict = (
-  storage: () => Storage,
-  index: SpeechModelIndex,
-  verdict: WebgpuVerdict,
-): Result<null, string> => writeStored(storage, VERDICT_KEY, `${index.release} ${verdict}`);
-
-/**
- * WebGPU when the device has it, with 16-bit floats if the model uses them, unless it already got
- * the self-check sentence wrong; else WebAssembly.
- */
-export const chooseBackend = async (
-  index: SpeechModelIndex,
-  storage: () => Storage,
-): Promise<SpeechBackend | null> => {
-  const webgpu = index.backends.webgpu ?? null;
-  if (webgpu !== null && "gpu" in navigator && webgpuVerdict(storage, index) !== "wrong") {
-    try {
-      const adapter = await navigator.gpu.requestAdapter();
-      const needsF16 = Object.values(webgpu.dtype).includes("fp16");
-      if (adapter !== null && (!needsF16 || adapter.features.has("shader-f16"))) return "webgpu";
-    } catch {
-      // No usable adapter: WebAssembly below.
-    }
-  }
-  return index.backends.wasm == null ? null : "wasm";
-};
-
 export const speechModelState = async (
   index: SpeechModelIndex,
-  backend: SpeechBackend,
 ): Promise<Result<SpeechModelState, SpeechFailure>> => {
   try {
     if (!(await caches.has(cacheName(index)))) return ok("absent");
     const cache = await caches.open(cacheName(index));
     const stored = new Set((await cache.keys()).map((request) => new URL(request.url).pathname));
-    const wanted = backendFiles(index, backend).flatMap((file) =>
-      pieces(file).map(({ path }) => url(path)),
-    );
+    const wanted = index.files.flatMap(pieces).map(({ path }) => url(path));
     return ok(
       wanted.every((path) => stored.has(path)) && stored.has(url(INDEX)) ? "installed" : "partial",
     );
-  } catch (error) {
-    return err(storageFailure(cacheName(index), error));
-  }
-};
-
-/** Deletes the files only `backend` loads, once the device is known to need the other one. */
-export const removeBackendFiles = async (
-  index: SpeechModelIndex,
-  backend: SpeechBackend,
-): Promise<Result<null, SpeechFailure>> => {
-  try {
-    const cache = await caches.open(cacheName(index));
-    const only = index.files.filter(
-      ({ backends }) => backends?.length === 1 && backends[0] === backend,
-    );
-    await Promise.all(only.flatMap(pieces).map(({ path }) => cache.delete(url(path))));
-    return ok(null);
   } catch (error) {
     return err(storageFailure(cacheName(index), error));
   }
@@ -139,17 +70,16 @@ export const removeSpeechModel = async (): Promise<Result<null, SpeechFailure>> 
 };
 
 /**
- * Downloads the backend's files, checks each piece against its sha256 and stores it in the Cache API, so a
+ * Downloads the model's files, checks each piece against its sha256 and stores it in the Cache API, so a
  * cancelled or failed download resumes at the next piece. Older releases are removed first.
  */
 export const installSpeechModel = async (
   index: SpeechModelIndex,
-  backend: SpeechBackend,
   fetchPiece: FetchProgress,
   onProgress: (received: number, total: number) => void,
   signal: AbortSignal,
 ): Promise<Result<null, SpeechFailure>> => {
-  const total = downloadBytes(index, backend);
+  const total = downloadBytes(index);
   try {
     const older = (await caches.keys()).filter(
       (name) => name.startsWith(CACHE_PREFIX) && name !== cacheName(index),
@@ -158,7 +88,7 @@ export const installSpeechModel = async (
     const cache = await caches.open(cacheName(index));
     const stored = new Set((await cache.keys()).map((request) => new URL(request.url).pathname));
     let received = 0;
-    for (const piece of backendFiles(index, backend).flatMap(pieces)) {
+    for (const piece of index.files.flatMap(pieces)) {
       if (stored.has(url(piece.path))) {
         received += piece.bytes;
         continue;

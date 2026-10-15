@@ -1,20 +1,14 @@
-import type { AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
-import type { SpeechBackend, SpeechModelIndex } from "@/data/format";
+import type { SpeechModelIndex } from "@/data/format";
 import { storedFile, url } from "@/data/speech-files";
+import createSherpaOnnx, { type SherpaOnnx } from "./sherpa-onnx/sherpa-onnx-asr.mjs";
 
 export type SpeechRequest =
-  | {
-      readonly type: "load";
-      readonly index: SpeechModelIndex;
-      readonly backend: SpeechBackend;
-    }
+  | { readonly type: "load"; readonly index: SpeechModelIndex }
   | {
       readonly type: "transcribe";
       readonly id: number;
       /** Mono, 16 kHz. */
       readonly samples: Float32Array<ArrayBuffer>;
-      /** Caps a runaway transcript: Whisper can repeat a token until its limit. */
-      readonly maxTokens: number;
     };
 
 export type SpeechReply =
@@ -31,49 +25,66 @@ export type SpeechReply =
 type Scope = {
   onmessage: ((event: MessageEvent<SpeechRequest>) => void) | null;
   postMessage: (message: SpeechReply) => void;
-  readonly location: Location;
 };
 const scope = self as unknown as Scope;
 
 class MissingFile extends Error {}
 
-let recognizer: Promise<AutomaticSpeechRecognitionPipeline> | null = null;
+type Engine = { readonly sherpa: SherpaOnnx; readonly recognizer: number };
+
+let engine: Promise<Engine> | null = null;
 
 /**
- * Loads transformers.js from our origin only: model files come from the Cache API filled after the
- * learner's consent (data/speech-model.ts), joined from their parts; the runtime binary too, passed
- * as `wasmBinary` so that its JavaScript, bundled here, needs no `blob:` script (ADR 0007).
+ * Starts sherpa-onnx with Paraformer from the Cache API filled after the learner's consent
+ * (data/speech-model.ts), files joined from their parts: nothing is fetched (ADR 0007).
  */
-const load = async (
-  index: SpeechModelIndex,
-  backend: SpeechBackend,
-): Promise<AutomaticSpeechRecognitionPipeline> => {
-  const config = index.backends[backend] ?? null;
-  if (config === null) throw new Error(`no ${backend} model in ${url("index.json")}`);
-  const files = new Map(index.files.map((file) => [url(file.path), file]));
-  const read = async (path: string): Promise<Response> => {
+const load = async (index: SpeechModelIndex): Promise<Engine> => {
+  const files = new Map(index.files.map((file) => [file.path, file]));
+  const read = async (path: string): Promise<Uint8Array> => {
     const file = files.get(path) ?? null;
     const response = file === null ? null : await storedFile(index, file);
-    if (response === null) throw new MissingFile(`${path} is not stored`);
-    return response;
+    if (response === null) throw new MissingFile(`${url(path)} is not stored`);
+    return new Uint8Array(await response.arrayBuffer());
   };
-  const { env, pipeline } = await import("@huggingface/transformers");
-  env.allowRemoteModels = false;
-  env.allowLocalModels = true;
-  env.localModelPath = url("");
-  env.useBrowserCache = false;
-  env.useWasmCache = false;
-  env.fetch = (input: string | URL) => read(new URL(input, scope.location.href).pathname);
-  const wasm = env.backends.onnx.wasm ?? null;
-  if (wasm === null) throw new Error("transformers.js has no WebAssembly backend");
-  wasm.wasmBinary = await (await read(url(config.runtime))).arrayBuffer();
-  // No `mjs`: ONNX Runtime uses the factory bundled with it instead of importing one.
-  wasm.wasmPaths = { wasm: url(config.runtime) };
-  // `numThreads` left to ONNX Runtime: one thread unless the page is cross-origin isolated.
-  return pipeline("automatic-speech-recognition", index.model, {
-    device: backend,
-    dtype: config.dtype,
+  const errors: string[] = [];
+  const sherpa = await createSherpaOnnx({
+    wasmBinary: await read(index.runtime),
+    print: () => {},
+    printErr: (text) => {
+      errors.push(text);
+    },
   });
+  sherpa.FS_createDataFile("/", "model.onnx", await read(index.model), true, false, true);
+  sherpa.FS_createDataFile("/", "tokens.txt", await read(index.tokens), true, false, true);
+  const model = sherpa.stringToNewUTF8("/model.onnx");
+  const tokens = sherpa.stringToNewUTF8("/tokens.txt");
+  const recognizer = sherpa._OpenLinguoCreateRecognizer(model, tokens);
+  sherpa._free(model);
+  sherpa._free(tokens);
+  // The recognizer holds its own copy: the files would only take memory.
+  sherpa.FS_unlink("/model.onnx");
+  sherpa.FS_unlink("/tokens.txt");
+  if (recognizer === 0) {
+    throw new Error(errors.join("\n") || "sherpa-onnx could not load the model");
+  }
+  return { sherpa, recognizer };
+};
+
+const transcribe = ({ sherpa, recognizer }: Engine, samples: Float32Array): string => {
+  const input = sherpa._malloc(samples.length * Float32Array.BYTES_PER_ELEMENT);
+  if (input === 0) throw new Error("no memory for the recording");
+  try {
+    sherpa.HEAPF32.set(samples, input / Float32Array.BYTES_PER_ELEMENT);
+    const text = sherpa._OpenLinguoTranscribe(recognizer, input, samples.length);
+    if (text === 0) throw new Error("sherpa-onnx returned no transcript");
+    try {
+      return sherpa.UTF8ToString(text);
+    } finally {
+      sherpa._free(text);
+    }
+  } finally {
+    sherpa._free(input);
+  }
 };
 
 const fail = (stage: "load" | "transcribe", error: unknown): SpeechReply => ({
@@ -85,26 +96,23 @@ const fail = (stage: "load" | "transcribe", error: unknown): SpeechReply => ({
 
 const handle = async (request: SpeechRequest): Promise<void> => {
   if (request.type === "load") {
-    recognizer = load(request.index, request.backend);
+    engine = load(request.index);
     try {
-      await recognizer;
+      await engine;
       scope.postMessage({ type: "loaded" });
     } catch (error) {
-      recognizer = null;
+      engine = null;
       scope.postMessage(fail("load", error));
     }
     return;
   }
   try {
-    if (recognizer === null) throw new Error("the model is not loaded");
-    const output = await (
-      await recognizer
-    )(request.samples, {
-      language: "chinese",
-      task: "transcribe",
-      max_new_tokens: request.maxTokens,
+    if (engine === null) throw new Error("the model is not loaded");
+    scope.postMessage({
+      type: "transcript",
+      id: request.id,
+      text: transcribe(await engine, request.samples),
     });
-    scope.postMessage({ type: "transcript", id: request.id, text: output.text });
   } catch (error) {
     scope.postMessage(fail("transcribe", error));
   }

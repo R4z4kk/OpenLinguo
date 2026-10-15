@@ -7,7 +7,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | Data | Personal | Notes |
 |---|---|---|
 | Dictionary, levels, stroke data, audio packs | No | Public datasets, cached offline |
-| Speech recognition model (Whisper files and the ONNX Runtime binary) | No | Downloaded only when the learner asks, after its size is shown, from the app's origin; kept in the Cache API, removed by « Delete speech recognition » (#119) |
+| Speech recognition model (Paraformer files and the sherpa-onnx WebAssembly binary) | No | Downloaded only when the learner asks, after its size is shown, from the app's origin; kept in the Cache API, removed by « Delete speech recognition » (#119) |
 | Cards and their content | Yes (learning data) | Synced if sync is on |
 | Review log (append-only) | Yes (learning data) | Synced if sync is on; XP is derived from it |
 | Personal decks: names typed by the learner, words filed in them | Yes (learning data) | Synced if sync is on |

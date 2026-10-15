@@ -1,86 +1,71 @@
-import { err, ok } from "@openlinguo/core";
+import { err, ok, type Result } from "@openlinguo/core";
 import { describe, expect, it, vi } from "vitest";
 import type { SpeechModelIndex } from "@/data/format";
-import { webgpuVerdict, type WebgpuVerdict } from "@/data/speech-model";
-import { startTrusted, type Recognizer, type TrustDependencies } from "./speech-recognizer.ts";
+import { shareRecognizer, type Recognizer, type RecognizerError } from "./speech-recognizer.ts";
 
-const index: SpeechModelIndex = {
-  release: "whisper-1",
-  model: "whisper-base",
-  backends: {},
+const index = (release: string): SpeechModelIndex => ({
+  release,
+  model: "m/model.int8.onnx",
+  tokens: "m/tokens.txt",
+  runtime: "sherpa-onnx/sherpa-onnx-asr.wasm",
   files: [],
-  check: { path: "whisper-base/self-check.wav", text: "我们一起去吃饭吧" },
+});
+
+const setup = (texts: Result<string, RecognizerError>[]) => {
+  const recognizers: Recognizer[] = [];
+  const start = vi.fn(() => {
+    const recognizer: Recognizer = {
+      transcribe: () => Promise.resolve(texts.shift() ?? ok("")),
+      close: vi.fn(),
+    };
+    recognizers.push(recognizer);
+    return Promise.resolve(ok(recognizer));
+  });
+  return { shared: shareRecognizer(start), start, recognizers };
 };
 
-const memoryStorage = (): Storage => {
-  const items = new Map<string, string>();
-  return {
-    get length() {
-      return items.size;
-    },
-    clear: () => {
-      items.clear();
-    },
-    getItem: (key) => items.get(key) ?? null,
-    key: (position) => [...items.keys()][position] ?? null,
-    removeItem: (key) => {
-      items.delete(key);
-    },
-    setItem: (key, value) => {
-      items.set(key, value);
-    },
-  };
-};
+const samples = new Float32Array(160);
 
-const setup = (verdict: WebgpuVerdict | "fails") => {
-  const recognizer: Recognizer = {
-    transcribe: () => Promise.resolve(ok("")),
-    close: vi.fn(),
-  };
-  const store = memoryStorage();
-  const dependencies = {
-    start: vi.fn(() => Promise.resolve(ok(recognizer))),
-    check: vi.fn(() =>
-      Promise.resolve(
-        verdict === "fails" ? err({ kind: "failed" as const, message: "no audio" }) : ok(verdict),
-      ),
-    ),
-    storage: () => store,
-    removeWebgpuFiles: vi.fn(() => Promise.resolve(null)),
-  } satisfies TrustDependencies;
-  return { recognizer, store, dependencies };
-};
-
-describe("startTrusted", () => {
-  it("does not check WebAssembly", async () => {
-    const { dependencies } = setup("wrong");
-    expect((await startTrusted(index, "wasm", dependencies)).ok).toBe(true);
-    expect(dependencies.check).not.toHaveBeenCalled();
+describe("shareRecognizer", () => {
+  it("starts once when the page opens, then serves every transcript", async () => {
+    const { shared, start } = setup([ok("你好"), ok("谢谢")]);
+    shared.warm(index("paraformer-1"));
+    shared.warm(index("paraformer-1"));
+    expect(await shared.transcribe(index("paraformer-1"), samples, 16_000)).toEqual(ok("你好"));
+    expect(await shared.transcribe(index("paraformer-1"), samples, 16_000)).toEqual(ok("谢谢"));
+    expect(start).toHaveBeenCalledTimes(1);
   });
 
-  it("checks WebGPU once per release, then trusts it", async () => {
-    const { dependencies, store } = setup("right");
-    expect((await startTrusted(index, "webgpu", dependencies)).ok).toBe(true);
-    expect(webgpuVerdict(() => store, index)).toBe("right");
-    await startTrusted(index, "webgpu", dependencies);
-    expect(dependencies.check).toHaveBeenCalledTimes(1);
-    expect(webgpuVerdict(() => store, { ...index, release: "whisper-2" })).toBeNull();
+  it("stops after a failure, and starts again on the next use", async () => {
+    const failed = err({ kind: "failed" as const, message: "abort" });
+    const { shared, start, recognizers } = setup([failed, ok("你好")]);
+    expect(await shared.transcribe(index("paraformer-1"), samples, 16_000)).toEqual(failed);
+    await Promise.resolve();
+    expect(recognizers[0]?.close).toHaveBeenCalled();
+    expect(await shared.transcribe(index("paraformer-1"), samples, 16_000)).toEqual(ok("你好"));
+    expect(start).toHaveBeenCalledTimes(2);
   });
 
-  it("sets WebGPU aside when it gets the sentence wrong, and deletes its files", async () => {
-    const { dependencies, store, recognizer } = setup("wrong");
-    expect(await startTrusted(index, "webgpu", dependencies)).toEqual(err({ kind: "unreliable" }));
-    expect(webgpuVerdict(() => store, index)).toBe("wrong");
-    expect(recognizer.close).toHaveBeenCalled();
-    expect(dependencies.removeWebgpuFiles).toHaveBeenCalledWith(index);
+  it("replaces the recognizer of an older release", async () => {
+    const { shared, start, recognizers } = setup([]);
+    shared.warm(index("paraformer-1"));
+    shared.warm(index("paraformer-2"));
+    await Promise.resolve();
+    expect(start).toHaveBeenCalledTimes(2);
+    expect(recognizers[0]?.close).toHaveBeenCalled();
+    expect(recognizers[1]?.close).not.toHaveBeenCalled();
   });
 
-  it("reports a check that could not run, and decides nothing", async () => {
-    const { dependencies, store } = setup("fails");
-    expect(await startTrusted(index, "webgpu", dependencies)).toEqual(
-      err({ kind: "failed", message: "no audio" }),
+  it("reports a start that failed, then tries again", async () => {
+    const start = vi.fn((): Promise<Result<Recognizer, RecognizerError>> =>
+      Promise.resolve(err({ kind: "missing" })),
     );
-    expect(webgpuVerdict(() => store, index)).toBeNull();
-    expect(dependencies.removeWebgpuFiles).not.toHaveBeenCalled();
+    const shared = shareRecognizer(start);
+    shared.warm(index("paraformer-1"));
+    expect(await shared.transcribe(index("paraformer-1"), samples, 16_000)).toEqual(
+      err({ kind: "missing" }),
+    );
+    await shared.transcribe(index("paraformer-1"), samples, 16_000);
+    expect(start).toHaveBeenCalledTimes(2);
   });
 });

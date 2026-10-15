@@ -303,7 +303,7 @@ export const fr: Messages = {
     "hanzi-writer-data": "Ordre des traits",
     jieba: "Indices de noms propres",
     "audio-zh": "Audio des mots (voix synthétique)",
-    whisper: "Reconnaissance vocale, téléchargée à la demande",
+    paraformer: "Reconnaissance vocale, téléchargée à la demande",
     fonts: "Polices",
   },
   nameProposal: {
@@ -506,7 +506,6 @@ export const fr: Messages = {
     tooLong: "{{max}} caractères au plus à la fois.",
     recording: "À l’écoute\u00a0: lisez la phrase. L’enregistrement s’arrête quand vous avez fini.",
     working: "Reconnaissance de ce qui a été dit…",
-    unsupported: "La reconnaissance vocale ne peut pas fonctionner dans ce navigateur.",
     unavailable: "La reconnaissance vocale ne peut pas être téléchargée ici\u00a0: {{reason}}",
   },
   hear: {
@@ -526,8 +525,6 @@ export const fr: Messages = {
     failed: "La reconnaissance vocale a échoué\u00a0: {{reason}}",
     missingModel:
       "La reconnaissance vocale n’est plus sur cet appareil. Téléchargez-la à nouveau sur la page Lire.",
-    unreliable:
-      "La puce graphique de cet appareil s’est trompée sur une phrase de test\u00a0: la reconnaissance vocale passe par son processeur, ce qui demande un autre téléchargement (page Lire).",
   },
   moduleError: { title: "Cette section n’a pas pu se charger", retry: "Réessayer" },
   notFound: { title: "Page introuvable", back: "Retour à Aujourd’hui" },

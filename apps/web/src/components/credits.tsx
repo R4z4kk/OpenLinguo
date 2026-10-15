@@ -106,14 +106,14 @@ export const CREDITS = {
     license: "CC0 1.0",
     licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
   },
-  whisper: {
-    name: "Whisper",
-    url: "https://github.com/openai/whisper",
+  paraformer: {
+    name: "Paraformer-small (FunASR)",
+    url: "https://modelscope.cn/models/iic/speech_paraformer_asr_nat-zh-cn-16k-common-vocab8358-tensorflow1",
     holder:
-      "OpenAI; ONNX conversion by onnx-community, run with transformers.js (Hugging Face, Apache-2.0) and ONNX Runtime (Microsoft, MIT)",
+      "Tongyi Lab, Alibaba; ONNX version from sherpa-onnx (k2-fsa), which runs it with ONNX Runtime (Microsoft, MIT)",
     site: null,
-    license: "MIT",
-    licenseUrl: "/data/licenses/whisper/LICENSE.txt",
+    license: "Apache-2.0",
+    licenseUrl: "/data/licenses/paraformer/THIRD-PARTY-LICENSES.txt",
   },
   fonts: {
     name: "Atkinson Hyperlegible Next, Noto Sans SC, LXGW WenKai GB, OpenLinguo Han Fallback",

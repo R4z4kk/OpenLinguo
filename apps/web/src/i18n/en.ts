@@ -293,7 +293,7 @@ export const en = {
     "hanzi-writer-data": "Stroke order",
     jieba: "Proper-name hints",
     "audio-zh": "Word audio (synthetic voice)",
-    whisper: "Speech recognition, downloaded on request",
+    paraformer: "Speech recognition, downloaded on request",
     fonts: "Fonts",
   },
   nameProposal: {
@@ -491,7 +491,6 @@ export const en = {
     tooLong: "Up to {{max}} characters at a time.",
     recording: "Listening: read the sentence. Recording stops when you finish.",
     working: "Recognising what was said…",
-    unsupported: "Speech recognition cannot run in this browser.",
     unavailable: "Speech recognition cannot be downloaded here: {{reason}}",
   },
   hear: {
@@ -510,8 +509,6 @@ export const en = {
     failed: "Speech recognition failed: {{reason}}",
     missingModel:
       "Speech recognition is no longer on this device. Download it again on the Read page.",
-    unreliable:
-      "This device's graphics chip got a test sentence wrong, so speech recognition runs on its processor instead, which needs another download (Read page).",
   },
   moduleError: { title: "This section failed to load", retry: "Try again" },
   notFound: { title: "Page not found", back: "Back to Today" },

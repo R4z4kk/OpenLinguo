@@ -45,28 +45,12 @@ const pagesFileLimit = (): Plugin => {
   };
 };
 
-/**
- * ONNX Runtime's bundle names its binary with `new URL(..., import.meta.url)`, so the build would
- * emit it (25.6 MiB). The speech worker passes the binary itself, joined from `/models/` parts
- * (ADR 0007): the copy is dropped.
- */
-const dropRuntimeBinary = (): Plugin => ({
-  name: "drop-onnx-runtime-binary",
-  apply: "build",
-  generateBundle(_options, bundle) {
-    for (const name of Object.keys(bundle)) {
-      if (/ort-wasm-simd-threaded[\w.-]*\.wasm$/u.test(name)) Reflect.deleteProperty(bundle, name);
-    }
-  },
-});
-
 export default defineConfig({
   resolve: { alias: { "@": fileURLToPath(new URL("src", import.meta.url)) } },
-  worker: { format: "es", plugins: () => [dropRuntimeBinary()] },
+  worker: { format: "es" },
   plugins: [
     pagesHeaders(),
     pagesFileLimit(),
-    dropRuntimeBinary(),
     react(),
     tailwindcss(),
     VitePWA({

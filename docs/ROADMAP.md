@@ -23,7 +23,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | Script | Simplified only (traditional stored, toggle later) |
 | AI | BYOK, OpenAI-compatible endpoint (Groq, OpenRouter, Ollama…). Every AI output is a proposal, human validates |
 | Audio | Pre-generated neural TTS (static files) + F0 contours extracted offline |
-| STT | Whisper in browser (transformers.js, Web Worker, model on demand) |
+| STT | Paraformer in browser (sherpa-onnx WebAssembly, Web Worker, model on demand) |
 | Reader content | AI-generated + coverage check, user import, in-app "submit to global library" → admin moderation |
 | Backend | Self-hosted TS API: Hono + Drizzle + Postgres + Better Auth (email/password + Google + GitHub) |
 | Hosting | PWA on Cloudflare Pages at `openlinguo.razakk.fr` (custom domain, OVH CNAME), API at `openlinguo-api.razakk.fr` on a self-hosted Docker host behind Traefik, Postgres 16. Same registrable domain → first-party cookies |
@@ -97,7 +97,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **Strokes**: self-hosted `hanzi-writer-data` subset (HSK chars) imported into IndexedDB with the dictionary; stroke order drawn by in-house SVG (outlines clipping the medians, Web Animations API), never autoplayed, stepped without motion under reduced motion (Hanzi Writer rejected for the word page, decision 2026-10-10: no reduced-motion support, no static "first k strokes" view). The writing quiz library is chosen with the writing cards.
 - **Pitch**: `pitchy` (MIT) F0 → semitones normalized to speaker mean → time-normalized comparison vs reference contour. Same code extracts reference contours in the pipeline and user contours in the browser.
 - **TTS**: Kokoro rejected for Mandarin (all zh voices graded D); used for English (af_bella A-). Mandarin (bake-off #112, ADR 0007): MOSS-TTS v1.5 for syllables, words and sentences, cloning a synthetic voice designed by MOSS-VoiceGenerator. Engines run as Docker containers on a Radeon through WSL2 (ROCm), the TS pipeline calls their HTTP API.
-- **STT**: transformers.js Whisper (WebGPU, WASM fallback) in a Web Worker; opencc-js t→s conversion (Whisper may output traditional). STT checks intelligibility only; tone accuracy comes from the pitch module (CER hides same-character tone errors).
+- **STT**: Paraformer-small run by sherpa-onnx WebAssembly in a Web Worker (replaced transformers.js Whisper, too slow on phones, #119); opencc-js t→s conversion kept. STT checks intelligibility only; tone accuracy comes from the pitch module (CER hides same-character tone errors).
 - **AI (BYOK)**: OpenAI-compatible client, JSON-schema structured output where supported, zod validation, retry/backoff on 429, explicit errors (CORS, 401, timeout). Key stays in IndexedDB, never sent to our API. Prompts versioned per language pack.
 - **Comprehensible input**: target ≥98% known-word coverage (Hu & Nation 2000), configurable.
 - **Backend security**: CORS allowlist, secure cookies, Better Auth CSRF, rate limits, zod + size limits, `secureHeaders`, plain-text submissions only, admin role via Better Auth admin plugin.
@@ -166,9 +166,9 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 - **Data map**: on-device only → cards, review logs, recordings, journal, AI key (never reaches our servers). Server → account (email, pseudonym, password hash, OAuth ids), sessions, submissions (text + attribution + license attestation), synced logs, league XP, security logs (IP).
 - **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
-- **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, Whisper models and the ONNX Runtime binary served from our own origin (decided in #119, ADR 0007).
+- **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, the speech-recognition model and its WebAssembly runtime served from our own origin (decided in #119, ADR 0007).
 - **BYOK AI**: clear notice before first call naming the endpoint the user configured; data flows device → provider, never through us.
-- **Voice**: processed on-device (Whisper, pitch), recordings stored locally and deletable, never uploaded.
+- **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
 - **Minors**: app usable without account by anyone; accounts 15+ (age declaration, France digital majority). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
 - **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Google/GitHub OAuth, SMTP provider), breach procedure (72 h), DPIA screening, privacy policy, legal notices.
@@ -232,12 +232,12 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 1. Scope for a solo dev → milestone increments, strict YAGNI per milestone.
 2. HSK 2025 provenance → M0 verification, versioned dataset, count sanity tests.
 3. Mandarin TTS tone quality → bake-off + human listening, fallback to CC-licensed native recordings.
-4. Whisper size on mobile → on-demand download, model choice benchmarked in M3, feature optional.
+4. Speech-recognition size and speed on mobile → on-demand download, model benchmarked on a phone in M3 (Paraformer-small), feature optional.
 5. iOS PWA storage eviction → `persist()`, backups, Capacitor post-v1.
 6. BYOK CORS differs by provider → documented tested providers; CSP `connect-src` must allow user endpoints (trade-off in ADR).
 7. User submissions copyright → attestation, moderation, takedown.
 8. Homelab exposure → API only, TLS via Traefik, rate limits, backups, monitoring.
-9. Open choices deferred to their milestone: SMTP provider (M7). Audio hosting decided in #113 and Whisper model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
+9. Open choices deferred to their milestone: SMTP provider (M7). Audio hosting decided in #113 and speech-model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
 10. Legal basis verified on primary texts, but not legal advice; watch items re-checked at M10.
 11. Visual-only widgets (pitch curve, decomposition tree, heatmap) need text alternatives (numeric score, tone label, list view).
 

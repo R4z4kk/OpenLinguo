@@ -5,7 +5,7 @@ import type { ReadChar } from "@/data/transcript";
 
 const PINYIN = "zh-Latn-pinyin";
 
-/** Whisper does not judge tones: what it heard is shown without them, the syllable that matches first. */
+/** Speech recognition does not judge tones: what it heard is shown without them, the syllable that matches first. */
 const heardSyllable = (heard: ReadChar, expected: ReadChar | null): string | null => {
   for (const syllable of expected?.syllables ?? [])
     if (heard.syllables.has(syllable)) return syllable;

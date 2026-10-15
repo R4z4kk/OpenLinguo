@@ -1,0 +1,34 @@
+{
+  "release": "paraformer-1",
+  "model": "csukuangfj/sherpa-onnx-paraformer-zh-small-2024-03-09",
+  "revision": "63ddc3cd0f2810b68289a7b3876e62ef5d53d6df",
+  "license": "Apache-2.0",
+  "runtime": {
+    "sherpaOnnx": "v1.13.8",
+    "commit": "11afbd009a7f8c08f4bcf2fc1b265d0df4670fbf",
+    "onnxruntime": "1.28.2",
+    "emscripten": "4.0.23",
+    "glue": {
+      "path": "sherpa-onnx-asr.mjs",
+      "bytes": 72395,
+      "sha256": "d4f9c5f6b74cb02f2d491523a6eb6e1bf1893f6898dd133e381d144de174b205"
+    }
+  },
+  "files": [
+    {
+      "path": "model.int8.onnx",
+      "bytes": 81828675,
+      "sha256": "3ef6c19369b912f7caf3cef8e545c5ccd1a33d9d7ec792a46668dc41c4b229ec"
+    },
+    {
+      "path": "tokens.txt",
+      "bytes": 75352,
+      "sha256": "4b2d964e18b9cf139b473003b6698fb2ed9a2a5ec55b93daa677b28f578897aa"
+    },
+    {
+      "path": "sherpa-onnx-asr.wasm",
+      "bytes": 13676704,
+      "sha256": "a7d3b8ac4256242dbd3e36e6aca94a84d46fa886b1e4ba799a707b34192ee2a8"
+    }
+  ]
+}

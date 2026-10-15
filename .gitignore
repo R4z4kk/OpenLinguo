@@ -14,7 +14,9 @@ apps/web/.cache/
 tools/tts/.bakeoff/
 # Audio pack recordings, checks and reviews (tools/data-pipeline/src/tts/packs.ts)
 tools/tts/.packs/
-# Whisper files mirrored from Hugging Face for their GitHub release (tools/data-pipeline/src/asr/whisper.ts)
+# Speech-recognition files gathered for their GitHub release (tools/data-pipeline/src/asr/paraformer.ts)
 tools/asr/.mirror/
-# Whisper files and ONNX Runtime published by apps/web/scripts/whisper-model.ts
+# The sherpa-onnx WebAssembly build (tools/sherpa-onnx/Dockerfile)
+tools/sherpa-onnx/out/
+# Speech-recognition files published by apps/web/scripts/speech-model.ts
 apps/web/public/models/
