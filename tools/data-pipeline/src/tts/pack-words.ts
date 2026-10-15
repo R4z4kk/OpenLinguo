@@ -9,10 +9,14 @@ export const REFERENTIALS = {
 export type Referential = keyof typeof REFERENTIALS;
 export type WordLists = Readonly<Record<Referential, readonly GradedWord[]>>;
 
-export type Band = { readonly referential: Referential; readonly level: number };
+/** The pinyin chart's band (#105): one recording per syllable and tone. */
+export const SYLLABLES = "syllables";
+
+export type WordBand = { readonly referential: Referential; readonly level: number };
+export type Band = WordBand | { readonly referential: typeof SYLLABLES; readonly level: 1 };
 export type PackItem = { readonly word: string; readonly reading: string };
 export type Gap = PackItem & {
-  readonly reason: "several-readings" | "no-reading" | "rejected" | "unverified";
+  readonly reason: "several-readings" | "no-reading" | "rejected" | "unverified" | "no-character";
 };
 
 export const isReferential = (value: string): value is Referential => value in REFERENTIALS;
@@ -55,7 +59,7 @@ export const severalReadings = (lists: WordLists): ReadonlySet<string> => {
 /** The readings of the words whose lowest level is the band, and the ones left without audio. */
 export const bandItems = (
   lists: WordLists,
-  { referential, level }: Band,
+  { referential, level }: WordBand,
   excluded: ReadonlySet<string>,
 ): { readonly items: readonly PackItem[]; readonly gaps: readonly Gap[] } => {
   const items: PackItem[] = [];

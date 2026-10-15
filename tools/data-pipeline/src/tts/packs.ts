@@ -27,10 +27,12 @@ import {
   REFERENTIALS,
   severalReadings,
   syllableCount,
+  SYLLABLES,
   type Band,
   type Gap,
   type PackItem,
 } from "./pack-words.ts";
+import { loadSyllableSources, syllableItems } from "./syllable-items.ts";
 import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
 import { toneDoubts, type SyllableRecording } from "./tone-doubt.ts";
 import { storedZip } from "./zip.ts";
@@ -146,11 +148,12 @@ const startService = async <T>(
 };
 
 const parseBand = (value: string): Band => {
+  if (value === SYLLABLES) return { referential: SYLLABLES, level: 1 };
   const [referential = "", level = ""] = value.split(":");
   const number = Number(level);
   if (!isReferential(referential) || !Number.isInteger(number) || number < 1 || number > 7) {
     throw new PacksError(
-      `invalid band ${value}: expected ${Object.keys(REFERENTIALS).join(" or ")}:1-7`,
+      `invalid band ${value}: expected ${Object.keys(REFERENTIALS).join(" or ")}:1-7, or ${SYLLABLES}`,
     );
   }
   return { referential, level: number };
@@ -158,12 +161,32 @@ const parseBand = (value: string): Band => {
 
 const loadBands = async (
   bands: readonly Band[],
+  state: State,
+  reviews: Readonly<Record<string, "ok" | "bad">>,
 ): Promise<
   { readonly band: Band; readonly items: readonly PackItem[]; readonly gaps: readonly Gap[] }[]
 > => {
   const lists = await loadWordLists();
   const excluded = severalReadings(lists);
-  return bands.map((band) => ({ band, ...bandItems(lists, band, excluded) }));
+  const loaded = [];
+  for (const band of bands) {
+    if (band.referential !== SYLLABLES) {
+      loaded.push({ band, ...bandItems(lists, band, excluded) });
+      continue;
+    }
+    const sources = await loadSyllableSources();
+    if (!sources.ok) throw new PacksError(`pinyin chart: ${sources.error.reading} is invalid`);
+    const words = Object.values(lists).flatMap((rows) =>
+      rows.flatMap(([word, , , readings]) => readings.map((reading) => ({ word, reading }))),
+    );
+    const shipped = words.filter(
+      (item) =>
+        !excluded.has(item.word) &&
+        (state.items[itemKey(item)]?.pass === true || reviews[itemKey(item)] === "ok"),
+    );
+    loaded.push({ band, ...syllableItems({ ...sources.value, shipped }) });
+  }
+  return loaded;
 };
 
 const unique = (items: readonly PackItem[]): PackItem[] => [
@@ -295,8 +318,12 @@ const toneCheck = async (
 };
 
 const build = async (bands: readonly Band[]): Promise<void> => {
-  const items = unique((await loadBands(bands)).flatMap(({ items: bandOnes }) => bandOnes));
   const state = await loadState();
+  const items = unique(
+    (await loadBands(bands, state, await readParsed(reviewsPath, reviewsSchema, {}))).flatMap(
+      ({ items: bandOnes }) => bandOnes,
+    ),
+  );
   const { syllables, tones } = await loadCedictChars();
   await mkdir(workDir, { recursive: true });
   // The checks are code and the transcripts are kept: a changed check applies to them without the GPU.
@@ -583,7 +610,7 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
   await mkdir(mp3Dir, { recursive: true });
   await mkdir(outDir, { recursive: true });
   const packed = [];
-  for (const { band, items, gaps } of await loadBands(bands)) {
+  for (const { band, items, gaps } of await loadBands(bands, state, reviews)) {
     const pending = items.filter((item) => (state.items[itemKey(item)]?.pass ?? null) === null);
     if (pending.length > 0) {
       throw new PacksError(
@@ -640,8 +667,8 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     },
   };
   await writeAtomic(manifestPath, serializeManifest(next));
-  const files = index.bands.flatMap(({ parts }) =>
-    parts.map(({ file }) => fileURLToPath(new URL(file, outDir))),
+  const files = packed.flatMap(({ entry }) =>
+    entry.parts.map(({ file }) => fileURLToPath(new URL(file, outDir))),
   );
   console.log(`Upload, after review: gh release upload ${RELEASE} --clobber ${files.join(" ")}`);
 };
@@ -671,7 +698,7 @@ const main = async (): Promise<void> => {
       return;
     default:
       throw new PacksError(
-        "usage: packs.ts build --band hsk-2025:1 [--band …] | review [--port n] | pack --band hsk-2025:1 [--band …]",
+        `usage: packs.ts build --band hsk-2025:1 [--band …] | review [--port n] | pack --band hsk-2025:1 [--band …]; --band ${SYLLABLES} for the pinyin chart`,
       );
   }
 };
