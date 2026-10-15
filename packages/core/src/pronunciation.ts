@@ -4,8 +4,8 @@ import { classifyTone, toneFeatures, type ToneClass } from "./tone-classifier.ts
 
 /**
  * Confidence from which the expected tone is told as heard, and another tone. Measured 2026-10-15 on
- * Lingua Libre two-syllable words, one speaker left out: 2 % of wrong syllables told right, 2 % of
- * right ones told another tone, the rest « not sure » (ADR 0007).
+ * Lingua Libre two-syllable words (F0 v2), one speaker left out: 1 % of wrong syllables told right,
+ * 1 % of right ones told another tone, the rest « not sure » (ADR 0007).
  */
 export const RIGHT_CONFIDENCE = 0.3;
 export const OTHER_CONFIDENCE = 0.4;

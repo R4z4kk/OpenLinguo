@@ -137,14 +137,14 @@ Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones 
 
 | Signal | Tone 1 | Tone 2 | Tone 3 | Tone 4 | All |
 |---|---|---|---|---|---|
-| Distance to the reference, isolated (289 syllables, 102 recordings) | 0.91 | 0.64 | 0.38 | 0.56 | 0.56 |
-| Classifier margin, isolated | 0.96 | 0.87 | 0.58 | 0.83 | 0.80 |
-| Distance to the reference, two-syllable words (784 words, 88 recordings) | 0.80 | 0.54 | 0.44 | 0.49 | 0.57 |
-| Classifier margin, two-syllable words | 0.79 | 0.77 | 0.54 | 0.69 | 0.69 |
+| Distance to the reference, isolated (289 syllables, 102 recordings) | 0.89 | 0.73 | 0.47 | 0.69 | 0.64 |
+| Classifier margin, isolated | 0.98 | 0.87 | 0.55 | 0.88 | 0.83 |
+| Distance to the reference, two-syllable words (784 words, 88 recordings) | 0.78 | 0.58 | 0.46 | 0.52 | 0.60 |
+| Classifier margin, two-syllable words | 0.83 | 0.82 | 0.57 | 0.73 | 0.72 |
 
-- A human reference from another speaker does no better than the synthetic voice on isolated syllables (0.55): one noisy curve against another. Inside words the MOSS voice also moves its pitch much more than the speakers (its second-syllable tone 3 sits about 4.5 semitones under its median, theirs about 0.5). Adding the distance to the classifier's margin helps tone 1 only and lowers the rest.
-- Thresholds, each syllable also scored against the three tones it is not (simulated errors): in words, 2 % of wrong syllables get « as expected », 2 % of right ones get another tone, and a tone named is the one said 85 % of the time; 14 % of right syllables get « as expected » (0–2 % for tones 2 and 3), the rest « not recognised for sure ». Isolated: 1 %, 2 % and 27 %. `MIN_CONFIDENCE` (0.2) would tell 4 % of wrong syllables right, 8 % for tone 3.
-- Limits: real learner errors fall between tones, so the false praise is likely higher than simulated; three speakers; tones from CC-CEDICT, not checked by ear. The figures above were measured on the contours before the low-pass of #114 (v2), which lifts the classifier in words from 45.0 to 50.6 %; they are to be measured again.
+- A human reference from another speaker does no better than the synthetic voice on isolated syllables (0.61): one noisy curve against another. Inside words the MOSS voice also moves its pitch much more than the speakers (its second-syllable tone 3 sits about 5 semitones under its median, theirs about 0.5). Adding the distance to the classifier's margin helps tone 1 only and lowers the rest.
+- Thresholds, each syllable also scored against the three tones it is not (simulated errors): in words, 1 % of wrong syllables get « as expected », 1 % of right ones get another tone, and a tone named is the one said 92 % of the time; 15 % of right syllables get « as expected » (2–3 % for tones 2 and 3), the rest « not recognised for sure ». Isolated: 1 %, 2 % (8 % for tone 3, 5 of 61 syllables) and 32 %. `MIN_CONFIDENCE` (0.2) would tell 4 % of wrong syllables right, 6 % for tone 3. Lowering the thresholds to 0.25 and 0.35 would tell 19 % of right syllables « as expected » in words, for 2 % of each error; they stay at 0.3 and 0.4 because the errors are simulated.
+- Limits: real learner errors fall between tones, so the false praise is likely higher than simulated; three speakers; tones from CC-CEDICT, not checked by ear. Measured on the low-passed contours (`F0_VERSION` v2, #114); on v1 the same thresholds gave 2 %, 2 % and 85 % in words.
 - Tests: a fake microphone (an oscillator behind `getUserMedia`) drives the end-to-end tests in Chromium and WebKit. The installed iOS web app is checked by hand on a device: home-screen apps long had microphone bugs ([WebKit #185448](https://bugs.webkit.org/show_bug.cgi?id=185448)), and a stream can go silent after a phone call ([WebKit #208209](https://bugs.webkit.org/show_bug.cgi?id=208209)).
 
 ## Speech-recognition model hosting (#119)
