@@ -12,7 +12,7 @@ The app processes learning data, voice, and optional accounts for EU users, incl
 - Privacy by design: learning data, recordings, journal and AI key stay on the device.
 - Server data is limited to account, sessions, submissions, synced logs, league XP and security logs. Legal bases: contract (GDPR art. 6(1)(b)) and legitimate interest for security logs (art. 6(1)(f)). No consent-based processing in v1.
 - Only consent-exempt storage (authentication, CSRF, language/theme), so no cookie banner, and no analytics in v1.
-- No third-party runtime requests by default: fonts, stroke data, audio and models come from project origins.
+- No third-party runtime requests by default: fonts, stroke data, audio, speech-recognition models and the ONNX Runtime binary come from project origins (#119, ADR 0007).
 - Accounts are restricted to users aged 15 and over; leagues use pseudonyms and predefined avatars, with no messaging.
 - Rights: in-app export and account deletion, profile rectification, contact address.
 - Retention: security logs 6 months (CNIL délibération 2021-122), inactive accounts deleted after 2 years with prior notice.

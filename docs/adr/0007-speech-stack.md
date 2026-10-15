@@ -1,7 +1,7 @@
 # 0007 — Speech stack
 
 - Status: Accepted
-- Date: 2026-10-09; Mandarin TTS decided 2026-10-13 (bake-off #112)
+- Date: 2026-10-09; Mandarin TTS decided 2026-10-13 (bake-off #112); speech-recognition model hosting 2026-10-15 (#119)
 
 ## Context
 
@@ -63,7 +63,7 @@ Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones 
 - Recordings never leave the device.
 - Generating audio needs the GPU: about 2–3 s per item on the RX 7900 XTX.
 - One engine to maintain, one voice file pinned in the repository.
-- Model mirroring is decided in #119.
+- Speech-recognition models are mirrored on our origin (#119, below).
 
 ## Audio packs (#113)
 
@@ -123,3 +123,28 @@ Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones 
 - Thresholds, each syllable also scored against the three tones it is not (simulated errors): in words, 2 % of wrong syllables get « as expected », 2 % of right ones get another tone, and a tone named is the one said 85 % of the time; 14 % of right syllables get « as expected » (0–2 % for tones 2 and 3), the rest « not recognised for sure ». Isolated: 1 %, 2 % and 27 %. `MIN_CONFIDENCE` (0.2) would tell 4 % of wrong syllables right, 8 % for tone 3.
 - Limits: real learner errors fall between tones, so the false praise is likely higher than simulated; three speakers; tones from CC-CEDICT, not checked by ear. pitchy misreads the speaker of 70 % of the words (frames near 25 or 600 Hz with a high clarity where YIN finds 100–165 Hz; 29 % unvoiced points against 11 %), which lowers every word figure: a matter for the F0 module (#114).
 - Tests: a fake microphone (an oscillator behind `getUserMedia`) drives the end-to-end tests in Chromium and WebKit. The installed iOS web app is checked by hand on a device: home-screen apps long had microphone bugs ([WebKit #185448](https://bugs.webkit.org/show_bug.cgi?id=185448)), and a stream can go silent after a phone call ([WebKit #208209](https://bugs.webkit.org/show_bug.cgi?id=208209)).
+
+## Speech-recognition model hosting (#119)
+
+The model is picked later by the benchmark of #119; this decides where its files come from.
+
+- **Served from `openlinguo.razakk.fr`**, like the audio packs: the model files and the ONNX Runtime WebAssembly binary are copied byte for byte from their pinned upstream (Hugging Face repository revision, npm package version), checked against their sha256 (Hugging Face publishes it for each large file), attached to a GitHub release, fetched and checked at build time, then served by Cloudflare Pages. The browser makes no request outside our origin; `connect-src 'self'` stays as it is.
+- **Files above 20 MiB are cut into parts.** Pages serves files of at most 25 MiB ([limits](https://developers.cloudflare.com/pages/platform/limits/), 2026-10-14), and almost no candidate fits (onnx-community conversions, sizes from the Hugging Face API on 2026-10-14):
+
+  | Model | int8 encoder + decoder (WASM) | fp16 encoder + q4 decoder (WebGPU) | Files of 25 MiB or less |
+  |---|---|---|---|
+  | whisper-tiny | 9.7 + 29.3 MiB | 15.8 + 82.7 MiB | encoders only |
+  | whisper-base | 22.1 + 51.2 MiB | 39.4 + 117.9 MiB | int8 encoder only |
+  | whisper-small | 88.0 + 149.5 MiB | 168.4 + 222.3 MiB | none |
+
+  A `parts.json` lists each cut file with its parts, size and sha256. transformers.js 4.3.1 downloads every model and runtime file through `env.fetch`; in the worker it is replaced by a function that streams the parts of a listed file as one response, and answers the `Range: bytes=0-0` size probe from `parts.json`. The files themselves are not converted.
+- **The runtime too.** transformers.js loads ONNX Runtime from jsDelivr unless `wasmPaths` is set (`src/backends/onnx.js`); it is set to our origin. Its default build (asyncify: WebAssembly and WebGPU in one binary) is 25.6 MiB in onnxruntime-web 1.31.0-dev.20260914, so it is cut as well. With `useWasmCache` on, transformers.js imports the runtime's JavaScript from a `blob:` URL, which our `script-src 'self'` refuses: it is turned off, and the worker caches the joined binary itself and passes it as `wasm.wasmBinary`. The `wasm-unsafe-eval` change stays to document in #119.
+- **Prototype** (2026-10-15, Chromium, whisper-tiny int8 at revision `ff41770`, a local server that refuses files above 25 MiB): the decoder and the runtime were each joined from 2 parts and a 1.4 s MOSS-TTS sentence was transcribed (load 0.8 s, run 1.4 s). With the server answering 404 for every part, it ran again from the Cache API; only the runtime's 52 KB JavaScript was fetched, which the app's service worker will serve. Whisper wrote 我們一起去吃飯吧 in traditional characters, as expected: opencc-js stays.
+- Rejected:
+  - Download from Hugging Face with a notice: the browser would send the learner's IP address, personal data for a site that can identify the person ([Breyer, C-582/14](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62014CJ0582), §49), and the site answers for that transmission ([Fashion ID, C-40/17](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:62017CJ0040), ruling 2). Hugging Face, Inc. is not on the [Data Privacy Framework list](https://www.dataprivacyframework.gov/list) (checked 2026-10-14) and its [privacy policy](https://huggingface.co/privacy) (2023-03-28) names no art. 46 safeguard. It would need consent, which ADR 0009 avoids, a CSP opened to `huggingface.co` and `*.hf.co` (Hugging Face warns its download hosts change), and anonymous downloads share 3,000 resolver requests per 5 minutes per IP address ([rate limits](https://huggingface.co/docs/hub/rate-limits)), a whole school behind one address included.
+  - R2 behind a Pages Function on `/models/*`: whole files on the same origin, but R2 needs a payment method on the account, every request counts in the Workers Free plan's 100,000 a day, cache hits included ([pricing](https://developers.cloudflare.com/pages/functions/pricing/)), and past that the fail-open setting serves static files instead, and the CI needs upload credentials.
+  - R2 custom domain or a Worker route: both need the `razakk.fr` zone on Cloudflare; its DNS is at OVH, and a partial (CNAME) setup is for Business and Enterprise plans ([R2 public buckets](https://developers.cloudflare.com/r2/buckets/public-buckets/)).
+  - GitHub release assets fetched by the browser: the redirect from `github.com` carries no `Access-Control-Allow-Origin`.
+  - The maintainer's own server: another origin (CORS, CSP), and a home connection's upload for downloads of 40 to 400 MiB.
+- Open: Cloudflare's terms let it limit Free, Pro and Business CDN use that serves a disproportionate share of large files, except through Developer Platform services, Pages and R2 among them ([service-specific terms](https://www.cloudflare.com/service-specific-terms-application-services/), 2026-09-28); they do not say whether the Free plan of those services counts. If Pages limits the files, R2 behind a Pages Function takes over and the client stays the same.
+- License: the Whisper weights are MIT (OpenAI, [openai/whisper](https://github.com/openai/whisper)); the onnx-community conversions declare none. The notice ships with the mirrored files and the chosen model goes in `data/SOURCES.md`.
