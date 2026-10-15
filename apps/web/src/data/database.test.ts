@@ -60,4 +60,23 @@ describe("openDatabase", () => {
     expect(await db.reviews.toArray()).toEqual([{ id: "r1", cardId: "c1", dailyGoal: 20 }]);
     db.close();
   });
+
+  it("marks pack contours stored before their version as of unknown version", async () => {
+    const legacy = new Dexie("contour-version-test");
+    legacy.version(12).stores({ wordAudio: "id, *bands", audioBands: "id" });
+    await legacy
+      .table("wordAudio")
+      .add({ id: "一\tyi1", type: "audio/mpeg", f0: [1, 2], bands: ["hsk-2025:1"] });
+    legacy.close();
+
+    const db = openDatabase("contour-version-test");
+    expect(await db.wordAudio.get("一\tyi1")).toEqual({
+      id: "一\tyi1",
+      type: "audio/mpeg",
+      f0: [1, 2],
+      f0Version: null,
+      bands: ["hsk-2025:1"],
+    });
+    db.close();
+  });
 });

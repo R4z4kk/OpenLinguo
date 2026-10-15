@@ -116,6 +116,7 @@ const formatFailure = (file: string, message: string): AudioFailure => ({
 const readPart = async (
   bytes: Uint8Array<ArrayBuffer>,
   file: string,
+  f0Version: string | null,
 ): Promise<Result<Recording[], AudioFailure>> => {
   const archive = await openZip(new Blob([bytes]));
   if (!archive.ok) return err(formatFailure(file, archive.error.kind));
@@ -138,6 +139,7 @@ const readPart = async (
       type: "audio/mpeg",
       data: new Uint8Array(audio.value).buffer,
       f0,
+      f0Version,
     });
   }
   return ok(recordings);
@@ -167,7 +169,7 @@ export const removeBand = async (db: Database, id: string): Promise<Result<null,
  */
 export const installBand = async (
   db: Database,
-  release: string,
+  { release, f0 }: Pick<AudioPackIndex, "release" | "f0">,
   band: AudioPackBand,
   fetchPart: FetchProgress,
   onProgress: (received: number, total: number) => void,
@@ -195,7 +197,7 @@ export const installBand = async (
       if (signal.aborted) return err({ kind: "cancelled" });
       if (!bytes.ok) return err({ kind: "network", file, message: bytes.error });
       if ((await sha256(bytes.value)) !== part.sha256) return err({ kind: "integrity", file });
-      const recordings = await readPart(bytes.value, file);
+      const recordings = await readPart(bytes.value, file, f0);
       if (!recordings.ok) return recordings;
       done.add(part.sha256);
       await db.transaction("rw", [db.wordAudio, db.audioBands], async () => {

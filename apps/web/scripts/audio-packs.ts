@@ -14,6 +14,7 @@ const Manifest = z.record(z.string(), z.looseObject({ sha256: z.string() }));
 /** The fields of `data/audio-zh/packs.json` the app needs; the pipeline owns the full schema. */
 const PackIndexFile = z.looseObject({
   release: z.string().min(1),
+  generator: z.looseObject({ f0: AudioPackIndex.shape.f0 }),
   bands: AudioPackIndex.shape.bands,
 });
 
@@ -49,7 +50,7 @@ export const publishAudioPacks = async (out: URL): Promise<string> => {
   if (manifest[DATASET]?.sha256 !== sha256(indexBytes)) {
     throw new Error(`data/${DATASET}/packs.json does not match its sha256 in data/manifest.json`);
   }
-  const { release, bands } = PackIndexFile.parse(
+  const { release, generator, bands } = PackIndexFile.parse(
     JSON.parse(new TextDecoder().decode(indexBytes)) as unknown,
   );
   const target = new URL(`${DATASET}/`, out);
@@ -65,6 +66,7 @@ export const publishAudioPacks = async (out: URL): Promise<string> => {
   }
   const index: AudioPackIndex = {
     release,
+    f0: generator.f0,
     bands: bands.map(({ referential, level, entries, parts }) => ({
       referential,
       level,
