@@ -14,7 +14,7 @@ import {
   type BandState,
 } from "@/data/audio-packs";
 import { database } from "@/data/database";
-import type { AudioPackBand } from "@/data/format";
+import type { AudioPackBand, AudioPackIndex } from "@/data/format";
 import type { ImportFailure } from "@/data/import";
 import { browserStorage, requestPersistence } from "@/data/persistence";
 import { formatSize } from "@/lib/format-size";
@@ -36,13 +36,13 @@ export const describeAudioFailure = (t: TFunction, failure: ImportFailure): stri
 
 /** Downloads, cancels or deletes a band's word audio; a failure is shown, the button then retries. */
 export const BandAudio = ({
-  release,
+  pack,
   band,
   state,
   describedBy,
   onChange,
 }: {
-  readonly release: string;
+  readonly pack: Pick<AudioPackIndex, "release" | "f0">;
   readonly band: AudioPackBand;
   readonly state: BandState;
   /** The band's heading. */
@@ -72,7 +72,7 @@ export const BandAudio = ({
     await requestPersistence(browserStorage());
     const result = await installBand(
       database,
-      release,
+      pack,
       band,
       fetchWithProgress,
       (received, total) => {

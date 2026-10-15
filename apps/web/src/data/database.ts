@@ -90,6 +90,8 @@ export type StoredWordAudio = {
   readonly data: ArrayBuffer;
   /** Reference pitch contour (core f0.ts), kept for the pitch exercises; null when the pack has none. */
   readonly f0: readonly (number | null)[] | null;
+  /** `F0_VERSION` that made `f0`: the contour is used only by the same version. */
+  readonly f0Version: string | null;
   /** Installed bands holding it: `hsk-2025:1`. */
   readonly bands: readonly string[];
 };
@@ -203,6 +205,15 @@ export const openDatabase = (name: string): Database => {
   db.version(10).stores({ extendedWords: "id, simplified, file", extendedMeta: "key" });
   db.version(11).stores({ names: "id, word, file", namesMeta: "key" });
   db.version(12).stores({ wordAudio: "id, *bands", audioBands: "id" });
+  // Contours stored before their version was are of an unknown version: recomputed when needed.
+  db.version(13).upgrade((tx) =>
+    tx
+      .table<Omit<StoredWordAudio, "f0Version">, string>("wordAudio")
+      .toCollection()
+      .modify((row) => {
+        Object.assign(row, { f0Version: null });
+      }),
+  );
   return db;
 };
 
