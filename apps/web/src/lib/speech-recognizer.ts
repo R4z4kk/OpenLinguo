@@ -2,7 +2,7 @@ import { err, ok, type Result } from "@openlinguo/core";
 import type { SpeechModelIndex } from "@/data/format";
 import type { SpeechReply, SpeechRequest } from "./speech-worker.ts";
 
-const SAMPLE_RATE = 16_000;
+export const SAMPLE_RATE = 16_000;
 
 export type RecognizerError =
   /** A model file is not stored: deleted from another tab, or the browser evicted it. */

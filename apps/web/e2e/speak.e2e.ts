@@ -52,6 +52,54 @@ const fakeMicrophone = async (page: Page, voice: Voice): Promise<void> => {
   }, voice);
 };
 
+/** Counts the clips played on the speakers in `data-played` (offline rendering is not playing). */
+const countPlayback = async (page: Page): Promise<void> => {
+  await page.addInitScript(() => {
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- Called below with the node as `this`.
+    const start = AudioBufferSourceNode.prototype.start;
+    Object.defineProperty(AudioBufferSourceNode.prototype, "start", {
+      configurable: true,
+      value: function played(this: AudioBufferSourceNode, ...args: [number?]) {
+        if (this.context instanceof AudioContext) {
+          const root = document.documentElement;
+          root.dataset["played"] = String(Number(root.dataset["played"] ?? "0") + 1);
+        }
+        start.apply(this, args);
+      },
+    });
+  });
+};
+
+/** A kept recording of 你好, a tenth of a second of silence, as Say it stores one. */
+const storeRecording = (page: Page): Promise<void> =>
+  page.evaluate(
+    () =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open("openlinguo");
+        open.onerror = () => {
+          reject(new Error(String(open.error)));
+        };
+        open.onsuccess = () => {
+          const transaction = open.result.transaction("recordings", "readwrite");
+          transaction.objectStore("recordings").put({
+            id: "你好\tni3 hao3",
+            headword: "你好",
+            readingKey: "ni3 hao3",
+            recordedAt: 1,
+            sampleRate: 16_000,
+            data: new Int16Array(1_600).buffer,
+          });
+          transaction.onabort = () => {
+            reject(new Error(String(transaction.error)));
+          };
+          transaction.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+        };
+      }),
+  );
+
 /** The HSK 1 audio, then the word page of 上学 shàngxué. */
 const openWord = async (page: Page): Promise<void> => {
   const main = page.getByRole("main");
@@ -124,6 +172,88 @@ test("says a word: a result per syllable as text, then the microphone is release
   await expect(page.locator("html")).toHaveAttribute("data-stopped", "1");
   await expect(main.getByRole("button", { name: en.speak.again })).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
+});
+
+test("shadows a word: model then voice, kept on the device, keys only in the section", async ({
+  page,
+}) => {
+  await fakeMicrophone(page, "word");
+  await countPlayback(page);
+  await openWord(page);
+  const main = page.getByRole("main");
+  const root = page.locator("html");
+  await page.keyboard.press("r");
+  await page.waitForTimeout(500);
+  await expect(main.getByText(en.speak.recording)).toHaveCount(0);
+
+  const record = main.getByRole("button", { name: en.speak.record });
+  await expect(record).toHaveAttribute("aria-keyshortcuts", "R");
+  await record.focus();
+  await page.keyboard.press("r");
+  await expect(main.getByRole("status").getByRole("listitem")).toHaveCount(2, { timeout: 15_000 });
+
+  const compare = main.getByRole("button", { name: en.speak.compare.said });
+  await expect(compare).toHaveAttribute("aria-keyshortcuts", "A");
+  await main.getByRole("button", { name: en.speak.again }).focus();
+  await page.keyboard.press("a");
+  await expect(main.getByRole("button", { name: en.speak.stopPlaying })).toBeVisible();
+  await expect(root).toHaveAttribute("data-played", "2");
+  await expect(compare).toBeVisible({ timeout: 10_000 });
+
+  await main.getByRole("button", { name: en.speak.keep }).click();
+  await expect(main.getByText(en.speak.keptNotice)).toBeVisible();
+  await expect(main.getByRole("button", { name: en.speak.keep })).toHaveCount(0);
+  await expect(main.getByRole("button", { name: en.speak.compare.kept })).toBeVisible();
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  await page.reload();
+  const kept = main.getByRole("button", { name: en.speak.compare.kept });
+  await expect(kept).toHaveAttribute("aria-keyshortcuts", "A");
+  await kept.click();
+  await expect(root).toHaveAttribute("data-played", "2");
+  await expect(kept).toBeVisible({ timeout: 10_000 });
+  await main.getByRole("button", { name: en.speak.deleteKept }).click();
+  await expect(main.getByText(en.speak.keptDeleted)).toBeVisible();
+  await expect(kept).toHaveCount(0);
+  await expect(main.getByRole("heading", { name: en.speak.title })).toBeFocused();
+});
+
+test("lists kept recordings in Profile: size, play, delete one, delete all", async ({ page }) => {
+  await fakeMicrophone(page, "word");
+  await countPlayback(page);
+  await openWord(page);
+  const main = page.getByRole("main");
+  await main.getByRole("button", { name: en.speak.record }).click();
+  await main.getByRole("button", { name: en.speak.keep }).click();
+  await expect(main.getByText(en.speak.keptNotice)).toBeVisible();
+  await storeRecording(page);
+
+  await page.goto("/profile");
+  const heading = main.getByRole("heading", { name: en.recordings.title });
+  await expect(main.getByText(/^2 recordings, [\d.]+ kB$/u)).toBeVisible();
+  const rows = main
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("button", { name: en.recordings.play }) });
+  await expect(rows).toHaveCount(2);
+  await expect(rows.first()).toContainText("上学");
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  await rows.first().getByRole("button", { name: en.recordings.play }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-played", "1");
+
+  await rows.nth(1).getByRole("button", { name: en.recordings.delete }).click();
+  await expect(main.getByText("Recording of 你好 deleted.")).toBeVisible();
+  await expect(rows).toHaveCount(1);
+  await expect(heading).toBeFocused();
+
+  await main.getByRole("button", { name: en.recordings.deleteAll }).click();
+  const dialog = page.getByRole("dialog", { name: en.recordings.deleteAllTitle });
+  await expect(dialog).toContainText("1 recording will be deleted from this device.");
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await dialog.getByRole("button", { name: en.recordings.deleteAll }).click();
+  await expect(main.getByText(en.recordings.none)).toBeVisible();
+  await expect(main.getByText(en.recordings.allDeleted)).toBeVisible();
+  await expect(heading).toBeFocused();
 });
 
 test("draws the voice live, or only once stopped under reduced motion", async ({ page }) => {
