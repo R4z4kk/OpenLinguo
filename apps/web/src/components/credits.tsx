@@ -106,6 +106,15 @@ export const CREDITS = {
     license: "CC0 1.0",
     licenseUrl: "https://creativecommons.org/publicdomain/zero/1.0/",
   },
+  whisper: {
+    name: "Whisper",
+    url: "https://github.com/openai/whisper",
+    holder:
+      "OpenAI; ONNX conversion by onnx-community, run with transformers.js (Hugging Face, Apache-2.0) and ONNX Runtime (Microsoft, MIT)",
+    site: null,
+    license: "MIT",
+    licenseUrl: "/data/licenses/whisper/LICENSE.txt",
+  },
   fonts: {
     name: "Atkinson Hyperlegible Next, Noto Sans SC, LXGW WenKai GB, OpenLinguo Han Fallback",
     url: "https://openfontlicense.org",

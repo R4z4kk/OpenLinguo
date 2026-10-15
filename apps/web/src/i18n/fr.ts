@@ -303,6 +303,7 @@ export const fr: Messages = {
     "hanzi-writer-data": "Ordre des traits",
     jieba: "Indices de noms propres",
     "audio-zh": "Audio des mots (voix synthétique)",
+    whisper: "Reconnaissance vocale, téléchargée à la demande",
     fonts: "Polices",
   },
   nameProposal: {
@@ -454,6 +455,14 @@ export const fr: Messages = {
     synthetic: "Voix synthétique",
     gone: "il a été supprimé avec son téléchargement audio.",
   },
+  speech: {
+    download: "Télécharger la reconnaissance vocale ({{size}})",
+    resume: "Reprendre le téléchargement de la reconnaissance vocale ({{size}})",
+    retry: "Réessayer le téléchargement de la reconnaissance vocale ({{size}})",
+    downloading: "Téléchargement de la reconnaissance vocale",
+    installed: "Reconnaissance vocale téléchargée ({{size}}), disponible hors ligne.",
+    delete: "Supprimer la reconnaissance vocale",
+  },
   speak: {
     title: "Prononcez-le",
     notice:
@@ -485,6 +494,40 @@ export const fr: Messages = {
       busy: "Le micro est utilisé par une autre application. Fermez-la et réessayez.",
     },
     listenInstead: "Impossible de parler maintenant\u00a0? Écoutez et choisissez le ton",
+  },
+  readAloud: {
+    title: "Lire à voix haute",
+    intro:
+      "Tapez ou collez une phrase en chinois, lisez-la à voix haute et voyez ce que la reconnaissance vocale a entendu. Facultatif\u00a0: rien d’autre dans l’application ne demande votre voix.",
+    notice:
+      "La reconnaissance vocale tourne sur cet appareil une fois téléchargée\u00a0: votre voix n’est jamais envoyée ni conservée.",
+    sentence: "Phrase en chinois",
+    noText: "Tapez d’abord une phrase en caractères chinois.",
+    tooLong: "{{max}} caractères au plus à la fois.",
+    recording: "À l’écoute\u00a0: lisez la phrase. L’enregistrement s’arrête quand vous avez fini.",
+    working: "Reconnaissance de ce qui a été dit…",
+    unsupported: "La reconnaissance vocale ne peut pas fonctionner dans ce navigateur.",
+    unavailable: "La reconnaissance vocale ne peut pas être téléchargée ici\u00a0: {{reason}}",
+  },
+  hear: {
+    heard: "Entendu\u00a0:",
+    nothing: "rien de reconnu.",
+    allRight: "Chaque caractère a été entendu comme attendu.",
+    summary: "{{right}} caractères sur {{total}} entendus comme attendu.",
+    heardAs: "entendu comme",
+    sameSyllable: ", la même syllabe",
+    missing: "pas entendu",
+    extra: "Entendu en plus\u00a0:",
+    tones: "La reconnaissance vocale vérifie les syllabes, pas les tons.",
+    indicative:
+      "Simple indication\u00a0: la reconnaissance vocale entend souvent mal un mot dit seul.",
+    offer: "La reconnaissance vocale peut aussi montrer ce qu’elle a entendu.",
+    offerLink: "La télécharger sur la page Lire",
+    failed: "La reconnaissance vocale a échoué\u00a0: {{reason}}",
+    missingModel:
+      "La reconnaissance vocale n’est plus sur cet appareil. Téléchargez-la à nouveau sur la page Lire.",
+    unreliable:
+      "La puce graphique de cet appareil s’est trompée sur une phrase de test\u00a0: la reconnaissance vocale passe par son processeur, ce qui demande un autre téléchargement (page Lire).",
   },
   moduleError: { title: "Cette section n’a pas pu se charger", retry: "Réessayer" },
   notFound: { title: "Page introuvable", back: "Retour à Aujourd’hui" },

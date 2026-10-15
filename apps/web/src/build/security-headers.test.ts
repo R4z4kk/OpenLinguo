@@ -1,17 +1,21 @@
 import { describe, expect, it } from "vitest";
 import headersFile from "../../public/_headers?raw";
-import { parseHeaders } from "./security-headers.ts";
+import { headersFor, parseHeaderRules, parseHeaders } from "./security-headers.ts";
 
 const parsed = parseHeaders(headersFile);
 if (!parsed.ok) throw new Error(parsed.error);
 const headers = parsed.value;
+const rules = parseHeaderRules(headersFile);
+if (!rules.ok) throw new Error(rules.error);
 
-const directives = new Map(
-  (headers["Content-Security-Policy"] ?? "").split(";").map((directive) => {
-    const [name = "", ...sources] = directive.trim().split(/\s+/u);
-    return [name, sources.join(" ")] as const;
-  }),
-);
+const directivesOf = (policy: string | null): ReadonlyMap<string, string> =>
+  new Map(
+    (policy ?? "").split(";").map((directive) => {
+      const [name = "", ...sources] = directive.trim().split(/\s+/u);
+      return [name, sources.join(" ")] as const;
+    }),
+  );
+const directives = directivesOf(headers["Content-Security-Policy"] ?? null);
 
 describe("public/_headers", () => {
   it("restricts every resource to the project origin, without inline or eval scripts", () => {
@@ -32,6 +36,34 @@ describe("public/_headers", () => {
 
   it("allows the microphone for the app only", () => {
     expect(headers["Permissions-Policy"]).toContain("microphone=(self)");
+  });
+
+  it("isolates the app across origins, so WebAssembly may run on several threads", () => {
+    expect(headers["Cross-Origin-Opener-Policy"]).toBe("same-origin");
+    expect(headers["Cross-Origin-Embedder-Policy"]).toBe("require-corp");
+  });
+
+  it("lets the speech worker and its thread workers alone compile WebAssembly, with one policy", () => {
+    for (const path of ["/assets/speech-worker-AbC123.js", "/assets/transformers.web-AbC123.js"]) {
+      const worker = headersFor(rules.value, path);
+      expect(directivesOf(worker["Content-Security-Policy"] ?? null).get("script-src")).toBe(
+        "'self' 'wasm-unsafe-eval'",
+      );
+      expect(worker["Content-Security-Policy"]).not.toContain(",");
+      expect(worker["Cross-Origin-Embedder-Policy"]).toBe("require-corp");
+      expect(worker["Strict-Transport-Security"]).toBe(headers["Strict-Transport-Security"]);
+    }
+    const other = headersFor(rules.value, "/assets/index-AbC123.js");
+    expect(other["Content-Security-Policy"]).toBe(headers["Content-Security-Policy"]);
+  });
+
+  it("applies matching rules in order: unset, then set, a repeated header joined", () => {
+    const sample = parseHeaderRules(
+      ["/*", "  A: 1", "  B: 2", "/x/*", "  ! A", "  A: 3", "  B: 4"].join("\n"),
+    );
+    if (!sample.ok) throw new Error(sample.error);
+    expect(headersFor(sample.value, "/x/y")).toEqual({ A: "3", B: "2, 4" });
+    expect(headersFor(sample.value, "/y")).toEqual({ A: "1", B: "2" });
   });
 
   it("rejects a header outside a rule and a file without the /* rule", () => {

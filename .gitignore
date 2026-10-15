@@ -14,3 +14,7 @@ apps/web/.cache/
 tools/tts/.bakeoff/
 # Audio pack recordings, checks and reviews (tools/data-pipeline/src/tts/packs.ts)
 tools/tts/.packs/
+# Whisper files mirrored from Hugging Face for their GitHub release (tools/data-pipeline/src/asr/whisper.ts)
+tools/asr/.mirror/
+# Whisper files and ONNX Runtime published by apps/web/scripts/whisper-model.ts
+apps/web/public/models/

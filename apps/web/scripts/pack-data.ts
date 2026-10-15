@@ -1,6 +1,6 @@
 // Packs the committed datasets into the files the app imports on first run (public/data/),
 // and the datasets it downloads on demand (public/data/wiktionary-zh/, public/data/jieba-names/,
-// public/data/audio-zh/).
+// public/data/audio-zh/, public/models/).
 import { createHash } from "node:crypto";
 import { copyFile, mkdir, rm, writeFile } from "node:fs/promises";
 import { gzipSync } from "node:zlib";
@@ -16,6 +16,7 @@ import {
   type OnDemandIndex,
 } from "../src/data/format.ts";
 import { publishAudioPacks } from "./audio-packs.ts";
+import { publishSpeechModel } from "./whisper-model.ts";
 import { DATA, loadDictionary, readRows } from "./sources.ts";
 
 const OUT = new URL("../public/data/", import.meta.url);
@@ -34,6 +35,7 @@ const LICENSES = [
   ["makemeahanzi/GPL-3.0.txt", "makemeahanzi/GPL-3.0.txt"],
   ["hanzi-writer-data/ARPHICPL.TXT", "hanzi-writer-data/ARPHICPL.txt"],
   ["jieba-names/jieba-MIT.txt", "jieba/LICENSE.txt"],
+  ["whisper/whisper-MIT.txt", "whisper/LICENSE.txt"],
 ] as const;
 
 const sha256 = (content: string): string => createHash("sha256").update(content).digest("hex");
@@ -130,6 +132,7 @@ const main = async (): Promise<void> => {
   await writeOnDemand(extended);
   await writeOnDemand(names);
   const audio = await publishAudioPacks(OUT);
+  const speech = await publishSpeechModel();
   for (const [source, published] of LICENSES) {
     const target = new URL(`licenses/${published}`, OUT);
     await mkdir(new URL(".", target), { recursive: true });
@@ -143,6 +146,7 @@ const main = async (): Promise<void> => {
     `data: proper names ${String(names.rows)} in ${payloadOf(names)}, downloaded on demand`,
   );
   console.log(audio);
+  console.log(speech);
   const skipped = dictionary.skipped.map(([simplified, , reading]) => `${simplified} [${reading}]`);
   console.log(
     `data: ${String(entries.length)} entries (${String(dictionary.lexicon.length)} lexicon headwords), ${String(characters.length)} characters, ${String(strokes.data.length)} stroke orders, ${String(files.length)} files, version ${index.version.slice(0, 12)}`,

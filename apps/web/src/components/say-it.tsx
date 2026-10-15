@@ -9,6 +9,7 @@ import {
 import { Mic, Square } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { HeardWord, type Said } from "@/components/heard-word";
 import { PitchChart } from "@/components/pitch-chart";
 import { Pinyin, type PinyinFeatures } from "@/components/pinyin";
 import { ToneCard } from "@/components/tone-card";
@@ -48,9 +49,9 @@ type Props = {
 };
 
 /**
- * Say the word, see your pitch over the reference recording's, get a result per syllable. The
- * voice is analysed in memory on the device and dropped after the score; the microphone is open
- * only while recording. A listening mode is always offered (EN 301 549 4.2.6).
+ * Say the word, see your pitch over the reference recording's, get a result per syllable, and what
+ * speech recognition heard once downloaded. The voice stays in memory on the device until the next
+ * recording; the microphone is open only while recording. A listening mode is always offered (EN 301 549 4.2.6).
  */
 export const SayIt = ({
   headword,
@@ -70,6 +71,7 @@ export const SayIt = ({
   const [voice, setVoice] = useState<Contour | null>(null);
   const [phase, setPhase] = useState<Phase>({ kind: "idle" });
   const [listening, setListening] = useState(false);
+  const [said, setSaid] = useState<Said | null>(null);
   const recording = useRef<Recording | null>(null);
   const opening = useRef(false);
   const mounted = useRef(true);
@@ -148,6 +150,7 @@ export const SayIt = ({
     }
     setVoice(heard.value);
     setPhase({ kind: "scored", scores: scores.value });
+    setSaid({ samples, sampleRate });
   };
 
   const record = async (): Promise<void> => {
@@ -155,6 +158,7 @@ export const SayIt = ({
     opening.current = true;
     setPhase({ kind: "opening" });
     setVoice(null);
+    setSaid(null);
     const blocks: Float32Array[] = [];
     const opened = await openMicrophone((block) => {
       blocks.push(block);
@@ -265,6 +269,7 @@ export const SayIt = ({
           </ul>
         )}
       </div>
+      <HeardWord headword={headword} readingKey={readingKey} features={features} said={said} />
       <Button
         variant="ghost"
         aria-expanded={listening}
