@@ -1,4 +1,5 @@
 import { err, ok, type Result } from "@openlinguo/core";
+import { readStored, writeStored } from "@/lib/stored";
 import type { FetchProgress } from "./audio-packs.ts";
 import { SpeechModelIndex, type SpeechBackend, type SpeechModelFile } from "./format.ts";
 import { readJson, sha256, type ImportFailure } from "./import.ts";
@@ -48,10 +49,37 @@ const storedIndex = async (): Promise<Uint8Array | null> => {
   }
 };
 
-/** WebGPU when the device has it, with 16-bit floats if the model uses them; else WebAssembly. */
-export const chooseBackend = async (index: SpeechModelIndex): Promise<SpeechBackend | null> => {
+const VERDICT_KEY = "openlinguo.speechWebgpu";
+
+/** Whether WebGPU transcribed the self-check sentence right on this device: `null` until tried. */
+export type WebgpuVerdict = "right" | "wrong";
+
+export const webgpuVerdict = (
+  storage: () => Storage,
+  index: SpeechModelIndex,
+): WebgpuVerdict | null => {
+  const stored = readStored(storage, VERDICT_KEY);
+  if (!stored.ok || stored.value === null) return null;
+  const [release, verdict] = stored.value.split(" ");
+  return release === index.release && (verdict === "right" || verdict === "wrong") ? verdict : null;
+};
+
+export const recordWebgpuVerdict = (
+  storage: () => Storage,
+  index: SpeechModelIndex,
+  verdict: WebgpuVerdict,
+): Result<null, string> => writeStored(storage, VERDICT_KEY, `${index.release} ${verdict}`);
+
+/**
+ * WebGPU when the device has it, with 16-bit floats if the model uses them, unless it already got
+ * the self-check sentence wrong; else WebAssembly.
+ */
+export const chooseBackend = async (
+  index: SpeechModelIndex,
+  storage: () => Storage,
+): Promise<SpeechBackend | null> => {
   const webgpu = index.backends.webgpu ?? null;
-  if (webgpu !== null && "gpu" in navigator) {
+  if (webgpu !== null && "gpu" in navigator && webgpuVerdict(storage, index) !== "wrong") {
     try {
       const adapter = await navigator.gpu.requestAdapter();
       const needsF16 = Object.values(webgpu.dtype).includes("fp16");
@@ -77,6 +105,23 @@ export const speechModelState = async (
     return ok(
       wanted.every((path) => stored.has(path)) && stored.has(url(INDEX)) ? "installed" : "partial",
     );
+  } catch (error) {
+    return err(storageFailure(cacheName(index), error));
+  }
+};
+
+/** Deletes the files only `backend` loads, once the device is known to need the other one. */
+export const removeBackendFiles = async (
+  index: SpeechModelIndex,
+  backend: SpeechBackend,
+): Promise<Result<null, SpeechFailure>> => {
+  try {
+    const cache = await caches.open(cacheName(index));
+    const only = index.files.filter(
+      ({ backends }) => backends?.length === 1 && backends[0] === backend,
+    );
+    await Promise.all(only.flatMap(pieces).map(({ path }) => cache.delete(url(path))));
+    return ok(null);
   } catch (error) {
     return err(storageFailure(cacheName(index), error));
   }

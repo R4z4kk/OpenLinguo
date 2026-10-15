@@ -19,6 +19,11 @@ const DATASET = "whisper";
 export const PART_BYTES = 20 * 1024 * 1024;
 /** ONNX Runtime's WebAssembly and WebGPU build: its JavaScript is bundled with transformers.js, not served. */
 const RUNTIME = "ort-wasm-simd-threaded.asyncify.wasm";
+/**
+ * A sentence the worker transcribes once on WebGPU before trusting it: some mobile GPUs give
+ * nonsense in fp16 (ADR 0007). MOSS-TTS, synthetic voice, CC0 like the audio packs.
+ */
+const SELF_CHECK = { file: "self-check.wav", text: "我们一起去吃饭吧" } as const;
 
 const Manifest = z.record(z.string(), z.looseObject({ sha256: z.string() }));
 const Dtype = z.enum(["fp32", "fp16", "q8", "q4"]);
@@ -139,6 +144,14 @@ export const publishSpeechModel = async (): Promise<string> => {
   }
   const runtime = `ort/${RUNTIME}`;
   served.push(await publish(runtime, await runtimeBinary(), null));
+  const check = `${directory}/${SELF_CHECK.file}`;
+  served.push(
+    await publish(
+      check,
+      new Uint8Array(await readFile(new URL(`${DATASET}/${SELF_CHECK.file}`, DATA))),
+      ["webgpu"],
+    ),
+  );
   const index: SpeechModelIndex = {
     release,
     model: directory,
@@ -147,6 +160,7 @@ export const publishSpeechModel = async (): Promise<string> => {
       ...(backends.wasm ? { wasm: { dtype: backends.wasm, runtime } } : {}),
     },
     files: served,
+    check: { path: check, text: SELF_CHECK.text },
   };
   await writeFile(new URL("index.json", OUT), `${JSON.stringify(index, null, 2)}\n`, "utf8");
   const total = served.reduce((sum, file) => sum + file.bytes, 0);

@@ -54,7 +54,7 @@ export const HeardWord = ({
     const check = async (): Promise<Hint> => {
       const heard = await transcribe(said.samples, said.sampleRate, words.length);
       if (!heard.ok) {
-        if (heard.error.kind === "missing") refresh();
+        if (heard.error.kind !== "failed") refresh();
         return { kind: "failed", message: recognizerFailure(t, heard.error) };
       }
       const result = await checkTranscript(pack, words, heard.value);

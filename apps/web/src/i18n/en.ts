@@ -510,6 +510,8 @@ export const en = {
     failed: "Speech recognition failed: {{reason}}",
     missingModel:
       "Speech recognition is no longer on this device. Download it again on the Read page.",
+    unreliable:
+      "This device's graphics chip got a test sentence wrong, so speech recognition runs on its processor instead, which needs another download (Read page).",
   },
   moduleError: { title: "This section failed to load", retry: "Try again" },
   notFound: { title: "Page not found", back: "Back to Today" },

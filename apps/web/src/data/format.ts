@@ -166,6 +166,8 @@ export const SpeechModelIndex = z.object({
       parts: z.array(ServedFile).min(2).optional(),
     }),
   ),
+  /** A recording of `text`, transcribed once on WebGPU before it is trusted. */
+  check: z.object({ path: z.string().regex(/^[\w./-]+$/u), text: z.string().min(1) }),
 });
 export type SpeechModelIndex = z.output<typeof SpeechModelIndex>;
 export type SpeechModelFile = SpeechModelIndex["files"][number];

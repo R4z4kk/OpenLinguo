@@ -1,7 +1,7 @@
 import { inMemoryDictionary, ok, type DictEntry } from "@openlinguo/core";
 import { createZhPack } from "@openlinguo/lang-zh";
 import { describe, expect, it } from "vitest";
-import { readText, toSimplified } from "./transcript.ts";
+import { readText, sameShare, toSimplified } from "./transcript.ts";
 
 const entry = (headword: string, reading: string, variants: string[] = []): DictEntry => ({
   headword,
@@ -61,5 +61,14 @@ describe("readText", () => {
     const read = await readText(pack, "2 See");
     expect(read.ok && read.value.map(({ char }) => char)).toEqual(["二", "See"]);
     expect(read.ok && read.value[1]?.syllables.size).toBe(0);
+  });
+});
+
+describe("sameShare", () => {
+  it("counts the expected characters heard as such, traditional ones converted", () => {
+    expect(sameShare("我们一起去吃饭吧", "我們一起去吃飯吧。")).toBe(1);
+    expect(sameShare("我们一起去吃饭吧", "我们一起去吃")).toBe(0.75);
+    expect(sameShare("我们一起去吃饭吧", "很快被環码裝備的警察")).toBe(0);
+    expect(sameShare("", "我们")).toBe(0);
   });
 });

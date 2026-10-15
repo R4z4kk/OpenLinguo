@@ -23,7 +23,9 @@ type Check =
   | { readonly kind: "failed"; readonly message: string };
 
 export const recognizerFailure = (t: TFunction, error: RecognizerError): string =>
-  error.kind === "missing" ? t("hear.missingModel") : t("hear.failed", { reason: error.message });
+  error.kind === "failed"
+    ? t("hear.failed", { reason: error.message })
+    : t(error.kind === "missing" ? "hear.missingModel" : "hear.unreliable");
 
 export const recordingStatus = (
   t: TFunction,
@@ -70,7 +72,7 @@ export const ReadAloud = ({ pack }: { readonly pack: LanguagePack }) => {
     const heard = await transcribe(samples, sampleRate, expected.value.length);
     if (!heard.ok) {
       setCheck({ kind: "failed", message: recognizerFailure(t, heard.error) });
-      if (heard.error.kind === "missing") refresh();
+      if (heard.error.kind !== "failed") refresh();
       return;
     }
     const result = await checkTranscript(pack, expected.value, heard.value);
@@ -117,6 +119,9 @@ export const ReadAloud = ({ pack }: { readonly pack: LanguagePack }) => {
               ? null
               : t("readAloud.unavailable", { reason: describeDownloadFailure(t, model.failure) })}
         </p>
+      )}
+      {model.status === "ready" && model.webgpuSetAside && model.state !== "installed" && (
+        <p>{t("hear.unreliable")}</p>
       )}
       {model.status === "ready" && (
         <SpeechModelControls

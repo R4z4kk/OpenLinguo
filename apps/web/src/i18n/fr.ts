@@ -526,6 +526,8 @@ export const fr: Messages = {
     failed: "La reconnaissance vocale a échoué\u00a0: {{reason}}",
     missingModel:
       "La reconnaissance vocale n’est plus sur cet appareil. Téléchargez-la à nouveau sur la page Lire.",
+    unreliable:
+      "La puce graphique de cet appareil s’est trompée sur une phrase de test\u00a0: la reconnaissance vocale passe par son processeur, ce qui demande un autre téléchargement (page Lire).",
   },
   moduleError: { title: "Cette section n’a pas pu se charger", retry: "Réessayer" },
   notFound: { title: "Page introuvable", back: "Retour à Aujourd’hui" },

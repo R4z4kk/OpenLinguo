@@ -9,12 +9,22 @@ import {
   downloadBytes,
   installSpeechModel,
   loadSpeechIndex,
+  removeBackendFiles,
   removeSpeechModel,
   speechModelState,
+  webgpuVerdict,
   type SpeechFailure,
   type SpeechModelState,
 } from "@/data/speech-model";
-import { startRecognizer, type Recognizer, type RecognizerError } from "@/lib/speech-recognizer";
+import {
+  checkRecognizer,
+  startRecognizer,
+  startTrusted,
+  type Recognizer,
+  type RecognizerError,
+} from "@/lib/speech-recognizer";
+
+const storage = (): Storage => localStorage;
 
 export type SpeechModel =
   | { readonly status: "loading" }
@@ -24,6 +34,8 @@ export type SpeechModel =
       readonly index: SpeechModelIndex;
       readonly backend: SpeechBackend;
       readonly state: SpeechModelState;
+      /** WebGPU got the self-check sentence wrong on this device, so WebAssembly is used. */
+      readonly webgpuSetAside: boolean;
     };
 
 /** The model this device would use and whether it is stored; `refresh` after a change. */
@@ -35,11 +47,17 @@ export const useSpeechModel = (): { readonly model: SpeechModel; readonly refres
     const load = async (): Promise<SpeechModel> => {
       const index = await loadSpeechIndex();
       if (!index.ok) return { status: "unavailable", failure: index.error };
-      const backend = await chooseBackend(index.value);
+      const backend = await chooseBackend(index.value, storage);
       if (backend === null) return { status: "unavailable", failure: null };
       const state = await speechModelState(index.value, backend);
       return state.ok
-        ? { status: "ready", index: index.value, backend, state: state.value }
+        ? {
+            status: "ready",
+            index: index.value,
+            backend,
+            state: state.value,
+            webgpuSetAside: webgpuVerdict(storage, index.value) === "wrong",
+          }
         : { status: "unavailable", failure: state.error };
     };
     void load().then((loaded) => {
@@ -106,7 +124,12 @@ export const useTranscriber = (model: SpeechModel): Transcribe => {
   return useCallback(
     async (samples, sampleRate, expectedCharacters) => {
       if (model.status !== "ready" || model.state !== "installed") return err({ kind: "missing" });
-      recognizer.current ??= startRecognizer(model.index, model.backend);
+      recognizer.current ??= startTrusted(model.index, model.backend, {
+        start: startRecognizer,
+        check: checkRecognizer,
+        storage,
+        removeWebgpuFiles: (index) => removeBackendFiles(index, "webgpu"),
+      });
       const started = await recognizer.current;
       if (!started.ok) {
         recognizer.current = null;

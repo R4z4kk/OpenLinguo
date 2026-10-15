@@ -1,5 +1,5 @@
 import { err, ok, type LanguagePack, type LookupError, type Result } from "@openlinguo/core";
-import { readingChars, type SpokenChar } from "@openlinguo/lang-zh";
+import { alignChars, readingChars, type SpokenChar } from "@openlinguo/lang-zh";
 import { Converter } from "opencc-js/t2cn";
 
 /** A character with the syllables it may be read as, and the reading shown for it (numbered pinyin). */
@@ -91,4 +91,17 @@ export const checkTranscript = async (
 ): Promise<Result<SpeechCheck, LookupError>> => {
   const heard = await readText(pack, toSimplified(transcript));
   return heard.ok ? ok({ expected, heard: heard.value }) : heard;
+};
+
+const hanChars = (text: string): SpokenChar[] =>
+  Array.from(text.matchAll(/\p{Script=Han}/gu), ([char]) => ({ char, syllables: new Set() }));
+
+/** The share of the expected characters heard as such, in simplified characters (0 to 1). */
+export const sameShare = (expected: string, transcript: string): number => {
+  const wanted = hanChars(expected);
+  if (wanted.length === 0) return 0;
+  const same = alignChars(wanted, hanChars(toSimplified(transcript))).filter(
+    ({ kind }) => kind === "same",
+  );
+  return same.length / wanted.length;
 };
