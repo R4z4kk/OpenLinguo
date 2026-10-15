@@ -119,7 +119,7 @@ const server = (files: ReadonlyMap<string, Uint8Array<ArrayBuffer>>) => {
 };
 
 const noProgress = (): void => {};
-const RELEASE = "audio-zh-1";
+const PACK = { release: "audio-zh-1", f0: "pitchy-4.1.0/v1" };
 
 let db: Database;
 let counter = 0;
@@ -143,7 +143,7 @@ describe("audio packs", () => {
     const progress: number[] = [];
     const result = await installBand(
       db,
-      RELEASE,
+      PACK,
       hsk1,
       fetchPart,
       (received) => progress.push(received),
@@ -154,12 +154,12 @@ describe("audio packs", () => {
     const stored = await db.wordAudio.get(wordAudioId("你好", "ni3 hao3"));
     expect(new TextDecoder().decode(stored?.data)).toBe("mp3 你好");
     expect(stored?.type).toBe("audio/mpeg");
-    const index: AudioPackIndex = { release: RELEASE, bands: [hsk1] };
+    const index: AudioPackIndex = { ...PACK, bands: [hsk1] };
     const states = await bandStates(db, index);
     expect(states.ok && states.value.get("hsk-2025:1")).toBe("installed");
   });
 
-  it("keeps each recording's pitch contour, null when the pack has none or nothing is voiced", async () => {
+  it("keeps each recording's pitch contour with its version, null when the pack has none or nothing is voiced", async () => {
     const contours = new Map([
       ["你好", [12, null, -30]],
       ["一", null],
@@ -176,7 +176,7 @@ describe("audio packs", () => {
     const name = `audio-zh/${hsk1.parts[0]?.file ?? ""}`;
     const result = await installBand(
       db,
-      RELEASE,
+      PACK,
       hsk1,
       server(new Map([[name, part]])).fetchPart,
       noProgress,
@@ -189,6 +189,7 @@ describe("audio packs", () => {
       wordAudioId("二", "er4"),
     ]);
     expect(stored.map((row) => row?.f0)).toEqual([[12, null, -30], null, null]);
+    expect(stored.map((row) => row?.f0Version)).toEqual([PACK.f0, PACK.f0, PACK.f0]);
   });
 
   it("resumes at the part that failed", async () => {
@@ -199,14 +200,14 @@ describe("audio packs", () => {
     const secondName = `audio-zh/${hsk1.parts[1]?.file ?? ""}`;
     const broken = await installBand(
       db,
-      RELEASE,
+      PACK,
       hsk1,
       server(new Map([[firstName, first]])).fetchPart,
       noProgress,
       new AbortController().signal,
     );
     expect(broken.ok || broken.error.kind).toBe("network");
-    const states = await bandStates(db, { release: RELEASE, bands: [hsk1] });
+    const states = await bandStates(db, { ...PACK, bands: [hsk1] });
     expect(states.ok && states.value.get("hsk-2025:1")).toBe("partial");
     const retry = server(
       new Map([
@@ -214,7 +215,7 @@ describe("audio packs", () => {
         [secondName, second],
       ]),
     );
-    await installBand(db, RELEASE, hsk1, retry.fetchPart, noProgress, new AbortController().signal);
+    await installBand(db, PACK, hsk1, retry.fetchPart, noProgress, new AbortController().signal);
     expect(retry.requested).toEqual([secondName]);
   });
 
@@ -223,7 +224,7 @@ describe("audio packs", () => {
     const name = `audio-zh/${hsk1.parts[0]?.file ?? ""}`;
     const result = await installBand(
       db,
-      RELEASE,
+      PACK,
       hsk1,
       server(new Map([[name, pack([["二", "er4"]])]])).fetchPart,
       noProgress,
@@ -240,7 +241,7 @@ describe("audio packs", () => {
       controller.abort();
       return Promise.resolve(err("AbortError"));
     };
-    const result = await installBand(db, RELEASE, hsk1, fetchPart, noProgress, controller.signal);
+    const result = await installBand(db, PACK, hsk1, fetchPart, noProgress, controller.signal);
     expect(result).toEqual(err({ kind: "cancelled" }));
   });
 
@@ -259,8 +260,8 @@ describe("audio packs", () => {
       ]),
     );
     const signal = new AbortController().signal;
-    await installBand(db, RELEASE, hsk1, fetchPart, noProgress, signal);
-    await installBand(db, RELEASE, gf1, fetchPart, noProgress, signal);
+    await installBand(db, PACK, hsk1, fetchPart, noProgress, signal);
+    await installBand(db, PACK, gf1, fetchPart, noProgress, signal);
     expect(await removeBand(db, "hsk-2025:1")).toEqual(ok(null));
     expect((await db.wordAudio.toArray()).map(({ id, bands }) => [id, bands])).toEqual([
       [wordAudioId("一", "yi1"), ["gf0025-2021:1"]],
@@ -275,7 +276,7 @@ describe("audio packs", () => {
     const oldBand = await band("hsk-2025", 1, [old]);
     await installBand(
       db,
-      "audio-zh-0",
+      { release: "audio-zh-0", f0: null },
       oldBand,
       server(new Map([[`audio-zh/${oldBand.parts[0]?.file ?? ""}`, old]])).fetchPart,
       noProgress,
@@ -284,7 +285,7 @@ describe("audio packs", () => {
     const newBand = await band("hsk-2025", 1, [current]);
     await installBand(
       db,
-      RELEASE,
+      PACK,
       newBand,
       server(new Map([[`audio-zh/${newBand.parts[0]?.file ?? ""}`, current]])).fetchPart,
       noProgress,

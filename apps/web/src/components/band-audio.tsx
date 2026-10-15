@@ -8,17 +8,17 @@ import {
   type BandState,
 } from "@/data/audio-packs";
 import { database } from "@/data/database";
-import type { AudioPackBand } from "@/data/format";
+import type { AudioPackBand, AudioPackIndex } from "@/data/format";
 
 /** Downloads, cancels or deletes a band's word audio. */
 export const BandAudio = ({
-  release,
+  pack,
   band,
   state,
   describedBy,
   onChange,
 }: {
-  readonly release: string;
+  readonly pack: Pick<AudioPackIndex, "release" | "f0">;
   readonly band: AudioPackBand;
   readonly state: BandState;
   /** The band's heading. */
@@ -31,7 +31,7 @@ export const BandAudio = ({
     state={state}
     describedBy={describedBy}
     install={(onProgress, signal) =>
-      installBand(database, release, band, fetchWithProgress, onProgress, signal)
+      installBand(database, pack, band, fetchWithProgress, onProgress, signal)
     }
     remove={() => removeBand(database, bandId(band))}
     onChange={onChange}

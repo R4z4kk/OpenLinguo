@@ -112,6 +112,8 @@ const Sha256 = z.string().regex(/^[0-9a-f]{64}$/u);
 /** `data/audio-zh/index.json`: the word audio pack of each referential band, downloaded on request. */
 export const AudioPackIndex = z.object({
   release: z.string().min(1),
+  /** `F0_VERSION` (core f0.ts) of the release's contours; null when it has none. */
+  f0: z.string().min(1).nullable().default(null),
   bands: z.array(
     z.object({
       referential: z.enum(["hsk-2025", "gf0025-2021"]),

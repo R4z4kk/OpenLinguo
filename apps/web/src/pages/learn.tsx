@@ -394,7 +394,7 @@ const BandList = ({
     if (band === null) return null;
     return (headingId: string) => (
       <BandAudio
-        release={index.release}
+        pack={index}
         band={band}
         state={states.get(bandId(band)) ?? "absent"}
         describedBy={headingId}

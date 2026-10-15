@@ -1,3 +1,4 @@
+import { F0_VERSION } from "@openlinguo/core";
 import { expect, type Page } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
@@ -62,6 +63,39 @@ const openWord = async (page: Page): Promise<void> => {
   await page.goto(`/learn/dictionary/${encodeURIComponent("上学")}`);
   await expect(main.getByRole("heading", { name: en.speak.title })).toBeVisible();
 };
+
+/** Stores a flat pitch contour of `version` with the recording of 上学, as a pack would. */
+const storeFlatContour = (page: Page, version: string): Promise<void> =>
+  page.evaluate(
+    (version) =>
+      new Promise<void>((resolve, reject) => {
+        const open = indexedDB.open("openlinguo");
+        open.onerror = () => {
+          reject(new Error(String(open.error)));
+        };
+        open.onsuccess = () => {
+          const transaction = open.result.transaction("wordAudio", "readwrite");
+          const store = transaction.objectStore("wordAudio");
+          const read = store.get("上学\tshang4 xue2");
+          read.onsuccess = () => {
+            const row: unknown = read.result;
+            if (typeof row !== "object" || row === null) {
+              transaction.abort();
+              return;
+            }
+            store.put({ ...row, f0: Array.from({ length: 20 }, () => 0), f0Version: version });
+          };
+          transaction.onabort = () => {
+            reject(new Error(String(transaction.error ?? "no recording of 上学 stored")));
+          };
+          transaction.oncomplete = () => {
+            open.result.close();
+            resolve();
+          };
+        };
+      }),
+    version,
+  );
 
 test.beforeEach(({ browserName }) => {
   test.skip(
@@ -135,4 +169,22 @@ test("explains a blocked microphone and keeps the listening mode", async ({ page
   await expect(main.getByText("Right: à 4")).toBeVisible();
   await expect(main.getByText(/^Graded/u)).toHaveCount(0);
   expect(await accessibilityViolations(page)).toEqual([]);
+});
+
+test("draws the pack's contour only when this app's contour code made it", async ({ page }) => {
+  await openWord(page);
+  const reference = page
+    .getByRole("main")
+    .getByRole("img", { name: en.speak.chart })
+    .locator("path");
+
+  await storeFlatContour(page, F0_VERSION);
+  await page.reload();
+  await expect(reference).toHaveCount(1);
+  await expect(reference).toHaveAttribute("d", /^M5\.0 50\.0h0\.1(L\d+\.0 50\.0){19}$/u);
+
+  await storeFlatContour(page, "pitchy-0.0.0/v0");
+  await page.reload();
+  await expect(reference).toHaveCount(1);
+  await expect(reference).toHaveAttribute("d", / (?!50\.0)\d+\.\d/u);
 });

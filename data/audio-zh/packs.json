@@ -1,17 +1,114 @@
 {
-  "release": "audio-zh-1",
+  "release": "audio-zh-2",
   "license": "CC0-1.0",
   "generator": {
     "tts": "OpenMOSS-Team/MOSS-TTS-v1.5@cdd3b911b1585e3f2dbc7775ef10f9926f58850a",
     "voiceSha256": "c78d7c51cc88c1ded15ff3f381acba9d80a0c8d80beb0cab1cfb0eb5d94f8feb",
     "asr": "Qwen/Qwen3-ASR-1.7B@7278e1e70fe206f11671096ffdd38061171dd6e5",
-    "encoder": "ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated"
+    "encoder": "ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated",
+    "f0": "pitchy-4.1.0/v1"
   },
   "words": {
     "hsk-2025-words": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2",
     "gf0025-2021-words": "4a8cfdc3a8fa85ced837c71aa187454c4d0ee36a1f70765655a93acb6a463af3"
   },
   "bands": [
+    {
+      "referential": "gf0025-2021",
+      "level": 1,
+      "entries": 438,
+      "validatedByEar": 4,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-1-1.zip",
+          "bytes": 2105190,
+          "sha256": "c0c7e6534ed72bcf80087a4745f2a3ce2c064676f2d19610acb5b52ad0ba940b"
+        }
+      ]
+    },
+    {
+      "referential": "gf0025-2021",
+      "level": 2,
+      "entries": 691,
+      "validatedByEar": 1,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-2-1.zip",
+          "bytes": 3532952,
+          "sha256": "c21902a73e82538e74edac94730556fc38c0c5a312fe30f8a4062192f41d7b48"
+        }
+      ]
+    },
+    {
+      "referential": "gf0025-2021",
+      "level": 3,
+      "entries": 911,
+      "validatedByEar": 0,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-3-1.zip",
+          "bytes": 4694208,
+          "sha256": "32f2484ab85a673e5556f98670e02c134cf8c5dbb5e42d577aef4cf7e77e23b7"
+        }
+      ]
+    },
+    {
+      "referential": "gf0025-2021",
+      "level": 4,
+      "entries": 924,
+      "validatedByEar": 1,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-4-1.zip",
+          "bytes": 4765810,
+          "sha256": "b9bafa9364c0074807feeaeec81caff82fb96c40d82945502f833bba2541100b"
+        }
+      ]
+    },
+    {
+      "referential": "gf0025-2021",
+      "level": 5,
+      "entries": 1017,
+      "validatedByEar": 6,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-5-1.zip",
+          "bytes": 5242240,
+          "sha256": "6b95e81a17cf2b47f0082cd5c45f754c01101390b6b0901223e992182112f0db"
+        }
+      ]
+    },
+    {
+      "referential": "gf0025-2021",
+      "level": 6,
+      "entries": 1062,
+      "validatedByEar": 3,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-6-1.zip",
+          "bytes": 5619610,
+          "sha256": "d6ef57e6331e3e23afe80004f24fb8aaf1c8432f872cf26deeca59506e310a3d"
+        }
+      ]
+    },
+    {
+      "referential": "gf0025-2021",
+      "level": 7,
+      "entries": 5469,
+      "validatedByEar": 16,
+      "parts": [
+        {
+          "file": "audio-zh-gf0025-2021-7-1.zip",
+          "bytes": 21877383,
+          "sha256": "edeb2ec3879ee61e32acbf71e0d55b8cb184a505915ba00471a00e5e230d5369"
+        },
+        {
+          "file": "audio-zh-gf0025-2021-7-2.zip",
+          "bytes": 8705802,
+          "sha256": "d35e29551b1082f17130e009ffd17e54bca3db23f039b99f785c32777bc811b3"
+        }
+      ]
+    },
     {
       "referential": "hsk-2025",
       "level": 1,
@@ -20,8 +117,91 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-1-1.zip",
-          "bytes": 1214061,
-          "sha256": "f6649145504472f642c53ae78bbe970d48bc61136639b0edcc39655f68990d16"
+          "bytes": 1230868,
+          "sha256": "63c1b4dd13725d7e1d9483db7b21d3781683bc91213d0621ab748f53547024fd"
+        }
+      ]
+    },
+    {
+      "referential": "hsk-2025",
+      "level": 2,
+      "entries": 169,
+      "validatedByEar": 1,
+      "parts": [
+        {
+          "file": "audio-zh-hsk-2025-2-1.zip",
+          "bytes": 813654,
+          "sha256": "28bf6544999c9665acb228c8422bb048338b7b45d15302b4b0a8d4a2e3da3221"
+        }
+      ]
+    },
+    {
+      "referential": "hsk-2025",
+      "level": 3,
+      "entries": 462,
+      "validatedByEar": 1,
+      "parts": [
+        {
+          "file": "audio-zh-hsk-2025-3-1.zip",
+          "bytes": 2358365,
+          "sha256": "4e2c9f8e245924d4b2a19235ce96009b83b1980d36e5252f9ec7baa48eabf2a3"
+        }
+      ]
+    },
+    {
+      "referential": "hsk-2025",
+      "level": 4,
+      "entries": 934,
+      "validatedByEar": 2,
+      "parts": [
+        {
+          "file": "audio-zh-hsk-2025-4-1.zip",
+          "bytes": 4768258,
+          "sha256": "011c51856c577e076fc7cd6f1f7e0ba355e9b3f69538dc53115f6f6862fc9eec"
+        }
+      ]
+    },
+    {
+      "referential": "hsk-2025",
+      "level": 5,
+      "entries": 1522,
+      "validatedByEar": 3,
+      "parts": [
+        {
+          "file": "audio-zh-hsk-2025-5-1.zip",
+          "bytes": 7894956,
+          "sha256": "b7abbcf48316298692426fbf1fa06985e542d11096b46972475bf382eba00e16"
+        }
+      ]
+    },
+    {
+      "referential": "hsk-2025",
+      "level": 6,
+      "entries": 1708,
+      "validatedByEar": 3,
+      "parts": [
+        {
+          "file": "audio-zh-hsk-2025-6-1.zip",
+          "bytes": 8997701,
+          "sha256": "4e0f6ec461650f88df12009ff6c70386b2fea024fd57a65217b2b35aa9f93e38"
+        }
+      ]
+    },
+    {
+      "referential": "hsk-2025",
+      "level": 7,
+      "entries": 5444,
+      "validatedByEar": 16,
+      "parts": [
+        {
+          "file": "audio-zh-hsk-2025-7-1.zip",
+          "bytes": 21878196,
+          "sha256": "12a123d255b5fa13420e67ecaf67c7b544c28cdab7abe3710756957212ed4ecf"
+        },
+        {
+          "file": "audio-zh-hsk-2025-7-2.zip",
+          "bytes": 8381176,
+          "sha256": "285d5e143b041ada91519f8c6a45858b05c3dbce198a8caa3ca5e1298bcb28cf"
         }
       ]
     }

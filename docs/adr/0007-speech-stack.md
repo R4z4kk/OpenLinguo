@@ -57,6 +57,16 @@ Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones 
 - Qwen3-ASR missed none. A false alarm costs a regeneration with another seed, at worst a listen; a miss ships a wrong recording.
 - Files all three passed, or all three flagged, were not labelled, and 5 failures is a small sample.
 - All three hear MOSS-TTS's isolated 烫 tàng as 胖 pàng.
+- A character reads as any syllable CC-CEDICT gives it, words included: alone, 钥 is only yuè, while 钥匙 is yàoshi.
+
+### Tone of isolated syllables (2026-10-15)
+
+The recognizer checks words, not tones, and no open recognizer outputs toned pinyin. Two weak signals point the same way on the 1,276 single-syllable recordings:
+
+- The character Qwen3-ASR hears for an isolated syllable is chosen from the sound alone: it carries the expected tone for 92 % of the recordings that pass. Its misses lean towards frequent characters (右 heard 有, 移 heard 一), so it cannot decide alone.
+- A tone model of this voice (the #115 classifier's features, trained on the recordings whose character agrees) confirms the expected tone for 82 % of its confident answers when the character agrees, 52 % when it does not. On the words reviewed by ear it confidently heard another tone for 4 of the rejected (勿, 愈, 暨, 熨) and agreed with 10 of the 11 accepted.
+
+A syllable is doubted when both point to another tone; it is redone with seeds up to 5. On the packs, 27 were doubted and all found a recording that passes by seed 5. A recording that fails any check with every seed, with no verdict by ear, ships without audio (`unverified` in `data/gaps/audio-zh.tsv`); reviewing by ear is optional. Words of two or more syllables keep the word check only: the recognizer's language model knows the word whatever its tones.
 
 ## Consequences
 
@@ -100,7 +110,7 @@ Compared on 2026-10-14 on the 360 bake-off samples (every engine, rejected ones 
 - Syllables: no alignment model. The voiced stretch is cut in equal parts, one per spoken syllable (the erhua `r5` is said inside the syllable before it), each boundary moved to the quietest frame within a quarter of a syllable. The learner's voice gets the same cut, so both curves line up.
 - Output: 10 points per syllable, in tenths of a semitone relative to the median pitch of the recording, `null` where nothing is voiced. Silence is never bridged. About 12 % of the points are unvoiced on the 258 HSK 1 recordings, every one has a voice, and a word takes about 3 ms.
 - Shipping: each pack part's `index.json` holds `f0` per recording; `generator.f0` in `packs.json` records `F0_VERSION`. A change of the contour code bumps it and the bands are rebuilt together (the packing guard refuses a mix). The contours come from the cached TTS WAV files, so a rebuild needs no new generation. The app keeps the contour in its `wordAudio` row.
-  - It does not yet compare a pack's `generator.f0` with its own `F0_VERSION`: a pack installed with older contours is scored against the learner's newer ones until it is updated.
+  - With its version: the app's `audio-zh/index.json` carries `generator.f0` as `f0`, stored with each recording. A stored contour is used only when its version is the app's `F0_VERSION`. Otherwise (a pack without contours, made by older contour code, or not yet rebuilt after a change) the app decodes the recording and computes the reference with the same function, offline. No download is forced; recordings stored before the version was kept count as of unknown version.
 - Limits: a creaky third tone has few voiced frames, and MOSS gives isolated fourth tones a fall of about half a semitone in some words (下, 二): #115 sets its threshold on human recordings, not on these.
 
 ## Tone card (#117)

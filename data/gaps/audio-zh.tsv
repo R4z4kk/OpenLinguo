@@ -1,4 +1,913 @@
 referential	level	simplified	reading	reason
+gf0025-2021	1	上	shang3	several-readings
+gf0025-2021	1	上	shang4	several-readings
+gf0025-2021	1	东西	dong1 xi1	several-readings
+gf0025-2021	1	东西	dong1 xi5	several-readings
+gf0025-2021	1	个	ge3	several-readings
+gf0025-2021	1	个	ge4	several-readings
+gf0025-2021	1	中	zhong1	several-readings
+gf0025-2021	1	中	zhong4	several-readings
+gf0025-2021	1	了	le5	several-readings
+gf0025-2021	1	了	liao3	several-readings
+gf0025-2021	1	了	liao4	several-readings
+gf0025-2021	1	们	men5	rejected
+gf0025-2021	1	会	hui4	several-readings
+gf0025-2021	1	会	kuai4	several-readings
+gf0025-2021	1	六	liu4	several-readings
+gf0025-2021	1	六	lu4	several-readings
+gf0025-2021	1	写	xie3	several-readings
+gf0025-2021	1	写	xie4	several-readings
+gf0025-2021	1	几	ji1	several-readings
+gf0025-2021	1	几	ji3	several-readings
+gf0025-2021	1	出来	chu1 lai2	several-readings
+gf0025-2021	1	出来	chu5 lai5	several-readings
+gf0025-2021	1	分	fen1	several-readings
+gf0025-2021	1	分	fen4	several-readings
+gf0025-2021	1	别	bie2	several-readings
+gf0025-2021	1	别	bie4	several-readings
+gf0025-2021	1	南	na1	several-readings
+gf0025-2021	1	南	nan2	several-readings
+gf0025-2021	1	号	hao2	several-readings
+gf0025-2021	1	号	hao4	several-readings
+gf0025-2021	1	吗	ma2	several-readings
+gf0025-2021	1	吗	ma3	several-readings
+gf0025-2021	1	吗	ma5	several-readings
+gf0025-2021	1	吧	ba1	several-readings
+gf0025-2021	1	吧	ba5	several-readings
+gf0025-2021	1	吧	bia1	several-readings
+gf0025-2021	1	听	ting1	several-readings
+gf0025-2021	1	听	yin3	several-readings
+gf0025-2021	1	告诉	gao4 su4	several-readings
+gf0025-2021	1	告诉	gao4 su5	several-readings
+gf0025-2021	1	呢	ne5	several-readings
+gf0025-2021	1	呢	ni2	several-readings
+gf0025-2021	1	和	he2	several-readings
+gf0025-2021	1	和	he4	several-readings
+gf0025-2021	1	和	hu2	several-readings
+gf0025-2021	1	和	huo2	several-readings
+gf0025-2021	1	和	huo4	several-readings
+gf0025-2021	1	哪	na3	several-readings
+gf0025-2021	1	哪	na5	several-readings
+gf0025-2021	1	哪	ne2	several-readings
+gf0025-2021	1	哪	nei3	several-readings
+gf0025-2021	1	喝	he1	several-readings
+gf0025-2021	1	喝	he4	several-readings
+gf0025-2021	1	地	de5	several-readings
+gf0025-2021	1	地	di4	several-readings
+gf0025-2021	1	地方	di4 fang1	several-readings
+gf0025-2021	1	地方	di4 fang5	several-readings
+gf0025-2021	1	多少	duo1 shao3	several-readings
+gf0025-2021	1	多少	duo1 shao5	several-readings
+gf0025-2021	1	大	da4	several-readings
+gf0025-2021	1	大	dai4	several-readings
+gf0025-2021	1	女	nu:3	several-readings
+gf0025-2021	1	女	ru3	several-readings
+gf0025-2021	1	女人	nu:3 ren2	several-readings
+gf0025-2021	1	女人	nu:3 ren5	several-readings
+gf0025-2021	1	好	hao3	several-readings
+gf0025-2021	1	好	hao4	several-readings
+gf0025-2021	1	好吃	hao3 chi1	several-readings
+gf0025-2021	1	好吃	hao4 chi1	several-readings
+gf0025-2021	1	子	zi3	several-readings
+gf0025-2021	1	子	zi5	several-readings
+gf0025-2021	1	少	shao3	several-readings
+gf0025-2021	1	少	shao4	several-readings
+gf0025-2021	1	差	cha1	several-readings
+gf0025-2021	1	差	cha4	several-readings
+gf0025-2021	1	差	chai1	several-readings
+gf0025-2021	1	差	ci1	several-readings
+gf0025-2021	1	干	gan1	several-readings
+gf0025-2021	1	干	gan4	several-readings
+gf0025-2021	1	弟	di4	several-readings
+gf0025-2021	1	弟	ti4	several-readings
+gf0025-2021	1	打	da2	several-readings
+gf0025-2021	1	打	da3	several-readings
+gf0025-2021	1	教	jiao1	several-readings
+gf0025-2021	1	教	jiao4	several-readings
+gf0025-2021	1	正	zheng1	several-readings
+gf0025-2021	1	正	zheng4	several-readings
+gf0025-2021	1	比	bi1	several-readings
+gf0025-2021	1	比	bi3	several-readings
+gf0025-2021	1	没	mei2	several-readings
+gf0025-2021	1	没	mo4	several-readings
+gf0025-2021	1	洗	xi3	several-readings
+gf0025-2021	1	洗	xian3	several-readings
+gf0025-2021	1	的	de5	several-readings
+gf0025-2021	1	的	di1	several-readings
+gf0025-2021	1	的	di2	several-readings
+gf0025-2021	1	的	di4	several-readings
+gf0025-2021	1	看	kan1	several-readings
+gf0025-2021	1	看	kan4	several-readings
+gf0025-2021	1	着	zhao1	several-readings
+gf0025-2021	1	着	zhao2	several-readings
+gf0025-2021	1	着	zhe5	several-readings
+gf0025-2021	1	着	zhuo2	several-readings
+gf0025-2021	1	累	lei2	several-readings
+gf0025-2021	1	累	lei3	several-readings
+gf0025-2021	1	累	lei4	several-readings
+gf0025-2021	1	给	gei3	several-readings
+gf0025-2021	1	给	ji3	several-readings
+gf0025-2021	1	行	hang2	several-readings
+gf0025-2021	1	行	heng2	several-readings
+gf0025-2021	1	行	xing2	several-readings
+gf0025-2021	1	要	yao1	several-readings
+gf0025-2021	1	要	yao4	several-readings
+gf0025-2021	1	见	jian4	several-readings
+gf0025-2021	1	见	xian4	several-readings
+gf0025-2021	1	说	shui4	several-readings
+gf0025-2021	1	说	shuo1	several-readings
+gf0025-2021	1	读	dou4	several-readings
+gf0025-2021	1	读	du2	several-readings
+gf0025-2021	1	起来	qi3 lai5	several-readings
+gf0025-2021	1	起来	qi5 lai5	several-readings
+gf0025-2021	1	跑	pao2	several-readings
+gf0025-2021	1	跑	pao3	several-readings
+gf0025-2021	1	车	che1	several-readings
+gf0025-2021	1	车	ju1	several-readings
+gf0025-2021	1	车上		no-reading
+gf0025-2021	1	过	guo1	several-readings
+gf0025-2021	1	过	guo4	several-readings
+gf0025-2021	1	过	guo5	several-readings
+gf0025-2021	1	还	hai2	several-readings
+gf0025-2021	1	还	huan2	several-readings
+gf0025-2021	1	这	zhe4	several-readings
+gf0025-2021	1	这	zhei4	several-readings
+gf0025-2021	1	远	yuan3	several-readings
+gf0025-2021	1	远	yuan4	several-readings
+gf0025-2021	1	那	na1	several-readings
+gf0025-2021	1	那	na3	several-readings
+gf0025-2021	1	那	na4	several-readings
+gf0025-2021	1	那	nuo2	several-readings
+gf0025-2021	1	都	dou1	several-readings
+gf0025-2021	1	都	du1	several-readings
+gf0025-2021	1	重	chong2	several-readings
+gf0025-2021	1	重	zhong4	several-readings
+gf0025-2021	1	间	jian1	several-readings
+gf0025-2021	1	间	jian4	several-readings
+gf0025-2021	1	难	nan2	several-readings
+gf0025-2021	1	难	nan4	several-readings
+gf0025-2021	1	雨	yu3	several-readings
+gf0025-2021	1	雨	yu4	several-readings
+gf0025-2021	1	页	xie2	several-readings
+gf0025-2021	1	页	ye4	several-readings
+gf0025-2021	2	万	mo4	several-readings
+gf0025-2021	2	万	wan4	several-readings
+gf0025-2021	2	不一会儿		no-reading
+gf0025-2021	2	不太		no-reading
+gf0025-2021	2	为	wei2	several-readings
+gf0025-2021	2	为	wei4	several-readings
+gf0025-2021	2	便宜	bian4 yi2	several-readings
+gf0025-2021	2	便宜	pian2 yi5	several-readings
+gf0025-2021	2	倒	dao3	several-readings
+gf0025-2021	2	倒	dao4	several-readings
+gf0025-2021	2	假	gei1	several-readings
+gf0025-2021	2	假	jia3	several-readings
+gf0025-2021	2	假	jia4	several-readings
+gf0025-2021	2	凉	liang2	several-readings
+gf0025-2021	2	凉	liang4	several-readings
+gf0025-2021	2	占	zhan1	several-readings
+gf0025-2021	2	占	zhan4	several-readings
+gf0025-2021	2	卡	ka3	several-readings
+gf0025-2021	2	卡	qia3	several-readings
+gf0025-2021	2	发	fa1	several-readings
+gf0025-2021	2	发	fa4	several-readings
+gf0025-2021	2	句	gou1	several-readings
+gf0025-2021	2	句	ju4	several-readings
+gf0025-2021	2	只	zhi1	several-readings
+gf0025-2021	2	只	zhi3	several-readings
+gf0025-2021	2	咱	za2	several-readings
+gf0025-2021	2	咱	zan2	several-readings
+gf0025-2021	2	啊	a1	several-readings
+gf0025-2021	2	啊	a2	several-readings
+gf0025-2021	2	啊	a3	several-readings
+gf0025-2021	2	啊	a4	several-readings
+gf0025-2021	2	啊	a5	several-readings
+gf0025-2021	2	喂	wei2	several-readings
+gf0025-2021	2	喂	wei4	several-readings
+gf0025-2021	2	场	chang2	several-readings
+gf0025-2021	2	场	chang3	several-readings
+gf0025-2021	2	头	tou2	several-readings
+gf0025-2021	2	头	tou5	several-readings
+gf0025-2021	2	好事	hao3 shi4	several-readings
+gf0025-2021	2	好事	hao4 shi4	several-readings
+gf0025-2021	2	好处	hao3 chu3	several-readings
+gf0025-2021	2	好处	hao3 chu5	several-readings
+gf0025-2021	2	度	du4	several-readings
+gf0025-2021	2	度	duo2	several-readings
+gf0025-2021	2	弄	long4	several-readings
+gf0025-2021	2	弄	nong4	several-readings
+gf0025-2021	2	当	dang1	several-readings
+gf0025-2021	2	当	dang4	several-readings
+gf0025-2021	2	当时	dang1 shi2	several-readings
+gf0025-2021	2	当时	dang4 shi2	several-readings
+gf0025-2021	2	得	de2	several-readings
+gf0025-2021	2	得	de4	several-readings
+gf0025-2021	2	得	de5	several-readings
+gf0025-2021	2	得	dei3	several-readings
+gf0025-2021	2	拉	la1	several-readings
+gf0025-2021	2	拉	la2	several-readings
+gf0025-2021	2	拉	la4	several-readings
+gf0025-2021	2	提	di1	several-readings
+gf0025-2021	2	提	ti2	several-readings
+gf0025-2021	2	故事	gu4 shi4	several-readings
+gf0025-2021	2	故事	gu4 shi5	several-readings
+gf0025-2021	2	教学	jiao1 xue2	several-readings
+gf0025-2021	2	教学	jiao4 xue2	several-readings
+gf0025-2021	2	数	shu3	several-readings
+gf0025-2021	2	数	shu4	several-readings
+gf0025-2021	2	数	shuo4	several-readings
+gf0025-2021	2	更	geng1	several-readings
+gf0025-2021	2	更	geng4	several-readings
+gf0025-2021	2	查	cha2	several-readings
+gf0025-2021	2	查	zha1	several-readings
+gf0025-2021	2	片	pian1	several-readings
+gf0025-2021	2	片	pian4	several-readings
+gf0025-2021	2	猫	mao1	several-readings
+gf0025-2021	2	猫	mao2	several-readings
+gf0025-2021	2	省	sheng3	several-readings
+gf0025-2021	2	省	xing3	several-readings
+gf0025-2021	2	离	chi1	several-readings
+gf0025-2021	2	离	li2	several-readings
+gf0025-2021	2	称	chen4	several-readings
+gf0025-2021	2	称	cheng1	several-readings
+gf0025-2021	2	称	cheng4	several-readings
+gf0025-2021	2	红	gong1	several-readings
+gf0025-2021	2	红	hong2	several-readings
+gf0025-2021	2	结果	jie1 guo3	several-readings
+gf0025-2021	2	结果	jie2 guo3	several-readings
+gf0025-2021	2	绿	lu4	several-readings
+gf0025-2021	2	绿	lu:4	several-readings
+gf0025-2021	2	背	bei1	several-readings
+gf0025-2021	2	背	bei4	several-readings
+gf0025-2021	2	脏	zang1	several-readings
+gf0025-2021	2	脏	zang4	several-readings
+gf0025-2021	2	脚	jiao3	several-readings
+gf0025-2021	2	脚	jue2	several-readings
+gf0025-2021	2	节	jie1	several-readings
+gf0025-2021	2	节	jie2	several-readings
+gf0025-2021	2	草	cao3	several-readings
+gf0025-2021	2	草	cao4	several-readings
+gf0025-2021	2	见过		no-reading
+gf0025-2021	2	角	jiao3	several-readings
+gf0025-2021	2	角	jue2	several-readings
+gf0025-2021	2	边	bian1	several-readings
+gf0025-2021	2	边	bian5	several-readings
+gf0025-2021	2	过去	guo4 qu4	several-readings
+gf0025-2021	2	过去	guo4 qu5	several-readings
+gf0025-2021	2	过来	guo4 lai2	several-readings
+gf0025-2021	2	过来	guo4 lai5	several-readings
+gf0025-2021	2	这时候		no-reading
+gf0025-2021	2	送到		no-reading
+gf0025-2021	2	通	tong1	several-readings
+gf0025-2021	2	通	tong4	several-readings
+gf0025-2021	2	重点	chong2 dian3	several-readings
+gf0025-2021	2	重点	zhong4 dian3	several-readings
+gf0025-2021	2	长	chang2	several-readings
+gf0025-2021	2	长	zhang3	several-readings
+gf0025-2021	2	骑	ji4	several-readings
+gf0025-2021	2	骑	qi2	several-readings
+gf0025-2021	2	高中	gao1 zhong1	several-readings
+gf0025-2021	2	高中	gao1 zhong4	several-readings
+gf0025-2021	2	鸟	diao3	several-readings
+gf0025-2021	2	鸟	niao3	several-readings
+gf0025-2021	3	乐	lao4	several-readings
+gf0025-2021	3	乐	le4	several-readings
+gf0025-2021	3	乐	yue4	several-readings
+gf0025-2021	3	亲	qin1	several-readings
+gf0025-2021	3	亲	qing4	several-readings
+gf0025-2021	3	任	ren2	several-readings
+gf0025-2021	3	任	ren4	several-readings
+gf0025-2021	3	传	chuan2	several-readings
+gf0025-2021	3	传	zhuan4	several-readings
+gf0025-2021	3	化	hua1	several-readings
+gf0025-2021	3	化	hua4	several-readings
+gf0025-2021	3	区	ou1	several-readings
+gf0025-2021	3	区	qu1	several-readings
+gf0025-2021	3	厂	chang3	several-readings
+gf0025-2021	3	厂	han3	several-readings
+gf0025-2021	3	压	ya1	several-readings
+gf0025-2021	3	压	ya4	several-readings
+gf0025-2021	3	台	tai1	several-readings
+gf0025-2021	3	台	tai2	several-readings
+gf0025-2021	3	合	ge3	several-readings
+gf0025-2021	3	合	he2	several-readings
+gf0025-2021	3	吵	chao1	several-readings
+gf0025-2021	3	吵	chao3	several-readings
+gf0025-2021	3	大夫	da4 fu1	several-readings
+gf0025-2021	3	大夫	dai4 fu5	several-readings
+gf0025-2021	3	尽量	jin3 liang4	several-readings
+gf0025-2021	3	尽量	jin4 liang4	several-readings
+gf0025-2021	3	属	shu3	several-readings
+gf0025-2021	3	属	zhu3	several-readings
+gf0025-2021	3	工夫	gong1 fu1	several-readings
+gf0025-2021	3	工夫	gong1 fu5	several-readings
+gf0025-2021	3	并	bing1	several-readings
+gf0025-2021	3	并	bing4	several-readings
+gf0025-2021	3	强	jiang4	several-readings
+gf0025-2021	3	强	qiang2	several-readings
+gf0025-2021	3	强	qiang3	several-readings
+gf0025-2021	3	所长	suo3 chang2	several-readings
+gf0025-2021	3	所长	suo3 zhang3	several-readings
+gf0025-2021	3	把	ba3	several-readings
+gf0025-2021	3	把	ba4	several-readings
+gf0025-2021	3	放到		no-reading
+gf0025-2021	3	朝	chao2	several-readings
+gf0025-2021	3	朝	zhao1	several-readings
+gf0025-2021	3	本事	ben3 shi4	several-readings
+gf0025-2021	3	本事	ben3 shi5	several-readings
+gf0025-2021	3	板	ban3	several-readings
+gf0025-2021	3	板	pan4	several-readings
+gf0025-2021	3	汤	shang1	several-readings
+gf0025-2021	3	汤	tang1	several-readings
+gf0025-2021	3	派	pa1	several-readings
+gf0025-2021	3	派	pai4	several-readings
+gf0025-2021	3	生意	sheng1 yi4	several-readings
+gf0025-2021	3	生意	sheng1 yi5	several-readings
+gf0025-2021	3	种	zhong3	several-readings
+gf0025-2021	3	种	zhong4	several-readings
+gf0025-2021	3	空	kong1	several-readings
+gf0025-2021	3	空	kong4	several-readings
+gf0025-2021	3	精神	jing1 shen2	several-readings
+gf0025-2021	3	精神	jing1 shen5	several-readings
+gf0025-2021	3	系	ji4	several-readings
+gf0025-2021	3	系	xi4	several-readings
+gf0025-2021	3	约	yao1	several-readings
+gf0025-2021	3	约	yue1	several-readings
+gf0025-2021	3	结实	jie1 shi2	several-readings
+gf0025-2021	3	结实	jie1 shi5	several-readings
+gf0025-2021	3	胖	pan2	several-readings
+gf0025-2021	3	胖	pang4	several-readings
+gf0025-2021	3	能不能		no-reading
+gf0025-2021	3	血	xie3	several-readings
+gf0025-2021	3	血	xue4	several-readings
+gf0025-2021	3	调	diao4	several-readings
+gf0025-2021	3	调	tiao2	several-readings
+gf0025-2021	3	转	zhuai3	several-readings
+gf0025-2021	3	转	zhuan3	several-readings
+gf0025-2021	3	转	zhuan4	several-readings
+gf0025-2021	3	追	dui1	several-readings
+gf0025-2021	3	追	zhui1	several-readings
+gf0025-2021	4	人家	ren2 jia1	several-readings
+gf0025-2021	4	人家	ren2 jia5	several-readings
+gf0025-2021	4	俩	lia3	several-readings
+gf0025-2021	4	俩	liang3	several-readings
+gf0025-2021	4	倒车	dao3 che1	several-readings
+gf0025-2021	4	倒车	dao4 che1	several-readings
+gf0025-2021	4	冲	chong1	several-readings
+gf0025-2021	4	冲	chong4	several-readings
+gf0025-2021	4	切	qie1	several-readings
+gf0025-2021	4	切	qie4	several-readings
+gf0025-2021	4	划	hua2	several-readings
+gf0025-2021	4	划	hua4	several-readings
+gf0025-2021	4	刷	shua1	several-readings
+gf0025-2021	4	刷	shua4	several-readings
+gf0025-2021	4	刺	ci1	several-readings
+gf0025-2021	4	刺	ci4	several-readings
+gf0025-2021	4	单	chan2	several-readings
+gf0025-2021	4	单	dan1	several-readings
+gf0025-2021	4	单	shan4	several-readings
+gf0025-2021	4	卷	juan3	several-readings
+gf0025-2021	4	卷	juan4	several-readings
+gf0025-2021	4	呀	ya1	several-readings
+gf0025-2021	4	呀	ya5	several-readings
+gf0025-2021	4	圈	juan1	several-readings
+gf0025-2021	4	圈	juan4	several-readings
+gf0025-2021	4	圈	quan1	several-readings
+gf0025-2021	4	土地	tu3 di4	several-readings
+gf0025-2021	4	土地	tu3 di5	several-readings
+gf0025-2021	4	地下	di4 xia4	several-readings
+gf0025-2021	4	地下	di4 xia5	several-readings
+gf0025-2021	4	处	chu3	several-readings
+gf0025-2021	4	处	chu4	several-readings
+gf0025-2021	4	大方	da4 fang1	several-readings
+gf0025-2021	4	大方	da4 fang5	several-readings
+gf0025-2021	4	大爷	da4 ye2	several-readings
+gf0025-2021	4	大爷	da4 ye5	several-readings
+gf0025-2021	4	妻子	qi1 zi3	several-readings
+gf0025-2021	4	妻子	qi1 zi5	several-readings
+gf0025-2021	4	孙子	sun1 zi3	several-readings
+gf0025-2021	4	孙子	sun1 zi5	several-readings
+gf0025-2021	4	尺	che3	several-readings
+gf0025-2021	4	尺	chi3	several-readings
+gf0025-2021	4	尽快	jin3 kuai4	several-readings
+gf0025-2021	4	尽快	jin4 kuai4	several-readings
+gf0025-2021	4	应	ying1	several-readings
+gf0025-2021	4	应	ying4	several-readings
+gf0025-2021	4	底	de5	several-readings
+gf0025-2021	4	底	di3	several-readings
+gf0025-2021	4	恶心	e3 xin1	several-readings
+gf0025-2021	4	恶心	e4 xin1	several-readings
+gf0025-2021	4	扫	sao3	several-readings
+gf0025-2021	4	扫	sao4	several-readings
+gf0025-2021	4	折	she2	several-readings
+gf0025-2021	4	折	zhe1	several-readings
+gf0025-2021	4	折	zhe2	several-readings
+gf0025-2021	4	挑	tiao1	several-readings
+gf0025-2021	4	挑	tiao3	several-readings
+gf0025-2021	4	摸	mo1	several-readings
+gf0025-2021	4	摸	mo2	several-readings
+gf0025-2021	4	教授	jiao1 shou4	several-readings
+gf0025-2021	4	教授	jiao4 shou4	several-readings
+gf0025-2021	4	散	san3	several-readings
+gf0025-2021	4	散	san4	several-readings
+gf0025-2021	4	无	mo2	several-readings
+gf0025-2021	4	无	wu2	several-readings
+gf0025-2021	4	曾	ceng2	several-readings
+gf0025-2021	4	曾	zeng1	several-readings
+gf0025-2021	4	有劲儿		no-reading
+gf0025-2021	4	末	me5	several-readings
+gf0025-2021	4	末	mo4	several-readings
+gf0025-2021	4	棵	ke1	rejected
+gf0025-2021	4	浅	jian1	several-readings
+gf0025-2021	4	浅	qian3	several-readings
+gf0025-2021	4	王	wang2	several-readings
+gf0025-2021	4	王	wang4	several-readings
+gf0025-2021	4	盖	gai4	several-readings
+gf0025-2021	4	盖	ge3	several-readings
+gf0025-2021	4	眼里		no-reading
+gf0025-2021	4	结	jie1	several-readings
+gf0025-2021	4	结	jie2	several-readings
+gf0025-2021	4	老公	lao3 gong1	several-readings
+gf0025-2021	4	老公	lao3 gong5	several-readings
+gf0025-2021	4	色	se4	several-readings
+gf0025-2021	4	色	shai3	several-readings
+gf0025-2021	4	落	la4	several-readings
+gf0025-2021	4	落	lao4	several-readings
+gf0025-2021	4	落	luo4	several-readings
+gf0025-2021	4	薄	bao2	several-readings
+gf0025-2021	4	薄	bo2	several-readings
+gf0025-2021	4	薄	bo4	several-readings
+gf0025-2021	4	转动	zhuan3 dong4	several-readings
+gf0025-2021	4	转动	zhuan4 dong4	several-readings
+gf0025-2021	4	透	tou4	rejected
+gf0025-2021	4	量	liang2	several-readings
+gf0025-2021	4	量	liang4	several-readings
+gf0025-2021	4	降	jiang4	several-readings
+gf0025-2021	4	降	xiang2	several-readings
+gf0025-2021	4	鲜	xian1	several-readings
+gf0025-2021	4	鲜	xian3	several-readings
+gf0025-2021	5	乘	cheng2	several-readings
+gf0025-2021	5	乘	sheng4	several-readings
+gf0025-2021	5	乙	yi3	several-readings
+gf0025-2021	5	乙	zhe2	several-readings
+gf0025-2021	5	买卖	mai3 mai4	several-readings
+gf0025-2021	5	买卖	mai3 mai5	several-readings
+gf0025-2021	5	令	ling2	several-readings
+gf0025-2021	5	令	ling3	several-readings
+gf0025-2021	5	令	ling4	several-readings
+gf0025-2021	5	价	jia4	several-readings
+gf0025-2021	5	价	jie4	several-readings
+gf0025-2021	5	价	jie5	several-readings
+gf0025-2021	5	匹	pi3	unverified
+gf0025-2021	5	叉	cha1	several-readings
+gf0025-2021	5	叉	cha2	several-readings
+gf0025-2021	5	叉	cha3	several-readings
+gf0025-2021	5	叉	cha4	several-readings
+gf0025-2021	5	可	ke3	several-readings
+gf0025-2021	5	可	ke4	several-readings
+gf0025-2021	5	吐	tu3	several-readings
+gf0025-2021	5	吐	tu4	several-readings
+gf0025-2021	5	吓	he4	several-readings
+gf0025-2021	5	吓	xia4	several-readings
+gf0025-2021	5	咳	hai1	several-readings
+gf0025-2021	5	咳	ke2	several-readings
+gf0025-2021	5	喷	pen1	several-readings
+gf0025-2021	5	喷	pen4	several-readings
+gf0025-2021	5	城里		no-reading
+gf0025-2021	5	大都	da4 dou1	several-readings
+gf0025-2021	5	大都	da4 du1	several-readings
+gf0025-2021	5	夹	ga1	several-readings
+gf0025-2021	5	夹	jia1	several-readings
+gf0025-2021	5	夹	jia2	several-readings
+gf0025-2021	5	将	jiang1	several-readings
+gf0025-2021	5	将	jiang4	several-readings
+gf0025-2021	5	将	qiang1	several-readings
+gf0025-2021	5	尽可能	jin3 ke3 neng2	several-readings
+gf0025-2021	5	尽可能	jin4 ke3 neng2	several-readings
+gf0025-2021	5	广	guang3	several-readings
+gf0025-2021	5	广	yan3	several-readings
+gf0025-2021	5	弹	dan4	several-readings
+gf0025-2021	5	弹	tan2	several-readings
+gf0025-2021	5	当年	dang1 nian2	several-readings
+gf0025-2021	5	当年	dang4 nian2	several-readings
+gf0025-2021	5	待	dai1	several-readings
+gf0025-2021	5	待	dai4	several-readings
+gf0025-2021	5	得了	de2 le5	several-readings
+gf0025-2021	5	得了	de2 liao3	several-readings
+gf0025-2021	5	扇	shan1	several-readings
+gf0025-2021	5	扇	shan4	several-readings
+gf0025-2021	5	抢	qiang1	several-readings
+gf0025-2021	5	抢	qiang3	several-readings
+gf0025-2021	5	拾	she4	several-readings
+gf0025-2021	5	拾	shi2	several-readings
+gf0025-2021	5	挡	dang3	several-readings
+gf0025-2021	5	挡	dang4	several-readings
+gf0025-2021	5	挣	zheng1	several-readings
+gf0025-2021	5	挣	zheng4	several-readings
+gf0025-2021	5	汗	han2	several-readings
+gf0025-2021	5	汗	han4	several-readings
+gf0025-2021	5	洞	dong4	several-readings
+gf0025-2021	5	洞	tong2	several-readings
+gf0025-2021	5	涨	zhang3	several-readings
+gf0025-2021	5	涨	zhang4	several-readings
+gf0025-2021	5	温和	wen1 he2	several-readings
+gf0025-2021	5	温和	wen1 huo5	several-readings
+gf0025-2021	5	稍	shao1	several-readings
+gf0025-2021	5	稍	shao4	several-readings
+gf0025-2021	5	答	da1	several-readings
+gf0025-2021	5	答	da2	several-readings
+gf0025-2021	5	臭	chou4	several-readings
+gf0025-2021	5	臭	xiu4	several-readings
+gf0025-2021	5	蛇	she2	several-readings
+gf0025-2021	5	蛇	yi2	several-readings
+gf0025-2021	5	言语	yan2 yu3	several-readings
+gf0025-2021	5	言语	yan2 yu5	several-readings
+gf0025-2021	5	说法	shuo1 fa3	several-readings
+gf0025-2021	5	说法	shuo1 fa5	several-readings
+gf0025-2021	5	跟前	gen1 qian2	several-readings
+gf0025-2021	5	跟前	gen1 qian5	several-readings
+gf0025-2021	5	躲	duo3	rejected
+gf0025-2021	5	转向	zhuan3 xiang4	several-readings
+gf0025-2021	5	转向	zhuan4 xiang4	several-readings
+gf0025-2021	6	一番		no-reading
+gf0025-2021	6	与	yu2	several-readings
+gf0025-2021	6	与	yu3	several-readings
+gf0025-2021	6	与	yu4	several-readings
+gf0025-2021	6	佛	fo2	several-readings
+gf0025-2021	6	佛	fu2	several-readings
+gf0025-2021	6	作	zuo1	several-readings
+gf0025-2021	6	作	zuo4	several-readings
+gf0025-2021	6	侧	ce4	several-readings
+gf0025-2021	6	侧	zhai1	several-readings
+gf0025-2021	6	便	bian4	several-readings
+gf0025-2021	6	便	pian2	several-readings
+gf0025-2021	6	同	tong2	several-readings
+gf0025-2021	6	同	tong4	several-readings
+gf0025-2021	6	同行	tong2 hang2	several-readings
+gf0025-2021	6	同行	tong2 xing2	several-readings
+gf0025-2021	6	哇	wa1	several-readings
+gf0025-2021	6	哇	wa5	several-readings
+gf0025-2021	6	啦	la1	several-readings
+gf0025-2021	6	啦	la5	several-readings
+gf0025-2021	6	嘛	ma2	several-readings
+gf0025-2021	6	嘛	ma5	several-readings
+gf0025-2021	6	埋	mai2	several-readings
+gf0025-2021	6	埋	man2	several-readings
+gf0025-2021	6	塞	sai1	several-readings
+gf0025-2021	6	塞	sai4	several-readings
+gf0025-2021	6	塞	se4	several-readings
+gf0025-2021	6	好学	hao3 xue2	several-readings
+gf0025-2021	6	好学	hao4 xue2	several-readings
+gf0025-2021	6	尽	jin3	several-readings
+gf0025-2021	6	尽	jin4	several-readings
+gf0025-2021	6	开通	kai1 tong1	several-readings
+gf0025-2021	6	开通	kai1 tong5	several-readings
+gf0025-2021	6	当天	dang1 tian1	several-readings
+gf0025-2021	6	当天	dang4 tian1	several-readings
+gf0025-2021	6	很难说		no-reading
+gf0025-2021	6	扁	bian3	several-readings
+gf0025-2021	6	扁	pian1	several-readings
+gf0025-2021	6	扎	za1	several-readings
+gf0025-2021	6	扎	zha1	several-readings
+gf0025-2021	6	扎	zha2	several-readings
+gf0025-2021	6	指着		no-reading
+gf0025-2021	6	挨	ai1	several-readings
+gf0025-2021	6	挨	ai2	several-readings
+gf0025-2021	6	据	ju1	several-readings
+gf0025-2021	6	据	ju4	several-readings
+gf0025-2021	6	晕	yun1	several-readings
+gf0025-2021	6	晕	yun4	several-readings
+gf0025-2021	6	服	fu2	several-readings
+gf0025-2021	6	服	fu4	several-readings
+gf0025-2021	6	杆	gan1	several-readings
+gf0025-2021	6	杆	gan3	several-readings
+gf0025-2021	6	档	dang3	several-readings
+gf0025-2021	6	档	dang4	several-readings
+gf0025-2021	6	横	heng2	several-readings
+gf0025-2021	6	横	heng4	several-readings
+gf0025-2021	6	正当	zheng4 dang1	several-readings
+gf0025-2021	6	正当	zheng4 dang4	several-readings
+gf0025-2021	6	泡	pao1	several-readings
+gf0025-2021	6	泡	pao4	several-readings
+gf0025-2021	6	泥	ni2	several-readings
+gf0025-2021	6	泥	ni4	several-readings
+gf0025-2021	6	混	hun2	several-readings
+gf0025-2021	6	混	hun4	several-readings
+gf0025-2021	6	滴	di1	rejected
+gf0025-2021	6	炮	bao1	several-readings
+gf0025-2021	6	炮	pao2	several-readings
+gf0025-2021	6	炮	pao4	several-readings
+gf0025-2021	6	炸	zha2	several-readings
+gf0025-2021	6	炸	zha4	several-readings
+gf0025-2021	6	番	fan1	several-readings
+gf0025-2021	6	番	pan1	several-readings
+gf0025-2021	6	看好	kan1 hao3	several-readings
+gf0025-2021	6	看好	kan4 hao3	several-readings
+gf0025-2021	6	磨	mo2	several-readings
+gf0025-2021	6	磨	mo4	several-readings
+gf0025-2021	6	粥	yu4	several-readings
+gf0025-2021	6	粥	zhou1	several-readings
+gf0025-2021	6	罢了	ba4 le5	several-readings
+gf0025-2021	6	罢了	ba4 liao3	several-readings
+gf0025-2021	6	背着	bei1 zhe5	several-readings
+gf0025-2021	6	背着	bei4 zhe5	several-readings
+gf0025-2021	6	膜	mo2	rejected
+gf0025-2021	6	若	re3	several-readings
+gf0025-2021	6	若	ruo4	several-readings
+gf0025-2021	6	蒙	meng1	several-readings
+gf0025-2021	6	蒙	meng2	several-readings
+gf0025-2021	6	蒙	meng3	several-readings
+gf0025-2021	6	藏	cang2	several-readings
+gf0025-2021	6	藏	zang4	several-readings
+gf0025-2021	6	觉	jiao4	several-readings
+gf0025-2021	6	觉	jue2	several-readings
+gf0025-2021	6	解	jie3	several-readings
+gf0025-2021	6	解	jie4	several-readings
+gf0025-2021	6	解	xie4	several-readings
+gf0025-2021	6	识	shi2	several-readings
+gf0025-2021	6	识	zhi4	several-readings
+gf0025-2021	6	赚	zhuan4	several-readings
+gf0025-2021	6	赚	zuan4	several-readings
+gf0025-2021	6	趟	tang1	several-readings
+gf0025-2021	6	趟	tang4	several-readings
+gf0025-2021	6	足	ju4	several-readings
+gf0025-2021	6	足	zu2	several-readings
+gf0025-2021	6	踏	ta1	several-readings
+gf0025-2021	6	踏	ta4	several-readings
+gf0025-2021	6	踢	ti1	rejected
+gf0025-2021	6	蹲	cun2	several-readings
+gf0025-2021	6	蹲	dun1	several-readings
+gf0025-2021	6	钻	zuan1	several-readings
+gf0025-2021	6	钻	zuan4	several-readings
+gf0025-2021	6	铺	pu1	several-readings
+gf0025-2021	6	铺	pu4	several-readings
+gf0025-2021	6	露	lou4	several-readings
+gf0025-2021	6	露	lu4	several-readings
+gf0025-2021	7	丁	ding1	several-readings
+gf0025-2021	7	丁	zheng1	several-readings
+gf0025-2021	7	上头	shang4 tou2	several-readings
+gf0025-2021	7	上头	shang4 tou5	several-readings
+gf0025-2021	7	下场	xia4 chang3	several-readings
+gf0025-2021	7	下场	xia4 chang5	several-readings
+gf0025-2021	7	下调	xia4 diao4	several-readings
+gf0025-2021	7	下调	xia4 tiao2	several-readings
+gf0025-2021	7	不利于		no-reading
+gf0025-2021	7	不如说		no-reading
+gf0025-2021	7	不肯		no-reading
+gf0025-2021	7	不难		no-reading
+gf0025-2021	7	世故	shi4 gu4	several-readings
+gf0025-2021	7	世故	shi4 gu5	several-readings
+gf0025-2021	7	为人	wei2 ren2	several-readings
+gf0025-2021	7	为人	wei4 ren2	several-readings
+gf0025-2021	7	仇	chou2	several-readings
+gf0025-2021	7	仇	qiu2	several-readings
+gf0025-2021	7	供	gong1	several-readings
+gf0025-2021	7	供	gong4	several-readings
+gf0025-2021	7	俊	jun4	several-readings
+gf0025-2021	7	俊	zun4	several-readings
+gf0025-2021	7	倒数	dao4 shu3	several-readings
+gf0025-2021	7	倒数	dao4 shu4	several-readings
+gf0025-2021	7	倔	jue2	several-readings
+gf0025-2021	7	倔	jue4	several-readings
+gf0025-2021	7	免	mian3	several-readings
+gf0025-2021	7	免	wen4	several-readings
+gf0025-2021	7	公益性		no-reading
+gf0025-2021	7	公道	gong1 dao4	several-readings
+gf0025-2021	7	公道	gong1 dao5	several-readings
+gf0025-2021	7	兹	ci2	several-readings
+gf0025-2021	7	兹	zi1	several-readings
+gf0025-2021	7	冷战	leng3 zhan4	several-readings
+gf0025-2021	7	冷战	leng3 zhan5	several-readings
+gf0025-2021	7	凭着		no-reading
+gf0025-2021	7	凹	ao1	several-readings
+gf0025-2021	7	凹	wa1	several-readings
+gf0025-2021	7	出息	chu1 xi1	several-readings
+gf0025-2021	7	出息	chu1 xi5	several-readings
+gf0025-2021	7	分量	fen1 liang4	several-readings
+gf0025-2021	7	分量	fen4 liang4	several-readings
+gf0025-2021	7	分量	fen4 liang5	several-readings
+gf0025-2021	7	创	chuang1	several-readings
+gf0025-2021	7	创	chuang4	several-readings
+gf0025-2021	7	刨	bao4	several-readings
+gf0025-2021	7	刨	pao2	several-readings
+gf0025-2021	7	利害	li4 hai4	several-readings
+gf0025-2021	7	利害	li4 hai5	several-readings
+gf0025-2021	7	削	xiao1	several-readings
+gf0025-2021	7	削	xue1	several-readings
+gf0025-2021	7	剥	bao1	several-readings
+gf0025-2021	7	剥	bo1	several-readings
+gf0025-2021	7	劈	pi1	several-readings
+gf0025-2021	7	劈	pi3	several-readings
+gf0025-2021	7	勒	le4	several-readings
+gf0025-2021	7	勒	lei1	several-readings
+gf0025-2021	7	勾	gou1	several-readings
+gf0025-2021	7	勾	gou4	several-readings
+gf0025-2021	7	勿	wu4	rejected
+gf0025-2021	7	卷子	juan3 zi5	several-readings
+gf0025-2021	7	卷子	juan4 zi5	several-readings
+gf0025-2021	7	口音	kou3 yin1	several-readings
+gf0025-2021	7	口音	kou3 yin5	several-readings
+gf0025-2021	7	呛	qiang1	several-readings
+gf0025-2021	7	呛	qiang4	several-readings
+gf0025-2021	7	咽	yan1	several-readings
+gf0025-2021	7	咽	yan4	several-readings
+gf0025-2021	7	咽	ye4	several-readings
+gf0025-2021	7	哄	hong1	several-readings
+gf0025-2021	7	哄	hong3	several-readings
+gf0025-2021	7	哄	hong4	several-readings
+gf0025-2021	7	哑	ya1	several-readings
+gf0025-2021	7	哑	ya3	several-readings
+gf0025-2021	7	哦	e2	several-readings
+gf0025-2021	7	哦	o2	several-readings
+gf0025-2021	7	哦	o4	several-readings
+gf0025-2021	7	哦	o5	several-readings
+gf0025-2021	7	哼	heng1	several-readings
+gf0025-2021	7	哼	hng5	several-readings
+gf0025-2021	7	唉	ai1	several-readings
+gf0025-2021	7	唉	ai4	several-readings
+gf0025-2021	7	唯	wei2	several-readings
+gf0025-2021	7	唯	wei3	several-readings
+gf0025-2021	7	嚼	jiao2	several-readings
+gf0025-2021	7	嚼	jiao4	several-readings
+gf0025-2021	7	地道	di4 dao4	several-readings
+gf0025-2021	7	地道	di4 dao5	several-readings
+gf0025-2021	7	壳	ke2	several-readings
+gf0025-2021	7	壳	qiao4	several-readings
+gf0025-2021	7	大意	da4 yi4	several-readings
+gf0025-2021	7	大意	da4 yi5	several-readings
+gf0025-2021	7	奔	ben1	several-readings
+gf0025-2021	7	奔	ben4	several-readings
+gf0025-2021	7	媳妇	xi2 fu4	several-readings
+gf0025-2021	7	媳妇	xi2 fu5	several-readings
+gf0025-2021	7	定为		no-reading
+gf0025-2021	7	尿	niao4	several-readings
+gf0025-2021	7	尿	sui1	several-readings
+gf0025-2021	7	屯	tun2	several-readings
+gf0025-2021	7	屯	zhun1	several-readings
+gf0025-2021	7	幢	chuang2	several-readings
+gf0025-2021	7	幢	zhuang4	several-readings
+gf0025-2021	7	当日	dang1 ri4	several-readings
+gf0025-2021	7	当日	dang4 ri4	several-readings
+gf0025-2021	7	当晚	dang1 wan3	several-readings
+gf0025-2021	7	当晚	dang4 wan3	several-readings
+gf0025-2021	7	得罪	de2 zui4	several-readings
+gf0025-2021	7	得罪	de2 zui5	several-readings
+gf0025-2021	7	怀着		no-reading
+gf0025-2021	7	恶	e3	several-readings
+gf0025-2021	7	恶	e4	several-readings
+gf0025-2021	7	恶	wu4	several-readings
+gf0025-2021	7	扒	ba1	several-readings
+gf0025-2021	7	扒	pa2	several-readings
+gf0025-2021	7	扛	gang1	several-readings
+gf0025-2021	7	扛	kang2	several-readings
+gf0025-2021	7	扳	ban1	several-readings
+gf0025-2021	7	扳	pan1	several-readings
+gf0025-2021	7	把手	ba3 shou3	several-readings
+gf0025-2021	7	把手	ba3 shou5	several-readings
+gf0025-2021	7	抡	lun1	several-readings
+gf0025-2021	7	抡	lun2	several-readings
+gf0025-2021	7	抹	ma1	several-readings
+gf0025-2021	7	抹	mo3	several-readings
+gf0025-2021	7	抹	mo4	several-readings
+gf0025-2021	7	担	dan1	several-readings
+gf0025-2021	7	担	dan4	several-readings
+gf0025-2021	7	拧	ning2	several-readings
+gf0025-2021	7	拧	ning3	several-readings
+gf0025-2021	7	拧	ning4	several-readings
+gf0025-2021	7	拽	ye4	several-readings
+gf0025-2021	7	拽	zhuai1	several-readings
+gf0025-2021	7	拽	zhuai3	several-readings
+gf0025-2021	7	拽	zhuai4	several-readings
+gf0025-2021	7	掺	chan1	several-readings
+gf0025-2021	7	掺	shan3	several-readings
+gf0025-2021	7	揣	chuai1	several-readings
+gf0025-2021	7	揣	chuai3	several-readings
+gf0025-2021	7	揣	chuai4	several-readings
+gf0025-2021	7	搁	ge1	several-readings
+gf0025-2021	7	搁	ge2	several-readings
+gf0025-2021	7	搂	lou1	several-readings
+gf0025-2021	7	搂	lou3	several-readings
+gf0025-2021	7	摆设	bai3 she4	several-readings
+gf0025-2021	7	摆设	bai3 she5	several-readings
+gf0025-2021	7	撇	pie1	several-readings
+gf0025-2021	7	撇	pie3	several-readings
+gf0025-2021	7	撒	sa1	several-readings
+gf0025-2021	7	撒	sa3	several-readings
+gf0025-2021	7	攒	cuan2	several-readings
+gf0025-2021	7	攒	zan3	several-readings
+gf0025-2021	7	斗	dou3	several-readings
+gf0025-2021	7	斗	dou4	several-readings
+gf0025-2021	7	晃	huang3	several-readings
+gf0025-2021	7	晃	huang4	several-readings
+gf0025-2021	7	曲	qu1	several-readings
+gf0025-2021	7	曲	qu3	several-readings
+gf0025-2021	7	本色	ben3 se4	several-readings
+gf0025-2021	7	本色	ben3 shai3	several-readings
+gf0025-2021	7	标致	biao1 zhi4	several-readings
+gf0025-2021	7	标致	biao1 zhi5	several-readings
+gf0025-2021	7	格	ge1	several-readings
+gf0025-2021	7	格	ge2	several-readings
+gf0025-2021	7	款式	kuan3 shi4	several-readings
+gf0025-2021	7	款式	kuan3 shi5	several-readings
+gf0025-2021	7	歪	wai1	several-readings
+gf0025-2021	7	歪	wai3	several-readings
+gf0025-2021	7	涌	chong1	several-readings
+gf0025-2021	7	涌	yong3	several-readings
+gf0025-2021	7	淋	lin2	several-readings
+gf0025-2021	7	淋	lin4	several-readings
+gf0025-2021	7	溜	liu1	several-readings
+gf0025-2021	7	溜	liu4	several-readings
+gf0025-2021	7	漂	piao1	several-readings
+gf0025-2021	7	漂	piao3	several-readings
+gf0025-2021	7	漂	piao4	several-readings
+gf0025-2021	7	澄清	cheng2 qing1	several-readings
+gf0025-2021	7	澄清	deng4 qing1	several-readings
+gf0025-2021	7	烟火	yan1 huo3	several-readings
+gf0025-2021	7	烟火	yan1 huo5	several-readings
+gf0025-2021	7	熬	ao1	several-readings
+gf0025-2021	7	熬	ao2	several-readings
+gf0025-2021	7	片子	pian1 zi5	several-readings
+gf0025-2021	7	片子	pian4 zi5	several-readings
+gf0025-2021	7	狮子	shi1 zi3	several-readings
+gf0025-2021	7	狮子	shi1 zi5	several-readings
+gf0025-2021	7	率	lu:4	several-readings
+gf0025-2021	7	率	shuai4	several-readings
+gf0025-2021	7	琢磨	zhuo2 mo2	several-readings
+gf0025-2021	7	琢磨	zuo2 mo5	several-readings
+gf0025-2021	7	疏散	shu1 san3	several-readings
+gf0025-2021	7	疏散	shu1 san4	several-readings
+gf0025-2021	7	盛	cheng2	several-readings
+gf0025-2021	7	盛	sheng4	several-readings
+gf0025-2021	7	省事	sheng3 shi4	several-readings
+gf0025-2021	7	省事	xing3 shi4	several-readings
+gf0025-2021	7	着眼于		no-reading
+gf0025-2021	7	磅	bang4	several-readings
+gf0025-2021	7	磅	pang2	several-readings
+gf0025-2021	7	磕	ke1	several-readings
+gf0025-2021	7	磕	ke4	several-readings
+gf0025-2021	7	祭	ji4	several-readings
+gf0025-2021	7	祭	zhai4	several-readings
+gf0025-2021	7	秤	cheng1	several-readings
+gf0025-2021	7	秤	cheng4	several-readings
+gf0025-2021	7	空地	kong1 di4	several-readings
+gf0025-2021	7	空地	kong4 di4	several-readings
+gf0025-2021	7	笼子	long2 zi5	several-readings
+gf0025-2021	7	笼子	long3 zi5	several-readings
+gf0025-2021	7	管子	guan3 zi3	several-readings
+gf0025-2021	7	管子	guan3 zi5	several-readings
+gf0025-2021	7	粘	nian2	several-readings
+gf0025-2021	7	粘	zhan1	several-readings
+gf0025-2021	7	糊	hu1	several-readings
+gf0025-2021	7	糊	hu2	several-readings
+gf0025-2021	7	糊	hu4	several-readings
+gf0025-2021	7	绷	beng1	several-readings
+gf0025-2021	7	绷	beng3	several-readings
+gf0025-2021	7	缝	feng2	several-readings
+gf0025-2021	7	缝	feng4	several-readings
+gf0025-2021	7	翘	qiao2	several-readings
+gf0025-2021	7	翘	qiao4	several-readings
+gf0025-2021	7	脊梁	ji3 liang2	several-readings
+gf0025-2021	7	脊梁	ji3 liang5	several-readings
+gf0025-2021	7	茎	jing1	rejected
+gf0025-2021	7	虾	ha2	several-readings
+gf0025-2021	7	虾	xia1	several-readings
+gf0025-2021	7	议	yi4	rejected
+gf0025-2021	7	说起来		no-reading
+gf0025-2021	7	说道	shuo1 dao4	several-readings
+gf0025-2021	7	说道	shuo1 dao5	several-readings
+gf0025-2021	7	谜	mei4	several-readings
+gf0025-2021	7	谜	mi2	several-readings
+gf0025-2021	7	豁	hua2	several-readings
+gf0025-2021	7	豁	huo1	several-readings
+gf0025-2021	7	豁	huo4	several-readings
+gf0025-2021	7	趁着		no-reading
+gf0025-2021	7	蹬	deng1	several-readings
+gf0025-2021	7	蹬	deng4	several-readings
+gf0025-2021	7	逮	dai3	several-readings
+gf0025-2021	7	逮	dai4	several-readings
+gf0025-2021	7	遛	liu2	several-readings
+gf0025-2021	7	遛	liu4	several-readings
+gf0025-2021	7	采	cai3	several-readings
+gf0025-2021	7	采	cai4	several-readings
+gf0025-2021	7	金子	jin1 zi3	several-readings
+gf0025-2021	7	金子	jin1 zi5	several-readings
+gf0025-2021	7	钉	ding1	several-readings
+gf0025-2021	7	钉	ding4	several-readings
+gf0025-2021	7	铅	qian1	several-readings
+gf0025-2021	7	铅	yan2	several-readings
+gf0025-2021	7	锯	ju1	several-readings
+gf0025-2021	7	锯	ju4	several-readings
+gf0025-2021	7	闷	men1	several-readings
+gf0025-2021	7	闷	men4	several-readings
+gf0025-2021	7	难以想象		no-reading
+gf0025-2021	7	飞往		no-reading
+gf0025-2021	7	饮水	yin3 shui3	several-readings
+gf0025-2021	7	饮水	yin4 shui3	several-readings
+gf0025-2021	7	驮	duo4	several-readings
+gf0025-2021	7	驮	tuo2	several-readings
+gf0025-2021	7	龟	gui1	several-readings
+gf0025-2021	7	龟	jun1	several-readings
+gf0025-2021	7	龟	qiu1	several-readings
 hsk-2025	1	上	shang4	several-readings
 hsk-2025	1	东西	dong1 xi5	several-readings
 hsk-2025	1	个	ge4	several-readings
@@ -41,3 +950,362 @@ hsk-2025	1	这	zhe4	several-readings
 hsk-2025	1	那	na4	several-readings
 hsk-2025	1	都	dou1	several-readings
 hsk-2025	1	雨	yu3	several-readings
+hsk-2025	2	万	wan4	several-readings
+hsk-2025	2	出来	chu1 lai2	several-readings
+hsk-2025	2	别	bie2	several-readings
+hsk-2025	2	告诉	gao4 su5	several-readings
+hsk-2025	2	啊	a5	several-readings
+hsk-2025	2	地	de5	several-readings
+hsk-2025	2	头	tou2	several-readings
+hsk-2025	2	妻子	qi1 zi5	several-readings
+hsk-2025	2	得	de5	several-readings
+hsk-2025	2	打	da3	several-readings
+hsk-2025	2	教	jiao1	several-readings
+hsk-2025	2	正	zheng4	several-readings
+hsk-2025	2	比	bi3	several-readings
+hsk-2025	2	洗	xi3	several-readings
+hsk-2025	2	着	zhe5	several-readings
+hsk-2025	2	离	li2	several-readings
+hsk-2025	2	累	lei4	several-readings
+hsk-2025	2	起来	qi3 lai5	several-readings
+hsk-2025	2	跑	pao3	several-readings
+hsk-2025	2	踢	ti1	rejected
+hsk-2025	2	过	guo5	several-readings
+hsk-2025	2	过去	guo4 qu4	several-readings
+hsk-2025	2	过来	guo4 lai2	several-readings
+hsk-2025	2	远	yuan3	several-readings
+hsk-2025	2	长	chang2	several-readings
+hsk-2025	2	间	jian1	several-readings
+hsk-2025	2	高中	gao1 zhong1	several-readings
+hsk-2025	2	鸟	niao3	several-readings
+hsk-2025	3	中	zhong1	several-readings
+hsk-2025	3	为	wei4	several-readings
+hsk-2025	3	刷	shua1	several-readings
+hsk-2025	3	南	nan2	several-readings
+hsk-2025	3	卡	ka3	several-readings
+hsk-2025	3	发	fa1	several-readings
+hsk-2025	3	句	ju4	several-readings
+hsk-2025	3	可	ke3	several-readings
+hsk-2025	3	地方	di4 fang5	several-readings
+hsk-2025	3	女人	nu:3 ren2	several-readings
+hsk-2025	3	子	zi5	several-readings
+hsk-2025	3	差	cha4	several-readings
+hsk-2025	3	干	gan4	several-readings
+hsk-2025	3	扫	sao3	several-readings
+hsk-2025	3	把	ba3	several-readings
+hsk-2025	3	故事	gu4 shi5	several-readings
+hsk-2025	3	更	geng4	several-readings
+hsk-2025	3	查	cha2	several-readings
+hsk-2025	3	种	zhong3	several-readings
+hsk-2025	3	胖	pang4	several-readings
+hsk-2025	3	脏	zang1	several-readings
+hsk-2025	3	脚	jiao3	several-readings
+hsk-2025	3	节	jie2	several-readings
+hsk-2025	3	草	cao3	several-readings
+hsk-2025	3	行	xing2	several-readings
+hsk-2025	3	角	jiao3	several-readings
+hsk-2025	3	难	nan2	several-readings
+hsk-2025	3	页	ye4	several-readings
+hsk-2025	3	骑	qi2	several-readings
+hsk-2025	4	与	yu3	several-readings
+hsk-2025	4	乘	cheng2	several-readings
+hsk-2025	4	俩	lia3	several-readings
+hsk-2025	4	倒	dao4	several-readings
+hsk-2025	4	假	jia3	several-readings
+hsk-2025	4	凉	liang2	several-readings
+hsk-2025	4	区	qu1	several-readings
+hsk-2025	4	厂	chang3	several-readings
+hsk-2025	4	压	ya1	several-readings
+hsk-2025	4	台	tai2	several-readings
+hsk-2025	4	咳	ke2	several-readings
+hsk-2025	4	嗯	en1	several-readings
+hsk-2025	4	嗯	en4	several-readings
+hsk-2025	4	嗯	en5	several-readings
+hsk-2025	4	场	chang3	several-readings
+hsk-2025	4	大夫	dai4 fu5	several-readings
+hsk-2025	4	好处	hao3 chu5	several-readings
+hsk-2025	4	孙子	sun1 zi5	several-readings
+hsk-2025	4	将	jiang1	several-readings
+hsk-2025	4	并	bing4	several-readings
+hsk-2025	4	底	di3	several-readings
+hsk-2025	4	弄	nong4	several-readings
+hsk-2025	4	弹	tan2	several-readings
+hsk-2025	4	强	qiang2	several-readings
+hsk-2025	4	当	dang1	several-readings
+hsk-2025	4	当时	dang1 shi2	several-readings
+hsk-2025	4	待	dai1	several-readings
+hsk-2025	4	拉	la1	several-readings
+hsk-2025	4	提	ti2	several-readings
+hsk-2025	4	教学	jiao4 xue2	several-readings
+hsk-2025	4	教授	jiao4 shou4	several-readings
+hsk-2025	4	数	shu4	several-readings
+hsk-2025	4	无	wu2	several-readings
+hsk-2025	4	末	mo4	several-readings
+hsk-2025	4	棵	ke1	rejected
+hsk-2025	4	汗	han4	several-readings
+hsk-2025	4	汤	tang1	several-readings
+hsk-2025	4	片	pian4	several-readings
+hsk-2025	4	生意	sheng1 yi5	several-readings
+hsk-2025	4	省	sheng3	several-readings
+hsk-2025	4	稍	shao1	several-readings
+hsk-2025	4	空	kong4	several-readings
+hsk-2025	4	答	da2	several-readings
+hsk-2025	4	约	yue1	several-readings
+hsk-2025	4	结果	jie2 guo3	several-readings
+hsk-2025	4	背	bei1	several-readings
+hsk-2025	4	落	luo4	several-readings
+hsk-2025	4	血	xie3	several-readings
+hsk-2025	4	说法	shuo1 fa3	several-readings
+hsk-2025	4	赚	zhuan4	several-readings
+hsk-2025	4	趟	tang4	several-readings
+hsk-2025	4	转	zhuan3	several-readings
+hsk-2025	4	通	tong1	several-readings
+hsk-2025	4	重	zhong4	several-readings
+hsk-2025	4	重点	zhong4 dian3	several-readings
+hsk-2025	4	量	liang2	several-readings
+hsk-2025	4	降	jiang4	several-readings
+hsk-2025	4	鲜	xian1	several-readings
+hsk-2025	5	乙	yi3	several-readings
+hsk-2025	5	买卖	mai3 mai5	several-readings
+hsk-2025	5	亲	qin1	several-readings
+hsk-2025	5	令	ling4	several-readings
+hsk-2025	5	传	chuan2	several-readings
+hsk-2025	5	便	bian4	several-readings
+hsk-2025	5	冲	chong1	several-readings
+hsk-2025	5	切	qie1	several-readings
+hsk-2025	5	划	hua2	several-readings
+hsk-2025	5	化	hua4	several-readings
+hsk-2025	5	匹	pi3	unverified
+hsk-2025	5	单	dan1	several-readings
+hsk-2025	5	占	zhan4	several-readings
+hsk-2025	5	合	he2	several-readings
+hsk-2025	5	同	tong2	several-readings
+hsk-2025	5	吵	chao3	several-readings
+hsk-2025	5	呀	ya1	several-readings
+hsk-2025	5	哦	o4	several-readings
+hsk-2025	5	唉	ai4	several-readings
+hsk-2025	5	土地	tu3 di4	several-readings
+hsk-2025	5	地下	di4 xia4	several-readings
+hsk-2025	5	处	chu4	several-readings
+hsk-2025	5	大爷	da4 ye5	several-readings
+hsk-2025	5	尽快	jin3 kuai4	several-readings
+hsk-2025	5	尽量	jin3 liang4	several-readings
+hsk-2025	5	广	guang3	several-readings
+hsk-2025	5	度	du4	several-readings
+hsk-2025	5	开通	kai1 tong1	several-readings
+hsk-2025	5	当年	dang1 nian2	several-readings
+hsk-2025	5	扇	shan1	several-readings
+hsk-2025	5	抢	qiang3	several-readings
+hsk-2025	5	挑	tiao1	several-readings
+hsk-2025	5	挡	dang3	several-readings
+hsk-2025	5	挣	zheng4	several-readings
+hsk-2025	5	据	ju4	several-readings
+hsk-2025	5	摸	mo1	several-readings
+hsk-2025	5	曾	ceng2	several-readings
+hsk-2025	5	朝	chao2	several-readings
+hsk-2025	5	洞	dong4	several-readings
+hsk-2025	5	派	pai4	several-readings
+hsk-2025	5	浅	qian3	several-readings
+hsk-2025	5	涨	zhang3	several-readings
+hsk-2025	5	炸	zha2	several-readings
+hsk-2025	5	盖	gai4	several-readings
+hsk-2025	5	称	cheng1	several-readings
+hsk-2025	5	精神	jing1 shen5	several-readings
+hsk-2025	5	系	xi4	several-readings
+hsk-2025	5	红	hong2	several-readings
+hsk-2025	5	结	jie2	several-readings
+hsk-2025	5	老公	lao3 gong1	several-readings
+hsk-2025	5	臭	chou4	several-readings
+hsk-2025	5	薄	bao2	several-readings
+hsk-2025	5	藏	cang2	several-readings
+hsk-2025	5	蛇	she2	several-readings
+hsk-2025	5	调	tiao2	several-readings
+hsk-2025	5	躲	duo3	rejected
+hsk-2025	5	追	zhui1	several-readings
+hsk-2025	6	人家	ren2 jia5	several-readings
+hsk-2025	6	侧	ce4	several-readings
+hsk-2025	6	倒车	dao3 che1	several-readings
+hsk-2025	6	免	mian3	several-readings
+hsk-2025	6	刺	ci4	several-readings
+hsk-2025	6	卷	juan4	several-readings
+hsk-2025	6	叉	cha1	several-readings
+hsk-2025	6	同行	tong2 hang2	several-readings
+hsk-2025	6	吐	tu4	several-readings
+hsk-2025	6	吓	xia4	several-readings
+hsk-2025	6	哇	wa1	several-readings
+hsk-2025	6	啦	la5	several-readings
+hsk-2025	6	喷	pen1	several-readings
+hsk-2025	6	嘛	ma5	several-readings
+hsk-2025	6	圈	quan1	several-readings
+hsk-2025	6	地道	di4 dao5	several-readings
+hsk-2025	6	埋	mai2	several-readings
+hsk-2025	6	塞	sai1	several-readings
+hsk-2025	6	大方	da4 fang5	several-readings
+hsk-2025	6	大都	da4 du1	several-readings
+hsk-2025	6	夹	jia1	several-readings
+hsk-2025	6	好学	hao4 xue2	several-readings
+hsk-2025	6	媳妇	xi2 fu5	several-readings
+hsk-2025	6	尺	chi3	several-readings
+hsk-2025	6	尽	jin4	several-readings
+hsk-2025	6	属	shu3	several-readings
+hsk-2025	6	工夫	gong1 fu5	several-readings
+hsk-2025	6	当天	dang4 tian1	several-readings
+hsk-2025	6	得了	de2 le5	several-readings
+hsk-2025	6	恶心	e3 xin1	several-readings
+hsk-2025	6	扎	zha1	several-readings
+hsk-2025	6	折	zhe2	several-readings
+hsk-2025	6	拾	shi2	several-readings
+hsk-2025	6	撒	sa3	several-readings
+hsk-2025	6	散	san4	several-readings
+hsk-2025	6	晕	yun1	several-readings
+hsk-2025	6	曲	qu3	several-readings
+hsk-2025	6	服	fu2	several-readings
+hsk-2025	6	横	heng2	several-readings
+hsk-2025	6	款式	kuan3 shi4	several-readings
+hsk-2025	6	歪	wai1	several-readings
+hsk-2025	6	泡	pao4	several-readings
+hsk-2025	6	泥	ni2	several-readings
+hsk-2025	6	淋	lin2	several-readings
+hsk-2025	6	混	hun4	several-readings
+hsk-2025	6	温和	wen1 he2	several-readings
+hsk-2025	6	滴	di1	rejected
+hsk-2025	6	漂	piao1	several-readings
+hsk-2025	6	狮子	shi1 zi5	several-readings
+hsk-2025	6	率	lu:4	several-readings
+hsk-2025	6	番	fan1	several-readings
+hsk-2025	6	盛	cheng2	several-readings
+hsk-2025	6	看好	kan4 hao3	several-readings
+hsk-2025	6	空地	kong4 di4	several-readings
+hsk-2025	6	粘	zhan1	several-readings
+hsk-2025	6	粥	zhou1	several-readings
+hsk-2025	6	结实	jie1 shi5	several-readings
+hsk-2025	6	解	jie3	several-readings
+hsk-2025	6	言语	yan2 yu3	several-readings
+hsk-2025	6	识	shi2	several-readings
+hsk-2025	6	足	zu2	several-readings
+hsk-2025	6	跟前	gen1 qian2	several-readings
+hsk-2025	6	蹲	dun1	several-readings
+hsk-2025	6	转动	zhuan4 dong4	several-readings
+hsk-2025	6	透	tou4	rejected
+hsk-2025	6	金子	jin1 zi5	several-readings
+hsk-2025	6	钻	zuan1	several-readings
+hsk-2025	6	铺	pu1	several-readings
+hsk-2025	6	露	lu4	several-readings
+hsk-2025	7	丁	ding1	several-readings
+hsk-2025	7	下场	xia4 chang3	several-readings
+hsk-2025	7	下调	xia4 tiao2	several-readings
+hsk-2025	7	世故	shi4 gu4	several-readings
+hsk-2025	7	为人	wei2 ren2	several-readings
+hsk-2025	7	仇	chou2	several-readings
+hsk-2025	7	任	ren4	several-readings
+hsk-2025	7	佛	fo2	several-readings
+hsk-2025	7	供	gong1	several-readings
+hsk-2025	7	俊	jun4	several-readings
+hsk-2025	7	倒数	dao4 shu3	several-readings
+hsk-2025	7	倔	jue4	several-readings
+hsk-2025	7	公道	gong1 dao5	several-readings
+hsk-2025	7	兹	zi1	several-readings
+hsk-2025	7	冷战	leng3 zhan4	several-readings
+hsk-2025	7	凹	ao1	several-readings
+hsk-2025	7	出息	chu1 xi5	several-readings
+hsk-2025	7	分量	fen4 liang4	several-readings
+hsk-2025	7	创	chuang4	several-readings
+hsk-2025	7	刨	pao2	several-readings
+hsk-2025	7	利害	li4 hai4	several-readings
+hsk-2025	7	削	xiao1	several-readings
+hsk-2025	7	剥	bao1	several-readings
+hsk-2025	7	劈	pi1	several-readings
+hsk-2025	7	劲	jin4	rejected
+hsk-2025	7	勒	lei1	several-readings
+hsk-2025	7	勾	gou1	several-readings
+hsk-2025	7	勿	wu4	rejected
+hsk-2025	7	口哨儿		no-reading
+hsk-2025	7	口音	kou3 yin1	several-readings
+hsk-2025	7	呛	qiang4	several-readings
+hsk-2025	7	咽	yan4	several-readings
+hsk-2025	7	哄	hong3	several-readings
+hsk-2025	7	哑	ya3	several-readings
+hsk-2025	7	哼	heng1	several-readings
+hsk-2025	7	唯	wei2	several-readings
+hsk-2025	7	嚼	jiao2	several-readings
+hsk-2025	7	壳	ke2	several-readings
+hsk-2025	7	大意	da4 yi4	several-readings
+hsk-2025	7	奔	ben4	several-readings
+hsk-2025	7	尿	niao4	several-readings
+hsk-2025	7	幢	zhuang4	several-readings
+hsk-2025	7	应	ying4	several-readings
+hsk-2025	7	当日	dang1 ri4	several-readings
+hsk-2025	7	当晚	dang4 wan3	several-readings
+hsk-2025	7	得罪	de2 zui4	several-readings
+hsk-2025	7	恶	e4	several-readings
+hsk-2025	7	愈	yu4	rejected
+hsk-2025	7	扁	bian3	several-readings
+hsk-2025	7	扒	ba1	several-readings
+hsk-2025	7	扛	kang2	several-readings
+hsk-2025	7	扳	ban1	several-readings
+hsk-2025	7	把手	ba3 shou5	several-readings
+hsk-2025	7	抡	lun1	several-readings
+hsk-2025	7	抹	mo3	several-readings
+hsk-2025	7	担	dan4	several-readings
+hsk-2025	7	拧	ning3	several-readings
+hsk-2025	7	拽	zhuai4	several-readings
+hsk-2025	7	挨	ai2	several-readings
+hsk-2025	7	掺	chan1	several-readings
+hsk-2025	7	揣	chuai1	several-readings
+hsk-2025	7	搁	ge1	several-readings
+hsk-2025	7	搂	lou3	several-readings
+hsk-2025	7	摆设	bai3 she5	several-readings
+hsk-2025	7	撇	pie3	several-readings
+hsk-2025	7	攒	zan3	several-readings
+hsk-2025	7	斗	dou4	several-readings
+hsk-2025	7	晃	huang4	several-readings
+hsk-2025	7	暨	ji4	rejected
+hsk-2025	7	本事	ben3 shi5	several-readings
+hsk-2025	7	本色	ben3 se4	several-readings
+hsk-2025	7	杆	gan3	several-readings
+hsk-2025	7	标致	biao1 zhi4	several-readings
+hsk-2025	7	正当	zheng4 dang4	several-readings
+hsk-2025	7	涌	yong3	several-readings
+hsk-2025	7	溜	liu1	several-readings
+hsk-2025	7	溪	xi1	unverified
+hsk-2025	7	澄清	cheng2 qing1	several-readings
+hsk-2025	7	炮	pao4	several-readings
+hsk-2025	7	烟火	yan1 huo3	several-readings
+hsk-2025	7	熨	yun4	rejected
+hsk-2025	7	熬	ao2	several-readings
+hsk-2025	7	片子	pian1 zi5	several-readings
+hsk-2025	7	琢磨	zuo2 mo5	several-readings
+hsk-2025	7	疏散	shu1 san4	several-readings
+hsk-2025	7	省事	sheng3 shi4	several-readings
+hsk-2025	7	磅	bang4	several-readings
+hsk-2025	7	磕	ke1	several-readings
+hsk-2025	7	磨	mo2	several-readings
+hsk-2025	7	祭	ji4	several-readings
+hsk-2025	7	秤	cheng4	several-readings
+hsk-2025	7	笼子	long2 zi5	several-readings
+hsk-2025	7	精彩纷呈		no-reading
+hsk-2025	7	糊	hu2	several-readings
+hsk-2025	7	绷	beng1	several-readings
+hsk-2025	7	缝	feng4	several-readings
+hsk-2025	7	罢了	ba4 le5	several-readings
+hsk-2025	7	翘	qiao4	several-readings
+hsk-2025	7	脊梁	ji3 liang2	several-readings
+hsk-2025	7	膜	mo2	rejected
+hsk-2025	7	臀	tun2	rejected
+hsk-2025	7	若	ruo4	several-readings
+hsk-2025	7	茎	jing1	rejected
+hsk-2025	7	蒙	meng2	several-readings
+hsk-2025	7	虾	xia1	several-readings
+hsk-2025	7	议	yi4	rejected
+hsk-2025	7	谜	mi2	several-readings
+hsk-2025	7	豁	huo1	several-readings
+hsk-2025	7	踏	ta4	several-readings
+hsk-2025	7	蹬	deng1	several-readings
+hsk-2025	7	逮	dai3	several-readings
+hsk-2025	7	遛	liu4	several-readings
+hsk-2025	7	采	cai3	several-readings
+hsk-2025	7	钉	ding4	several-readings
+hsk-2025	7	闷	men4	several-readings
+hsk-2025	7	驮	tuo2	several-readings
+hsk-2025	7	鲸	jing1	rejected
+hsk-2025	7	龟	gui1	several-readings

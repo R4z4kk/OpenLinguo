@@ -1,11 +1,11 @@
 {
   "audio-zh": {
-    "source": "https://github.com/R4z4kk/OpenLinguo/releases/tag/audio-zh-1",
+    "source": "https://github.com/R4z4kk/OpenLinguo/releases/tag/audio-zh-2",
     "license": "CC0-1.0",
-    "version": "audio-zh-1: OpenMOSS-Team/MOSS-TTS-v1.5@cdd3b911b1585e3f2dbc7775ef10f9926f58850a, voice c78d7c51cc88, checked by Qwen/Qwen3-ASR-1.7B@7278e1e70fe206f11671096ffdd38061171dd6e5, ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated",
-    "retrievedAt": "2026-10-14T09:52:24.035Z",
+    "version": "audio-zh-2: OpenMOSS-Team/MOSS-TTS-v1.5@cdd3b911b1585e3f2dbc7775ef10f9926f58850a, voice c78d7c51cc88, checked by Qwen/Qwen3-ASR-1.7B@7278e1e70fe206f11671096ffdd38061171dd6e5, ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated, contours pitchy-4.1.0/v1",
+    "retrievedAt": "2026-10-15T08:03:18.627Z",
     "maxAgeDays": 365,
-    "sha256": "69270816c7f76a26780de8c1d28206136caf0bd4d4b0caf4f998d3cb2fd3fcdd"
+    "sha256": "652624e3262cdc04db0c5825c47f64ff5cff97deb8b87019d2ffaef25ac725a4"
   },
   "cc-cedict": {
     "source": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",

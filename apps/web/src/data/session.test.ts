@@ -96,6 +96,7 @@ describe("loadSession", () => {
       type: "audio/mpeg",
       data: new ArrayBuffer(4),
       f0: null,
+      f0Version: null,
       bands: ["hsk-2025:1"],
     });
     await db.wordAudio.bulkAdd([packed("天", TIAN.readingKey), packed("你", NI.readingKey)]);
@@ -154,6 +155,7 @@ describe("tone cards", () => {
     type: "audio/mpeg",
     data: new ArrayBuffer(4),
     f0: null,
+    f0Version: null,
     bands: ["hsk-2025:1"],
   });
   const started = (due: number): Partial<CardState> => ({
