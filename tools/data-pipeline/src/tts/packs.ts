@@ -49,7 +49,7 @@ const TONE_CLASS: Readonly<Record<string, ToneClass>> = { "1": 1, "2": 2, "3": 3
 const PART_BYTES = 20 * 1024 * 1024;
 const MP3_BITRATE = "48k";
 /** Bump for every rebuild: release assets are immutable once the app points to them. */
-const RELEASE = "audio-zh-2";
+const RELEASE = "audio-zh-3";
 const RELEASE_URL = `https://github.com/R4z4kk/OpenLinguo/releases/tag/${RELEASE}`;
 const SERVICE_TIMEOUT_MS = 20 * 60_000;
 const SAVE_EVERY = 50;
