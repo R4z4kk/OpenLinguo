@@ -8,14 +8,15 @@ type Voice = "word" | "endless" | "denied";
 
 /**
  * Replaces the microphone with a synthetic voice (no device in CI); counts the tracks stopped in
- * `data-stopped`, so the test sees the microphone released.
+ * `data-stopped`, so the test sees the microphone released. Patched on the prototypes: WebKit ignores
+ * an assignment to `navigator.mediaDevices.getUserMedia` and keeps a track's own `stop`.
  */
 const fakeMicrophone = async (page: Page, voice: Voice): Promise<void> => {
   await page.addInitScript((voice: Voice) => {
     HTMLMediaElement.prototype.play = function play() {
       return Promise.resolve();
     };
-    navigator.mediaDevices.getUserMedia = () => {
+    const getUserMedia = (): Promise<MediaStream> => {
       if (voice === "denied") return Promise.reject(new DOMException("", "NotAllowedError"));
       const context = new AudioContext();
       const source = context.createOscillator();
@@ -31,17 +32,22 @@ const fakeMicrophone = async (page: Page, voice: Voice): Promise<void> => {
       if (voice === "word") gain.gain.setValueAtTime(0, at + 0.8);
       source.connect(gain).connect(output);
       source.start();
-      for (const track of output.stream.getTracks()) {
-        const stop = track.stop.bind(track);
-        track.stop = () => {
-          const root = document.documentElement;
-          root.dataset["stopped"] = String(Number(root.dataset["stopped"] ?? "0") + 1);
-          stop();
-          void context.close();
-        };
-      }
       return Promise.resolve(output.stream);
     };
+    Object.defineProperty(MediaDevices.prototype, "getUserMedia", {
+      configurable: true,
+      value: getUserMedia,
+    });
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- Called below with the track as `this`.
+    const stopTrack = MediaStreamTrack.prototype.stop;
+    Object.defineProperty(MediaStreamTrack.prototype, "stop", {
+      configurable: true,
+      value: function stop(this: MediaStreamTrack) {
+        const root = document.documentElement;
+        root.dataset["stopped"] = String(Number(root.dataset["stopped"] ?? "0") + 1);
+        stopTrack.call(this);
+      },
+    });
   }, voice);
 };
 
