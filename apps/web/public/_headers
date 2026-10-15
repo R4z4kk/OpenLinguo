@@ -1,4 +1,5 @@
 # Every route, on Cloudflare Pages and in `vite preview`. HSTS value from the OWASP HTTP Headers Cheat Sheet.
+# COOP and COEP make the app cross-origin isolated, so ONNX Runtime runs on several threads (ADR 0007).
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; media-src 'self' blob:; connect-src 'self'; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   Strict-Transport-Security: max-age=63072000; includeSubDomains
@@ -6,9 +7,14 @@
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
 
-# The speech-recognition worker alone may compile WebAssembly (ONNX Runtime, ADR 0007): a dedicated
-# worker gets its policy from its own response, so the pages keep script-src 'self'.
+# The speech-recognition worker and ONNX Runtime's thread workers, which run the chunk transformers.js
+# is bundled in, alone may compile WebAssembly (ADR 0007): a dedicated worker gets its policy from its
+# own response, so the pages keep script-src 'self'.
 /assets/speech-worker-*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'
+/assets/transformers.web-*
   ! Content-Security-Policy
   Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; object-src 'none'; base-uri 'self'

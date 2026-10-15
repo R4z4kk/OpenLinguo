@@ -4,37 +4,38 @@ import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
 
-const SPEECH = "/__e2e/speech.wav";
 const SENTENCE = "我们一起去吃饭吧";
 
 /**
  * Replaces the microphone with a recording of the sentence (MOSS-TTS, fixtures/speech), played once
  * after 0.3 s of silence; the stream stays silent afterwards, so the recording stops by itself.
  * Patched on the prototype: WebKit ignores an assignment to `navigator.mediaDevices.getUserMedia`.
+ * The recording comes with the script: in WebKit, a request from a page the service worker controls
+ * escapes `page.route`.
  */
 const fakeMicrophone = async (page: Page): Promise<void> => {
   const wav = await readFile(
     new URL("../fixtures/speech/women-yiqi-qu-chifan-ba.wav", import.meta.url),
   );
-  await page.route(`**${SPEECH}`, (route) =>
-    route.fulfill({ body: wav, contentType: "audio/wav" }),
+  await page.addInitScript(
+    (bytes: number[]) => {
+      const getUserMedia = async (): Promise<MediaStream> => {
+        const context = new AudioContext();
+        const buffer = await context.decodeAudioData(new Uint8Array(bytes).buffer);
+        const source = context.createBufferSource();
+        const output = context.createMediaStreamDestination();
+        source.buffer = buffer;
+        source.connect(output);
+        source.start(context.currentTime + 0.3);
+        return output.stream;
+      };
+      Object.defineProperty(MediaDevices.prototype, "getUserMedia", {
+        configurable: true,
+        value: getUserMedia,
+      });
+    },
+    [...wav],
   );
-  await page.addInitScript((url: string) => {
-    const getUserMedia = async (): Promise<MediaStream> => {
-      const context = new AudioContext();
-      const buffer = await context.decodeAudioData(await (await fetch(url)).arrayBuffer());
-      const source = context.createBufferSource();
-      const output = context.createMediaStreamDestination();
-      source.buffer = buffer;
-      source.connect(output);
-      source.start(context.currentTime + 0.3);
-      return output.stream;
-    };
-    Object.defineProperty(MediaDevices.prototype, "getUserMedia", {
-      configurable: true,
-      value: getUserMedia,
-    });
-  }, SPEECH);
 };
 
 /** Paths under /models/ the page or its worker asked for. */
@@ -85,6 +86,9 @@ test("offers speech recognition, downloads it on request, checks a sentence and 
   // Nothing of the model is fetched before the learner asks: only its index, for the size.
   expect(requested.filter((path) => path !== "/models/index.json")).toEqual([]);
   expect(await accessibilityViolations(page)).toEqual([]);
+
+  // Cross-origin isolated: ONNX Runtime runs WebAssembly on several threads.
+  expect(await page.evaluate(() => crossOriginIsolated)).toBe(true);
 
   await downloadButton(page).click();
   await expect(main.getByText(/^Speech recognition downloaded \(/u)).toBeVisible({
