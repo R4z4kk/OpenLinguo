@@ -21,11 +21,17 @@ const deck = (page: Page, name: string) =>
 
 test("imports an Anki deck with its sounds and notes of its own, then reviews them", async ({
   page,
+  browser,
+  browserName,
 }) => {
   const main = page.getByRole("main");
   const errors: string[] = [];
+  // WebKit 27.2 (Playwright 1.64) holds each <select>'s built-in style to the page CSP; a newer WebKit is checked again.
+  const selectStyleRefused = browserName === "webkit" && browser.version() === "27.2";
   page.on("console", (message) => {
-    if (message.type() === "error") errors.push(message.text());
+    if (message.type() !== "error") return;
+    if (selectStyleRefused && message.text().startsWith("Refused to apply a stylesheet")) return;
+    errors.push(message.text());
   });
 
   await page.goto("/learn");
