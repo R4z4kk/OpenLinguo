@@ -1,0 +1,62 @@
+name: promote
+
+# Opens the develop -> main promotion pull request when a milestone closes: docs/adr/0010-branches-and-ci.md
+on:
+  milestone:
+    types: [closed]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: promote
+  cancel-in-progress: false
+
+jobs:
+  promote:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Open or update the promotion pull request
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          MILESTONE: ${{ github.event.milestone.title }}
+          MILESTONE_URL: ${{ github.event.milestone.html_url }}
+          OPEN_ISSUES: ${{ github.event.milestone.open_issues }}
+        run: |
+          ahead=$(gh api "repos/${GH_REPO}/compare/main...develop" --jq .ahead_by)
+          if [ "$ahead" = "0" ]; then
+            echo "::notice::develop has no commit that main lacks: nothing to promote."
+            exit 0
+          fi
+
+          line="- Manual run"
+          if [ -n "$MILESTONE" ]; then
+            line="- [${MILESTONE}](${MILESTONE_URL})"
+            if [ "$OPEN_ISSUES" != "0" ]; then line="${line}, ${OPEN_ISSUES} issue(s) still open"; fi
+          fi
+
+          body="$RUNNER_TEMP/body.md"
+          number=$(gh pr list --base main --head develop --state open --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh pr view "$number" --json body --jq .body > "$body"
+            if [ -n "$MILESTONE" ] && grep -qF "$MILESTONE_URL" "$body"; then exit 0; fi
+            echo "$line" >> "$body"
+            gh pr edit "$number" --body-file "$body"
+            exit 0
+          fi
+
+          {
+            echo "Promotes \`develop\` to \`main\` (ADR 0010). Merge with a merge commit."
+            echo
+            echo "$line"
+          } > "$body"
+          gh pr create --base main --head develop --title "Promote ${MILESTONE:-develop} to main" --body-file "$body"
+          # A pull request opened with GITHUB_TOKEN starts no pull_request workflow: run the full CI on its head.
+          gh workflow run ci.yml --ref develop
