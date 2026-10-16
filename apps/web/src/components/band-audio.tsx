@@ -18,7 +18,7 @@ export const BandAudio = ({
   describedBy,
   onChange,
 }: {
-  readonly pack: Pick<AudioPackIndex, "release" | "f0">;
+  readonly pack: Pick<AudioPackIndex, "f0">;
   readonly band: AudioPackBand;
   readonly state: BandState;
   /** The band's heading. */
