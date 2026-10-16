@@ -60,7 +60,7 @@ jobs:
             cat "$RUNNER_TEMP/stats.txt"
             echo '```'
             echo
-            echo "Review the diff, then [open the pull request](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${BRANCH}?expand=1). Refresh pull requests are never merged automatically."
+            echo "Review the diff, then [open the pull request](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${GITHUB_REF_NAME}...${BRANCH}?expand=1). Refresh pull requests are never merged automatically."
           } > "$RUNNER_TEMP/body.md"
           gh issue create --title "Data refresh $(date -u +%F)" --label area:data --body-file "$RUNNER_TEMP/body.md"
       - name: Report a failed refresh
