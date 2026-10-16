@@ -235,6 +235,17 @@ export const fr: Messages = {
     place: "Lieu",
     manner: "Mode",
     chao: "Chao (1968) :",
+    sound: "Son",
+    soundIntro:
+      "Écoutez chaque syllabe du tableau dans les quatre tons, et chaque initiale dite seule. Les enregistrements se téléchargent une fois, puis marchent hors ligne. Quelques syllabes n’en ont pas\u00a0: aucun caractère ne se lit seulement ainsi.",
+    recordingsFailed: "Les enregistrements n’ont pas pu être lus\u00a0: {{reason}}",
+    hear: "Écouter",
+    tone: "Ton joué",
+    toneAll: "Les quatre",
+    toneHint: "Appuyez sur une syllabe pour l’entendre au ton {{tone}}.",
+    toneHintAll: "Appuyez sur une syllabe pour entendre ses quatre tons.",
+    playing: "Lecture de {{syllables}}",
+    missing: "Pas d’enregistrement de {{syllables}}.",
     places: {
       bilabial: "bilabiale (les deux lèvres)",
       labiodental: "labiodentale (lèvre inférieure, dents du haut)",

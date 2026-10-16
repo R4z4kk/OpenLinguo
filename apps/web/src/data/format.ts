@@ -116,7 +116,8 @@ export const AudioPackIndex = z.object({
   f0: z.string().min(1).nullable().default(null),
   bands: z.array(
     z.object({
-      referential: z.enum(["hsk-2025", "gf0025-2021"]),
+      /** `syllables`: the pinyin chart's band, one recording per syllable and tone (#105). */
+      referential: z.enum(["hsk-2025", "gf0025-2021", "syllables"]),
       level: z.number().int().min(1),
       entries: z.number().int().nonnegative(),
       parts: z

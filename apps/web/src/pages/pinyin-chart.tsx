@@ -2,13 +2,21 @@ import {
   FINALS,
   INITIALS,
   INTERJECTIONS,
+  readingKey,
   spell,
   type FinalGroup,
   type PinyinFinal,
   type PinyinInitial,
 } from "@openlinguo/lang-zh";
-import { useId } from "react";
+import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { SegmentedControl, type SegmentedOption } from "@/components/segmented-control";
+import {
+  spoken,
+  SyllableSound,
+  useSyllableAudio,
+  useSyllablePlayer,
+} from "@/components/syllable-sound";
 
 const GROUPS: readonly FinalGroup[] = ["a", "o", "e", "i", "u", "ü"];
 const RULES = ["yw", "umlaut", "contracted", "apical"] as const;
@@ -16,6 +24,21 @@ const COLUMNS: readonly (PinyinInitial | null)[] = [null, ...INITIALS];
 
 const SCHEME = "https://zh.wikisource.org/wiki/汉语拼音方案";
 const LEE_ZEE = "https://doi.org/10.1017/S0025100303001208";
+
+const TONES = [1, 2, 3, 4] as const;
+type ToneChoice = (typeof TONES)[number] | "all";
+
+/** Reading keys of a written syllable in these tones: `lu:4` for lü. */
+const keysOf = (written: string, tones: readonly number[]): string[] =>
+  tones.flatMap((tone) => {
+    const key = readingKey(`${written}${String(tone)}`);
+    return key.ok ? [key.value] : [];
+  });
+
+const SYLLABLE_BUTTON =
+  "inline-flex min-h-6 min-w-6 items-center justify-center rounded-control px-1 hover:bg-sunken focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ink";
+
+type Recordings = ReadonlyMap<string, string>;
 
 const finalsOf = (group: FinalGroup): readonly PinyinFinal[] =>
   FINALS.filter((pinyinFinal) => pinyinFinal.group === group);
@@ -28,9 +51,12 @@ const PinyinText = ({ text }: { readonly text: string }) => (
   </span>
 );
 
-const Initials = () => {
+/** An initial said alone plays in tone 1, else in the first tone recorded. */
+const Initials = ({ recordings }: { readonly recordings: Recordings | null }) => {
   const { t } = useTranslation();
   const id = useId();
+  const { play, notice } = useSyllablePlayer(recordings ?? new Map());
+  const columns = ["initial", "saidAlone", "ipa", "place", "manner"] as const;
   return (
     <section aria-labelledby={id} className="mt-10 max-w-3xl">
       <h2 id={id} className="text-subtitle">
@@ -40,36 +66,63 @@ const Initials = () => {
       <table className="mt-4 w-full text-left">
         <thead>
           <tr>
-            {(["initial", "saidAlone", "ipa", "place", "manner"] as const).map((column) => (
+            {columns.map((column) => (
               <th key={column} scope="col" className="border-b border-hairline py-2 pe-3">
                 {t(`pinyinChart.${column}`)}
               </th>
             ))}
+            {recordings !== null && (
+              <th scope="col" className="border-b border-hairline py-2">
+                {t("pinyinChart.hear")}
+              </th>
+            )}
           </tr>
         </thead>
         <tbody>
-          {INITIALS.map(({ letters, reading, ipa, chaoIpa, place, manner }) => (
-            <tr key={letters} className="border-b border-hairline align-top">
-              <th scope="row" className="py-2 pe-3 text-pinyin">
-                <PinyinText text={letters} />
-              </th>
-              <td className="py-2 pe-3">
-                <PinyinText text={reading} />
-              </td>
-              <td className="py-2 pe-3">
-                <Ipa ipa={ipa} />
-                {chaoIpa !== null && (
-                  <span className="block text-small text-muted">
-                    {t("pinyinChart.chao")} <Ipa ipa={chaoIpa} />
-                  </span>
+          {INITIALS.map(({ letters, reading, ipa, chaoIpa, place, manner }) => {
+            const key =
+              keysOf(reading, TONES).find((tone) => recordings?.has(tone) === true) ?? null;
+            return (
+              <tr key={letters} className="border-b border-hairline align-top">
+                <th scope="row" className="py-2 pe-3 text-pinyin">
+                  <PinyinText text={letters} />
+                </th>
+                <td className="py-2 pe-3">
+                  <PinyinText text={reading} />
+                </td>
+                <td className="py-2 pe-3">
+                  <Ipa ipa={ipa} />
+                  {chaoIpa !== null && (
+                    <span className="block text-small text-muted">
+                      {t("pinyinChart.chao")} <Ipa ipa={chaoIpa} />
+                    </span>
+                  )}
+                </td>
+                <td className="py-2 pe-3">{t(`pinyinChart.places.${place}`)}</td>
+                <td className="py-2 pe-3">{t(`pinyinChart.manners.${manner}`)}</td>
+                {recordings !== null && (
+                  <td className="py-2">
+                    {key !== null && (
+                      <button
+                        type="button"
+                        className={SYLLABLE_BUTTON}
+                        onClick={() => void play([key])}
+                      >
+                        <PinyinText text={spoken(key)} />
+                      </button>
+                    )}
+                  </td>
                 )}
-              </td>
-              <td className="py-2 pe-3">{t(`pinyinChart.places.${place}`)}</td>
-              <td className="py-2">{t(`pinyinChart.manners.${manner}`)}</td>
-            </tr>
-          ))}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
+      {recordings !== null && (
+        <p role="status" className={notice?.failed === true ? "mt-3 text-danger" : "mt-3"}>
+          {notice?.text}
+        </p>
+      )}
     </section>
   );
 };
@@ -138,15 +191,50 @@ const SpellingRules = () => {
 
 const STICKY_HEADER = "sticky z-10 bg-surface border-b border-r border-hairline px-2 py-1";
 
-const SyllableGrid = () => {
+const SyllableGrid = ({ recordings }: { readonly recordings: Recordings | null }) => {
   const { t } = useTranslation();
   const id = useId();
+  const hintId = useId();
+  const [choice, setChoice] = useState<ToneChoice>(1);
+  const { play, notice } = useSyllablePlayer(recordings ?? new Map());
+  const tones = choice === "all" ? TONES : [choice];
+  const options: readonly SegmentedOption<ToneChoice>[] = [
+    ...["ā", "á", "ǎ", "à"].map((mark, index) => ({
+      value: TONES[index] ?? 1,
+      label: `${mark} ${String(index + 1)}`,
+      lang: null,
+    })),
+    { value: "all", label: t("pinyinChart.toneAll"), lang: null },
+  ];
   return (
     <section className="mt-10">
       <h2 id={id} className="text-subtitle">
         {t("pinyinChart.syllables")}
       </h2>
       <p className="mt-2 max-w-3xl text-muted">{t("pinyinChart.syllablesIntro")}</p>
+      {recordings !== null && (
+        <div className="mt-4">
+          <SegmentedControl
+            legend={t("pinyinChart.tone")}
+            name="tone"
+            options={options}
+            value={choice}
+            onChange={setChoice}
+            failure={null}
+          />
+          <p id={hintId} className="mt-2 text-small text-muted">
+            {choice === "all"
+              ? t("pinyinChart.toneHintAll")
+              : t("pinyinChart.toneHint", { tone: choice })}
+          </p>
+          <p
+            role="status"
+            className={notice?.failed === true ? "mt-2 min-h-6 text-danger" : "mt-2 min-h-6"}
+          >
+            {notice?.text}
+          </p>
+        </div>
+      )}
       <div
         role="region"
         aria-labelledby={id}
@@ -191,12 +279,26 @@ const SyllableGrid = () => {
                   </th>
                   {COLUMNS.map((initial) => {
                     const written = spell(initial?.letters ?? null, pinyinFinal);
+                    const keys = written === null ? [] : keysOf(written, tones);
+                    const heard = keys.some((key) => recordings?.has(key) === true);
                     return (
                       <td
                         key={initial?.letters ?? "-"}
                         className="border-r border-b border-hairline px-2 py-1"
                       >
-                        {written !== null && <PinyinText text={written} />}
+                        {written !== null &&
+                          (recordings === null ? (
+                            <PinyinText text={written} />
+                          ) : (
+                            <button
+                              type="button"
+                              aria-describedby={hintId}
+                              className={`${SYLLABLE_BUTTON}${heard ? "" : " text-muted"}`}
+                              onClick={() => void play(keys)}
+                            >
+                              <PinyinText text={written} />
+                            </button>
+                          ))}
                       </td>
                     );
                   })}
@@ -213,16 +315,22 @@ const SyllableGrid = () => {
 
 export const PinyinChartPage = () => {
   const { t } = useTranslation();
+  const { audio, refresh } = useSyllableAudio();
+  const recordings =
+    audio?.recordings.ok === true && audio.recordings.value.size > 0
+      ? audio.recordings.value
+      : null;
   return (
     <section aria-labelledby="pinyin-chart-title">
       <h1 id="pinyin-chart-title" className="text-title">
         {t("pinyinChart.title")}
       </h1>
       <p className="mt-2 max-w-3xl text-muted">{t("pinyinChart.intro")}</p>
-      <Initials />
+      <SyllableSound audio={audio} refresh={refresh} />
+      <Initials recordings={recordings} />
       <Finals />
       <SpellingRules />
-      <SyllableGrid />
+      <SyllableGrid recordings={recordings} />
       <h2 className="mt-10 text-subtitle">{t("pinyinChart.sources")}</h2>
       <ul className="mt-2 grid max-w-3xl gap-1 text-small">
         <li>

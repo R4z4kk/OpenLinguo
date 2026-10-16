@@ -225,6 +225,17 @@ export const en = {
     place: "Place",
     manner: "Manner",
     chao: "Chao (1968):",
+    sound: "Sound",
+    soundIntro:
+      "Hear every syllable of the chart in the four tones, and each initial said alone. The recordings are downloaded once, then work offline. A few syllables have none: no character is read only that way.",
+    recordingsFailed: "The recordings could not be read: {{reason}}",
+    hear: "Hear",
+    tone: "Tone played",
+    toneAll: "All four",
+    toneHint: "Press a syllable to hear it in tone {{tone}}.",
+    toneHintAll: "Press a syllable to hear its four tones.",
+    playing: "Playing {{syllables}}",
+    missing: "No recording of {{syllables}}.",
     places: {
       bilabial: "bilabial (both lips)",
       labiodental: "labiodental (lower lip, upper teeth)",

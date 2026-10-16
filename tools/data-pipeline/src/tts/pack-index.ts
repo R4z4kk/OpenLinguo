@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { dataDir } from "../manifest.ts";
-import { REFERENTIALS } from "./pack-words.ts";
+import { REFERENTIALS, SYLLABLES } from "./pack-words.ts";
 
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/u);
 
@@ -20,7 +20,10 @@ export const packIndexSchema = z.strictObject({
   words: z.record(z.enum(Object.values(REFERENTIALS)), sha256),
   bands: z.array(
     z.strictObject({
-      referential: z.enum(Object.keys(REFERENTIALS) as [keyof typeof REFERENTIALS]),
+      referential: z.enum([
+        ...(Object.keys(REFERENTIALS) as (keyof typeof REFERENTIALS)[]),
+        SYLLABLES,
+      ]),
       level: z.number().int().min(1).max(7),
       entries: z.number().int().nonnegative(),
       validatedByEar: z.number().int().nonnegative(),

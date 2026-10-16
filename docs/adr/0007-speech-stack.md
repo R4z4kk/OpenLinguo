@@ -84,6 +84,17 @@ A syllable is doubted when both point to another tone; it is redone with seeds u
 - Machine-readable marking (AI Act art. 50(2), applicable since 2 August 2026; checked on the consolidated text of 27 July 2026, after Regulation (EU) 2026/1744): running MOSS-TTS for our own recordings likely makes the project a provider (art. 3(3), « puts the AI system into service under its own name »; art. 3(11), « for own use »). Each MP3 carries ID3 tags, the pack index too: the IPTC digital source type `trainedAlgorithmicMedia` (« Created using Generative AI », [IPTC](https://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia)) and a « synthetic voice » note. Metadata is one of the techniques recital 133 lists; it can be stripped, so a robust audio watermark (such as AudioSeal) stays an option if this falls short. Not legal advice.
 - `data/audio-zh/packs.json` records the generator, the voice's sha256, the checker, the encoder and the sha256 of the word lists; a test fails when a word list changes after the packs were built.
 
+## Pinyin chart audio (#105)
+
+- The same voice and checks as the word packs: no recording set of the syllables has a clear license yet (audio-cmn says « CC-by-sa » with no version and its author leaned to NC; Tone Perfect's terms are unknown; Lingua Libre has no syllable set). Human recordings can replace these later.
+- Which pairs: the chart's syllables in tones 1 to 4 that CC-CEDICT attests, 1,292. MOSS-TTS reads characters, so each pair needs a character said only that way:
+  - 782 reuse a word pack's one-character recording that ships (the same file).
+  - 412 take the most frequent character CC-CEDICT reads only that way, words included (钥 is yue4 alone but yao4 in 钥匙, so it is left out); a neutral tone inside a word does not count.
+  - 98 have no such character (`no-character`): interjections (a, ei, o, m) and syllables whose characters all have several readings (de1, shuo1, guo4).
+- Of the 412 generated, 291 pass with 5 seeds; rare characters fail most, the recognizer hearing another syllable. The other 121 ship without audio (118 `unverified`, 3 rejected by ear in #113). The band holds 1,073 pairs (83 %), 4.4 MB.
+- An initial said alone plays in tone 1 when it is recorded, else in the first tone recorded (fo1, te1, ne1, le1 and ri1 do not exist); f has none, as 佛 also reads fu2.
+- The `syllables` band is part of the audio release and downloaded on request from the chart page. Release `audio-zh-3` rebuilt every band without new recordings: `audio-zh-2` held contours of the previous `F0_VERSION` and an index has one contour version.
+
 ## Pitch contours (#114)
 
 - One function, `contour()` in `packages/core/src/f0.ts`, for the pipeline now and the browser in #116. pitchy 4.1.0 (MIT) reads 40 ms windows every 10 ms of a low-passed copy of the recording (below); a frame is voiced when its clarity is at least 0.5 and its level at least 3 % of the loudest frame.

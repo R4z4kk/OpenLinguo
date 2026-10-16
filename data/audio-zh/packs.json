@@ -1,12 +1,12 @@
 {
-  "release": "audio-zh-2",
+  "release": "audio-zh-3",
   "license": "CC0-1.0",
   "generator": {
     "tts": "OpenMOSS-Team/MOSS-TTS-v1.5@cdd3b911b1585e3f2dbc7775ef10f9926f58850a",
     "voiceSha256": "c78d7c51cc88c1ded15ff3f381acba9d80a0c8d80beb0cab1cfb0eb5d94f8feb",
     "asr": "Qwen/Qwen3-ASR-1.7B@7278e1e70fe206f11671096ffdd38061171dd6e5",
     "encoder": "ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated",
-    "f0": "pitchy-4.1.0/v1"
+    "f0": "pitchy-4.1.0/v2"
   },
   "words": {
     "hsk-2025-words": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2",
@@ -21,8 +21,8 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-1-1.zip",
-          "bytes": 2105190,
-          "sha256": "c0c7e6534ed72bcf80087a4745f2a3ce2c064676f2d19610acb5b52ad0ba940b"
+          "bytes": 2104627,
+          "sha256": "d349bf64851007d829985fd0caddce74528f5d62145ab4932971e23865430338"
         }
       ]
     },
@@ -34,8 +34,8 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-2-1.zip",
-          "bytes": 3532952,
-          "sha256": "c21902a73e82538e74edac94730556fc38c0c5a312fe30f8a4062192f41d7b48"
+          "bytes": 3531002,
+          "sha256": "835e794b00485b144b10f108502c18fcf9774f6ef028fc96a842f96006e3fe5c"
         }
       ]
     },
@@ -47,8 +47,8 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-3-1.zip",
-          "bytes": 4694208,
-          "sha256": "32f2484ab85a673e5556f98670e02c134cf8c5dbb5e42d577aef4cf7e77e23b7"
+          "bytes": 4693018,
+          "sha256": "bbe39c8e6c7a14b7ed39e75060814fd7c74571fefb9216253babfff8c3e07a99"
         }
       ]
     },
@@ -60,8 +60,8 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-4-1.zip",
-          "bytes": 4765810,
-          "sha256": "b9bafa9364c0074807feeaeec81caff82fb96c40d82945502f833bba2541100b"
+          "bytes": 4765404,
+          "sha256": "fb5624c56d161026fe31396963cd6be062acbdfd85fd7f1bff5ec8fed07a9a52"
         }
       ]
     },
@@ -73,8 +73,8 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-5-1.zip",
-          "bytes": 5242240,
-          "sha256": "6b95e81a17cf2b47f0082cd5c45f754c01101390b6b0901223e992182112f0db"
+          "bytes": 5241454,
+          "sha256": "f8eeef80ae49bdc747676b1683c6236b90a0a0e051c29d9200b0aeddaf71ea80"
         }
       ]
     },
@@ -86,8 +86,8 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-6-1.zip",
-          "bytes": 5619610,
-          "sha256": "d6ef57e6331e3e23afe80004f24fb8aaf1c8432f872cf26deeca59506e310a3d"
+          "bytes": 5617978,
+          "sha256": "e63cadac7c9f82a5f3d5a246f8a388bb230f49249f883780a38c93b9443da164"
         }
       ]
     },
@@ -99,13 +99,13 @@
       "parts": [
         {
           "file": "audio-zh-gf0025-2021-7-1.zip",
-          "bytes": 21877383,
-          "sha256": "edeb2ec3879ee61e32acbf71e0d55b8cb184a505915ba00471a00e5e230d5369"
+          "bytes": 21870161,
+          "sha256": "e02ccdbed8767210f5301ecbeb73120917fd79c44c5c623909b7dcd16ed78ae0"
         },
         {
           "file": "audio-zh-gf0025-2021-7-2.zip",
-          "bytes": 8705802,
-          "sha256": "d35e29551b1082f17130e009ffd17e54bca3db23f039b99f785c32777bc811b3"
+          "bytes": 8703156,
+          "sha256": "dbfd765d81b4889f7c005281c2b1416fd5d78c2a2c6efa194d8549ceb5d1ae73"
         }
       ]
     },
@@ -117,8 +117,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-1-1.zip",
-          "bytes": 1230868,
-          "sha256": "63c1b4dd13725d7e1d9483db7b21d3781683bc91213d0621ab748f53547024fd"
+          "bytes": 1230560,
+          "sha256": "5650f0f5efa57f6a656d7621c0f8958dda0d5da5c2b26ffdbcecfcb0592f3183"
         }
       ]
     },
@@ -130,8 +130,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-2-1.zip",
-          "bytes": 813654,
-          "sha256": "28bf6544999c9665acb228c8422bb048338b7b45d15302b4b0a8d4a2e3da3221"
+          "bytes": 813416,
+          "sha256": "aba22f67b223e2eea6208b0146191be2f1228300b59bb72cd863fb734ae7d27f"
         }
       ]
     },
@@ -143,8 +143,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-3-1.zip",
-          "bytes": 2358365,
-          "sha256": "4e2c9f8e245924d4b2a19235ce96009b83b1980d36e5252f9ec7baa48eabf2a3"
+          "bytes": 2357710,
+          "sha256": "3cc853575b656ec18b50de84dbff820cf52ca1a439619bef1c6aafdb6254d9cc"
         }
       ]
     },
@@ -156,8 +156,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-4-1.zip",
-          "bytes": 4768258,
-          "sha256": "011c51856c577e076fc7cd6f1f7e0ba355e9b3f69538dc53115f6f6862fc9eec"
+          "bytes": 4767088,
+          "sha256": "bf8630391c5c0ad5c6d0003f71e8be2b2b4b0428e490a48ba2d73c56d5983bf9"
         }
       ]
     },
@@ -169,8 +169,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-5-1.zip",
-          "bytes": 7894956,
-          "sha256": "b7abbcf48316298692426fbf1fa06985e542d11096b46972475bf382eba00e16"
+          "bytes": 7893932,
+          "sha256": "cef27c70faa9654d778c9c048618072975cc865cde605dcbb6a6be008345aad9"
         }
       ]
     },
@@ -182,8 +182,8 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-6-1.zip",
-          "bytes": 8997701,
-          "sha256": "4e0f6ec461650f88df12009ff6c70386b2fea024fd57a65217b2b35aa9f93e38"
+          "bytes": 8994898,
+          "sha256": "10c97739f4c01247b151d98b67beeabf58a9f3079c19d7ed9cc7d6c9b9c0a27a"
         }
       ]
     },
@@ -195,13 +195,26 @@
       "parts": [
         {
           "file": "audio-zh-hsk-2025-7-1.zip",
-          "bytes": 21878196,
-          "sha256": "12a123d255b5fa13420e67ecaf67c7b544c28cdab7abe3710756957212ed4ecf"
+          "bytes": 21870692,
+          "sha256": "2ef8a53d0714b31a30538e9c4135cdbe0be4a3a8043f6d0dedfb21ae940cda5e"
         },
         {
           "file": "audio-zh-hsk-2025-7-2.zip",
-          "bytes": 8381176,
-          "sha256": "285d5e143b041ada91519f8c6a45858b05c3dbce198a8caa3ca5e1298bcb28cf"
+          "bytes": 8378830,
+          "sha256": "aee1bc494cefffe7b4fd4a779976935e76957895bb45e90a23717b36befe2e95"
+        }
+      ]
+    },
+    {
+      "referential": "syllables",
+      "level": 1,
+      "entries": 1073,
+      "validatedByEar": 13,
+      "parts": [
+        {
+          "file": "audio-zh-syllables-1-1.zip",
+          "bytes": 4425377,
+          "sha256": "ddf6b97262318e9b5091ee962f5a83da9cce6df026e74032761f558e654dd548"
         }
       ]
     }
