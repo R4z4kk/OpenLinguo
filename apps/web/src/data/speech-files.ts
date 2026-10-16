@@ -19,10 +19,10 @@ export const storedFile = async (
   index: SpeechModelIndex,
   file: SpeechModelFile,
 ): Promise<Response | null> => {
-  const cache = await caches.open(cacheName(index));
   const responses: Response[] = [];
   for (const piece of pieces(file)) {
-    const response = await cache.match(url(piece.path));
+    // Not caches.open: it would create the cache again if the model was deleted while the worker loads it.
+    const response = await caches.match(url(piece.path), { cacheName: cacheName(index) });
     if (response?.body == null) return null;
     responses.push(response);
   }
