@@ -93,7 +93,7 @@ test("plays the chart's syllables in a chosen tone, and each initial said alone"
   const initials = page.getByRole("table").first();
   await initials.getByRole("button", { name: "bō", exact: true }).click();
   await expect(page.getByText("Playing bō", { exact: true })).toBeVisible();
-  await expect(initials.getByRole("button", { name: "dé", exact: true })).toBeVisible();
+  await expect(initials.getByRole("button", { name: "tè", exact: true })).toBeVisible();
   await expect(
     initials
       .getByRole("row")
