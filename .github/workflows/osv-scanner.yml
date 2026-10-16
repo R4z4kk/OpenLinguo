@@ -3,7 +3,7 @@ name: osv-scanner
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [develop]
   schedule:
     - cron: "17 4 * * 1"
 

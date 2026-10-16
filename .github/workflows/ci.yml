@@ -1,9 +1,11 @@
 name: ci
 
+# Branches and required checks: docs/adr/0010-branches-and-ci.md
 on:
   pull_request:
-  push:
-    branches: [main]
+  schedule:
+    - cron: "37 2 * * *"
+  workflow_dispatch:
 
 permissions: {}
 
@@ -12,9 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
+  quick:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -35,11 +37,54 @@ jobs:
       - run: pnpm build
       - run: pnpm data:freshness
       - run: pnpm data:gaps --check
-      - run: pnpm --filter @openlinguo/web exec playwright install --with-deps chromium webkit
-      - run: pnpm e2e
+
+  e2e-shard:
+    if: github.event_name != 'pull_request' || github.base_ref == 'main'
+    name: e2e ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.shards }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      # WebKit takes about twice as long as Chromium.
+      matrix:
+        include:
+          - { project: chromium, shard: 1, shards: 2 }
+          - { project: chromium, shard: 2, shards: 2 }
+          - { project: webkit, shard: 1, shards: 4 }
+          - { project: webkit, shard: 2, shards: 4 }
+          - { project: webkit, shard: 3, shards: 4 }
+          - { project: webkit, shard: 4, shards: 4 }
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          cache: true
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: pnpm --filter @openlinguo/web exec playwright install --with-deps ${{ matrix.project }}
+      - run: pnpm e2e --project=${{ matrix.project }} --shard=${{ matrix.shard }}/${{ matrix.shards }}
       - if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}-${{ matrix.shard }}
           path: apps/web/playwright-report/
           retention-days: 7
+
+  # The one E2E check a ruleset requires, whatever the number of shards.
+  e2e:
+    if: always() && needs.e2e-shard.result != 'skipped'
+    needs: e2e-shard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - if: needs.e2e-shard.result != 'success'
+        run: |
+          echo "::error::E2E shards ended with ${{ needs.e2e-shard.result }}"
+          exit 1
