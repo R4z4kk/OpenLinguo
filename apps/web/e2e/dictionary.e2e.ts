@@ -3,6 +3,9 @@ import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
 
+// The first visit: the import screen, then the offline reload.
+test.use({ seeded: false });
+
 test("searches a word, opens it, then reloads it offline", async ({ page, server }) => {
   const expectWordPage = async (): Promise<void> => {
     await expect(page.getByRole("heading", { level: 1, name: "你 nǐ 好 hǎo" })).toBeVisible();
