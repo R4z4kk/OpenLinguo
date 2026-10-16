@@ -112,7 +112,6 @@ export type StoredRecording = {
 export type StoredAudioBand = {
   /** `hsk-2025:1` */
   readonly id: string;
-  readonly release: string;
   readonly parts: readonly string[];
 };
 

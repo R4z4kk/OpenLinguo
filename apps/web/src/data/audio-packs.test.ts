@@ -120,6 +120,7 @@ const server = (files: ReadonlyMap<string, Uint8Array<ArrayBuffer>>) => {
 
 const noProgress = (): void => {};
 const PACK = { release: "audio-zh-1", f0: "pitchy-4.1.0/v1" };
+const NEXT = { ...PACK, release: "audio-zh-2" };
 
 let db: Database;
 let counter = 0;
@@ -215,8 +216,29 @@ describe("audio packs", () => {
         [secondName, second],
       ]),
     );
-    await installBand(db, PACK, hsk1, retry.fetchPart, noProgress, new AbortController().signal);
+    await installBand(db, NEXT, hsk1, retry.fetchPart, noProgress, new AbortController().signal);
     expect(retry.requested).toEqual([secondName]);
+  });
+
+  it("keeps a band installed across releases when its parts are the same", async () => {
+    const part = pack([["一", "yi1"]]);
+    const hsk1 = await band("hsk-2025", 1, [part]);
+    const signal = new AbortController().signal;
+    await installBand(
+      db,
+      PACK,
+      hsk1,
+      server(new Map([[`audio-zh/${hsk1.parts[0]?.file ?? ""}`, part]])).fetchPart,
+      noProgress,
+      signal,
+    );
+    const states = await bandStates(db, { ...NEXT, bands: [hsk1] });
+    expect(states.ok && states.value.get("hsk-2025:1")).toBe("installed");
+    const again = server(new Map());
+    expect(await installBand(db, NEXT, hsk1, again.fetchPart, noProgress, signal)).toEqual(
+      ok(null),
+    );
+    expect(again.requested).toEqual([]);
   });
 
   it("refuses a part that does not match its sha256", async () => {
@@ -269,28 +291,49 @@ describe("audio packs", () => {
     expect(await db.audioBands.get("hsk-2025:1")).toBeUndefined();
   });
 
-  it("replaces a band from an older release", async () => {
-    const old = pack([["一", "yi1"]]);
-    const current = pack([["二", "er4"]]);
+  it("downloads a band again when one of its parts changed, replacing its recordings", async () => {
+    const first = pack([["一", "yi1"]]);
+    const old = pack([
+      ["二", "er4"],
+      ["三", "san1"],
+    ]);
+    const changed = pack([["二", "er4"]], new Map([["二", [7]]]));
     const signal = new AbortController().signal;
-    const oldBand = await band("hsk-2025", 1, [old]);
-    await installBand(
-      db,
-      { release: "audio-zh-0", f0: null },
-      oldBand,
-      server(new Map([[`audio-zh/${oldBand.parts[0]?.file ?? ""}`, old]])).fetchPart,
-      noProgress,
-      signal,
-    );
-    const newBand = await band("hsk-2025", 1, [current]);
+    const oldBand = await band("hsk-2025", 1, [first, old]);
     await installBand(
       db,
       PACK,
-      newBand,
-      server(new Map([[`audio-zh/${newBand.parts[0]?.file ?? ""}`, current]])).fetchPart,
+      oldBand,
+      server(
+        new Map([
+          [`audio-zh/${oldBand.parts[0]?.file ?? ""}`, first],
+          [`audio-zh/${oldBand.parts[1]?.file ?? ""}`, old],
+        ]),
+      ).fetchPart,
       noProgress,
       signal,
     );
-    expect(await db.wordAudio.toCollection().primaryKeys()).toEqual([wordAudioId("二", "er4")]);
+    const newBand = await band("hsk-2025", 1, [first, changed]);
+    const states = await bandStates(db, { ...NEXT, bands: [newBand] });
+    expect(states.ok && states.value.get("hsk-2025:1")).toBe("partial");
+    const firstName = `audio-zh/${newBand.parts[0]?.file ?? ""}`;
+    const changedName = `audio-zh/${newBand.parts[1]?.file ?? ""}`;
+    const current = server(
+      new Map([
+        [firstName, first],
+        [changedName, changed],
+      ]),
+    );
+    expect(await installBand(db, NEXT, newBand, current.fetchPart, noProgress, signal)).toEqual(
+      ok(null),
+    );
+    expect(current.requested).toEqual([firstName, changedName]);
+    const rows = await db.wordAudio.toArray();
+    expect(rows.map(({ id, f0 }) => [id, f0])).toEqual([
+      [wordAudioId("一", "yi1"), null],
+      [wordAudioId("二", "er4"), [7]],
+    ]);
+    const after = await bandStates(db, { ...NEXT, bands: [newBand] });
+    expect(after.ok && after.value.get("hsk-2025:1")).toBe("installed");
   });
 });

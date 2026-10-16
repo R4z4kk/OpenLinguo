@@ -67,12 +67,12 @@ export const loadAudioIndex = async (
   return readJson(bytes.value, AudioPackIndex, INDEX);
 };
 
-/** `installed`: every part of the current release is stored; `partial`: an interrupted or older download. */
+/** `installed`: every listed part is stored, from any release; `partial`: interrupted or a part changed. */
 export type BandState = "absent" | "partial" | "installed";
 
 export const bandStates = async (
   db: Database,
-  { release, bands }: AudioPackIndex,
+  { bands }: AudioPackIndex,
 ): Promise<Result<ReadonlyMap<string, BandState>, AudioFailure>> => {
   try {
     const stored = new Map((await db.audioBands.toArray()).map((band) => [band.id, band]));
@@ -81,9 +81,7 @@ export const bandStates = async (
         bands.map((band): [string, BandState] => {
           const saved = stored.get(bandId(band)) ?? null;
           if (saved === null) return [bandId(band), "absent"];
-          const complete =
-            saved.release === release &&
-            band.parts.every((part) => saved.parts.includes(part.sha256));
+          const complete = band.parts.every((part) => saved.parts.includes(part.sha256));
           return [bandId(band), complete ? "installed" : "partial"];
         }),
       ),
@@ -169,11 +167,12 @@ export const removeBand = async (db: Database, id: string): Promise<Result<null,
 
 /**
  * Downloads a band's parts, checks each against its sha256 and stores it in one transaction, so a
- * cancelled or failed download resumes at the next part. An older release's band is removed first.
+ * cancelled or failed download resumes at the next part. A band holding a part the index no longer
+ * lists is removed first: recordings are not traced to their part.
  */
 export const installBand = async (
   db: Database,
-  { release, f0 }: Pick<AudioPackIndex, "release" | "f0">,
+  { f0 }: Pick<AudioPackIndex, "f0">,
   band: AudioPackBand,
   fetchPart: FetchProgress,
   onProgress: (received: number, total: number) => void,
@@ -183,11 +182,13 @@ export const installBand = async (
   const total = bandBytes(band);
   try {
     const saved = (await db.audioBands.get(id)) ?? null;
-    if (saved !== null && saved.release !== release) {
+    const listed = new Set(band.parts.map((part) => part.sha256));
+    const stale = saved !== null && saved.parts.some((part) => !listed.has(part));
+    if (stale) {
       const removed = await removeBand(db, id);
       if (!removed.ok) return removed;
     }
-    const done = new Set(saved !== null && saved.release === release ? saved.parts : []);
+    const done = new Set(saved === null || stale ? [] : saved.parts);
     let received = band.parts
       .filter((part) => done.has(part.sha256))
       .reduce((sum, part) => sum + part.bytes, 0);
@@ -214,7 +215,7 @@ export const installBand = async (
             bands: [...new Set([...(existing[index]?.bands ?? []), id])],
           })),
         );
-        await db.audioBands.put({ id, release, parts: [...done] });
+        await db.audioBands.put({ id, parts: [...done] });
       });
       received += part.bytes;
       onProgress(received, total);
