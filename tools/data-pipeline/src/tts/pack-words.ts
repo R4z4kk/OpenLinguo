@@ -16,7 +16,8 @@ export type WordBand = { readonly referential: Referential; readonly level: numb
 export type Band = WordBand | { readonly referential: typeof SYLLABLES; readonly level: 1 };
 export type PackItem = { readonly word: string; readonly reading: string };
 export type Gap = PackItem & {
-  readonly reason: "several-readings" | "no-reading" | "rejected" | "unverified" | "no-character";
+  readonly reason:
+    "several-readings" | "no-reading" | "rejected" | "unverified" | "no-character" | "no-source";
 };
 
 export const isReferential = (value: string): value is Referential => value in REFERENTIALS;

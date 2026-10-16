@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chartPairs, charReadings, syllableItems } from "./syllable-items.ts";
+import { chartPairs, charReadings, seedCandidates, syllableItems } from "./syllable-items.ts";
 
 describe("chartPairs", () => {
   it("lists every chart syllable in tones 1 to 4, ü written u:", () => {
@@ -81,5 +81,41 @@ describe("syllableItems", () => {
       { word: "䟦", reading: "biang2" },
       { word: "拔", reading: "ba2" },
     ]);
+  });
+});
+
+describe("seedCandidates", () => {
+  const readings = new Map([
+    ["啊", new Set(["a5", "a1", "a2", "a3", "a4"])],
+    ["阿", new Set(["a1", "e1"])],
+    ["吖", new Set(["a1"])],
+    ["锕", new Set(["a1"])],
+    ["八", new Set(["ba1"])],
+  ]);
+  const frequency = new Map([
+    ["啊", 5.2],
+    ["阿", 4.8],
+    ["吖", 1.5],
+  ]);
+
+  it("lists the most frequent characters read only as the syllable, in any tone, labelled with a tone 1 to 4", () => {
+    expect(
+      seedCandidates({ syllable: "a", readings, frequency, excluded: new Set(), limit: 2 }),
+    ).toEqual([
+      { word: "啊", reading: "a1" },
+      { word: "吖", reading: "a1" },
+    ]);
+  });
+
+  it("leaves out the characters already recorded", () => {
+    expect(
+      seedCandidates({
+        syllable: "a",
+        readings,
+        frequency,
+        excluded: new Set(["啊", "吖"]),
+        limit: 3,
+      }),
+    ).toEqual([{ word: "锕", reading: "a1" }]);
   });
 });

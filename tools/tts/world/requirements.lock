@@ -1,0 +1,19 @@
+cffi==2.1.1
+    # via soundfile
+cython==3.3.0
+    # via world.in
+numpy==2.2.6
+    # via
+    #   world.in
+    #   pyworld
+    #   soundfile
+pycparser==3.11
+    # via cffi
+pyworld==0.3.5
+    # via world.in
+setuptools==80.10.2
+    # via world.in
+soundfile==0.14.0
+    # via world.in
+typing-extensions==4.16.0
+    # via soundfile
