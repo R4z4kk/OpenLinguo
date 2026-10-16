@@ -1,7 +1,7 @@
 # 0007 — Speech stack
 
 - Status: Accepted
-- Date: 2026-10-09; Mandarin TTS decided 2026-10-13 (bake-off #112); speech-recognition model hosting and model 2026-10-15 (#119)
+- Date: 2026-10-09; Mandarin TTS decided 2026-10-13 (bake-off #112); speech-recognition model hosting and model 2026-10-15 (#119); tone transfer for the pinyin chart 2026-10-16 (#105)
 
 ## Context
 
@@ -14,6 +14,7 @@ Tone training needs reference audio with an analyzable pitch contour. Browser sp
 - Mandarin: **MOSS-TTS v1.5** (OpenMOSS, 8B, Apache-2.0) for every recording: syllables, words and sentences.
   - Isolated words are sent with a final 。: without it MOSS-TTS often does not stop (its maintainers' advice for end-of-utterance problems, OpenMOSS/MOSS-TTS#19). Its server caps the length at about 2 s per syllable.
   - It clones `tools/tts/voices/designed-zh-female.wav`, a synthetic voice made by MOSS-VoiceGenerator (Apache-2.0) from a text description: the third of three candidates, as the first spoke too fast for learners and the second too slow. No real person's voice is reproduced, so we read the audio as no deep fake in the sense of the AI Act (art. 3(60): content that "resembles existing persons"; art. 50(4) unchanged by Regulation (EU) 2026/1744). Generated audio is still labelled « synthetic voice » in the app (#113).
+  - A pinyin chart syllable missing in one tone is a recording of the same syllable in another tone, its pitch replaced by the WORLD vocoder (« Tone transfer », below, #105).
 - TTS engines run as Docker containers called over HTTP by the TypeScript pipeline (`tools/tts`, `tools/data-pipeline/src/tts`), with pinned commits, model revisions, dependency locks and seeds. They run on the maintainer's Radeon RX 7900 XTX through WSL2: AMD's ROCm 6.4.2 WSL runtime with PyTorch ROCm wheels, tested with the Adrenalin 24.12 driver (AMD certifies WSL only with its "for WSL2" drivers).
 - Pitch: one F0 implementation (`pitchy`, MIT) shared by the pipeline and the browser; semitones normalized to the speaker's mean, time-normalized comparison. Raw pitchy contours make octave errors on TTS audio, corrected in #114, and lose weak fundamentals: pitchy reads a low-passed copy (#114, v2).
 - STT: **Paraformer-small on sherpa-onnx WebAssembly** in a Web Worker, downloaded on the learner's request (#119, « Faster speech recognition » and « Paraformer in the app », below). It replaced Whisper base via transformers.js on 2026-10-15, too slow on phones. opencc-js still converts traditional output to simplified.
@@ -94,6 +95,36 @@ A syllable is doubted when both point to another tone; it is redone with seeds u
 - Of the 412 generated, 291 pass with 5 seeds; rare characters fail most, the recognizer hearing another syllable. The other 121 ship without audio (118 `unverified`, 3 rejected by ear in #113). The band holds 1,073 pairs (83 %), 4.4 MB.
 - An initial said alone plays in tone 1 when it is recorded, else in the first tone recorded (fo1, te1, ne1, le1 and ri1 do not exist); f has none, as 佛 also reads fu2.
 - The `syllables` band is part of the audio release and downloaded on request from the chart page. Release `audio-zh-3` rebuilt every band without new recordings: `audio-zh-2` held contours of the previous `F0_VERSION` and an index has one contour version.
+
+### Tone transfer (2026-10-16)
+
+The 219 pairs left without audio are filled from the same voice, with no one listening (maintainer's choice: no human recording or review).
+
+- Why the recognizer cannot settle them: they are pairs with rare characters only, and a recognizer writes frequent characters. Paraformer-small (#119) heard the right syllable in the right tone in 8.1 % of the recordings re-pitched to these pairs (below), as often as in a recording judged against a tone it does not have (8.0 %); 65.4 % for the shipped recordings. A good share of the 118 `unverified` are likely misses of the recognizer, not wrong recordings.
+- Method: a pair missing in one tone takes a recording of its syllable in another tone. The WORLD vocoder (`tools/tts/world`, pyworld 0.3.5, CPU) keeps its consonant and vowel, stretches its voiced part to the missing tone's length (the tone's median, scaled as the source is to its own tone) and replaces its F0 by the voice's mean contour for that tone (20 points over the voiced part, averaged over the band's recordings). What comes before the voiced part (an unvoiced initial) and after it is kept.
+- Sources, in this order: recordings that ship; recordings whose tone was doubted, whose syllable was heard right; seeds. Then by source tone: 3, 2, 1, 4 (measured, below). A voiced part under half or over twice its tone's median length is mis-measured or runs on, and is not a source.
+- Seeds: a syllable heard in no tone gets up to 3 characters CC-CEDICT reads only as that syllable, whatever the tone (啊 for a), each with seeds 1 to 5. They are checked for the syllable only, never ship as they are and do not train the tone model.
+- Checks, both automatic:
+  - Round trip: the source re-synthesized in its own tone and length must still be heard as its syllable by Qwen3-ASR (the vocoder kept its consonant and vowel). This is the syllable check the source passed, on the processed audio.
+  - Pitch: the transfer's contour, measured by the app's code (`contour()`), must be at most as far from the tone's mean contour (RMS of the shape, in semitones) as 90 % of the voice's own recordings of that tone are (1.7, 2.2, 3.6 and 3.4 semitones for tones 1 to 4 on `audio-zh-3`). It catches pitch-tracking failures, not tone errors: the pitch is given. On the shipped recordings it rejected 8 of 348 transfers.
+  - The tone classifier (#115) is not a check: it recognizes 54 % of this voice's own tone 3 recordings.
+- Measured on the 1,073 shipped chart recordings, each re-pitched to its syllable's three other tones (3,219 files), Paraformer-small standing in for Qwen3-ASR:
+
+| Audio | Syllable heard | Syllable and tone heard |
+|---|---|---|
+| Shipped recordings | 76.2 % | 65.4 % |
+| WORLD analysis and synthesis, F0 unchanged | 72.4 % | 61.0 % |
+| Own tone, mean contour (the round trip) | 67.1 % | 56.4 % |
+| Another tone the syllable has a recording of | 58.6 % | 45.6 % |
+| A missing pair | 37.3 % | 8.1 % |
+
+- The tone model of this voice (the #115 features, one syllable left out) recognizes the target tone in 82.8 % of the re-pitched files (tones 1 to 4: 97.8, 80.6, 58.8, 92.5 %), 74.5 % for the shipped recordings (93.0, 78.9, 54.4, 71.1 %).
+- By source tone, syllable heard: 3: 64.6 %, 2: 63.9 %, 1: 56.2 %, 4: 51.0 %.
+- The real contour of a recording of the target tone with the same final, instead of the mean contour, kept the syllable less often (64.3 % against 67.1 %).
+- Expected yield: 189 of the 219 have their syllable shipped in another tone. With Paraformer-small as the round-trip check, stricter than Qwen3-ASR (it hears 76 % of the recordings Qwen3-ASR passed), 139 pass both checks, before the doubted-tone sources and the seeds. Seeds exist for 5 syllables (a, cen, den, bin, nou; 10 pairs). Fourteen pairs have only characters with several readings (ei, gei, lia, dei, zhei, sei, tei, kei, chua, rua): a recognizer that writes characters cannot tell which reading was said, so they stay without audio (`no-source`). zhuai, dia, fo and eng (6 pairs) have one such character each, already tried with every seed: they get audio only if its recording was heard as its syllable.
+- Marking: a transfer's ID3 comment says its tone was changed by the WORLD vocoder, its entry in the part's index names its `source` (character and reading), and `packs.json` names the vocoder. Its `word` is the pinyin with its tone mark (fā): no character was said that way.
+- Gaps: a pair still without audio is `no-source` (its syllable is heard in no tone) or `unverified` (no transfer passes the checks).
+- Trade-off: a transfer is a little less natural than a recording (vocoder, mean contour), and no one listens to it. Release `audio-zh-4` holds the transfers; the word bands are packed again from the same recordings.
 
 ## Pitch contours (#114)
 

@@ -84,9 +84,10 @@ test("plays the chart's syllables in a chosen tone, and each initial said alone"
   await expect(page.getByText("Playing mā, má, mǎ, mà", { exact: true })).toBeVisible();
   await expect(root).toHaveAttribute("data-played", "6");
 
+  // Every character read ei has other readings: no recording of it in any tone, so no tone transfer either.
   await chooseTone("ā 1");
-  await syllable("a").click();
-  await expect(page.getByText("No recording of ā.", { exact: true })).toBeVisible();
+  await syllable("ei").click();
+  await expect(page.getByText("No recording of ēi.", { exact: true })).toBeVisible();
   await expect(root).toHaveAttribute("data-played", "6");
 
   const initials = page.getByRole("table").first();
