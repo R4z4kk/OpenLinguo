@@ -1,12 +1,13 @@
 {
-  "release": "audio-zh-3",
+  "release": "audio-zh-4",
   "license": "CC0-1.0",
   "generator": {
     "tts": "OpenMOSS-Team/MOSS-TTS-v1.5@cdd3b911b1585e3f2dbc7775ef10f9926f58850a",
     "voiceSha256": "c78d7c51cc88c1ded15ff3f381acba9d80a0c8d80beb0cab1cfb0eb5d94f8feb",
     "asr": "Qwen/Qwen3-ASR-1.7B@7278e1e70fe206f11671096ffdd38061171dd6e5",
     "encoder": "ffmpeg version 9.0-full_build-www.gyan.dev, libmp3lame 48k mono, ID3 marked AI-generated",
-    "f0": "pitchy-4.1.0/v2"
+    "f0": "pitchy-4.1.0/v2",
+    "vocoder": "pyworld 0.3.5"
   },
   "words": {
     "hsk-2025-words": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2",
@@ -208,13 +209,13 @@
     {
       "referential": "syllables",
       "level": 1,
-      "entries": 1073,
+      "entries": 1241,
       "validatedByEar": 13,
       "parts": [
         {
           "file": "audio-zh-syllables-1-1.zip",
-          "bytes": 4425377,
-          "sha256": "ddf6b97262318e9b5091ee962f5a83da9cce6df026e74032761f558e654dd548"
+          "bytes": 5125305,
+          "sha256": "1e310ed529db3823a49e8625425a4d55180987372043ccea62107b2623680611"
         }
       ]
     }

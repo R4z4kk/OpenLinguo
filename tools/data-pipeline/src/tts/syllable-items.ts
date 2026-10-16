@@ -3,6 +3,7 @@ import { err, ok, type InvalidReading, type Result } from "@openlinguo/core";
 import { FINALS, INITIALS, readingKey, spell } from "@openlinguo/lang-zh";
 import { dataDir } from "../manifest.ts";
 import type { Gap, PackItem } from "./pack-words.ts";
+import { syllableOf, toneOf } from "./tone-transfer.ts";
 
 type CedictRow = readonly [simplified: string, traditional: string, reading: string];
 
@@ -93,6 +94,35 @@ export const syllableItems = ({
   }
   return { items, gaps };
 };
+
+/**
+ * Characters to record for a syllable heard in no tone, only as a source for the tone transfer (tone-transfer.ts):
+ * the most frequent ones CC-CEDICT reads as that syllable only, whatever the tone (啊 reads a1 to a5). The tone said
+ * does not matter since the transfer replaces it; each is labelled with one of its readings in tones 1 to 4.
+ */
+export const seedCandidates = ({
+  syllable,
+  readings,
+  frequency,
+  excluded,
+  limit,
+}: {
+  readonly syllable: string;
+  readonly readings: ReadonlyMap<string, ReadonlySet<string>>;
+  readonly frequency: ReadonlyMap<string, number>;
+  /** Characters already recorded for this syllable. */
+  readonly excluded: ReadonlySet<string>;
+  readonly limit: number;
+}): PackItem[] =>
+  [...readings]
+    .flatMap(([char, keys]) => {
+      const sorted = [...keys].sort();
+      const reading = sorted.find((key) => toneOf(key) !== null) ?? null;
+      const only = sorted.every((key) => syllableOf(key) === syllable);
+      return only && reading !== null && !excluded.has(char) ? [{ word: char, reading }] : [];
+    })
+    .sort((a, b) => byFrequency(frequency)(a.word, b.word))
+    .slice(0, limit);
 
 const readShards = async <T>(dataset: string, prefix: string): Promise<T[]> => {
   const dir = new URL(`${dataset}/`, dataDir);

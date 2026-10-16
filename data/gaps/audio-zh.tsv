@@ -1309,222 +1309,54 @@ hsk-2025	7	闷	men4	several-readings
 hsk-2025	7	驮	tuo2	several-readings
 hsk-2025	7	鲸	jing1	rejected
 hsk-2025	7	龟	gui1	several-readings
-syllables	1		a2	no-character
-syllables	1		a3	no-character
-syllables	1		a4	no-character
-syllables	1		beng2	no-character
-syllables	1		bie3	no-character
-syllables	1		bie4	no-character
-syllables	1		ceng1	no-character
-syllables	1		cheng4	no-character
-syllables	1		chua1	no-character
-syllables	1		chuai3	no-character
-syllables	1		cu3	no-character
-syllables	1		cuan2	no-character
-syllables	1		da3	no-character
-syllables	1		de1	no-character
-syllables	1		de4	no-character
-syllables	1		dei3	no-character
-syllables	1		e3	no-character
-syllables	1		ei1	no-character
-syllables	1		ei2	no-character
-syllables	1		ei3	no-character
-syllables	1		ei4	no-character
-syllables	1		gang2	no-character
-syllables	1		gei1	no-character
-syllables	1		gei3	no-character
-syllables	1		gen2	no-character
-syllables	1		gen3	no-character
-syllables	1		geng4	no-character
-syllables	1		guo4	no-character
-syllables	1		ha2	no-character
-syllables	1		ha3	no-character
-syllables	1		ha4	no-character
-syllables	1		hang1	no-character
-syllables	1		hong3	no-character
-syllables	1		jiao2	no-character
-syllables	1		jue3	no-character
-syllables	1		jue4	no-character
-syllables	1		kang2	no-character
-syllables	1		ke2	no-character
-syllables	1		la3	no-character
-syllables	1		lei1	no-character
-syllables	1		leng1	no-character
-syllables	1		li1	no-character
-syllables	1		lia3	no-character
-syllables	1		lie1	no-character
-syllables	1		lie3	no-character
-syllables	1		long1	no-character
-syllables	1		lun1	no-character
-syllables	1		lun4	no-character
-syllables	1		luo1	no-character
-syllables	1		mao1	no-character
-syllables	1		men1	no-character
-syllables	1		meng1	no-character
-syllables	1		mo1	no-character
-syllables	1		na1	no-character
-syllables	1		nan4	no-character
-syllables	1		nang2	no-character
-syllables	1		ne2	no-character
-syllables	1		ning3	no-character
-syllables	1		niu4	no-character
-syllables	1		o2	no-character
-syllables	1		o3	no-character
-syllables	1		o4	no-character
-syllables	1		ou2	no-character
-syllables	1		pai3	no-character
-syllables	1		pang4	no-character
-syllables	1		pao3	no-character
-syllables	1		pen4	no-character
-syllables	1		pu4	no-character
-syllables	1		qia3	no-character
-syllables	1		qie1	no-character
-syllables	1		rang1	no-character
-syllables	1		rua2	no-character
-syllables	1		san4	no-character
-syllables	1		sang4	no-character
-syllables	1		sei2	no-character
-syllables	1		shai3	no-character
-syllables	1		shao3	no-character
-syllables	1		she3	no-character
-syllables	1		shou2	no-character
-syllables	1		shua4	no-character
-syllables	1		shui2	no-character
-syllables	1		shuo1	no-character
-syllables	1		tai3	no-character
-syllables	1		tei1	no-character
-syllables	1		tun4	no-character
-syllables	1		wai3	no-character
-syllables	1		xie3	no-character
-syllables	1		xin2	no-character
-syllables	1		yue3	no-character
-syllables	1		za3	no-character
-syllables	1		zan2	no-character
-syllables	1		zhao2	no-character
-syllables	1		zhei4	no-character
-syllables	1		zhua3	no-character
-syllables	1		zhuai1	no-character
-syllables	1		zhuai4	no-character
-syllables	1		zhuang3	no-character
-syllables	1		zuo1	no-character
+syllables	1		chua1	no-source
+syllables	1		dei3	no-source
+syllables	1		ei1	no-source
+syllables	1		ei2	no-source
+syllables	1		ei3	no-source
+syllables	1		ei4	no-source
+syllables	1		gei1	no-source
+syllables	1		gei3	no-source
+syllables	1		ha2	unverified
+syllables	1		ha3	unverified
+syllables	1		ha4	unverified
+syllables	1		hang1	unverified
+syllables	1		lia3	no-source
+syllables	1		lie1	unverified
+syllables	1		nang2	unverified
+syllables	1		ning3	unverified
+syllables	1		ou2	unverified
+syllables	1		pang4	unverified
+syllables	1		pen4	unverified
+syllables	1		rua2	no-source
+syllables	1		sei2	no-source
+syllables	1		tei1	no-source
+syllables	1		zhei4	no-source
+syllables	1		zhuai1	no-source
+syllables	1		zhuai4	no-source
 syllables	1	㕻	pou3	unverified
-syllables	1	㖞	wai1	unverified
-syllables	1	㛂	nuo3	unverified
-syllables	1	㟥	cen1	unverified
-syllables	1	㨃	dui3	unverified
-syllables	1	㩐	den4	unverified
-syllables	1	㿠	huang4	unverified
-syllables	1	䁖	lou1	unverified
-syllables	1	乒	ping1	unverified
+syllables	1	㟥	cen1	no-source
+syllables	1	㩐	den4	no-source
 syllables	1	乪	nang1	unverified
-syllables	1	乸	na3	unverified
-syllables	1	亘	gen4	unverified
-syllables	1	仄	ze4	unverified
-syllables	1	仨	sa1	unverified
-syllables	1	佢	qu2	unverified
 syllables	1	冂	jiong1	unverified
-syllables	1	剋	kei1	unverified
-syllables	1	匴	suan3	unverified
-syllables	1	厜	zui1	unverified
-syllables	1	吖	a1	unverified
-syllables	1	吮	shun3	unverified
+syllables	1	剋	kei1	no-source
 syllables	1	呠	pen1	unverified
-syllables	1	哞	mou1	unverified
-syllables	1	啽	an2	unverified
 syllables	1	嗙	pang3	unverified
-syllables	1	嗲	dia3	unverified
-syllables	1	嗽	sou4	unverified
-syllables	1	嘅	ge3	unverified
-syllables	1	坲	fo2	unverified
-syllables	1	堧	ruan2	unverified
-syllables	1	堼	heng4	unverified
-syllables	1	夼	kuang3	unverified
-syllables	1	嫑	biao2	unverified
+syllables	1	嗲	dia3	no-source
+syllables	1	坲	fo2	no-source
 syllables	1	嬲	niao3	unverified
-syllables	1	孨	zhuan3	unverified
 syllables	1	宾	bin1	unverified
-syllables	1	岑	cen2	unverified
-syllables	1	崚	leng2	unverified
-syllables	1	忾	kai4	unverified
+syllables	1	岑	cen2	no-source
 syllables	1	怄	ou4	unverified
-syllables	1	拤	qia2	unverified
-syllables	1	挊	nong4	unverified
-syllables	1	捘	zun4	unverified
-syllables	1	捼	ruo2	unverified
-syllables	1	搋	chuai1	unverified
-syllables	1	撅	jue1	unverified
-syllables	1	撙	zun3	unverified
-syllables	1	擘	bo4	unverified
-syllables	1	昝	zan3	unverified
-syllables	1	昤	ling1	unverified
-syllables	1	朽	xiu3	unverified
 syllables	1	欧	ou1	unverified
-syllables	1	殂	cu2	unverified
-syllables	1	殠	chou4	unverified
 syllables	1	殡	bin4	unverified
-syllables	1	毪	mu2	unverified
-syllables	1	氽	tun3	unverified
-syllables	1	汏	da4	unverified
 syllables	1	沆	hang4	unverified
-syllables	1	沷	fa1	unverified
-syllables	1	湳	nan3	unverified
-syllables	1	滃	weng3	unverified
-syllables	1	熘	liu1	unverified
-syllables	1	熥	teng1	unverified
 syllables	1	爊	ao1	unverified
-syllables	1	牤	mang1	unverified
-syllables	1	犉	run2	unverified
-syllables	1	璀	cui3	unverified
-syllables	1	瓮	weng4	unverified
-syllables	1	痖	ya3	unverified
-syllables	1	癿	qie2	unverified
-syllables	1	盎	ang4	unverified
-syllables	1	礤	ca3	unverified
-syllables	1	礮	pao4	unverified
-syllables	1	簪	zan1	unverified
-syllables	1	糗	qiu3	unverified
-syllables	1	紑	fou2	unverified
-syllables	1	纂	zuan3	unverified
-syllables	1	耖	chao4	unverified
-syllables	1	耨	nou4	unverified
-syllables	1	肏	cao4	unverified
-syllables	1	膗	chuai2	unverified
-syllables	1	臀	tun2	rejected
-syllables	1	臇	juan3	unverified
-syllables	1	艹	cao3	unverified
-syllables	1	芿	reng4	unverified
-syllables	1	苤	pie3	unverified
+syllables	1	耨	nou4	no-source
 syllables	1	苶	nie2	unverified
-syllables	1	薮	sou3	unverified
-syllables	1	袍	pao2	unverified
-syllables	1	裉	ken4	unverified
 syllables	1	裒	pou2	unverified
-syllables	1	谆	zhun1	unverified
-syllables	1	谋	mou2	unverified
-syllables	1	谮	zen4	unverified
-syllables	1	赟	yun1	unverified
-syllables	1	跩	zhuai3	unverified
-syllables	1	踢	ti1	rejected
-syllables	1	躰	ti3	unverified
-syllables	1	透	tou4	rejected
-syllables	1	逺	yuan3	unverified
-syllables	1	醭	bu2	unverified
+syllables	1	跩	zhuai3	no-source
 syllables	1	鉲	ka3	unverified
-syllables	1	銎	qiong1	unverified
-syllables	1	鑶	cang2	unverified
-syllables	1	钭	tou3	unverified
-syllables	1	锪	huo1	unverified
-syllables	1	雹	bao2	unverified
-syllables	1	鞥	eng1	unverified
-syllables	1	馈	kui4	unverified
-syllables	1	驵	zang3	unverified
-syllables	1	骈	pian2	unverified
-syllables	1	髓	sui3	unverified
+syllables	1	鞥	eng1	no-source
 syllables	1	鳃	sai1	unverified
-syllables	1	鹨	liu4	unverified
-syllables	1	麿	mo3	unverified
-syllables	1	齁	hou1	unverified
 syllables	1	齉	nang4	unverified
-syllables	1	龡	chui4	unverified
-syllables	1	鿍	gang4	unverified
-syllables	1	𪨊	song2	unverified

@@ -45,6 +45,12 @@ services:
       MODEL_REVISION: 7278e1e70fe206f11671096ffdd38061171dd6e5
     ports: ["127.0.0.1:8121:8000"]
 
+  # Vocoder giving a recorded syllable another tone (#105, ADR 0007); CPU only
+  world:
+    build: { context: ./world, dockerfile: Dockerfile }
+    image: openlinguo-vocoder-world
+    ports: ["127.0.0.1:8131:8000"]
+
 volumes:
   models:
   hf-cache:

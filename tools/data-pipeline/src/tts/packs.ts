@@ -4,7 +4,8 @@ import { access, mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
 import { parseArgs, promisify } from "node:util";
-import { contour, F0_VERSION, type Result, type ToneClass } from "@openlinguo/core";
+import { contour, F0_VERSION, type Contour, type Result, type ToneClass } from "@openlinguo/core";
+import { toDiacritic } from "@openlinguo/lang-zh";
 import { z } from "zod";
 import { dataDir, manifestPath, readManifest, serializeManifest } from "../manifest.ts";
 import {
@@ -32,9 +33,24 @@ import {
   type Gap,
   type PackItem,
 } from "./pack-words.ts";
-import { loadSyllableSources, syllableItems } from "./syllable-items.ts";
+import { loadSyllableSources, seedCandidates, syllableItems } from "./syllable-items.ts";
 import { decodeWav, encodeWav, trimUtterance } from "./wav.ts";
 import { toneDoubts, type SyllableRecording } from "./tone-doubt.ts";
+import {
+  CONTOUR_POINTS,
+  pitchDistance,
+  pitchLimits,
+  rankSources,
+  syllableOf,
+  toneOf,
+  toneTemplates,
+  transferSeconds,
+  transferSources,
+  usableSource,
+  type Analysis,
+  type Source,
+} from "./tone-transfer.ts";
+import { analyse, transfer, vocoderInfo } from "./vocoder.ts";
 import { storedZip } from "./zip.ts";
 
 const run = promisify(execFile);
@@ -49,7 +65,14 @@ const TONE_CLASS: Readonly<Record<string, ToneClass>> = { "1": 1, "2": 2, "3": 3
 const PART_BYTES = 20 * 1024 * 1024;
 const MP3_BITRATE = "48k";
 /** Bump for every rebuild: release assets are immutable once the app points to them. */
-const RELEASE = "audio-zh-3";
+const RELEASE = "audio-zh-4";
+/** Characters tried in turn for a chart syllable heard in no tone, each with every seed (seedCandidates). */
+const SEED_CHARACTERS = 3;
+/**
+ * A tone transfer whose contour is further from its template than this share of the voice's own recordings of
+ * that tone is not the pitch it was given (tone-transfer.ts pitchLimits).
+ */
+const PITCH_SHARE = 0.9;
 const RELEASE_URL = `https://github.com/R4z4kk/OpenLinguo/releases/tag/${RELEASE}`;
 const SERVICE_TIMEOUT_MS = 20 * 60_000;
 const SAVE_EVERY = 50;
@@ -59,6 +82,7 @@ const workDir = new URL("../../../tts/.packs/", import.meta.url);
 const wavDir = new URL("wav/", workDir);
 const mp3Dir = new URL("mp3/", workDir);
 const outDir = new URL("out/", workDir);
+const transferDir = new URL("transfer/", workDir);
 const statePath = new URL("state.json", workDir);
 const reviewsPath = new URL("reviews.json", workDir);
 const composeFile = fileURLToPath(new URL("../../../tts/compose.yaml", import.meta.url));
@@ -74,11 +98,38 @@ const itemStateSchema = z.strictObject({
   /** An isolated syllable whose tone the transcript and the pitch both doubt (tone-doubt.ts). */
   toneDoubt: z.boolean().default(false),
 });
+const analysisSchema = z
+  .strictObject({
+    seconds: z.number().positive(),
+    contour: z.array(z.number()).length(CONTOUR_POINTS),
+  })
+  .nullable();
 const stateSchema = z.strictObject({
   tts: z.string(),
   voiceSha256: z.string(),
   asr: z.string().nullable(),
   items: z.record(z.string(), itemStateSchema),
+  /** Characters recorded only as tone transfer sources (seedCandidates), never shipped as they are. */
+  seeds: z.array(z.string()).default([]),
+  /** The vocoder of the tone transfer; what follows is redone when it changes. */
+  vocoder: z.string().nullable().default(null),
+  /** WORLD's analysis of a recording by item key: null when nothing in it is voiced. */
+  analyses: z.record(z.string(), analysisSchema).default({}),
+  /** By file in transfer/: a source re-synthesized in its own tone, as its transfers are; is its syllable still heard? */
+  roundTrips: z
+    .record(
+      z.string(),
+      z.strictObject({
+        source: z.string(),
+        transcript: z.string().nullable(),
+        pass: z.boolean().nullable(),
+      }),
+    )
+    .default({}),
+  /** For each missing chart pair (reading key): the source and file chosen, null when no transfer passes the checks. */
+  transfers: z
+    .record(z.string(), z.strictObject({ source: z.string(), file: z.string() }).nullable())
+    .default({}),
 });
 type State = z.infer<typeof stateSchema>;
 const reviewsSchema = z.record(z.string(), z.enum(["ok", "bad"]));
@@ -88,6 +139,17 @@ const sha256 = (bytes: Uint8Array | string): string =>
 
 const fileId = (item: PackItem): string => sha256(itemKey(item)).slice(0, 16);
 const wavPath = (item: PackItem): URL => new URL(`${fileId(item)}.wav`, wavDir);
+const keyItem = (key: string): PackItem => {
+  const [word = "", reading = ""] = key.split("\t");
+  return { word, reading };
+};
+/** A vocoded file is named after all it is made of: a changed template or vocoder gives a new file. */
+const vocodedName = (
+  source: string,
+  contour: readonly number[],
+  seconds: number,
+  vocoder: string,
+): string => `${sha256(JSON.stringify([source, contour, seconds, vocoder])).slice(0, 16)}.wav`;
 
 const exists = async (url: URL): Promise<boolean> => {
   try {
@@ -200,6 +262,11 @@ const loadState = async (): Promise<State> => {
     voiceSha256,
     asr: null,
     items: {},
+    seeds: [],
+    vocoder: null,
+    analyses: {},
+    roundTrips: {},
+    transfers: {},
   });
   if (state.voiceSha256 !== voiceSha256) {
     throw new PacksError(
@@ -242,13 +309,7 @@ const generate = async (items: readonly PackItem[], state: State, seed: number):
   await compose("stop", "moss-tts");
 };
 
-const check = async (
-  items: readonly PackItem[],
-  state: State,
-  chars: CharSyllables,
-): Promise<void> => {
-  const todo = items.filter((item) => state.items[itemKey(item)]?.pass === null);
-  if (todo.length === 0) return;
+const startAsr = async (state: State): Promise<void> => {
   const info = await startService("qwen3-asr", asrInfo);
   const asr = `${info.model}@${info.revision}`;
   if (state.asr !== null && state.asr !== asr) {
@@ -257,6 +318,16 @@ const check = async (
     );
   }
   state.asr = asr;
+};
+
+const check = async (
+  items: readonly PackItem[],
+  state: State,
+  chars: CharSyllables,
+): Promise<void> => {
+  const todo = items.filter((item) => state.items[itemKey(item)]?.pass === null);
+  if (todo.length === 0) return;
+  await startAsr(state);
   for (const [index, item] of todo.entries()) {
     const text = await transcribe(new Uint8Array(await readFile(wavPath(item))));
     if (!text.ok) throw new PacksError(`${item.word}: ${text.error}`);
@@ -291,7 +362,8 @@ const toneCheck = async (
     const tone = TONE_CLASS[/[1-5]$/u.exec(reading)?.[0] ?? ""] ?? null;
     const checked = saved.pass === true || saved.toneDoubt;
     if (reading.includes(" ") || tone === null || saved.transcript === null || !checked) continue;
-    if (key in reviews) continue;
+    // A seed's tone is whatever MOSS-TTS said: it does not train the tone model.
+    if (key in reviews || state.seeds.includes(key)) continue;
     const pcm = decodeWav(new Uint8Array(await readFile(wavPath({ word, reading }))));
     if (!pcm.ok) throw new PacksError(`${word}: ${pcm.error}`);
     const curve = contour(pcm.value.samples, pcm.value.sampleRate, 1);
@@ -317,13 +389,226 @@ const toneCheck = async (
   console.log(`tone check: ${String(inBand)} isolated syllables doubted`);
 };
 
+type BandItems = { readonly items: readonly PackItem[]; readonly gaps: readonly Gap[] };
+
+const ships = (key: string, state: State, reviews: Readonly<Record<string, "ok" | "bad">>) =>
+  state.items[key]?.pass === true || reviews[key] === "ok";
+
+/** The chart's pairs (reading keys) without a recording that ships: failing every check, rejected, or without a character. */
+const missingPairs = (
+  chart: BandItems,
+  state: State,
+  reviews: Readonly<Record<string, "ok" | "bad">>,
+): string[] => [
+  ...new Set([
+    ...chart.items
+      .filter((item) => !ships(itemKey(item), state, reviews))
+      .map(({ reading }) => reading),
+    ...chart.gaps.map(({ reading }) => reading),
+  ]),
+];
+
+const sourcesOf = (
+  state: State,
+  reviews: Readonly<Record<string, "ok" | "bad">>,
+  chars: CharSyllables,
+): Map<string, Source[]> =>
+  transferSources({
+    recordings: Object.entries(state.items),
+    seeds: new Set(state.seeds),
+    reviews,
+    heard: (reading, transcript) => transcriptMatches(chars, reading, transcript),
+  });
+
+/**
+ * Records seeds for the missing pairs whose syllable is heard in no tone: up to SEED_CHARACTERS characters in turn,
+ * each with every seed, checked like the other recordings but for the syllable only (seedCandidates).
+ */
+const recordSeeds = async (
+  missing: readonly string[],
+  state: State,
+  reviews: Readonly<Record<string, "ok" | "bad">>,
+  chars: CharSyllables,
+): Promise<void> => {
+  const sources = await loadSyllableSources();
+  if (!sources.ok) throw new PacksError(`pinyin chart: ${sources.error.reading} is invalid`);
+  const { readings, frequency } = sources.value;
+  for (let rank = 0; rank < SEED_CHARACTERS; rank++) {
+    const heard = sourcesOf(state, reviews, chars);
+    const silent = [...new Set(missing.map(syllableOf))].filter((syllable) => !heard.has(syllable));
+    const items = silent.flatMap((syllable) => {
+      const recorded = new Set(
+        Object.keys(state.items)
+          .filter(
+            (key) => !state.seeds.includes(key) && syllableOf(keyItem(key).reading) === syllable,
+          )
+          .map((key) => keyItem(key).word),
+      );
+      const candidates = seedCandidates({
+        syllable,
+        readings,
+        frequency,
+        excluded: recorded,
+        limit: SEED_CHARACTERS,
+      });
+      return candidates.slice(rank, rank + 1);
+    });
+    if (items.length === 0) return;
+    state.seeds = [...new Set([...state.seeds, ...items.map(itemKey)])];
+    console.log(`seeds, character ${String(rank + 1)}: ${items.map(({ word }) => word).join(" ")}`);
+    for (const seed of SEEDS) {
+      await generate(items, state, seed);
+      await check(items, state, chars);
+    }
+  }
+};
+
+/** The voice's recordings that ship in the chart band, with their tone: what the templates and limits come from. */
+const chartRecordings = (
+  chart: BandItems,
+  state: State,
+  reviews: Readonly<Record<string, "ok" | "bad">>,
+) =>
+  chart.items.flatMap((item) => {
+    const tone = toneOf(item.reading);
+    return tone !== null && ships(itemKey(item), state, reviews) ? [{ item, tone }] : [];
+  });
+
+const pcmContour = async (wav: URL): Promise<Contour | null> => {
+  const pcm = decodeWav(new Uint8Array(await readFile(wav)));
+  if (!pcm.ok) throw new PacksError(`${wav.pathname}: ${pcm.error}`);
+  const result = contour(pcm.value.samples, pcm.value.sampleRate, 1);
+  return result.ok ? result.value : null;
+};
+
+/**
+ * Gives each missing chart pair a recording of its syllable in another tone with the pitch of its own (ADR 0007,
+ * tone-transfer.ts). A transfer ships when its source, re-synthesized in its own tone, is still heard as its
+ * syllable by the recognizer, and when the app's pitch code finds the contour it was given. No one listens.
+ */
+const transferMissing = async (
+  chart: BandItems,
+  state: State,
+  chars: CharSyllables,
+): Promise<void> => {
+  const reviews = await readParsed(reviewsPath, reviewsSchema, {});
+  const missing = missingPairs(chart, state, reviews);
+  if (missing.length === 0) return;
+  await recordSeeds(missing, state, reviews, chars);
+  const bySyllable = sourcesOf(state, reviews, chars);
+  const candidates = new Map(
+    missing.map((pair) => [pair, rankSources(bySyllable.get(syllableOf(pair)) ?? [])]),
+  );
+  const recordings = chartRecordings(chart, state, reviews);
+
+  const info = await startService("world", vocoderInfo);
+  const vocoder = info.version;
+  if (state.vocoder !== vocoder) {
+    state.vocoder = vocoder;
+    state.analyses = {};
+    state.transfers = {};
+  }
+  await mkdir(transferDir, { recursive: true });
+  const analysed = async (key: string): Promise<Analysis | null> => {
+    if (key in state.analyses) return state.analyses[key] ?? null;
+    const result = await analyse(new Uint8Array(await readFile(wavPath(keyItem(key)))));
+    if (!result.ok) throw new PacksError(`${key}: ${result.error}`);
+    state.analyses[key] =
+      result.value === null ? null : { ...result.value, contour: [...result.value.contour] };
+    return result.value;
+  };
+  const measured = [];
+  for (const { item, tone } of recordings) {
+    const analysis = await analysed(itemKey(item));
+    if (analysis !== null) measured.push({ tone, analysis });
+  }
+  const templates = toneTemplates(measured);
+  if (!templates.ok)
+    throw new PacksError(`tone templates: no recording in tone ${String(templates.error.tone)}`);
+  /** The source with its voiced stretch lasting `seconds` and the pitch of the `target` tone. */
+  const vocode = async (key: string, target: ToneClass, seconds: number): Promise<string> => {
+    const { contour: pitch } = templates.value[target];
+    const name = vocodedName(key, pitch, seconds, vocoder);
+    if (await exists(new URL(name, transferDir))) return name;
+    const wav = new Uint8Array(await readFile(wavPath(keyItem(key))));
+    const result = await transfer(wav, pitch, seconds);
+    if (!result.ok) throw new PacksError(`${key} to tone ${String(target)}: ${result.error}`);
+    await writeAtomic(new URL(name, transferDir), result.value);
+    return name;
+  };
+  // Every source once in its own tone and length (the round trip), then into each missing tone of its syllable.
+  const roundTrips = new Map<string, string>();
+  const transfers = new Map<string, string>();
+  for (const [pair, ranked] of candidates) {
+    const target = toneOf(pair);
+    for (const { key, reading } of ranked) {
+      const analysis = await analysed(key);
+      const tone = toneOf(reading);
+      if (analysis === null || tone === null || target === null) continue;
+      if (!usableSource(analysis, tone, templates.value)) continue;
+      if (!roundTrips.has(key)) {
+        const name = await vocode(key, tone, analysis.seconds);
+        roundTrips.set(key, name);
+        state.roundTrips[name] ??= { source: key, transcript: null, pass: null };
+      }
+      const seconds = transferSeconds(templates.value, tone, analysis.seconds, target);
+      transfers.set(`${pair}\t${key}`, await vocode(key, target, seconds));
+    }
+  }
+  await saveState(state);
+  await compose("stop", "world");
+
+  const unheard = [...roundTrips.values()].filter((name) => state.roundTrips[name]?.pass === null);
+  if (unheard.length > 0) {
+    await startAsr(state);
+    for (const name of unheard) {
+      const text = await transcribe(new Uint8Array(await readFile(new URL(name, transferDir))));
+      const trip = state.roundTrips[name] ?? null;
+      if (!text.ok || trip === null)
+        throw new PacksError(`round trip ${name}: ${text.ok ? "unknown" : text.error}`);
+      state.roundTrips[name] = {
+        ...trip,
+        transcript: text.value,
+        pass: transcriptMatches(chars, keyItem(trip.source).reading, text.value),
+      };
+    }
+    await saveState(state);
+    await compose("stop", "qwen3-asr");
+  }
+
+  const contours = [];
+  for (const { item, tone } of recordings) {
+    const curve = await pcmContour(wavPath(item));
+    if (curve !== null) contours.push({ tone, contour: curve });
+  }
+  const limits = pitchLimits(contours, templates.value, PITCH_SHARE);
+  for (const [pair, ranked] of candidates) {
+    const target = toneOf(pair);
+    state.transfers[pair] = null;
+    for (const { key } of ranked) {
+      const trip = state.roundTrips[roundTrips.get(key) ?? ""] ?? null;
+      const file = transfers.get(`${pair}\t${key}`) ?? null;
+      if (target === null || trip?.pass !== true || file === null) continue;
+      const curve = await pcmContour(new URL(file, transferDir));
+      const distance = curve === null ? null : pitchDistance(curve, templates.value[target]);
+      if (distance !== null && distance <= limits[target]) {
+        state.transfers[pair] = { source: key, file };
+        break;
+      }
+    }
+  }
+  await saveState(state);
+  const transferred = missing.filter((pair) => (state.transfers[pair] ?? null) !== null).length;
+  const sourceless = missing.filter((pair) => (candidates.get(pair) ?? []).length === 0).length;
+  console.log(
+    `tone transfer: ${String(missing.length)} chart pairs missing, ${String(transferred)} transferred, ${String(sourceless)} with no recording of their syllable in any tone`,
+  );
+};
+
 const build = async (bands: readonly Band[]): Promise<void> => {
   const state = await loadState();
-  const items = unique(
-    (await loadBands(bands, state, await readParsed(reviewsPath, reviewsSchema, {}))).flatMap(
-      ({ items: bandOnes }) => bandOnes,
-    ),
-  );
+  const loaded = await loadBands(bands, state, await readParsed(reviewsPath, reviewsSchema, {}));
+  const items = unique(loaded.flatMap(({ items: bandOnes }) => bandOnes));
   const { syllables, tones } = await loadCedictChars();
   await mkdir(workDir, { recursive: true });
   // The checks are code and the transcripts are kept: a changed check applies to them without the GPU.
@@ -342,6 +627,8 @@ const build = async (bands: readonly Band[]): Promise<void> => {
     await check(items, state, syllables);
     await toneCheck(items, state, tones);
   }
+  const chart = loaded.find(({ band }) => band.referential === SYLLABLES) ?? null;
+  if (chart !== null) await transferMissing(chart, state, syllables);
   const reviews = await readParsed(reviewsPath, reviewsSchema, {});
   const failing = items.filter((item) => state.items[itemKey(item)]?.pass === false);
   const doubted = failing.filter((item) => state.items[itemKey(item)]?.toneDoubt === true);
@@ -475,22 +762,28 @@ const ffmpegVersion = async (): Promise<string> => {
  */
 const AI_GENERATED = "http://cv.iptc.org/newscodes/digitalsourcetype/trainedAlgorithmicMedia";
 const SYNTHETIC_NOTE = "Synthetic voice generated by MOSS-TTS v1.5 for OpenLinguo, CC0 1.0";
+const TRANSFER_NOTE =
+  "Synthetic voice generated by MOSS-TTS v1.5 for OpenLinguo, its tone changed by the WORLD vocoder, CC0 1.0";
 
 /** Mono MP3 at 48 kbps (ADR 0007); bit-exact flags keep the encoder's own version out of the file. */
-const ENCODING = [
+const encoding = (note: string): string[] => [
   ...["-ac", "1", "-c:a", "libmp3lame", "-b:a", MP3_BITRATE, "-map_metadata", "-1"],
   ...["-id3v2_version", "3", "-write_id3v1", "0"],
-  ...["-metadata", `digitalSourceType=${AI_GENERATED}`, "-metadata", `comment=${SYNTHETIC_NOTE}`],
+  ...["-metadata", `digitalSourceType=${AI_GENERATED}`, "-metadata", `comment=${note}`],
   ...["-fflags", "+bitexact", "-flags:a", "+bitexact"],
 ];
 
-const encodeMp3 = async (item: PackItem): Promise<Uint8Array> => {
-  const wav = await readFile(wavPath(item));
-  const mp3 = new URL(`${sha256(`${sha256(wav)} ${ENCODING.join(" ")}`).slice(0, 16)}.mp3`, mp3Dir);
+/** A recording in a pack: its WAV, and for a tone transfer the recording it was made from. */
+type PackEntry = { readonly item: PackItem; readonly wav: URL; readonly source: PackItem | null };
+
+const encodeMp3 = async ({ item, wav, source }: PackEntry): Promise<Uint8Array> => {
+  const args = encoding(source === null ? SYNTHETIC_NOTE : TRANSFER_NOTE);
+  const pcm = await readFile(wav);
+  const mp3 = new URL(`${sha256(`${sha256(pcm)} ${args.join(" ")}`).slice(0, 16)}.mp3`, mp3Dir);
   if (!(await exists(mp3))) {
-    const input = ["-v", "error", "-y", "-i", fileURLToPath(wavPath(item))];
+    const input = ["-v", "error", "-y", "-i", fileURLToPath(wav)];
     try {
-      await run("ffmpeg", [...input, ...ENCODING, fileURLToPath(mp3)]);
+      await run("ffmpeg", [...input, ...args, fileURLToPath(mp3)]);
     } catch (error) {
       throw new PacksError(`ffmpeg failed on ${item.word}: ${String(error)}`);
     }
@@ -499,8 +792,8 @@ const encodeMp3 = async (item: PackItem): Promise<Uint8Array> => {
 };
 
 /** The recording's pitch contour (core f0.ts); `null` when nothing in it is voiced. */
-const contourOf = async (item: PackItem): Promise<(number | null)[] | null> => {
-  const pcm = decodeWav(new Uint8Array(await readFile(wavPath(item))));
+const contourOf = async ({ item, wav }: PackEntry): Promise<(number | null)[] | null> => {
+  const pcm = decodeWav(new Uint8Array(await readFile(wav)));
   if (!pcm.ok) throw new PacksError(`${item.word}: ${pcm.error}`);
   const result = contour(pcm.value.samples, pcm.value.sampleRate, syllableCount(item));
   if (result.ok) return [...result.value];
@@ -510,34 +803,36 @@ const contourOf = async (item: PackItem): Promise<(number | null)[] | null> => {
 
 const packBand = async (
   band: Band,
-  entries: readonly PackItem[],
+  entries: readonly PackEntry[],
 ): Promise<{ file: string; bytes: number; sha256: string }[]> => {
-  const parts: { item: PackItem; mp3: Uint8Array }[][] = [[]];
+  const parts: { entry: PackEntry; mp3: Uint8Array }[][] = [[]];
   let size = 0;
-  for (const item of entries) {
-    const mp3 = await encodeMp3(item);
+  for (const entry of entries) {
+    const mp3 = await encodeMp3(entry);
     const current = parts.at(-1) ?? [];
     if (size + mp3.length > PART_BYTES && current.length > 0) {
       parts.push([]);
       size = 0;
     }
-    (parts.at(-1) ?? current).push({ item, mp3 });
+    (parts.at(-1) ?? current).push({ entry, mp3 });
     size += mp3.length;
   }
   const written = [];
   for (const [index, part] of parts.entries()) {
     const files = [];
-    for (const [at, { item, mp3 }] of part.entries()) {
-      files.push({ name: `${String(at)}.mp3`, item, bytes: mp3, f0: await contourOf(item) });
+    for (const [at, { entry, mp3 }] of part.entries()) {
+      files.push({ name: `${String(at)}.mp3`, entry, bytes: mp3, f0: await contourOf(entry) });
     }
     const list = {
       digitalSourceType: AI_GENERATED,
       note: SYNTHETIC_NOTE,
-      files: files.map(({ name, item, f0 }) => ({
+      files: files.map(({ name, entry: { item, source }, f0 }) => ({
         file: name,
         word: item.word,
         reading: item.reading,
         f0,
+        // A tone transfer: this recording of the same syllable with the pitch of another tone (TRANSFER_NOTE).
+        ...(source === null ? {} : { source }),
       })),
     };
     const zip = storedZip([
@@ -550,6 +845,45 @@ const packBand = async (
     written.push({ file, bytes: zip.value.length, sha256: sha256(zip.value) });
   }
   return written;
+};
+
+/**
+ * The chart's tone transfers chosen by `tts-packs build`, and the pairs still without audio: `no-source` when no
+ * recording of the syllable is heard in any tone, `unverified` when no transfer passes the checks.
+ */
+const chartTransfers = (
+  chart: BandItems,
+  state: State,
+  reviews: Readonly<Record<string, "ok" | "bad">>,
+  chars: CharSyllables,
+): { readonly entries: readonly PackEntry[]; readonly gaps: readonly Gap[] } => {
+  const missing = missingPairs(chart, state, reviews);
+  const undecided = missing.filter((pair) => !(pair in state.transfers));
+  if (undecided.length > 0) {
+    throw new PacksError(
+      `syllables: ${String(undecided.length)} pairs without a tone transfer decision (tts-packs build --band ${SYLLABLES})`,
+    );
+  }
+  const heard = sourcesOf(state, reviews, chars);
+  const entries: PackEntry[] = [];
+  const gaps: Gap[] = [];
+  for (const reading of missing) {
+    const chosen = state.transfers[reading] ?? null;
+    const word = toDiacritic(reading);
+    if (!word.ok) throw new PacksError(`syllables: ${reading} is invalid`);
+    if (chosen === null) {
+      const char = chart.items.find((item) => item.reading === reading)?.word ?? "";
+      const reason = heard.has(syllableOf(reading)) ? "unverified" : "no-source";
+      gaps.push({ word: char, reading, reason });
+      continue;
+    }
+    entries.push({
+      item: { word: word.value, reading },
+      wav: new URL(chosen.file, transferDir),
+      source: keyItem(chosen.source),
+    });
+  }
+  return { entries, gaps };
 };
 
 const GAPS_HEADER = "referential\tlevel\tsimplified\treading\treason";
@@ -595,6 +929,7 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     asr: state.asr,
     encoder: `${await ffmpegVersion()}, libmp3lame ${MP3_BITRATE} mono, ID3 marked AI-generated`,
     f0: F0_VERSION,
+    vocoder: state.vocoder,
   };
   const previous = await readParsed(packIndexPath, packIndexSchema.nullable(), null);
   if (
@@ -617,9 +952,7 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
         `${band.referential} ${String(band.level)}: ${String(pending.length)} recordings not built or checked (tts-packs build)`,
       );
     }
-    const kept = items.filter(
-      (item) => state.items[itemKey(item)]?.pass === true || reviews[itemKey(item)] === "ok",
-    );
+    const kept = items.filter((item) => ships(itemKey(item), state, reviews));
     const rejected = items
       .filter((item) => reviews[itemKey(item)] === "bad")
       .map((item): Gap => ({ ...item, reason: "rejected" }));
@@ -627,15 +960,23 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     const unverified = items
       .filter((item) => state.items[itemKey(item)]?.pass === false && !(itemKey(item) in reviews))
       .map((item): Gap => ({ ...item, reason: "unverified" }));
-    const parts = await packBand(band, kept);
+    const chart =
+      band.referential === SYLLABLES
+        ? chartTransfers({ items, gaps }, state, reviews, (await loadCedictChars()).syllables)
+        : null;
+    const entries = [
+      ...kept.map((item): PackEntry => ({ item, wav: wavPath(item), source: null })),
+      ...(chart?.entries ?? []),
+    ];
+    const parts = await packBand(band, entries);
     const validatedByEar = kept.filter((item) => state.items[itemKey(item)]?.pass === false).length;
     packed.push({
       band,
-      gaps: [...gaps, ...rejected, ...unverified],
-      entry: { ...band, entries: kept.length, validatedByEar, parts },
+      gaps: chart?.gaps ?? [...gaps, ...rejected, ...unverified],
+      entry: { ...band, entries: entries.length, validatedByEar, parts },
     });
     console.log(
-      `${band.referential} ${String(band.level)}: ${String(kept.length)} recordings in ${String(parts.length)} part(s)`,
+      `${band.referential} ${String(band.level)}: ${String(entries.length)} recordings in ${String(parts.length)} part(s)${chart === null ? "" : `, ${String(chart.entries.length)} by tone transfer`}`,
     );
   }
   const replaced = new Set(packed.map(({ band }) => `${band.referential}:${String(band.level)}`));
@@ -660,7 +1001,7 @@ const pack = async (bands: readonly Band[]): Promise<void> => {
     [AUDIO_DATASET]: {
       source: RELEASE_URL,
       license: "CC0-1.0",
-      version: `${RELEASE}: ${generator.tts}, voice ${generator.voiceSha256.slice(0, 12)}, checked by ${generator.asr}, ${generator.encoder}, contours ${generator.f0}`,
+      version: `${RELEASE}: ${generator.tts}, voice ${generator.voiceSha256.slice(0, 12)}, checked by ${generator.asr}, ${generator.encoder}, contours ${generator.f0}${generator.vocoder === null ? "" : `, tone transfer by ${generator.vocoder}`}`,
       retrievedAt: new Date().toISOString(),
       maxAgeDays: 365,
       sha256: sha256(indexJson),
