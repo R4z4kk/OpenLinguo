@@ -83,7 +83,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 ## Screen patterns
 
 - **Review**: progress bar, one card, grading buttons À revoir / Difficile / Bien / Facile with next intervals; "Bien" is the single filled button.
-- **Card types**: recognition, recall (French → Chinese), listening, tone choice (four buttons with diacritic, color and tone number), writing with a stroke-order quiz alternative.
+- **Card types**: recognition, recall (French → Chinese), listening, tone choice (four buttons with diacritic, color and tone number), writing (draw the strokes on the 米 grid, or write on paper, reveal the stroke order and self-grade), typing (in-app pinyin IME with a candidate list).
 - **Word page**: pinyin, audio, FR and EN glosses, decomposition as a nested list (word → characters → components), stroke count and stroke order.
 - **Pronunciation studio**: reference (dashed) and user (solid) pitch curves, per-syllable text result, sandhi hint, on-device processing notice, "Je ne peux pas parler maintenant".
 - **Writing studio**: five contexts, AI correction shown as a labeled proposal ("Généré par IA") with inserted characters underlined, accept or keep, optional card creation.
@@ -94,7 +94,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 ## Accessibility rules
 
 - `lang="zh-Hans"` on Chinese text and `lang="zh-Latn-pinyin"` on pinyin.
-- Stroke drawing always has a single-pointer alternative (WCAG 2.5.7).
+- Stroke drawing always has a single-pointer, keyboard-operable alternative (WCAG 2.5.1, 2.5.7).
 - Every microphone exercise offers a non-speech alternative without penalty.
 - No mandatory time limit (WCAG 2.2.1).
 - Curves, trees and heatmaps have a text equivalent.
