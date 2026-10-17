@@ -29,7 +29,7 @@ import type { StrokeData } from "./language-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 
 /** In the stroke data's 1024-unit box, y up. */
-export type Point = readonly [x: number, y: number];
+export type StrokePoint = readonly [x: number, y: number];
 
 /** `backwards` is a miss that would match drawn the other way. */
 export type StrokeMatch = "match" | "backwards" | "miss";
@@ -50,40 +50,41 @@ const average = (values: readonly number[]): number =>
   values.reduce((sum, value) => value + sum, 0) / values.length;
 
 // Points are read by index in the helpers below: destructuring a tuple is several times slower.
-const subtract = (p1: Point, p2: Point): Point => [p1[0] - p2[0], p1[1] - p2[1]];
+const subtract = (p1: StrokePoint, p2: StrokePoint): StrokePoint => [p1[0] - p2[0], p1[1] - p2[1]];
 
-const magnitude = (point: Point): number => Math.sqrt(point[0] ** 2 + point[1] ** 2);
+const magnitude = (point: StrokePoint): number => Math.sqrt(point[0] ** 2 + point[1] ** 2);
 
-const distance = (point1: Point, point2: Point): number => magnitude(subtract(point1, point2));
+const distance = (point1: StrokePoint, point2: StrokePoint): number =>
+  magnitude(subtract(point1, point2));
 
-const equals = (p1: Point, p2: Point): boolean => p1[0] === p2[0] && p1[1] === p2[1];
+const equals = (p1: StrokePoint, p2: StrokePoint): boolean => p1[0] === p2[0] && p1[1] === p2[1];
 
 /** The first and last points, `null` for an empty curve. */
-const ends = (curve: readonly Point[]): readonly [Point, Point] | null => {
+const ends = (curve: readonly StrokePoint[]): readonly [StrokePoint, StrokePoint] | null => {
   const first = curve.at(0) ?? null;
   const last = curve.at(-1) ?? null;
   return first === null || last === null ? null : [first, last];
 };
 
 /** The direction of each segment of the line through the points. */
-const getEdgeVectors = (points: readonly Point[]): readonly Point[] =>
+const getEdgeVectors = (points: readonly StrokePoint[]): readonly StrokePoint[] =>
   points.slice(1).map((point, index) => subtract(point, points[index] ?? point));
 
-const length = (points: readonly Point[]): number =>
+const length = (points: readonly StrokePoint[]): number =>
   getEdgeVectors(points).reduce((sum, vector) => sum + magnitude(vector), 0);
 
-const cosineSimilarity = (point1: Point, point2: Point): number =>
+const cosineSimilarity = (point1: StrokePoint, point2: StrokePoint): number =>
   (point1[0] * point2[0] + point1[1] * point2[1]) / magnitude(point1) / magnitude(point2);
 
 /** On the line through p1 and p2, `dist` beyond p2: p1, p2 and the result lie in that order. */
-const extendPointOnLine = (p1: Point, p2: Point, dist: number): Point => {
+const extendPointOnLine = (p1: StrokePoint, p2: StrokePoint, dist: number): StrokePoint => {
   const vect = subtract(p2, p1);
   const norm = dist / magnitude(vect);
   return [p2[0] + norm * vect[0], p2[1] + norm * vect[1]];
 };
 
 /** Based on http://www.kr.tuwien.ac.at/staff/eiter/et-archive/cdtr9464.pdf */
-const frechetDist = (curve1: readonly Point[], curve2: readonly Point[]): number => {
+const frechetDist = (curve1: readonly StrokePoint[], curve2: readonly StrokePoint[]): number => {
   const [longCurve, shortCurve] =
     curve1.length >= curve2.length ? [curve1, curve2] : [curve2, curve1];
   let prevResultsCol: readonly number[] = [];
@@ -113,8 +114,8 @@ const frechetDist = (curve1: readonly Point[], curve2: readonly Point[]): number
 };
 
 /** Breaks the segments longer than `maxLen` into equal ones. */
-const subdivideCurve = (curve: readonly Point[], maxLen = 0.05): readonly Point[] => {
-  const newCurve: Point[] = [];
+const subdivideCurve = (curve: readonly StrokePoint[], maxLen = 0.05): readonly StrokePoint[] => {
+  const newCurve: StrokePoint[] = [];
   for (const point of curve) {
     const prevPoint = newCurve.at(-1) ?? null;
     const segLen = prevPoint === null ? 0 : distance(point, prevPoint);
@@ -132,12 +133,12 @@ const subdivideCurve = (curve: readonly Point[], maxLen = 0.05): readonly Point[
 };
 
 /** Redraws the curve with `numPoints` points equally spaced along it. */
-const outlineCurve = (curve: readonly Point[], numPoints = 30): readonly Point[] => {
+const outlineCurve = (curve: readonly StrokePoint[], numPoints = 30): readonly StrokePoint[] => {
   const curveEnds = ends(curve);
   if (curveEnds === null) return [];
   const [startPoint, endPoint] = curveEnds;
   const segmentLen = length(curve) / (numPoints - 1);
-  const outlinePoints: Point[] = [startPoint];
+  const outlinePoints: StrokePoint[] = [startPoint];
   const remainingCurvePoints = curve.slice(1);
   let lastPoint = startPoint;
   let next = 0;
@@ -167,9 +168,9 @@ const outlineCurve = (curve: readonly Point[], numPoints = 30): readonly Point[]
 };
 
 /** Translated and scaled as in https://en.wikipedia.org/wiki/Procrustes_analysis */
-const normalizeCurve = (curve: readonly Point[]): readonly Point[] => {
+const normalizeCurve = (curve: readonly StrokePoint[]): readonly StrokePoint[] => {
   const outlinedCurve = outlineCurve(curve);
-  const mean: Point = [
+  const mean: StrokePoint = [
     average(outlinedCurve.map((point) => point[0])),
     average(outlinedCurve.map((point) => point[1])),
   ];
@@ -178,31 +179,34 @@ const normalizeCurve = (curve: readonly Point[]): readonly Point[] => {
   if (translatedEnds === null) return [];
   const scale = Math.sqrt(average(translatedEnds.map((point) => point[0] ** 2 + point[1] ** 2)));
   return subdivideCurve(
-    translatedCurve.map((point): Point => [point[0] / scale, point[1] / scale]),
+    translatedCurve.map((point): StrokePoint => [point[0] / scale, point[1] / scale]),
   );
 };
 
 /** Around the origin. */
-const rotate = (curve: readonly Point[], theta: number): readonly Point[] =>
-  curve.map((point): Point => [
+const rotate = (curve: readonly StrokePoint[], theta: number): readonly StrokePoint[] =>
+  curve.map((point): StrokePoint => [
     Math.cos(theta) * point[0] - Math.sin(theta) * point[1],
     Math.sin(theta) * point[0] + Math.cos(theta) * point[1],
   ]);
 
-const stripDuplicates = (points: readonly Point[]): readonly Point[] =>
+const stripDuplicates = (points: readonly StrokePoint[]): readonly StrokePoint[] =>
   points.filter((point, index) => {
     const previous = points[index - 1] ?? null;
     return previous === null || !equals(point, previous);
   });
 
-const getAverageDistance = (median: readonly Point[], points: readonly Point[]): number =>
+const getAverageDistance = (
+  median: readonly StrokePoint[],
+  points: readonly StrokePoint[],
+): number =>
   average(
     points.map((point) => Math.min(...median.map((strokePoint) => distance(strokePoint, point)))),
   );
 
 const startAndEndMatches = (
-  points: readonly Point[],
-  median: readonly Point[],
+  points: readonly StrokePoint[],
+  median: readonly StrokePoint[],
   leniency: number,
 ): boolean => {
   const drawn = ends(points);
@@ -212,7 +216,10 @@ const startAndEndMatches = (
   return distance(stroke[0], drawn[0]) <= threshold && distance(stroke[1], drawn[1]) <= threshold;
 };
 
-const directionMatches = (points: readonly Point[], median: readonly Point[]): boolean => {
+const directionMatches = (
+  points: readonly StrokePoint[],
+  median: readonly StrokePoint[],
+): boolean => {
   const strokeVectors = getEdgeVectors(median);
   const similarities = getEdgeVectors(points).map((edgeVector) =>
     Math.max(...strokeVectors.map((strokeVector) => cosineSimilarity(strokeVector, edgeVector))),
@@ -221,14 +228,14 @@ const directionMatches = (points: readonly Point[], median: readonly Point[]): b
 };
 
 const lengthMatches = (
-  points: readonly Point[],
-  median: readonly Point[],
+  points: readonly StrokePoint[],
+  median: readonly StrokePoint[],
   leniency: number,
 ): boolean => (leniency * (length(points) + 25)) / (length(median) + 25) >= MIN_LEN_THRESHOLD;
 
 const shapeFit = (
-  curve1: readonly Point[],
-  curve2: readonly Point[],
+  curve1: readonly StrokePoint[],
+  curve2: readonly StrokePoint[],
   leniency: number,
 ): boolean => {
   const normCurve1 = normalizeCurve(curve1);
@@ -246,8 +253,8 @@ type MatchData = {
 };
 
 const getMatchData = (
-  points: readonly Point[],
-  median: readonly Point[],
+  points: readonly StrokePoint[],
+  median: readonly StrokePoint[],
   strokeNum: number,
   leniency: number,
   checkBackwards: boolean,
@@ -277,7 +284,7 @@ const toStrokeMatch = ({ isMatch, isStrokeBackwards }: MatchData): StrokeMatch =
  * better is judged again with less leniency: the learner probably drew that one.
  */
 export const strokeMatches = (
-  drawn: readonly Point[],
+  drawn: readonly StrokePoint[],
   character: StrokeData,
   strokeNum: number,
   leniency = STROKE_LENIENCY,

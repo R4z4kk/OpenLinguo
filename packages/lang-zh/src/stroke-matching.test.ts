@@ -1,4 +1,9 @@
-import { STROKE_LENIENCY, strokeMatches, type Point, type StrokeData } from "@openlinguo/core";
+import {
+  STROKE_LENIENCY,
+  strokeMatches,
+  type StrokeData,
+  type StrokePoint,
+} from "@openlinguo/core";
 import { beforeAll, describe, expect, it } from "vitest";
 import { loadStrokes } from "./testing/dataset-shards.ts";
 
@@ -22,13 +27,13 @@ const random = (seed: number) => {
  */
 const noisy = (
   next: () => number,
-  median: readonly Point[],
+  median: readonly StrokePoint[],
   sigma: number,
   shift: number,
-): readonly Point[] => {
+): readonly StrokePoint[] => {
   const gauss = () => Math.sqrt(-2 * Math.log(1 - next())) * Math.cos(2 * Math.PI * next());
   const theta = 2 * Math.PI * next();
-  const resampled = median.flatMap((point, index): Point[] => {
+  const resampled = median.flatMap((point, index): StrokePoint[] => {
     const after = median[index + 1] ?? null;
     if (after === null) return [point];
     return [0, 1, 2, 3, 4, 5].map((step) => [

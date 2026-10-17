@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import type { StrokeData } from "./language-pack.ts";
-import type { Point } from "./stroke-matcher.ts";
+import type { StrokePoint } from "./stroke-matcher.ts";
 import {
   drawStroke,
   gradeWriting,
@@ -10,15 +10,15 @@ import {
   type WritingQuiz,
 } from "./writing-quiz.ts";
 
-const HORIZONTAL: readonly Point[] = [
+const HORIZONTAL: readonly StrokePoint[] = [
   [150, 450],
   [850, 450],
 ];
-const VERTICAL: readonly Point[] = [
+const VERTICAL: readonly StrokePoint[] = [
   [500, 800],
   [500, 50],
 ];
-const OFF: readonly Point[] = [
+const OFF: readonly StrokePoint[] = [
   [50, 50],
   [60, 950],
 ];
@@ -34,7 +34,7 @@ const start = (...characters: StrokeData[]): WritingQuiz => {
 };
 
 /** Draws the strokes in turn, each judged on the quiz the last one left. */
-const draw = (quiz: WritingQuiz, ...strokes: (readonly Point[])[]): WritingQuiz =>
+const draw = (quiz: WritingQuiz, ...strokes: (readonly StrokePoint[])[]): WritingQuiz =>
   strokes.reduce((current, drawn) => {
     if (current.finished) throw new Error("finished");
     const step = drawStroke(current, drawn);
@@ -88,7 +88,7 @@ describe("writing quiz", () => {
         [500, 500],
         [500, 500],
       ],
-    ] satisfies Point[][]) {
+    ] satisfies StrokePoint[][]) {
       expect(drawStroke(quiz, tap)).toEqual({ ok: true, value: { quiz, match: null } });
     }
   });

@@ -1,17 +1,17 @@
 import { describe, expect, test } from "vitest";
 import type { StrokeData } from "./language-pack.ts";
-import { strokeMatches, type Point } from "./stroke-matcher.ts";
+import { strokeMatches, type StrokePoint } from "./stroke-matcher.ts";
 
-const character = (...medians: (readonly Point[])[]): StrokeData => ({
+const character = (...medians: (readonly StrokePoint[])[]): StrokeData => ({
   strokes: medians.map(() => ""),
   medians,
 });
 
-const shift = (points: readonly Point[], dx: number, dy: number): readonly Point[] =>
+const shift = (points: readonly StrokePoint[], dx: number, dy: number): readonly StrokePoint[] =>
   points.map(([x, y]) => [x + dx, y + dy]);
 
 // 三 drawn as three horizontal strokes, top to bottom, and a vertical one.
-const TOP: readonly Point[] = [
+const TOP: readonly StrokePoint[] = [
   [200, 700],
   [500, 710],
   [800, 700],
@@ -32,7 +32,7 @@ describe("strokeMatches", () => {
   });
 
   test("a stroke elsewhere or of another shape misses", () => {
-    const vertical: readonly Point[] = [
+    const vertical: readonly StrokePoint[] = [
       [500, 900],
       [500, 100],
     ];

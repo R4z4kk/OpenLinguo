@@ -105,9 +105,9 @@ export {
 export {
   STROKE_LENIENCY,
   strokeMatches,
-  type Point,
   type StrokeMatch,
   type StrokeMatchError,
+  type StrokePoint,
 } from "./stroke-matcher.ts";
 export { gradeTones, type ToneAnswerError, type ToneGrading } from "./tone-answer.ts";
 export {

@@ -1,7 +1,7 @@
 import type { StrokeData } from "./language-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 import type { Grade } from "./srs.ts";
-import { strokeMatches, type Point, type StrokeMatch } from "./stroke-matcher.ts";
+import { strokeMatches, type StrokeMatch, type StrokePoint } from "./stroke-matcher.ts";
 
 /** Misses on a stroke before its outline is shown as a hint (ADR 0011). */
 export const HINT_AFTER_MISSES = 3;
@@ -47,7 +47,7 @@ export const startWritingQuiz = (
 export const showsHint = (quiz: Writing): boolean =>
   (quiz.misses[quiz.character]?.[quiz.stroke] ?? 0) >= HINT_AFTER_MISSES;
 
-const isTap = (drawn: readonly Point[]): boolean => {
+const isTap = (drawn: readonly StrokePoint[]): boolean => {
   const first = drawn.at(0) ?? null;
   return first === null || drawn.every(([x, y]) => x === first[0] && y === first[1]);
 };
@@ -58,7 +58,7 @@ const isTap = (drawn: readonly Point[]): boolean => {
  */
 export const drawStroke = (
   quiz: Writing,
-  drawn: readonly Point[],
+  drawn: readonly StrokePoint[],
 ): Result<WritingStep, WritingQuizError> => {
   const { characters, character, stroke } = quiz;
   const data = characters[character] ?? null;
