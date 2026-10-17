@@ -91,8 +91,9 @@ export const en = {
     writingCount_other: "{{count}} characters",
     showStrokes: "Show the stroke order",
     writingKeys:
-      "Keyboard: “Write on paper” replaces drawing; Space then shows the stroke order, 1 to 4 grade it.",
-    paperKeys: "Keyboard: Space shows the stroke order, 1 to 4 grade it.",
+      "Keyboard: “Write on paper” replaces drawing; Tab then leads to “Show the stroke order”, 1 to 4 grade it.",
+    paperKeys:
+      "Keyboard: Space shows the stroke order, Tab leads to it from the switch; 1 to 4 grade it.",
     continueKeys: "Keyboard: Enter continues.",
     typingTitle: "Typing",
     typingYours: "Your answer:",
