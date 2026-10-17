@@ -94,8 +94,9 @@ export const fr: Messages = {
     writingCount_other: "{{count}} caractères",
     showStrokes: "Voir l’ordre des traits",
     writingKeys:
-      "Clavier\u00a0: «\u00a0Écrire sur papier\u00a0» remplace le tracé\u00a0; Espace affiche alors l’ordre des traits, 1 à 4 le notent.",
-    paperKeys: "Clavier\u00a0: Espace affiche l’ordre des traits, 1 à 4 le notent.",
+      "Clavier\u00a0: «\u00a0Écrire sur papier\u00a0» remplace le tracé\u00a0; Tab mène ensuite à «\u00a0Voir l’ordre des traits\u00a0», 1 à 4 le notent.",
+    paperKeys:
+      "Clavier\u00a0: Espace affiche l’ordre des traits, Tab y mène depuis l’interrupteur\u00a0; 1 à 4 le notent.",
     continueKeys: "Clavier\u00a0: Entrée continue.",
     typingTitle: "Saisie",
     typingYours: "Votre réponse\u00a0:",

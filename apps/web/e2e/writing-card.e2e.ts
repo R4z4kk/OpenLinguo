@@ -120,16 +120,20 @@ test("reviews a writing card on paper with the keyboard only, the choice kept", 
   await expect(main).toContainText(en.review.writingPaper);
   await expect(main).toContainText("1 character");
   await expect(main.getByRole("img", { name: /^Drawing area/u })).toHaveCount(0);
-  await expect(main.getByRole("button", { name: en.review.showStrokes })).toBeVisible();
   await expect(main).toContainText(en.review.paperKeys);
   expect(await accessibilityViolations(page)).toEqual([]);
+  // The switch keeps Space: Tab leads on to the stroke order.
+  await page.keyboard.press("Tab");
+  await expect(main.getByRole("button", { name: en.review.showStrokes })).toBeFocused();
+  await page.keyboard.press("Enter");
+  const strokeOrder = main.getByRole("img", { name: "Stroke order of 人" });
+  await expect(strokeOrder).toBeVisible();
 
   // The choice is a setting: the card opens on paper again.
   await page.reload();
   await expect(focused).toContainText(en.review.writingPaper);
   await expect(paper).toHaveAttribute("aria-checked", "true");
   await page.keyboard.press("Space");
-  const strokeOrder = main.getByRole("img", { name: "Stroke order of 人" });
   await expect(strokeOrder).toBeVisible();
   await expect(main.getByRole("button", { name: /^Good/u })).toBeVisible();
 
