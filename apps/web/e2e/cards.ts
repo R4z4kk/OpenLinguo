@@ -2,10 +2,14 @@ import type { Page } from "@playwright/test";
 
 type SeedCard = { readonly headword: string; readonly readingKey: string };
 
-/** Stores a reading's recognition and recall cards as started, so its tone or writing card comes next. */
-export const startReading = (page: Page, { headword, readingKey }: SeedCard): Promise<void> =>
+/** Stores a reading's cards of these types as started, so another type comes next. */
+export const startCards = (
+  page: Page,
+  { headword, readingKey }: SeedCard,
+  types: readonly string[],
+): Promise<void> =>
   page.evaluate(
-    ({ headword, readingKey }) =>
+    ({ headword, readingKey, types }) =>
       new Promise<void>((resolve, reject) => {
         const open = indexedDB.open("openlinguo");
         open.onerror = () => {
@@ -13,7 +17,7 @@ export const startReading = (page: Page, { headword, readingKey }: SeedCard): Pr
         };
         open.onsuccess = () => {
           const transaction = open.result.transaction("cards", "readwrite");
-          for (const type of ["recognition", "recall"]) {
+          for (const type of types) {
             transaction.objectStore("cards").put({
               id: JSON.stringify(["zh", headword, readingKey, type]),
               language: "zh",
@@ -41,5 +45,9 @@ export const startReading = (page: Page, { headword, readingKey }: SeedCard): Pr
           };
         };
       }),
-    { headword, readingKey },
+    { headword, readingKey, types },
   );
+
+/** Stores a reading's recognition and recall cards as started, so its tone or writing card comes next. */
+export const startReading = (page: Page, card: SeedCard): Promise<void> =>
+  startCards(page, card, ["recognition", "recall"]);

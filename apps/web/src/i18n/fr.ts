@@ -97,6 +97,12 @@ export const fr: Messages = {
       "Clavier\u00a0: «\u00a0Écrire sur papier\u00a0» remplace le tracé\u00a0; Espace affiche alors l’ordre des traits, 1 à 4 le notent.",
     paperKeys: "Clavier\u00a0: Espace affiche l’ordre des traits, 1 à 4 le notent.",
     continueKeys: "Clavier\u00a0: Entrée continue.",
+    typingTitle: "Saisie",
+    typingYours: "Votre réponse\u00a0:",
+    typingAnswer: "Réponse",
+    typingFailed: "La carte de saisie n’a pas pu être affichée\u00a0: {{reason}}",
+    typingKeys:
+      "Clavier\u00a0: tapez le pinyin (v pour ü, 1 à 5 pour le ton)\u00a0; flèches pour choisir, Espace ou Entrée pour valider un candidat\u00a0; Entrée vérifie la réponse.",
   },
   learn: {
     title: "Apprendre",

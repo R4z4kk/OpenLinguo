@@ -94,6 +94,12 @@ export const en = {
       "Keyboard: “Write on paper” replaces drawing; Space then shows the stroke order, 1 to 4 grade it.",
     paperKeys: "Keyboard: Space shows the stroke order, 1 to 4 grade it.",
     continueKeys: "Keyboard: Enter continues.",
+    typingTitle: "Typing",
+    typingYours: "Your answer:",
+    typingAnswer: "Answer",
+    typingFailed: "The typing card could not be shown: {{reason}}",
+    typingKeys:
+      "Keyboard: type the pinyin (v for ü, 1 to 5 for the tone); arrows pick, Space or Enter commits a candidate; Enter checks the answer.",
   },
   learn: {
     title: "Learn",
