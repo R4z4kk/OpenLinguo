@@ -43,6 +43,10 @@ export const loadFrenchEntries = (dataset: string): Promise<readonly CedictRow[]
 export const loadHskWords = (): Promise<readonly HskWordRow[]> =>
   loadRows("hsk-2025-words", "words-");
 
+/** `[simplified word, Zipf frequency]` from wordfreq. */
+export const loadWordFrequencies = (): Promise<readonly (readonly [string, number])[]> =>
+  loadRows("wordfreq-zh", "words-");
+
 export const loadHskCharacters = (): Promise<readonly (readonly [string, number])[]> =>
   loadRows("hsk-2025-chars", "characters-");
 

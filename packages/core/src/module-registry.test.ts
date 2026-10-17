@@ -11,7 +11,14 @@ const pack = (features: Partial<LanguagePack["features"]>): LanguagePack => ({
   proficiency: "hsk-2025",
   tokenize: intlTokenizer("zh-Hans"),
   lookup: inMemoryDictionary([]),
-  features: { tones: null, strokes: null, romanization: null, decomposition: null, ...features },
+  features: {
+    tones: null,
+    strokes: null,
+    romanization: null,
+    decomposition: null,
+    ime: null,
+    ...features,
+  },
 });
 
 const modules = [

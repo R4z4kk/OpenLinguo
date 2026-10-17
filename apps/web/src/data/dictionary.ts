@@ -8,9 +8,10 @@ import {
   type Result,
   type StrokeFeature,
 } from "@openlinguo/core";
-import { createZhPack, type ZhProficiency } from "@openlinguo/lang-zh";
+import { createZhPack, type ImeWordsOf, type ZhProficiency } from "@openlinguo/lang-zh";
 import type { Database, StoredEntry } from "./database.ts";
 import { GLOSS_LANGUAGE, GLOSS_SOURCES } from "./format.ts";
+import { idsFor, loadSearchIndex } from "./search-index.ts";
 
 export const toDictEntry = (entry: StoredEntry, referential: ZhProficiency): DictEntry => ({
   headword: entry.simplified,
@@ -51,7 +52,34 @@ export const createStrokesOf =
     }
   };
 
-/** The zh pack over the imported data: CC-CEDICT lexicon, Make Me a Hanzi decompositions, strokes. */
+/** CC-CEDICT words whose toneless reading is `key`, through the pinyin search index. */
+export const createWordsOfPinyin =
+  (db: Database): ImeWordsOf =>
+  async (key) => {
+    try {
+      const index = await loadSearchIndex(db);
+      const rows = await db.entries.bulkGet([...idsFor(index.pinyin, key, false)]);
+      const entries = rows.filter((row) => row != null);
+      if (entries.length !== rows.length)
+        return err({ kind: "dataset-missing", dataset: "entries" });
+      return ok(
+        entries
+          .filter((entry) => entry.lexicon)
+          .map((entry) => ({
+            headword: entry.simplified,
+            reading: entry.reading,
+            frequency: entry.frequency,
+          })),
+      );
+    } catch (error) {
+      return err({ kind: "storage-failure", message: String(error) });
+    }
+  };
+
+/**
+ * The zh pack over the imported data: CC-CEDICT lexicon, Make Me a Hanzi decompositions, strokes,
+ * and an input method over the pinyin search index.
+ */
 export const loadZhPack = async (
   db: Database,
   referential: ZhProficiency,
@@ -70,6 +98,7 @@ export const loadZhPack = async (
         decompositions: new Map(characters.map((row) => [row.character, row.decomposition])),
         proficiency: referential,
         strokesOf: createStrokesOf(db),
+        wordsOfPinyin: createWordsOfPinyin(db),
       }),
     );
   } catch (error) {
