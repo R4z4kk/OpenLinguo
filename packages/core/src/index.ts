@@ -102,6 +102,13 @@ export {
   type Subject,
   type WordKey,
 } from "./srs.ts";
+export {
+  STROKE_LENIENCY,
+  strokeMatches,
+  type Point,
+  type StrokeMatch,
+  type StrokeMatchError,
+} from "./stroke-matcher.ts";
 export { gradeTones, type ToneAnswerError, type ToneGrading } from "./tone-answer.ts";
 export {
   classifyTone,
@@ -125,3 +132,13 @@ export {
   type ToneRates,
 } from "./tone-evaluation.ts";
 export { parseWith, type ValidationError, type ValidationIssue } from "./validation.ts";
+export {
+  drawStroke,
+  gradeWriting,
+  HINT_AFTER_MISSES,
+  showsHint,
+  startWritingQuiz,
+  type WritingQuiz,
+  type WritingQuizError,
+  type WritingStep,
+} from "./writing-quiz.ts";
