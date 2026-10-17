@@ -1,51 +1,8 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
-
-type SeedCard = { readonly headword: string; readonly readingKey: string };
-
-/** Stores a reading's recognition and recall cards as started, so its tone card comes next. */
-const startReading = (page: Page, { headword, readingKey }: SeedCard): Promise<void> =>
-  page.evaluate(
-    ({ headword, readingKey }) =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open("openlinguo");
-        open.onerror = () => {
-          reject(new Error(String(open.error)));
-        };
-        open.onsuccess = () => {
-          const transaction = open.result.transaction("cards", "readwrite");
-          for (const type of ["recognition", "recall"]) {
-            transaction.objectStore("cards").put({
-              id: JSON.stringify(["zh", headword, readingKey, type]),
-              language: "zh",
-              headword,
-              readingKey,
-              type,
-              phase: "review",
-              due: Date.now() + 5 * 24 * 60 * 60 * 1000,
-              stability: 5,
-              difficulty: 5,
-              reps: 1,
-              lapses: 0,
-              learningSteps: 0,
-              scheduledDays: 5,
-              firstReviewDay: "2026-10-10",
-              lastReviewDay: "2026-10-10",
-            });
-          }
-          transaction.onerror = () => {
-            reject(new Error(String(transaction.error)));
-          };
-          transaction.oncomplete = () => {
-            open.result.close();
-            resolve();
-          };
-        };
-      }),
-    { headword, readingKey },
-  );
+import { startReading } from "./cards.ts";
 
 test("answers a tone card from the keyboard, accepting the tone spoken after sandhi", async ({
   page,
