@@ -59,6 +59,51 @@ const trace = (median: readonly StrokePoint[]): readonly StrokePoint[] =>
     ]);
   });
 
+/**
+ * Hanzi Writer 3.7.3 misjudges these traced strokes (`[character, stroke]`): it measures distance to
+ * the median's points, so the middle of a long segment looks far from the stroke.
+ */
+const MISSED_TRACES = [
+  ["申", 4],
+  ["果", 5],
+  ["麻", 4],
+  ["嘛", 11],
+  ["沸", 7],
+  ["瞅", 7],
+  ["肺", 7],
+] as const;
+const UNFLAGGED_REVERSALS = [
+  ["申", 4],
+  ["果", 5],
+  ["沸", 7],
+  ["肺", 7],
+] as const;
+/** The next stroke, traced instead, passes for this one. */
+const NEXT_ACCEPTED = [
+  ["募", 5],
+  ["夏", 5],
+  ["嫌", 9],
+  ["尊", 7],
+  ["彰", 7],
+  ["惠", 3],
+  ["擅", 9],
+  ["歉", 6],
+  ["瀑", 5],
+  ["矗", 4],
+  ["矗", 5],
+  ["矗", 12],
+  ["矗", 13],
+  ["矗", 21],
+  ["蠢", 7],
+  ["覆", 13],
+  ["赚", 10],
+  ["遵", 7],
+  ["颤", 6],
+  ["颤", 10],
+  ["魔", 14],
+  ["鹰", 9],
+] as const;
+
 const FORMS = [
   ["median", (median: readonly StrokePoint[]) => median],
   ["traced median", trace],
@@ -66,12 +111,14 @@ const FORMS = [
 
 describe("stroke matching on the stroke data", () => {
   const characters = new Map<string, StrokeData>();
+  const NEEDED = new Set<string>([
+    ...SAMPLE,
+    ...[...MISSED_TRACES, ...UNFLAGGED_REVERSALS, ...NEXT_ACCEPTED].map(([character]) => character),
+  ]);
 
   beforeAll(async () => {
     for (const [character, strokes, medians] of await loadStrokes()) {
-      if (SAMPLE.includes(character) || character === "申") {
-        characters.set(character, { strokes, medians });
-      }
+      if (NEEDED.has(character)) characters.set(character, { strokes, medians });
     }
   });
 
@@ -112,13 +159,35 @@ describe("stroke matching on the stroke data", () => {
     expect(judged.filter(({ match }) => !match.ok || match.value === "match")).toEqual([]);
   });
 
-  it("misses a few exact traces, as Hanzi Writer does", () => {
-    // 7 of the 30,052 strokes. Distances go to the median's points; 申's vertical is mostly one segment.
-    const shen = characters.get("申") ?? null;
-    const vertical = shen?.medians[4] ?? null;
-    if (shen === null || vertical === null) throw new Error("no stroke data for 申");
-    expect(strokeMatches(vertical, shen, 4)).toEqual({ ok: true, value: "match" });
-    expect(strokeMatches(trace(vertical), shen, 4)).toEqual({ ok: true, value: "miss" });
+  /** Stroke `drawn` of the character, traced, judged as stroke `index`. */
+  const judgeTrace = (character: string, index: number, drawn: number, reversed: boolean) => {
+    const data = characters.get(character) ?? null;
+    const median = data?.medians[drawn] ?? null;
+    if (data === null || median === null)
+      throw new Error(`no stroke ${String(drawn)} in ${character}`);
+    const traced = reversed ? trace(median).toReversed() : trace(median);
+    const match = strokeMatches(traced, data, index);
+    return `${character}#${String(index)} ${match.ok ? match.value : match.error.kind}`;
+  };
+
+  it("accepts the exact traces Hanzi Writer misses", () => {
+    expect(
+      MISSED_TRACES.map(([character, index]) => judgeTrace(character, index, index, false)),
+    ).toEqual(MISSED_TRACES.map(([character, index]) => `${character}#${String(index)} match`));
+  });
+
+  it("flags the reversed traces Hanzi Writer does not", () => {
+    expect(
+      UNFLAGGED_REVERSALS.map(([character, index]) => judgeTrace(character, index, index, true)),
+    ).toEqual(
+      UNFLAGGED_REVERSALS.map(([character, index]) => `${character}#${String(index)} backwards`),
+    );
+  });
+
+  it("rejects the next strokes Hanzi Writer accepts instead", () => {
+    expect(
+      NEXT_ACCEPTED.map(([character, index]) => judgeTrace(character, index, index + 1, false)),
+    ).toEqual(NEXT_ACCEPTED.map(([character, index]) => `${character}#${String(index)} miss`));
   });
 
   it("accepts most noisy strokes at the chosen leniency", () => {
@@ -127,7 +196,7 @@ describe("stroke matching on the stroke data", () => {
       strokeMatches(noisy(next, median, 15, 28), data, index, STROKE_LENIENCY),
     );
     const accepted = judged.filter((match) => match.ok && match.value === "match").length;
-    // 85.2 % here; the spike's 84.5 % on all 30,052 strokes.
+    // 85.2 % here, 84.9 % on all 30,052 strokes (the spike: 84.5 %).
     expect(accepted / judged.length).toBeGreaterThan(0.8);
   });
 });

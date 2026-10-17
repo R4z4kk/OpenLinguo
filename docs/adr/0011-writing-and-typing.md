@@ -1,7 +1,7 @@
 # 0011 — Writing and typing
 
 - Status: Accepted
-- Date: 2026-10-16
+- Date: 2026-10-16; stroke distance amended 2026-10-17 (#154)
 
 ## Context
 
@@ -22,6 +22,23 @@ M4 adds two card types: writing (draw the strokes of a word) and typing (type a 
 | Median + noise σ 35 units, shifted 72 units | 40.5 % accepted |
 | Median reversed | 100 % rejected and flagged backwards |
 | The next stroke's median instead | 100 % rejected |
+
+### Stroke distance (2026-10-17)
+
+The test above drew each median as its own points. Traced as a pointer draws it, a point every 8 units, Hanzi Writer misjudges a few strokes: it measures each drawn point's distance to the median's closest point, so the middle of a long segment looks far from the stroke. Against distance to the median's closest segment, on all 30,052 strokes at leniency 1, with the same seeded strokes:
+
+| Stroke drawn | Hanzi Writer 3.7.3 | Closest segment |
+|---|---|---|
+| The median, traced | 7 missed: 申, 果, 麻, 嘛, 沸, 瞅, 肺 | 100 % accepted |
+| The median, traced and reversed | 4 not flagged backwards: 申, 果, 沸, 肺 | 100 % flagged backwards |
+| The next stroke's median, traced, instead | 22 accepted: 夏, 尊, 魔, 矗 (5 strokes)… | 100 % rejected |
+| The median as its points: itself, reversed, the next one | as above | as above |
+| Median + noise σ 15 units, shifted 28 units | 84.9 % accepted | 84.9 % accepted |
+| Median + noise σ 35 units, shifted 72 units | 41.1 % accepted | 41.0 % accepted |
+| The stroke just drawn, again | 9.15 % accepted | 9.38 % accepted |
+| Any other stroke of the character | 1.42 % accepted | 1.48 % accepted |
+
+Leniency, with the closest segment: at 0.75, 67.6 % of the σ 15 strokes are accepted; at 1.25, 92.8 %, but other strokes of the character pass nearly twice as often (2.75 %) and the next stroke starts to (0.04 %). Hanzi Writer compares a stroke with the later strokes only, so the stroke just drawn, drawn again, can pass for the current one, as with 三's parallel strokes.
 
 ### Input method
 
@@ -52,7 +69,7 @@ M4 adds two card types: writing (draw the strokes of a word) and typing (type a 
 All choices below are the maintainer's, 2026-10-16.
 
 - **Card types** `writing` and `typing` join `recognition`, `recall` and `tone`. Their subject is a word reading, like the other word cards; notes get neither. A settings pair "Practice: typing / handwriting" turns each on, typing on and handwriting off by default. An enabled card is created like the tone card: once its word is started, from the new-card budget, one card per word per learning day. A word is eligible for writing when every character has stroke data, for typing when the language pack has the `ime` feature. Turning a setting off hides its cards from sessions; the review log is untouched.
-- **Writing quiz: in-house.** Hanzi Writer's matcher is ported to `packages/core` with its MIT notice, credited on the about page. The card shows meaning, pinyin and audio; the learner draws each character's strokes on the word page's 米 grid, without outline. Pointer Events with pointer capture and `touch-action: none`; a stroke is judged on release and dropped on `pointercancel` (SC 2.5.2). After three misses on a stroke its outline is shown as a hint, without motion under reduced motion. Grade: no miss is good, misses without a hint hard, any hint again; never easy, as with the tone card.
+- **Writing quiz: in-house.** Hanzi Writer's matcher is ported to `packages/core` with its MIT notice, credited on the about page. It departs from Hanzi Writer in one place, decided 2026-10-17: a drawn point's distance to a stroke is to the median's closest segment, not its closest point (« Stroke distance », above). Leniency stays at Hanzi Writer's default, 1. The card shows meaning, pinyin and audio; the learner draws each character's strokes on the word page's 米 grid, without outline. Pointer Events with pointer capture and `touch-action: none`; a stroke is judged on release and dropped on `pointercancel` (SC 2.5.2). After three misses on a stroke its outline is shown as a hint, without motion under reduced motion. Grade: no miss is good, misses without a hint hard, any hint again; never easy, as with the tone card.
 - **Single-pointer and keyboard alternative: write on paper, then self-grade.** A switch on the card ("Write on paper") remembers the choice as a setting. Space reveals each character's stroke order (the word page's stepper), keys 1–4 grade, as on a recall card. A stroke-order choice quiz was rejected: its choices show the character's shape, so it tests order, not recall.
 - **Input method: in-house, over our data.** The `ime` capability (ADR 0003) is implemented in `lang-zh`: the input is split into pinyin syllables (every valid split, so `xian` is xian or xi'an; an apostrophe forces a split; `v` is ü), candidates come from CC-CEDICT readings through the dictionary's pinyin index; those covering more of the input come first, then by wordfreq. Committing a candidate consumes its syllables and leaves the rest of the input. A digit 1–5 after a syllable is its tone (5 neutral) and filters the candidates; tones stay optional; candidates are chosen with the arrow keys and Space or Enter, by click or tap. The field follows the ARIA combobox pattern; input composed by the system's own IME passes through. No new dataset or dependency.
 - **Typing card**: meaning and audio shown, the learner types the characters; the headword typed exactly is good, anything else again, then the answer is shown with its pinyin.
@@ -60,7 +77,7 @@ All choices below are the maintainer's, 2026-10-16.
 
 ## Consequences
 
-- No new runtime dependency; the matcher port carries Hanzi Writer's MIT notice.
+- No new runtime dependency; the matcher port carries Hanzi Writer's MIT notice and states its one departure.
 - The card id scheme, backup format and future sync keep their shape; the backup schema accepts the two new types.
 - A character shared by several words is written in each of their writing cards.
 - The IME offers dictionary words only and has no sentence model; a phrase is typed word by word through partial commits.
