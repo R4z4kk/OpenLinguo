@@ -22,6 +22,7 @@ import { GlossSummary } from "@/components/gloss-summary";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
 import { ToneCard } from "@/components/tone-card";
+import { TypingCard } from "@/components/typing-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { WritingCard } from "@/components/writing-card";
@@ -159,8 +160,11 @@ const Runner = ({
   const current = queue[0] ?? null;
   /** A drawn card stays drawn once graded: the switch then applies to the next writing cards. */
   const paper = current?.type === "writing" && paperChecked && landed === null;
-  /** Tone and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
-  const selfGraded = current?.type === "tone" || (current?.type === "writing" && !paper);
+  /** Tone, typing and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
+  const selfGraded =
+    current?.type === "tone" ||
+    current?.type === "typing" ||
+    (current?.type === "writing" && !paper);
 
   useEffect(() => {
     focusTarget.current?.focus();
@@ -293,48 +297,63 @@ const Runner = ({
         </span>
       </div>
       {skipped}
-      <div className="mt-6 rounded-card border border-hairline bg-surface p-6 text-center">
-        {current.type === "tone" && !("note" in current) ? (
-          <ToneCard
-            key={done}
-            headword={current.headword}
-            readingKey={current.readingKey}
-            glosses={current.entry.glosses}
-            audio={current.audio}
-            features={pack.features}
-            language={language}
-            focusTarget={focusTarget}
-            onGrade={gradeSelf}
-            onContinue={continueSelf}
-          />
-        ) : current.type === "writing" && !("note" in current) ? (
-          <WritingCard
-            key={done}
-            headword={current.headword}
-            readingKey={current.readingKey}
-            glosses={current.entry.glosses}
-            audio={current.audio}
-            features={pack.features}
-            language={language}
-            focusTarget={focusTarget}
-            paperChecked={paperChecked}
-            paper={paper}
-            revealed={revealedAt !== null}
-            onPaperChange={setPaperChecked}
-            onGrade={gradeSelf}
-            onContinue={continueSelf}
-          />
-        ) : (
-          <Card
-            key={done}
-            item={current}
-            revealed={revealedAt !== null}
-            pack={pack}
-            language={language}
-            focusTarget={focusTarget}
-          />
-        )}
-      </div>
+      {current.type === "typing" && !("note" in current) ? (
+        <TypingCard
+          key={done}
+          headword={current.headword}
+          readingKey={current.readingKey}
+          glosses={current.entry.glosses}
+          audio={current.audio}
+          pack={pack}
+          language={language}
+          focusTarget={focusTarget}
+          onGrade={gradeSelf}
+          onContinue={continueSelf}
+        />
+      ) : (
+        <div className="mt-6 rounded-card border border-hairline bg-surface p-6 text-center">
+          {current.type === "tone" && !("note" in current) ? (
+            <ToneCard
+              key={done}
+              headword={current.headword}
+              readingKey={current.readingKey}
+              glosses={current.entry.glosses}
+              audio={current.audio}
+              features={pack.features}
+              language={language}
+              focusTarget={focusTarget}
+              onGrade={gradeSelf}
+              onContinue={continueSelf}
+            />
+          ) : current.type === "writing" && !("note" in current) ? (
+            <WritingCard
+              key={done}
+              headword={current.headword}
+              readingKey={current.readingKey}
+              glosses={current.entry.glosses}
+              audio={current.audio}
+              features={pack.features}
+              language={language}
+              focusTarget={focusTarget}
+              paperChecked={paperChecked}
+              paper={paper}
+              revealed={revealedAt !== null}
+              onPaperChange={setPaperChecked}
+              onGrade={gradeSelf}
+              onContinue={continueSelf}
+            />
+          ) : (
+            <Card
+              key={done}
+              item={current}
+              revealed={revealedAt !== null}
+              pack={pack}
+              language={language}
+              focusTarget={focusTarget}
+            />
+          )}
+        </div>
+      )}
       {selfGraded ? null : revealedAt === null ? (
         <Button
           className="mt-6 w-full"
@@ -367,13 +386,17 @@ const Runner = ({
         {t(
           current.type === "tone"
             ? "review.toneKeys"
-            : current.type !== "writing"
-              ? "review.keys"
-              : paper
-                ? "review.paperKeys"
-                : landed === null
-                  ? "review.writingKeys"
-                  : "review.continueKeys",
+            : current.type === "typing"
+              ? landed === null
+                ? "review.typingKeys"
+                : "review.continueKeys"
+              : current.type !== "writing"
+                ? "review.keys"
+                : paper
+                  ? "review.paperKeys"
+                  : landed === null
+                    ? "review.writingKeys"
+                    : "review.continueKeys",
         )}
       </p>
       {(failure !== null || outcomes?.ok === false) && (
