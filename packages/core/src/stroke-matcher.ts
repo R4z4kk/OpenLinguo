@@ -4,6 +4,11 @@
  * parameter; the other options keep their defaults, with no character outline shown (Hanzi Writer's
  * quiz shows one by default). `/*!` marks this notice as a legal comment for bundlers.
  *
+ * One departure from 3.7.3 (ADR 0011): a drawn point's distance to a stroke is to the median's
+ * closest segment, not its closest point. Upstream, a point in the middle of a long segment is far
+ * from both ends: exact traces of 7 of our 30,052 strokes missed, and some reversed or wrong
+ * strokes were misjudged.
+ *
  * The MIT License (MIT)
  *
  * Copyright (c) 2014 David Chanin
@@ -200,14 +205,30 @@ const stripDuplicates = (points: readonly StrokePoint[]): readonly StrokePoint[]
     return previous === null || !equals(point, previous);
   });
 
-// To the median's points, not its segments: some strokes traced exactly miss, as in Hanzi Writer.
+/** To the closest point of the segment from `start` to `end`. */
+const segmentDistance = (point: StrokePoint, start: StrokePoint, end: StrokePoint): number => {
+  const along = subtract(end, start);
+  const offset = subtract(point, start);
+  const lengthSquared = along[0] ** 2 + along[1] ** 2;
+  const t =
+    lengthSquared === 0
+      ? 0
+      : Math.min(1, Math.max(0, (offset[0] * along[0] + offset[1] * along[1]) / lengthSquared));
+  return distance(point, [start[0] + t * along[0], start[1] + t * along[1]]);
+};
+
+/** To the median's closest segment, where Hanzi Writer takes its closest point. */
+const getDistance = (median: readonly StrokePoint[], point: StrokePoint): number =>
+  median.length < 2
+    ? Math.min(...median.map((strokePoint) => distance(strokePoint, point)))
+    : Math.min(
+        ...median.slice(1).map((end, index) => segmentDistance(point, median[index] ?? end, end)),
+      );
+
 const getAverageDistance = (
   median: readonly StrokePoint[],
   points: readonly StrokePoint[],
-): number =>
-  average(
-    points.map((point) => Math.min(...median.map((strokePoint) => distance(strokePoint, point)))),
-  );
+): number => average(points.map((point) => getDistance(median, point)));
 
 const startAndEndMatches = (
   points: readonly StrokePoint[],

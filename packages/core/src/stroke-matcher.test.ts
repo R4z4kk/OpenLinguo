@@ -51,6 +51,18 @@ describe("strokeMatches", () => {
     expect(strokeMatches(shift(BOTTOM, 0, -200), SAN, 2)).toEqual({ ok: true, value: "miss" });
   });
 
+  test("distance goes to the median's segments, not its points", () => {
+    // 十's vertical: to its two ends, a trace would average 200 units, over the 175 allowed.
+    const vertical: readonly StrokePoint[] = [
+      [500, 850],
+      [500, 50],
+    ];
+    const shi = character(shift(TOP, 0, -250), vertical);
+    const traced = Array.from({ length: 81 }, (_, step): StrokePoint => [500, 850 - step * 10]);
+    expect(strokeMatches(traced, shi, 1)).toEqual({ ok: true, value: "match" });
+    expect(strokeMatches(traced.toReversed(), shi, 1)).toEqual({ ok: true, value: "backwards" });
+  });
+
   test("leniency widens every threshold", () => {
     const sloppy = shift(TOP, 0, -260);
     const single = character(TOP);
