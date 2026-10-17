@@ -5,6 +5,7 @@ import {
   drawStroke,
   gradeWriting,
   HINT_AFTER_MISSES,
+  revealStroke,
   showsHint,
   startWritingQuiz,
   type WritingQuiz,
@@ -78,7 +79,7 @@ describe("writing quiz", () => {
     });
   });
 
-  test("a tap is not judged", () => {
+  test("a tap, even with a little jitter, is not judged", () => {
     const quiz = start(SHI);
     if (quiz.finished) throw new Error("finished");
     for (const tap of [
@@ -88,9 +89,19 @@ describe("writing quiz", () => {
         [500, 500],
         [500, 500],
       ],
+      [
+        [500, 500],
+        [503.5, 498.25],
+        [494.5, 503],
+      ],
     ] satisfies StrokePoint[][]) {
       expect(drawStroke(quiz, tap)).toEqual({ ok: true, value: { quiz, match: null } });
     }
+    const flick = drawStroke(quiz, [
+      [500, 500],
+      [510, 500],
+    ]);
+    expect(flick.ok && flick.value.match).toBe("miss");
   });
 
   test("the hint shows after three misses on a stroke, until it is drawn", () => {
@@ -102,6 +113,21 @@ describe("writing quiz", () => {
     expect(hinted(draw(quiz, OFF, OFF, OFF, OFF))).toBe(true);
     expect(hinted(draw(quiz, OFF, OFF, OFF, HORIZONTAL))).toBe(false);
     expect(hinted(draw(quiz, OFF, HORIZONTAL, OFF, OFF))).toBe(false);
+  });
+
+  test("revealing a stroke moves on and counts as hinted", () => {
+    const reveal = (quiz: WritingQuiz): WritingQuiz => {
+      if (quiz.finished) throw new Error("finished");
+      const revealed = revealStroke(quiz);
+      if (!revealed.ok) throw new Error(revealed.error.kind);
+      return revealed.value;
+    };
+    const quiz = start(SHI, YI);
+    expect(reveal(quiz)).toMatchObject({ character: 0, stroke: 1, misses: [[3, 0], [0]] });
+    expect(reveal(draw(quiz, OFF, OFF, OFF, OFF))).toMatchObject({ misses: [[4, 0], [0]] });
+    const revealedLast = reveal(draw(quiz, HORIZONTAL, VERTICAL));
+    expect(revealedLast).toEqual({ finished: true, characters: [SHI, YI], misses: [[0, 0], [3]] });
+    expect(revealedLast.finished && gradeWriting(revealedLast)).toBe("again");
   });
 
   test("grades: no miss good, misses without a hint hard, any hint again, never easy", () => {
@@ -138,6 +164,14 @@ describe("writing quiz", () => {
     expect(drawStroke({ ...quiz, stroke: 1 }, HORIZONTAL)).toEqual({
       ok: false,
       error: { kind: "no-stroke", character: 0, stroke: 1 },
+    });
+    expect(drawStroke({ ...quiz, misses: [[]] }, OFF)).toEqual({
+      ok: false,
+      error: { kind: "no-stroke", character: 0, stroke: 0 },
+    });
+    expect(revealStroke({ ...quiz, character: 1 })).toEqual({
+      ok: false,
+      error: { kind: "no-character", character: 1 },
     });
   });
 });

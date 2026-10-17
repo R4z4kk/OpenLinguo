@@ -47,12 +47,31 @@ const noisy = (
   ]);
 };
 
+/** The median as a pointer draws it: a point every 8 units along it. */
+const trace = (median: readonly StrokePoint[]): readonly StrokePoint[] =>
+  median.flatMap((point, index): StrokePoint[] => {
+    const before = median[index - 1] ?? null;
+    if (before === null) return [point];
+    const count = Math.ceil(Math.hypot(point[0] - before[0], point[1] - before[1]) / 8);
+    return Array.from({ length: count }, (_, step): StrokePoint => [
+      before[0] + ((point[0] - before[0]) * (step + 1)) / count,
+      before[1] + ((point[1] - before[1]) * (step + 1)) / count,
+    ]);
+  });
+
+const FORMS = [
+  ["median", (median: readonly StrokePoint[]) => median],
+  ["traced median", trace],
+] as const;
+
 describe("stroke matching on the stroke data", () => {
   const characters = new Map<string, StrokeData>();
 
   beforeAll(async () => {
     for (const [character, strokes, medians] of await loadStrokes()) {
-      if (SAMPLE.includes(character)) characters.set(character, { strokes, medians });
+      if (SAMPLE.includes(character) || character === "申") {
+        characters.set(character, { strokes, medians });
+      }
     }
   });
 
@@ -64,32 +83,42 @@ describe("stroke matching on the stroke data", () => {
       return data.medians.map((median, index) => ({ character, data, median, index }));
     });
 
-  it("accepts each stroke's median", () => {
+  it.each(FORMS)("accepts each stroke's %s", (_, form) => {
     const judged = strokes().map(({ character, data, median, index }) => ({
       character,
       index,
-      match: strokeMatches(median, data, index),
+      match: strokeMatches(form(median), data, index),
     }));
     expect(judged.length).toBe(176);
     expect(judged.filter(({ match }) => !match.ok || match.value !== "match")).toEqual([]);
   });
 
-  it("flags a reversed median backwards", () => {
+  it.each(FORMS)("flags a reversed %s backwards", (_, form) => {
     const judged = strokes().map(({ character, data, median, index }) => ({
       character,
       index,
-      match: strokeMatches(median.toReversed(), data, index),
+      match: strokeMatches(form(median).toReversed(), data, index),
     }));
     expect(judged.filter(({ match }) => !match.ok || match.value !== "backwards")).toEqual([]);
   });
 
-  it("rejects the next stroke drawn instead", () => {
+  it.each(FORMS)("rejects the next stroke's %s drawn instead", (_, form) => {
     const judged = strokes().flatMap(({ character, data, index }) => {
       const next = data.medians[index + 1] ?? null;
-      return next === null ? [] : [{ character, index, match: strokeMatches(next, data, index) }];
+      if (next === null) return [];
+      return [{ character, index, match: strokeMatches(form(next), data, index) }];
     });
     expect(judged.length).toBe(176 - SAMPLE.length);
     expect(judged.filter(({ match }) => !match.ok || match.value === "match")).toEqual([]);
+  });
+
+  it("misses a few exact traces, as Hanzi Writer does", () => {
+    // 7 of the 30,052 strokes. Distances go to the median's points; 申's vertical is mostly one segment.
+    const shen = characters.get("申") ?? null;
+    const vertical = shen?.medians[4] ?? null;
+    if (shen === null || vertical === null) throw new Error("no stroke data for 申");
+    expect(strokeMatches(vertical, shen, 4)).toEqual({ ok: true, value: "match" });
+    expect(strokeMatches(trace(vertical), shen, 4)).toEqual({ ok: true, value: "miss" });
   });
 
   it("accepts most noisy strokes at the chosen leniency", () => {

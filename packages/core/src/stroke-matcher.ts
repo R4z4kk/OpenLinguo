@@ -1,7 +1,8 @@
-/*
+/*!
  * `strokeMatches` and its geometry helpers, ported from Hanzi Writer 3.7.3 (`dist/index.esm.js`,
  * https://github.com/chanind/hanzi-writer) to typed, pure functions over `StrokeData`. Leniency is a
- * parameter; the other options keep their defaults, without a character outline as in the quiz.
+ * parameter; the other options keep their defaults, with no character outline shown (Hanzi Writer's
+ * quiz shows one by default). `/*!` marks this notice as a legal comment for bundlers.
  *
  * The MIT License (MIT)
  *
@@ -28,7 +29,10 @@
 import type { StrokeData } from "./language-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 
-/** In the stroke data's 1024-unit box, y up. */
+/**
+ * In the stroke data's box: x from 0 to 1024, y up from -124 to 900. A point (x, y) of the word
+ * page's `viewBox="0 0 1024 1024"` is `[x, 900 - y]`.
+ */
 export type StrokePoint = readonly [x: number, y: number];
 
 /** `backwards` is a miss that would match drawn the other way. */
@@ -91,7 +95,7 @@ const frechetDist = (curve1: readonly StrokePoint[], curve2: readonly StrokePoin
   longCurve.forEach((longPoint, i) => {
     const curResultsCol: number[] = [];
     shortCurve.forEach((shortPoint, j) => {
-      // Cases as in Hanzi Writer, which never reads outside a column: that is slow.
+      // Hanzi Writer's four cases: reading index -1 of a column instead is several times slower.
       const dist = distance(longPoint, shortPoint);
       if (i === 0 && j === 0) {
         curResultsCol.push(dist);
@@ -196,6 +200,7 @@ const stripDuplicates = (points: readonly StrokePoint[]): readonly StrokePoint[]
     return previous === null || !equals(point, previous);
   });
 
+// To the median's points, not its segments: some strokes traced exactly miss, as in Hanzi Writer.
 const getAverageDistance = (
   median: readonly StrokePoint[],
   points: readonly StrokePoint[],
