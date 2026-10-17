@@ -328,6 +328,8 @@ export const fr: Messages = {
     title: "À propos d’OpenLinguo",
     license: "OpenLinguo est un logiciel libre sous licence GNU AGPL-3.0.",
     source: "Code source",
+    notices: "Les licences du code tiers inclus dans l’application :",
+    noticesLink: "mentions des tiers",
     credits: "Données, polices et code",
     shareAlike:
       "Le dictionnaire combine des sources en partage à l’identique et est distribué sous CC BY-SA 4.0. Les textes des licences des données incluses sont liés ci-dessous.",
