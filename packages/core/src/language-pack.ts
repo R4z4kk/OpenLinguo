@@ -75,11 +75,33 @@ export type StrokeFeature = {
   readonly strokesOf: (character: string) => Promise<Result<StrokeData | null, LookupError>>;
 };
 
+/** A word the input method offers for the start of the input. */
+export type ImeCandidate = {
+  readonly text: string;
+  /** UTF-16 code units of the input it replaces, from the start: committing it leaves `input.slice(consumed)`. */
+  readonly consumed: number;
+};
+
+export type ImeError =
+  | LookupError
+  /** Nothing at the start of the input can be typed: empty, or not a syllable of the language. */
+  | { readonly kind: "unknown-input"; readonly input: string }
+  /** The input reads as syllables, but no word has them (with the tones typed). */
+  | { readonly kind: "no-match"; readonly input: string };
+
+export type ImeFeature = {
+  /** Words for the start of the input, best first: never an empty list. */
+  readonly candidates: (
+    input: string,
+  ) => Promise<Result<readonly [ImeCandidate, ...ImeCandidate[]], ImeError>>;
+};
+
 export type LanguageFeatures = {
   readonly tones: ToneFeature | null;
   readonly strokes: StrokeFeature | null;
   readonly romanization: RomanizationFeature | null;
   readonly decomposition: DecompositionFeature | null;
+  readonly ime: ImeFeature | null;
 };
 
 export type FeatureName = keyof LanguageFeatures;

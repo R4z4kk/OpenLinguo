@@ -1,7 +1,8 @@
 import "fake-indexeddb/auto";
 import { beforeAll, describe, expect, it } from "vitest";
 import { openDatabase, type Database, type StoredEntry } from "./database.ts";
-import { createLookup, createStrokesOf, loadZhPack } from "./dictionary.ts";
+import { createLookup, createStrokesOf, createWordsOfPinyin, loadZhPack } from "./dictionary.ts";
+import { indexRecord } from "./search-index.ts";
 
 const entry = (
   id: string,
@@ -26,11 +27,15 @@ let db: Database;
 
 beforeAll(async () => {
   db = openDatabase("dictionary-test");
-  await db.entries.bulkPut([
+  const entries = [
     entry("电话\tdian4 hua4", ["電話"], [2, 1]),
     entry("话\thua4", ["話"], [1, 1]),
     entry("电\tdian4", ["電"], [1, 2]),
-  ]);
+    { ...entry("店话\tdian4 hua4", [], [null, null]), lexicon: false },
+  ];
+  await db.entries.bulkPut(entries);
+  await db.searchIndex.put(indexRecord("file", entries));
+  await db.meta.put({ key: "dataVersion", value: "v1" });
   await db.characters.bulkPut([
     { character: "话", decomposition: "⿰讠舌", radical: "讠", etymology: null },
     { character: "电", decomposition: "⿻曰乚", radical: "曰", etymology: null },
@@ -101,6 +106,28 @@ describe("dictionary", () => {
       },
     });
     expect(await createStrokesOf(db)("龘")).toEqual({ ok: true, value: null });
+  });
+
+  it("finds CC-CEDICT words by toneless reading through the pinyin index", async () => {
+    expect(await createWordsOfPinyin(db)("dianhua")).toEqual({
+      ok: true,
+      value: [{ headword: "电话", reading: "dian4 hua4", frequency: null }],
+    });
+    expect(await createWordsOfPinyin(db)("zzz")).toEqual({ ok: true, value: [] });
+    expect(await createWordsOfPinyin(openDatabase("empty-test"))("dian")).toMatchObject({
+      ok: false,
+      error: { kind: "storage-failure" },
+    });
+  });
+
+  it("types words through the zh pack's input method", async () => {
+    const pack = await loadZhPack(db, "hsk-2025");
+    if (!pack.ok) throw new Error(pack.error.kind);
+    const candidates = await pack.value.features.ime?.candidates("dianhua");
+    expect(candidates?.ok && candidates.value).toEqual([
+      { text: "电话", consumed: 7 },
+      { text: "电", consumed: 4 },
+    ]);
   });
 
   it("reports data that was never imported", async () => {

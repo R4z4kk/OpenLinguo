@@ -26,4 +26,5 @@ describeLanguagePackContract(() => createEnPack(inMemoryDictionary(fixture)), {
   knownTerm: "hello",
   unknownTerm: "qwxz",
   sampleText: "Hello, world! I don't know.",
+  typedTerm: null,
 });
