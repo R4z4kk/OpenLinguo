@@ -312,6 +312,7 @@ export const fr: Messages = {
     wordfreq: "Fréquences des mots",
     makemeahanzi: "Décomposition des caractères",
     "hanzi-writer-data": "Ordre des traits",
+    "hanzi-writer": "Vérification des traits dessinés",
     jieba: "Indices de noms propres",
     "audio-zh": "Audio des mots (voix synthétique)",
     paraformer: "Reconnaissance vocale, téléchargée à la demande",
@@ -327,7 +328,7 @@ export const fr: Messages = {
     title: "À propos d’OpenLinguo",
     license: "OpenLinguo est un logiciel libre sous licence GNU AGPL-3.0.",
     source: "Code source",
-    credits: "Données et polices",
+    credits: "Données, polices et code",
     shareAlike:
       "Le dictionnaire combine des sources en partage à l’identique et est distribué sous CC BY-SA 4.0. Les textes des licences des données incluses sont liés ci-dessous.",
     notAffiliated:

@@ -302,6 +302,7 @@ export const en = {
     wordfreq: "Word frequencies",
     makemeahanzi: "Character decomposition",
     "hanzi-writer-data": "Stroke order",
+    "hanzi-writer": "Checking drawn strokes",
     jieba: "Proper-name hints",
     "audio-zh": "Word audio (synthetic voice)",
     paraformer: "Speech recognition, downloaded on request",
@@ -317,7 +318,7 @@ export const en = {
     title: "About OpenLinguo",
     license: "OpenLinguo is free software under the GNU AGPL-3.0 license.",
     source: "Source code",
-    credits: "Data and fonts",
+    credits: "Data, fonts and code",
     shareAlike:
       "The dictionary combines share-alike sources and is distributed under CC BY-SA 4.0. The license texts of the bundled data are linked below.",
     notAffiliated:

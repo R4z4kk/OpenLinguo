@@ -162,6 +162,7 @@ Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots
 - GF0025-2021 standard levels — Ministry of Education and State Language Commission of the PRC (OCR: Pleco Inc. via elkmovie/hsk30, MIT)
 - Fonts — Atkinson Hyperlegible Next (Braille Institute), Noto Sans SC (Adobe, Google), LXGW WenKai GB (LXGW; Klee One by Fontworks), OpenLinguo Han Fallback (modified from Plangothic by Fitzgerald P. Köeingsegg and the Plangothic Project contributors; Source Han Sans by Adobe), SIL Open Font License 1.1
 - Make Me a Hanzi — Shaunak Kishore, LGPL-3.0, with Unihan data © Unicode, Inc.; stroke data from hanzi-writer-data (David Chanin), © Arphic Technology, Arphic Public License
+- Hanzi Writer — David Chanin, MIT (stroke matcher of the writing quiz, ported to `packages/core` with its notice)
 - Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - jieba — Sun Junyi, MIT (proper-name tags)
 - wordfreq — Robyn Speer, CC BY-SA 4.0; Chinese list from Wikipedia, OpenSubtitles 2018, SUBTLEX-CH (Cai and Brysbaert, 2010), NewsCrawl, GlobalVoices, Google Books Ngrams, OSCAR, Twitter and the Jieba word list
