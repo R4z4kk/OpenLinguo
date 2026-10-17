@@ -424,6 +424,12 @@ export const fr: Messages = {
     unreadable: "Le dictionnaire n’a pas pu être lu\u00a0: {{message}}",
     retry: "Réessayer",
   },
+  ime: {
+    answer: "Votre réponse",
+    candidates: "Candidats",
+    nextCandidates: "Candidats suivants",
+    noCandidates: "Aucun candidat",
+  },
   backup: {
     intro:
       "Gardez vos cartes, votre historique de révisions, vos paquets et vos réglages dans un fichier, et restaurez-les sur n’importe quel appareil. L’import ajoute ce qui manque sur cet appareil et garde le reste.",

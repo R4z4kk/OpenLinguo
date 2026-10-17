@@ -413,6 +413,12 @@ export const en = {
     unreadable: "The dictionary could not be read: {{message}}",
     retry: "Try again",
   },
+  ime: {
+    answer: "Your answer",
+    candidates: "Candidates",
+    nextCandidates: "Next candidates",
+    noCandidates: "No candidates",
+  },
   backup: {
     intro:
       "Keep your cards, review history, decks and settings in a file, and restore them on any device. Importing adds what this device lacks and keeps the rest.",
