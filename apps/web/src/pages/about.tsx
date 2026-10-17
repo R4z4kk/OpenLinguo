@@ -2,6 +2,8 @@ import { useTranslation } from "react-i18next";
 import { CREDITS, CreditList, type CreditId } from "@/components/credits";
 
 const REPOSITORY = "https://github.com/R4z4kk/OpenLinguo";
+/** Written by the build (`NOTICES_FILE` in src/build/third-party-notices.ts). */
+const NOTICES = "/THIRD-PARTY-NOTICES.txt";
 
 /** Every credit, in the order of `CREDITS`. */
 const ALL = Object.keys(CREDITS).filter((id): id is CreditId => id in CREDITS);
@@ -17,6 +19,12 @@ export const AboutPage = () => {
         {t("about.license")}{" "}
         <a href={REPOSITORY} className="underline">
           {t("about.source")}
+        </a>
+      </p>
+      <p className="mt-2">
+        {t("about.notices")}{" "}
+        <a href={NOTICES} className="underline">
+          {t("about.noticesLink")}
         </a>
       </p>
       <h2 className="mt-8 text-subtitle">{t("about.credits")}</h2>

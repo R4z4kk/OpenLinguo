@@ -171,6 +171,8 @@ Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots
 - Tatoeba sentences — tatoeba.org contributors, CC BY 2.0 FR
 - Paraformer-small — Tongyi Lab (Alibaba), Apache-2.0 (speech recognition, downloaded on request); ONNX export from sherpa-onnx (k2-fsa), run by sherpa-onnx and ONNX Runtime
 
+The licenses of the code shipped in the app (npm packages in the bundles and its workers, the Workbox runtime, code ported with a leading `/*!` notice) go to `/THIRD-PARTY-NOTICES.txt`, which the build writes (`apps/web/src/build/third-party-notices.ts`) because minification drops legal comments. The About page links it. The build fails when a bundled package has neither a license file nor a README license section.
+
 ## Excluded
 
 - Commercial graded readers.

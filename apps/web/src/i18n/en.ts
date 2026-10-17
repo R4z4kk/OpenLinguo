@@ -318,6 +318,8 @@ export const en = {
     title: "About OpenLinguo",
     license: "OpenLinguo is free software under the GNU AGPL-3.0 license.",
     source: "Source code",
+    notices: "The licenses of the third-party code in the app:",
+    noticesLink: "third-party notices",
     credits: "Data, fonts and code",
     shareAlike:
       "The dictionary combines share-alike sources and is distributed under CC BY-SA 4.0. The license texts of the bundled data are linked below.",
