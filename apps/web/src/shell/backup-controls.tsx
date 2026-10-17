@@ -14,6 +14,7 @@ import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY, saveSetting } from "@/da
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { describeDeckFailure } from "@/data/decks";
+import { PRACTICE_TYPING, PRACTICE_WRITING } from "@/data/practice";
 import { SHOW_PROGRESS } from "@/data/progress";
 import { describeFailure } from "@/data/review-log";
 import { DEFAULT_LANGUAGE, languages, saveLanguage } from "@/i18n/language";
@@ -95,6 +96,8 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
     dailyGoal: currentSetting(storage, DAILY_GOAL),
     newCardsPerDay: currentSetting(storage, NEW_CARDS_PER_DAY),
     showProgress: currentSetting(storage, SHOW_PROGRESS),
+    practiceTyping: currentSetting(storage, PRACTICE_TYPING),
+    practiceWriting: currentSetting(storage, PRACTICE_WRITING),
   });
 
   const exportFile = async (): Promise<void> => {
@@ -115,6 +118,8 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
     dailyGoal,
     newCardsPerDay,
     showProgress,
+    practiceTyping,
+    practiceWriting,
   }: Settings): string | null => {
     void i18n.changeLanguage(language);
     applyPreference(document.documentElement, theme);
@@ -125,6 +130,8 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
       saveSetting(storage, DAILY_GOAL, dailyGoal),
       saveSetting(storage, NEW_CARDS_PER_DAY, newCardsPerDay),
       saveSetting(storage, SHOW_PROGRESS, showProgress),
+      saveSetting(storage, PRACTICE_TYPING, practiceTyping),
+      saveSetting(storage, PRACTICE_WRITING, practiceWriting),
     ];
     return saved.flatMap((result) => (result.ok ? [] : [result.error]))[0] ?? null;
   };

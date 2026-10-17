@@ -11,9 +11,17 @@ import {
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { wordAudioId } from "./audio-packs.ts";
-import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredEntry } from "./database.ts";
+import {
+  deckWordId,
+  MY_WORDS,
+  openDatabase,
+  type Database,
+  type StoredEntry,
+  type StoredStrokes,
+} from "./database.ts";
 import { fileWord, putCards, type LocalTime } from "./decks.ts";
 import { todayActivity } from "./daily-goal.ts";
+import type { Practice } from "./practice.ts";
 import { gradeItem, loadSession, type ReviewItem } from "./session.ts";
 
 const entry = (simplified: string, readingKey: string, hsk2025: number): StoredEntry => ({
@@ -39,8 +47,10 @@ const later = (minutes: number): LocalTime => ({ ...NOON, at: NOON.at + minutes 
 const idOf = (subject: Subject, type: CardType): string =>
   cardId({ language: "zh", ...subject, type });
 
-const session = async (now: LocalTime) => {
-  const loaded = await loadSession(db, "hsk-2025", now, 20);
+const NO_PRACTICE: Practice = { writing: false, typing: false };
+
+const session = async (now: LocalTime, practice = NO_PRACTICE) => {
+  const loaded = await loadSession(db, "hsk-2025", now, 20, practice);
   if (!loaded.ok) throw new Error(loaded.error.kind);
   return loaded.value;
 };
@@ -231,6 +241,68 @@ describe("tone cards", () => {
     await db.wordAudio.add(recording(neutral));
     const { items } = await session(NOON);
     expect(items.some((item) => item.type === "tone")).toBe(false);
+  });
+});
+
+describe("writing and typing cards", () => {
+  const FUTURE = NOON.at + 5 * 24 * 60 * MINUTE;
+  const strokes = (character: string): StoredStrokes => ({
+    character,
+    strokes: ["M 0 0 Z"],
+    medians: [[[0, 0]]],
+  });
+  const start = async (word: WordKey, types: readonly CardType[], due: number) => {
+    await db.cards.bulkPut(
+      newCards("zh", word, types).map((card) => ({
+        ...card,
+        ...NEW_CARD_STATE,
+        phase: "review" as const,
+        due,
+        firstReviewDay: "2026-10-15",
+        lastReviewDay: "2026-10-15",
+      })),
+    );
+  };
+
+  it("offers writing when every character has strokes, typing for any started word, as set", async () => {
+    await start(TIAN, ["recognition", "recall"], FUTURE);
+    await start(NI, ["recognition", "recall"], FUTURE);
+    await db.strokes.add(strokes("天"));
+    expect(ids((await session(NOON, { writing: true, typing: false })).items)).toEqual([
+      [idOf(TIAN, "writing"), true],
+    ]);
+    expect(ids((await session(NOON, { writing: true, typing: true })).items)).toEqual([
+      [idOf(NI, "typing"), true],
+      [idOf(TIAN, "typing"), true],
+    ]);
+    expect(ids((await session(NOON)).items)).toEqual([]);
+  });
+
+  it("stores only the graded card", async () => {
+    await start(TIAN, ["recognition", "recall"], FUTURE);
+    await db.strokes.add(strokes("天"));
+    const [first] = (await session(NOON, { writing: true, typing: true })).items;
+    if (first == null) throw new Error("empty session");
+    expect(first.type).toBe("typing");
+    await gradeItem(db, first, "good", NOON, 20, false);
+    expect(await db.cards.get(idOf(TIAN, "typing"))).toMatchObject({ phase: "learning" });
+    expect(await db.cards.get(idOf(TIAN, "writing"))).toBeUndefined();
+  });
+
+  it("skips and counts a due writing card whose word lost its strokes, unless writing is off", async () => {
+    await start(TIAN, ["recognition", "recall"], FUTURE);
+    await start(TIAN, ["writing"], NOON.at - 60 * MINUTE);
+    const lost = await session(NOON, { writing: true, typing: false });
+    expect(ids(lost.items)).toEqual([[idOf(NI, "recognition"), true]]);
+    expect(lost.skipped).toBe(1);
+    expect((await session(NOON)).skipped).toBe(0);
+    await db.strokes.add(strokes("天"));
+    const back = await session(NOON, { writing: true, typing: false });
+    expect(ids(back.items)).toEqual([
+      [idOf(TIAN, "writing"), false],
+      [idOf(NI, "recognition"), true],
+    ]);
+    expect(back.skipped).toBe(0);
   });
 });
 

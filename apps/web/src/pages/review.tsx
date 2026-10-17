@@ -1,4 +1,10 @@
-import { Grade, previewGrades, type LanguagePack, type Result } from "@openlinguo/core";
+import {
+  Grade,
+  hasFeatures,
+  previewGrades,
+  type LanguagePack,
+  type Result,
+} from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import {
   Suspense,
@@ -22,6 +28,7 @@ import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { localNow, type LocalTime } from "@/data/decks";
+import { PRACTICE_TYPING, PRACTICE_WRITING } from "@/data/practice";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import { gradeItem, loadSession, type ReviewItem, type Session } from "@/data/session";
 import { languages, type Language } from "@/i18n/language";
@@ -108,7 +115,7 @@ const Card = ({
     </div>
   ) : (
     <div className="flex flex-col items-center gap-4">
-      <p className="text-small text-muted">{t("review.recall")}</p>
+      <p className="text-small text-muted">{t(`review.${item.type}`)}</p>
       {meaning}
       <div {...focus}>{word}</div>
       {audio}
@@ -366,20 +373,32 @@ const Loaded = ({
 export const ReviewPage = () => {
   const { t, i18n } = useTranslation();
   const { state, referential } = useData();
+  const pack = state.status === "ready" ? state.pack : null;
   const session = useMemo(
     () =>
-      loadSession(database, referential, localNow(), currentSetting(storage, NEW_CARDS_PER_DAY)),
-    [referential],
+      pack === null
+        ? null
+        : loadSession(
+            database,
+            referential,
+            localNow(),
+            currentSetting(storage, NEW_CARDS_PER_DAY),
+            {
+              writing: currentSetting(storage, PRACTICE_WRITING),
+              typing: currentSetting(storage, PRACTICE_TYPING) && hasFeatures(pack, ["ime"]),
+            },
+          ),
+    [referential, pack],
   );
   const language = languages.find((lang) => lang === i18n.language) ?? "en";
-  if (state.status !== "ready") return null;
+  if (pack === null || session === null) return null;
   return (
     <section aria-labelledby="review-title" className="mx-auto max-w-2xl">
       <h1 id="review-title" className="text-title">
         {t("review.title")}
       </h1>
       <Suspense fallback={null}>
-        <Loaded session={session} pack={state.pack} language={language} />
+        <Loaded session={session} pack={pack} language={language} />
       </Suspense>
     </section>
   );

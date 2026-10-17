@@ -53,6 +53,8 @@ const compose = (input: Partial<SessionInput>) =>
     cards: [],
     newReadings: [],
     toneWords: [],
+    writingWords: [],
+    typingWords: [],
     newLimit: 20,
     at: NOON,
     utcOffsetMinutes: OFFSET,
@@ -197,6 +199,65 @@ describe("composeSession", () => {
         newLimit: 2,
       }),
     ).toEqual([[idOf(HAO, "tone"), true]]);
+  });
+
+  test("a started word gets its writing and typing cards, one a day, from the new-card budget", () => {
+    const cards = [
+      card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+      card(NI, "recall", review(NOON + 3 * DAY, "2026-10-19")),
+      card(HAO, "recognition", review(NOON + 3 * DAY)),
+      card(HAO, "recall", {}),
+    ];
+    const practised = { writingWords: [NI, HAO], typingWords: [NI, HAO] };
+    expect(compose({ cards, newReadings: [TIAN], ...practised })).toEqual([
+      [idOf(NI, "typing"), true],
+      [idOf(HAO, "recall"), true],
+      [idOf(TIAN, "recognition"), true],
+    ]);
+    expect(compose({ cards, newReadings: [TIAN], ...practised, newLimit: 1 })).toEqual([
+      [idOf(NI, "typing"), true],
+    ]);
+  });
+
+  test("no writing or typing card for a word that is not started, or not in their list", () => {
+    expect(
+      compose({
+        cards: [
+          card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+          card(HAO, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+        ],
+        writingWords: [NI, TIAN],
+        typingWords: [TIAN],
+      }),
+    ).toEqual([[idOf(NI, "writing"), true]]);
+  });
+
+  test("a writing or typing card started today keeps the word's other ones for tomorrow", () => {
+    expect(
+      compose({
+        cards: [
+          card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+          card(NI, "writing", review(NOON + 3 * DAY, TODAY)),
+        ],
+        writingWords: [NI],
+        typingWords: [NI],
+        toneWords: [NI],
+      }),
+    ).toEqual([]);
+  });
+
+  test("turning a practice off hides its cards, due or new, and turning it on brings them back", () => {
+    const cards = [
+      card(NI, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+      card(NI, "writing", review(NOON - HOUR, "2026-10-19")),
+      card(HAO, "recognition", review(NOON + 3 * DAY, "2026-10-19")),
+      card(HAO, "typing", {}),
+    ];
+    expect(compose({ cards })).toEqual([]);
+    expect(compose({ cards, writingWords: [NI, HAO], typingWords: [NI, HAO] })).toEqual([
+      [idOf(NI, "writing"), false],
+      [idOf(HAO, "typing"), true],
+    ]);
   });
 
   test("a note is composed like a word, one card per learning day", () => {
