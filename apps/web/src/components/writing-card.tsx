@@ -31,9 +31,12 @@ import { useTranslation } from "react-i18next";
 import { GlossSummary } from "@/components/gloss-summary";
 import { Pinyin, type PinyinFeatures } from "@/components/pinyin";
 import { PlayAudio } from "@/components/play-audio";
-import { GridLines } from "@/components/stroke-order";
+import { GridLines, StrokeOrder } from "@/components/stroke-order";
+import { Switch } from "@/components/switch";
 import { Button } from "@/components/ui/button";
 import type { AudioSource } from "@/data/audio-packs";
+import { saveSetting } from "@/data/daily-goal";
+import { WRITE_ON_PAPER } from "@/data/practice";
 import {
   characterReports,
   hinted,
@@ -48,6 +51,8 @@ import { cn } from "@/lib/utils";
 
 /** The stroke data's y axis points up from its baseline (see `StrokePoint`). */
 const FLIP = "translate(0 900) scale(1 -1)";
+const storage = (): Storage => localStorage;
+
 /** About 6 px on the phone's grid. */
 const TRACE_WIDTH = 24;
 
@@ -69,7 +74,14 @@ type Props = {
   readonly features: PinyinFeatures & Pick<LanguageFeatures, "strokes">;
   readonly language: Language;
   readonly focusTarget: RefObject<HTMLDivElement | null>;
-  /** Stores the grade; `false` when it could not be stored (the failure is shown by the caller). */
+  /** The "Write on paper" setting. */
+  readonly paperChecked: boolean;
+  /** Written on paper, the stroke order shown on request and graded by the caller, or drawn. */
+  readonly paper: boolean;
+  /** Paper mode: the stroke order is shown. */
+  readonly revealed: boolean;
+  readonly onPaperChange: (paper: boolean) => void;
+  /** Drawn: stores the grade; `false` when it could not be stored (the failure is shown by the caller). */
   readonly onGrade: (grade: Grade) => Promise<boolean>;
   readonly onContinue: () => void;
 };
@@ -395,7 +407,69 @@ const Drawing = ({
   return <Quiz start={started.value} {...props} />;
 };
 
-/** Meaning, pinyin and audio (never played by itself), then the word drawn character by character. */
+/** Paper mode: empty 米 boxes to count the characters, then each one's stroke order. */
+const Paper = ({
+  strokes,
+  revealed,
+  characters,
+  prompt,
+}: {
+  readonly strokes: WordStrokes;
+  readonly revealed: boolean;
+  readonly characters: readonly string[];
+  readonly prompt: ReactNode;
+}) => {
+  const { t } = useTranslation();
+  // Read on arrival, so revealing does not suspend.
+  const loaded = use(strokes);
+  if (!loaded.ok)
+    return (
+      <p role="alert" className="text-danger">
+        {t("review.writingFailed", { reason: reasonOf(loaded.error) })}
+      </p>
+    );
+  if (!revealed)
+    return (
+      <>
+        <p className="text-small text-muted">{t("review.writingPaper")}</p>
+        {prompt}
+        <div className="flex flex-col items-center gap-2">
+          <div aria-hidden="true" className="flex flex-wrap justify-center gap-2">
+            {characters.map((_, index) => (
+              // Characters never move: the index is a stable key.
+              <svg
+                key={index}
+                viewBox="0 0 1024 1024"
+                className="size-18 rounded-control border border-hairline"
+              >
+                <GridLines />
+              </svg>
+            ))}
+          </div>
+          <p className="text-small text-muted">
+            {t("review.writingCount", { count: characters.length })}
+          </p>
+        </div>
+      </>
+    );
+  return (
+    <>
+      {prompt}
+      <div className="flex flex-wrap justify-center gap-3">
+        {loaded.value.map((data, index) => (
+          // Characters never move: the index is a stable key.
+          <StrokeOrder key={index} character={characters[index] ?? ""} data={data} compact />
+        ))}
+      </div>
+    </>
+  );
+};
+
+/**
+ * Meaning, pinyin and audio (never played by itself), then the word drawn character by character,
+ * or written on paper and self-graded by the review page: "Write on paper" switches, and the choice
+ * is kept for the next writing cards.
+ */
 export const WritingCard = ({
   headword,
   readingKey,
@@ -404,10 +478,15 @@ export const WritingCard = ({
   features,
   language,
   focusTarget,
+  paperChecked,
+  paper,
+  revealed,
+  onPaperChange,
   onGrade,
   onContinue,
 }: Props) => {
   const { t } = useTranslation();
+  const [notSaved, setNotSaved] = useState<string | null>(null);
   const strokesOf = features.strokes?.strokesOf ?? null;
   // Started once per word and read under Suspense below the card, which keeps focus meanwhile.
   const strokes: WordStrokes = useMemo(
@@ -417,41 +496,56 @@ export const WritingCard = ({
         : wordStrokes(strokesOf, headword),
     [strokesOf, headword],
   );
+  const characters = Array.from(headword);
+  const prompt = (
+    <>
+      <GlossSummary glosses={glosses} language={language} className="text-subtitle font-normal" />
+      <div className="flex flex-wrap items-center justify-center gap-4">
+        <p>
+          <Pinyin reading={readingKey} features={features} className="text-subtitle font-normal" />
+        </p>
+        {audio !== null && <PlayAudio source={audio} align="center" />}
+      </div>
+    </>
+  );
   return (
     <div
       ref={focusTarget}
       tabIndex={-1}
       className="flex flex-col items-center gap-3 rounded-control"
     >
-      <p className="self-stretch text-start text-caption tracking-[0.08em] text-muted uppercase">
-        {t("review.writingTitle")}
-      </p>
-      <Suspense fallback={null}>
-        <Drawing
-          strokes={strokes}
-          characters={Array.from(headword)}
-          prompt={
-            <>
-              <GlossSummary
-                glosses={glosses}
-                language={language}
-                className="text-subtitle font-normal"
-              />
-              <div className="flex flex-wrap items-center justify-center gap-4">
-                <p>
-                  <Pinyin
-                    reading={readingKey}
-                    features={features}
-                    className="text-subtitle font-normal"
-                  />
-                </p>
-                {audio !== null && <PlayAudio source={audio} align="center" />}
-              </div>
-            </>
-          }
-          onGrade={onGrade}
-          onContinue={onContinue}
+      <div className="flex items-center justify-between gap-3 self-stretch">
+        <p className="text-caption tracking-[0.08em] text-muted uppercase">
+          {t("review.writingTitle")}
+        </p>
+        <Switch
+          label={t("review.writingOnPaper")}
+          hint={null}
+          checked={paperChecked}
+          onChange={(next) => {
+            const saved = saveSetting(storage, WRITE_ON_PAPER, next);
+            setNotSaved(saved.ok ? null : saved.error);
+            onPaperChange(next);
+          }}
         />
+      </div>
+      {notSaved !== null && (
+        <p role="alert" className="text-danger">
+          {t("goal.notSaved", { reason: notSaved })}
+        </p>
+      )}
+      <Suspense fallback={null}>
+        {paper ? (
+          <Paper strokes={strokes} revealed={revealed} characters={characters} prompt={prompt} />
+        ) : (
+          <Drawing
+            strokes={strokes}
+            characters={characters}
+            prompt={prompt}
+            onGrade={onGrade}
+            onContinue={onContinue}
+          />
+        )}
       </Suspense>
     </div>
   );

@@ -97,3 +97,57 @@ test("draws a writing card with the mouse: a stroke along its median is accepted
     "1",
   );
 });
+
+test("reviews a writing card on paper with the keyboard only, the choice kept", async ({
+  page,
+}) => {
+  const main = page.getByRole("main");
+  await page.goto("/learn");
+  await page.evaluate(() => {
+    localStorage.setItem("openlinguo.practiceWriting", "true");
+    localStorage.setItem("openlinguo.practiceTyping", "false");
+  });
+  await startReading(page, { headword: "人", readingKey: "ren2" });
+
+  await page.goto("/review");
+  const focused = page.locator(":focus");
+  await expect(focused).toContainText(en.review.writingTitle);
+  const paper = main.getByRole("switch", { name: en.review.writingOnPaper });
+  await page.keyboard.press("Tab");
+  await expect(paper).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(paper).toHaveAttribute("aria-checked", "true");
+  await expect(main).toContainText(en.review.writingPaper);
+  await expect(main).toContainText("1 character");
+  await expect(main.getByRole("img", { name: /^Drawing area/u })).toHaveCount(0);
+  await expect(main.getByRole("button", { name: en.review.showStrokes })).toBeVisible();
+  await expect(main).toContainText(en.review.paperKeys);
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  // The choice is a setting: the card opens on paper again.
+  await page.reload();
+  await expect(focused).toContainText(en.review.writingPaper);
+  await expect(paper).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Space");
+  const strokeOrder = main.getByRole("img", { name: "Stroke order of 人" });
+  await expect(strokeOrder).toBeVisible();
+  await expect(main.getByRole("button", { name: /^Good/u })).toBeVisible();
+
+  // Switched back to drawing and on paper again, the stroke order stays shown.
+  await page.keyboard.press("Tab");
+  await expect(paper).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(paper).toHaveAttribute("aria-checked", "false");
+  await expect(main.getByRole("img", { name: /^Drawing area/u })).toBeVisible();
+  await page.keyboard.press("Space");
+  await expect(paper).toHaveAttribute("aria-checked", "true");
+  await expect(strokeOrder).toBeVisible();
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  await page.keyboard.press("3");
+  await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
+    "value",
+    "1",
+  );
+  await expect(strokeOrder).toHaveCount(0);
+});

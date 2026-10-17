@@ -72,6 +72,7 @@ const SETTINGS: Settings = {
   showProgress: false,
   practiceTyping: false,
   practiceWriting: true,
+  writeOnPaper: true,
 };
 const ANIMALS = { id: uuid(100), name: "Animals" };
 
@@ -189,6 +190,7 @@ describe("parseBackup", () => {
             showProgress: true,
             practiceTyping: true,
             practiceWriting: false,
+            writeOnPaper: false,
           },
           reviews: [review(1, RECALL.id, start, "good")],
         }),

@@ -85,6 +85,15 @@ export const en = {
     writingRule: "No miss: Good. Misses without a hint: Hard. A hint: Again.",
     writingSaveAgain: "Save again",
     writingFailed: "The writing card could not be shown: {{reason}}",
+    writingOnPaper: "Write on paper",
+    writingPaper: "Write the word on paper, then show the stroke order.",
+    writingCount_one: "{{count}} character",
+    writingCount_other: "{{count}} characters",
+    showStrokes: "Show the stroke order",
+    writingKeys:
+      "Keyboard: “Write on paper” replaces drawing; Space then shows the stroke order, 1 to 4 grade it.",
+    paperKeys: "Keyboard: Space shows the stroke order, 1 to 4 grade it.",
+    continueKeys: "Keyboard: Enter continues.",
   },
   learn: {
     title: "Learn",
