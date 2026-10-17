@@ -3,6 +3,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { z } from "zod";
+import { downloadRelease } from "../src/build/release-download.ts";
 import { AudioPackIndex } from "../src/data/format.ts";
 import { DATA } from "./sources.ts";
 
@@ -31,9 +32,7 @@ const readCached = async (file: string, hash: string): Promise<Uint8Array | null
 
 const download = async (release: string, file: string, hash: string): Promise<Uint8Array> => {
   const url = `${RELEASES}/${release}/${file}`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`${url}: HTTP ${String(response.status)}`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
+  const bytes = await downloadRelease(url);
   if (sha256(bytes) !== hash) {
     throw new Error(`${url} does not match its sha256 in data/audio-zh/packs.json`);
   }

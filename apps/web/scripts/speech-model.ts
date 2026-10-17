@@ -5,6 +5,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { z } from "zod";
+import { downloadRelease } from "../src/build/release-download.ts";
 import type { SpeechModelFile, SpeechModelIndex } from "../src/data/format.ts";
 import { DATA } from "./sources.ts";
 
@@ -45,9 +46,7 @@ const readCached = async (file: URL, hash: string): Promise<Uint8Array | null> =
 };
 
 const download = async (url: string, file: URL, hash: string): Promise<Uint8Array> => {
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`${url}: HTTP ${String(response.status)}`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
+  const bytes = await downloadRelease(url);
   if (sha256(bytes) !== hash) {
     throw new Error(`${url} does not match its sha256 in data/${DATASET}/model.json`);
   }
