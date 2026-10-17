@@ -4,6 +4,7 @@ import {
   CURRENT_SCHEDULER,
   dueToday,
   isWord,
+  isWordType,
   NEW_CARD_STATE,
   ok,
   PAIRED_TYPES,
@@ -24,6 +25,7 @@ import { todayActivity } from "./daily-goal.ts";
 import type { Database, NoteContent } from "./database.ts";
 import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks.ts";
 import { toDictEntry } from "./dictionary.ts";
+import type { Practice } from "./practice.ts";
 import { guarded, recordReview, type ReviewLogFailure } from "./review-log.ts";
 import { toneSyllables } from "./tone-card.ts";
 
@@ -34,8 +36,8 @@ export type ReviewItem = (
 ) & { readonly state: CardState; readonly audio: AudioSource | null };
 
 /**
- * `skipped`: cards whose reading left the dictionary, or whose note lost its content.
- * `toneHeldBack`: tone cards due today whose reading has no audio installed.
+ * `skipped`: cards whose reading left the dictionary or lost its stroke data, or whose note lost
+ * its content. `toneHeldBack`: tone cards due today whose reading has no audio installed.
  */
 export type Session = {
   readonly items: readonly ReviewItem[];
@@ -48,13 +50,14 @@ export const loadSession = (
   referential: ZhProficiency,
   now: LocalTime,
   newLimit: number,
+  practice: Practice,
 ): Promise<Result<Session, ReviewLogFailure>> =>
   guarded(async () => {
     const newReadings = await nextNewReadings(db, referential, newLimit);
     if (!newReadings.ok) return newReadings;
     const cards = await db.cards.toArray();
     const recorded = new Set(await db.wordAudio.toCollection().primaryKeys());
-    const toneWords = [
+    const storedWords = [
       ...new Map(
         cards
           .filter(isWord)
@@ -63,11 +66,32 @@ export const loadSession = (
             { headword: card.headword, readingKey: card.readingKey },
           ]),
       ).values(),
-    ].filter(
+    ];
+    const toneWords = storedWords.filter(
       (word) =>
         recorded.has(wordAudioId(word.headword, word.readingKey)) &&
         toneSyllables(word.readingKey) !== null,
     );
+    const stroked = practice.writing
+      ? new Set(await db.strokes.toCollection().primaryKeys())
+      : null;
+    const writingWords =
+      stroked === null
+        ? []
+        : storedWords.filter((word) =>
+            Array.from(word.headword).every((character) => stroked.has(character)),
+          );
+    const written = new Set(writingWords.map(subjectId));
+    const strokesLost =
+      stroked === null
+        ? 0
+        : cards.filter(
+            (card) =>
+              card.type === "writing" &&
+              card.phase !== "new" &&
+              dueToday(card.due, now.at, now.utcOffsetMinutes) &&
+              !written.has(subjectId(card)),
+          ).length;
     const toned = new Set(toneWords.map(subjectId));
     const toneHeldBack = cards.filter(
       (card) =>
@@ -81,6 +105,8 @@ export const loadSession = (
       cards,
       newReadings: newReadings.value,
       toneWords,
+      writingWords,
+      typingWords: practice.typing ? storedWords : [],
       newLimit,
       at: now.at,
       utcOffsetMinutes: now.utcOffsetMinutes,
@@ -155,7 +181,11 @@ export const loadSession = (
       const row = entries.get(entryId(item));
       return row == null ? [] : [{ ...item, ...shared, entry: toDictEntry(row, referential) }];
     });
-    return ok({ items: joined, skipped: items.length - joined.length, toneHeldBack });
+    return ok({
+      items: joined,
+      skipped: items.length - joined.length + strokesLost,
+      toneHeldBack,
+    });
   });
 
 const comesBack = (state: CardState, now: LocalTime): boolean =>
@@ -200,7 +230,11 @@ export const gradeItem = async (
   const goal = await goalToStamp(db, item, grading, now, dailyGoal, last);
   if (!goal.ok) return goal;
   if (item.new) {
-    const stored = await introduceWord(db, item, item.type === "tone" ? ["tone"] : PAIRED_TYPES);
+    const stored = await introduceWord(
+      db,
+      item,
+      isWordType(item.type) ? [item.type] : PAIRED_TYPES,
+    );
     if (!stored.ok) return stored;
   }
   const state = await recordReview(db, {

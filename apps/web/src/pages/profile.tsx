@@ -9,6 +9,7 @@ import { RecordingsControls } from "@/shell/recordings-controls";
 import { GoalSwitcher } from "@/shell/goal-switcher";
 import { LanguageSwitcher } from "@/shell/language-switcher";
 import { LearningStats } from "@/shell/learning-stats";
+import { PracticeSwitches } from "@/shell/practice-switches";
 import { ProgressSummary } from "@/shell/progress-summary";
 import { ProgressSwitch } from "@/shell/progress-switch";
 import { ReferentialSwitcher } from "@/shell/referential-switcher";
@@ -38,6 +39,7 @@ export const ProfilePage = () => {
         <ReferentialSwitcher />
         <GoalSwitcher name="dailyGoal" />
         <GoalSwitcher name="newCardsPerDay" />
+        <PracticeSwitches />
       </div>
       <h2 className="mt-8 text-subtitle">{t("profile.display")}</h2>
       <div key={`display-${String(restored)}`} className="mt-4 flex flex-col gap-6">

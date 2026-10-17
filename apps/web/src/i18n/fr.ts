@@ -25,6 +25,8 @@ export const fr: Messages = {
     title: "Révision",
     recognition: "Retrouvez son pinyin et son sens.",
     recall: "Retrouvez le mot en caractères.",
+    writing: "Écrivez le mot en caractères.",
+    typing: "Tapez le mot en caractères.",
     showAnswer: "Voir la réponse",
     grades: { again: "À revoir", hard: "Difficile", good: "Bien", easy: "Facile" },
     keys: "Clavier\u00a0: Espace affiche la réponse, 1 à 4 la notent.",
@@ -37,8 +39,10 @@ export const fr: Messages = {
     finished_one: "Séance terminée\u00a0: {{count}} révision.",
     finished_other: "Séance terminée\u00a0: {{count}} révisions.",
     back: "Retour à Aujourd’hui",
-    skipped_one: "{{count}} carte ignorée\u00a0: son mot n’est plus dans le dictionnaire.",
-    skipped_other: "{{count}} cartes ignorées\u00a0: leurs mots ne sont plus dans le dictionnaire.",
+    skipped_one:
+      "{{count}} carte ignorée\u00a0: son mot ou l’ordre de ses traits n’est plus dans le dictionnaire.",
+    skipped_other:
+      "{{count}} cartes ignorées\u00a0: leurs mots ou l’ordre de leurs traits ne sont plus dans le dictionnaire.",
     failed: "La séance n’a pas pu être chargée\u00a0: {{reason}}",
     gradeFailed: "La révision n’a pas pu être enregistrée\u00a0: {{reason}}",
     playAudio: "Écouter",
@@ -397,6 +401,16 @@ export const fr: Messages = {
     dailyGoal: "Objectif du jour (révisions)",
     newCardsPerDay: "Nouvelles cartes par jour",
     notSaved: "Le choix ne peut pas être enregistré dans ce navigateur\u00a0: {{reason}}",
+  },
+  practice: {
+    legend: "Pratique",
+    intro:
+      "Ajoute un type de carte à chaque mot commencé, une carte par mot et par jour, prise sur les nouvelles cartes du jour.",
+    typing: "Saisie",
+    typingHint: "Tapez le mot en pinyin avec la méthode de saisie de l’application.",
+    writing: "Écriture à la main",
+    writingHint: "Tracez les caractères à l’écran, ou écrivez-les sur papier puis notez-vous.",
+    kept: "Désactiver un type masque ses cartes des séances. Leur historique est conservé.",
   },
   dataImport: {
     title: "Préparation du dictionnaire hors ligne",

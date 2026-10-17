@@ -9,12 +9,19 @@ const ROLLOVER = 4 * 60 * MINUTE;
 /** Milliseconds since the Unix epoch (UTC), within the `Date` range. */
 const Epoch = z.number().int().min(0).max(8_640_000_000_000_000);
 
-export const CardType = z.enum(["recognition", "recall", "tone"]);
+export const CardType = z.enum(["recognition", "recall", "tone", "writing", "typing"]);
 export type CardType = z.output<typeof CardType>;
 
 /** The cards of a subject created together; a word's tone card comes once its reading has audio. */
 export const PAIRED_TYPES = ["recognition", "recall"] as const satisfies readonly CardType[];
 export type PairedType = (typeof PAIRED_TYPES)[number];
+
+/** Cards a started word reading gets one at a time while it qualifies; notes get none. */
+export const WORD_TYPES = ["tone", "writing", "typing"] as const satisfies readonly CardType[];
+export type WordType = (typeof WORD_TYPES)[number];
+
+export const isWordType = (type: CardType): type is WordType =>
+  WORD_TYPES.some((wordType) => wordType === type);
 
 export const Grade = z.enum(["again", "hard", "good", "easy"]);
 export type Grade = z.output<typeof Grade>;

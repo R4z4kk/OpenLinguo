@@ -24,6 +24,8 @@ export const en = {
     title: "Review",
     recognition: "Recall its pinyin and meaning.",
     recall: "Recall the word in characters.",
+    writing: "Write the word in characters.",
+    typing: "Type the word in characters.",
     showAnswer: "Show the answer",
     grades: { again: "Again", hard: "Hard", good: "Good", easy: "Easy" },
     keys: "Keyboard: Space shows the answer, 1 to 4 grade it.",
@@ -35,8 +37,10 @@ export const en = {
     finished_one: "Session finished: {{count}} review.",
     finished_other: "Session finished: {{count}} reviews.",
     back: "Back to Today",
-    skipped_one: "{{count}} card skipped: its word is no longer in the dictionary.",
-    skipped_other: "{{count}} cards skipped: their words are no longer in the dictionary.",
+    skipped_one:
+      "{{count}} card skipped: its word or its stroke order is no longer in the dictionary.",
+    skipped_other:
+      "{{count}} cards skipped: their words or their stroke orders are no longer in the dictionary.",
     failed: "The session could not be loaded: {{reason}}",
     gradeFailed: "The review could not be saved: {{reason}}",
     playAudio: "Play audio",
@@ -386,6 +390,16 @@ export const en = {
     dailyGoal: "Daily goal (reviews)",
     newCardsPerDay: "New cards per day",
     notSaved: "The choice cannot be saved in this browser: {{reason}}",
+  },
+  practice: {
+    legend: "Practice",
+    intro:
+      "Adds a card type to each word you have started: one card per word and per day, taken from the day's new cards.",
+    typing: "Typing",
+    typingHint: "Type the word in pinyin with the app's input method.",
+    writing: "Handwriting",
+    writingHint: "Draw the characters on screen, or write them on paper and grade yourself.",
+    kept: "Turning a type off hides its cards from sessions. Their history is kept.",
   },
   dataImport: {
     title: "Preparing the offline dictionary",

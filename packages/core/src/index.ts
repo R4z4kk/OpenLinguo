@@ -86,6 +86,7 @@ export {
   dueToday,
   Grade,
   isWord,
+  isWordType,
   learningDay,
   NEW_CARD_STATE,
   newCards,
@@ -96,6 +97,7 @@ export {
   Review,
   subjectId,
   subjectOf,
+  WORD_TYPES,
   type CardKey,
   type GradeOutcome,
   type Grading,
@@ -104,6 +106,7 @@ export {
   type ReplayError,
   type Subject,
   type WordKey,
+  type WordType,
 } from "./srs.ts";
 export {
   STROKE_LENIENCY,
