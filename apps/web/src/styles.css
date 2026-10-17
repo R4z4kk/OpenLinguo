@@ -51,6 +51,14 @@
 
   --default-transition-duration: 150ms;
   --default-transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
+
+  --animate-appear: appear 300ms ease-out;
+
+  @keyframes appear {
+    from {
+      opacity: 0;
+    }
+  }
 }
 
 :root {

@@ -10,6 +10,16 @@ import { medianPath, polylineLength, strokeDuration } from "@/lib/strokes";
 const MEDIAN_WIDTH = 200;
 const PAUSE_MS = 150;
 
+/** The 米 grid's guides, in the strokes' `viewBox="0 0 1024 1024"`. */
+export const GridLines = () => (
+  <g className="stroke-hairline" strokeWidth={4} strokeDasharray="16 16" aria-hidden="true">
+    <line x1={0} y1={0} x2={1024} y2={1024} />
+    <line x1={1024} y1={0} x2={0} y2={1024} />
+    <line x1={512} y1={0} x2={512} y2={1024} />
+    <line x1={0} y1={512} x2={1024} y2={512} />
+  </g>
+);
+
 type Props = { readonly character: string; readonly data: StrokeData };
 
 /**
@@ -60,12 +70,7 @@ export const StrokeOrder = ({ character, data }: Props) => {
         aria-label={t("word.strokeImage", { character })}
         className="size-64 rounded-card border border-hairline bg-surface text-ink"
       >
-        <g className="stroke-hairline" strokeWidth={4} strokeDasharray="16 16" aria-hidden="true">
-          <line x1={0} y1={0} x2={1024} y2={1024} />
-          <line x1={1024} y1={0} x2={0} y2={1024} />
-          <line x1={512} y1={0} x2={512} y2={1024} />
-          <line x1={0} y1={512} x2={1024} y2={512} />
-        </g>
+        <GridLines />
         <g transform="translate(0 900) scale(1 -1)">
           {data.strokes.map((stroke, index) => (
             // Strokes never move: the index is a stable key.

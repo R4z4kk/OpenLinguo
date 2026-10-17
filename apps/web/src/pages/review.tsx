@@ -24,6 +24,7 @@ import { RubyWord } from "@/components/ruby-word";
 import { ToneCard } from "@/components/tone-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { WritingCard } from "@/components/writing-card";
 import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
@@ -150,11 +151,13 @@ const Runner = ({
   const [done, setDone] = useState(0);
   const [revealedAt, setRevealedAt] = useState<LocalTime | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
-  /** A tone card's stored grade, while its answer is shown: what the queue takes at Continue. */
+  /** A self-graded card's stored grade, while its answer is shown: what the queue takes at Continue. */
   const [landed, setLanded] = useState<{ readonly again: ReviewItem | null } | null>(null);
   const pending = useRef(false);
   const focusTarget = useRef<HTMLDivElement>(null);
   const current = queue[0] ?? null;
+  /** Tone and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
+  const selfGraded = current?.type === "tone" || current?.type === "writing";
 
   useEffect(() => {
     focusTarget.current?.focus();
@@ -196,6 +199,17 @@ const Runner = ({
     setLanded(null);
   };
 
+  const gradeSelf = async (grade: Grade): Promise<boolean> => {
+    const recorded = await record(grade);
+    if (recorded === null) return false;
+    setLanded(recorded);
+    return true;
+  };
+
+  const continueSelf = (): void => {
+    if (landed !== null) advance(landed);
+  };
+
   const submit = async (grade: Grade): Promise<void> => {
     if (revealedAt === null) return;
     const recorded = await record(grade);
@@ -203,7 +217,7 @@ const Runner = ({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if (current?.type === "tone") return;
+    if (selfGraded) return;
     if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (event.key === " " && revealedAt === null) {
       event.preventDefault();
@@ -286,15 +300,21 @@ const Runner = ({
             features={pack.features}
             language={language}
             focusTarget={focusTarget}
-            onGrade={async (grade) => {
-              const recorded = await record(grade);
-              if (recorded === null) return false;
-              setLanded(recorded);
-              return true;
-            }}
-            onContinue={() => {
-              if (landed !== null) advance(landed);
-            }}
+            onGrade={gradeSelf}
+            onContinue={continueSelf}
+          />
+        ) : current.type === "writing" && !("note" in current) ? (
+          <WritingCard
+            key={done}
+            headword={current.headword}
+            readingKey={current.readingKey}
+            glosses={current.entry.glosses}
+            audio={current.audio}
+            features={pack.features}
+            language={language}
+            focusTarget={focusTarget}
+            onGrade={gradeSelf}
+            onContinue={continueSelf}
           />
         ) : (
           <Card
@@ -307,7 +327,7 @@ const Runner = ({
           />
         )}
       </div>
-      {current.type === "tone" ? null : revealedAt === null ? (
+      {selfGraded ? null : revealedAt === null ? (
         <Button
           className="mt-6 w-full"
           aria-keyshortcuts="Space"
@@ -335,9 +355,11 @@ const Runner = ({
           ))}
         </div>
       ) : null}
-      <p className="mt-4 text-small text-muted">
-        {t(current.type === "tone" ? "review.toneKeys" : "review.keys")}
-      </p>
+      {current.type !== "writing" && (
+        <p className="mt-4 text-small text-muted">
+          {t(current.type === "tone" ? "review.toneKeys" : "review.keys")}
+        </p>
+      )}
       {(failure !== null || outcomes?.ok === false) && (
         <p role="alert" className="mt-4 text-danger">
           {t("review.gradeFailed", {
