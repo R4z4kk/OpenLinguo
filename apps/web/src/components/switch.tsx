@@ -1,7 +1,7 @@
 import { useId } from "react";
 import { cn } from "@/lib/utils";
 
-/** An on/off setting: the thumb's side tells the state as well as the fill. */
+/** An on/off setting: the thumb's side tells the state as well as the fill. `hint`: its description. */
 export const Switch = ({
   label,
   hint,
@@ -9,7 +9,7 @@ export const Switch = ({
   onChange,
 }: {
   readonly label: string;
-  readonly hint: string;
+  readonly hint: string | null;
   readonly checked: boolean;
   readonly onChange: (checked: boolean) => void;
 }) => {
@@ -20,7 +20,7 @@ export const Switch = ({
         type="button"
         role="switch"
         aria-checked={checked}
-        aria-describedby={hintId}
+        {...(hint === null ? {} : { "aria-describedby": hintId })}
         onClick={() => {
           onChange(!checked);
         }}
@@ -41,9 +41,11 @@ export const Switch = ({
         </span>
         {label}
       </button>
-      <p id={hintId} className="ms-14 text-small text-muted">
-        {hint}
-      </p>
+      {hint !== null && (
+        <p id={hintId} className="ms-14 text-small text-muted">
+          {hint}
+        </p>
+      )}
     </div>
   );
 };

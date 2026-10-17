@@ -29,7 +29,7 @@ import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { localNow, type LocalTime } from "@/data/decks";
-import { PRACTICE_TYPING, PRACTICE_WRITING } from "@/data/practice";
+import { PRACTICE_TYPING, PRACTICE_WRITING, WRITE_ON_PAPER } from "@/data/practice";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import { gradeItem, loadSession, type ReviewItem, type Session } from "@/data/session";
 import { languages, type Language } from "@/i18n/language";
@@ -153,11 +153,14 @@ const Runner = ({
   const [failure, setFailure] = useState<string | null>(null);
   /** A self-graded card's stored grade, while its answer is shown: what the queue takes at Continue. */
   const [landed, setLanded] = useState<{ readonly again: ReviewItem | null } | null>(null);
+  const [paperChecked, setPaperChecked] = useState(() => currentSetting(storage, WRITE_ON_PAPER));
   const pending = useRef(false);
   const focusTarget = useRef<HTMLDivElement>(null);
   const current = queue[0] ?? null;
+  /** A drawn card stays drawn once graded: the switch then applies to the next writing cards. */
+  const paper = current?.type === "writing" && paperChecked && landed === null;
   /** Tone and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
-  const selfGraded = current?.type === "tone" || current?.type === "writing";
+  const selfGraded = current?.type === "tone" || (current?.type === "writing" && !paper);
 
   useEffect(() => {
     focusTarget.current?.focus();
@@ -219,7 +222,8 @@ const Runner = ({
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (selfGraded) return;
     if (event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.key === " " && revealedAt === null) {
+    // Space on a button is the button's own: the switch, Listen or Show the answer.
+    if (event.key === " " && revealedAt === null && !(event.target instanceof HTMLButtonElement)) {
       event.preventDefault();
       setRevealedAt(localNow());
       return;
@@ -313,6 +317,10 @@ const Runner = ({
             features={pack.features}
             language={language}
             focusTarget={focusTarget}
+            paperChecked={paperChecked}
+            paper={paper}
+            revealed={revealedAt !== null}
+            onPaperChange={setPaperChecked}
             onGrade={gradeSelf}
             onContinue={continueSelf}
           />
@@ -335,7 +343,7 @@ const Runner = ({
             setRevealedAt(localNow());
           }}
         >
-          {t("review.showAnswer")}
+          {t(paper ? "review.showStrokes" : "review.showAnswer")}
         </Button>
       ) : outcomes?.ok === true ? (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -355,11 +363,19 @@ const Runner = ({
           ))}
         </div>
       ) : null}
-      {current.type !== "writing" && (
-        <p className="mt-4 text-small text-muted">
-          {t(current.type === "tone" ? "review.toneKeys" : "review.keys")}
-        </p>
-      )}
+      <p className="mt-4 text-small text-muted">
+        {t(
+          current.type === "tone"
+            ? "review.toneKeys"
+            : current.type !== "writing"
+              ? "review.keys"
+              : paper
+                ? "review.paperKeys"
+                : landed === null
+                  ? "review.writingKeys"
+                  : "review.continueKeys",
+        )}
+      </p>
       {(failure !== null || outcomes?.ok === false) && (
         <p role="alert" className="mt-4 text-danger">
           {t("review.gradeFailed", {

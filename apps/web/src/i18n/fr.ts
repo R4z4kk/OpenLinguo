@@ -88,6 +88,15 @@ export const fr: Messages = {
       "Sans erreur\u00a0: Bien. Essais manqués sans indice\u00a0: Difficile. Un indice\u00a0: À revoir.",
     writingSaveAgain: "Enregistrer à nouveau",
     writingFailed: "La carte d’écriture n’a pas pu être affichée\u00a0: {{reason}}",
+    writingOnPaper: "Écrire sur papier",
+    writingPaper: "Écrivez le mot sur papier, puis affichez l’ordre des traits.",
+    writingCount_one: "{{count}} caractère",
+    writingCount_other: "{{count}} caractères",
+    showStrokes: "Voir l’ordre des traits",
+    writingKeys:
+      "Clavier\u00a0: «\u00a0Écrire sur papier\u00a0» remplace le tracé\u00a0; Espace affiche alors l’ordre des traits, 1 à 4 le notent.",
+    paperKeys: "Clavier\u00a0: Espace affiche l’ordre des traits, 1 à 4 le notent.",
+    continueKeys: "Clavier\u00a0: Entrée continue.",
   },
   learn: {
     title: "Apprendre",

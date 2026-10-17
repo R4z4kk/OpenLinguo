@@ -12,7 +12,7 @@ import { z } from "zod";
 import { languages } from "@/i18n/language";
 import { themePreferences } from "@/theme";
 import { DAILY_GOAL, NEW_CARDS_PER_DAY } from "./daily-goal.ts";
-import { PRACTICE_TYPING, PRACTICE_WRITING } from "./practice.ts";
+import { PRACTICE_TYPING, PRACTICE_WRITING, WRITE_ON_PAPER } from "./practice.ts";
 import {
   deckWordId,
   MY_WORDS,
@@ -40,6 +40,7 @@ export const Settings = z.object({
   showProgress: z.boolean().default(SHOW_PROGRESS.fallback),
   practiceTyping: z.boolean().default(PRACTICE_TYPING.fallback),
   practiceWriting: z.boolean().default(PRACTICE_WRITING.fallback),
+  writeOnPaper: z.boolean().default(WRITE_ON_PAPER.fallback),
 });
 export type Settings = z.output<typeof Settings>;
 
