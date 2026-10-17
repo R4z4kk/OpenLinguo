@@ -17,6 +17,7 @@ import {
   type ProgressError,
   type Result,
   type SessionItem,
+  type Subject,
   type WordKey,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
@@ -43,6 +44,61 @@ export type Session = {
   readonly items: readonly ReviewItem[];
   readonly skipped: number;
   readonly toneHeldBack: number;
+};
+
+/** What can play each subject: a deck's own audio (`deck`), the audio pack's recording of a word (`pack`). */
+export const audioFinder = async (
+  db: Database,
+  subjects: readonly Subject[],
+): Promise<{
+  readonly deck: (subject: Subject) => AudioSource | null;
+  readonly pack: (word: WordKey) => AudioSource | null;
+}> => {
+  const filed = (
+    await Promise.all(
+      subjects.map((subject) =>
+        "note" in subject
+          ? db.deckWords.where("note").equals(subject.note).toArray()
+          : db.deckWords
+              .where("[headword+readingKey]")
+              .equals([subject.headword, subject.readingKey])
+              .toArray(),
+      ),
+    )
+  ).flat();
+  const voiced = new Set(
+    (
+      await Promise.all(filed.map((word) => db.audio.where(":id").equals(word.id).primaryKeys()))
+    ).flat(),
+  );
+  const audioOf = new Map(
+    filed.filter((word) => voiced.has(word.id)).map((word) => [subjectId(word), word.id] as const),
+  );
+  // One `equals` per key: `anyOf` walks the whole index in WebKit.
+  const packVoiced = new Set(
+    (
+      await Promise.all(
+        subjects
+          .filter(isWord)
+          .map((word) =>
+            db.wordAudio
+              .where(":id")
+              .equals(wordAudioId(word.headword, word.readingKey))
+              .primaryKeys(),
+          ),
+      )
+    ).flat(),
+  );
+  return {
+    deck: (subject) => {
+      const id = audioOf.get(subjectId(subject)) ?? null;
+      return id === null ? null : { table: "audio", id };
+    },
+    pack: (word) => {
+      const id = wordAudioId(word.headword, word.readingKey);
+      return packVoiced.has(id) ? { table: "wordAudio", id } : null;
+    },
+  };
 };
 
 export const loadSession = (
@@ -124,48 +180,12 @@ export const loadSession = (
         note == null ? [] : [[note.id, note] as const],
       ),
     );
-    const filed = (
-      await Promise.all(
-        items.map((item) =>
-          "note" in item
-            ? db.deckWords.where("note").equals(item.note).toArray()
-            : db.deckWords
-                .where("[headword+readingKey]")
-                .equals([item.headword, item.readingKey])
-                .toArray(),
-        ),
-      )
-    ).flat();
-    const voiced = new Set(
-      (
-        await Promise.all(filed.map((word) => db.audio.where(":id").equals(word.id).primaryKeys()))
-      ).flat(),
-    );
-    const audioOf = new Map(
-      filed
-        .filter((word) => voiced.has(word.id))
-        .map((word) => [subjectId(word), word.id] as const),
-    );
-    // One `equals` per key: `anyOf` walks the whole index in WebKit.
-    const packVoiced = new Set(
-      (
-        await Promise.all(
-          words.map((word) =>
-            db.wordAudio
-              .where(":id")
-              .equals(wordAudioId(word.headword, word.readingKey))
-              .primaryKeys(),
-          ),
-        )
-      ).flat(),
-    );
+    const audio = await audioFinder(db, items);
     /** A deck's own audio comes first, then the audio pack's recording of the reading. */
     const sourceOf = (item: SessionItem): AudioSource | null => {
-      const deck = item.type === "tone" ? null : (audioOf.get(subjectId(item)) ?? null);
-      if (deck !== null) return { table: "audio", id: deck };
-      if ("note" in item) return null;
-      const pack = wordAudioId(item.headword, item.readingKey);
-      return packVoiced.has(pack) ? { table: "wordAudio", id: pack } : null;
+      const deck = item.type === "tone" ? null : audio.deck(item);
+      if (deck !== null) return deck;
+      return "note" in item ? null : audio.pack(item);
     };
     const joined = items.flatMap((item): ReviewItem[] => {
       const shared = {
