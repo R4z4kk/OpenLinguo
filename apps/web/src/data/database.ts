@@ -160,6 +160,15 @@ export type StoredAiNotice = { readonly feature: AiFeature };
 /** The AI provider settings: one row, never in the backup (ADR 0012). */
 export type StoredAiSettings = AiSettings & { readonly id: string };
 
+/** A learning day's 5-sentence challenge, kept on the device and in the backup (ADR 0012). */
+export type StoredChallenge = WordKey & {
+  /** The learning day, `YYYY-MM-DD`. */
+  readonly day: string;
+  /** As typed, empty ones included: one per field. */
+  readonly sentences: readonly string[];
+  readonly updatedAt: number;
+};
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -186,6 +195,7 @@ export type Database = Dexie & {
   recordings: EntityTable<StoredRecording, "id">;
   aiNotices: EntityTable<StoredAiNotice, "feature">;
   aiSettings: EntityTable<StoredAiSettings, "id">;
+  challenges: EntityTable<StoredChallenge, "day">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -259,6 +269,7 @@ export const openDatabase = (name: string): Database => {
         }),
     );
   db.version(16).stores({ aiSettings: "id" });
+  db.version(17).stores({ challenges: "day" });
   return db;
 };
 

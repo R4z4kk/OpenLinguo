@@ -61,6 +61,14 @@ const AI_NOTE = {
   },
 } as const;
 
+const CHALLENGE = {
+  day: "2026-10-21",
+  headword: "电话",
+  readingKey: "dian4 hua4",
+  sentences: ["我给妈妈打电话。", "", "请你电话我。", "", ""],
+  updatedAt: start,
+};
+
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
 
 const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Review => ({
@@ -103,6 +111,7 @@ const backup = (data: Partial<Backup>): Backup => ({
   decks: [],
   deckWords: [],
   notes: [],
+  challenges: [],
   ...data,
 });
 
@@ -163,6 +172,22 @@ describe("round trip", () => {
     expect(await restored.notes.toArray()).toEqual([NOTE, AI_NOTE]);
   });
 
+  it("brings challenges back, the latest content of a day winning", async () => {
+    await db.challenges.bulkAdd([CHALLENGE, { ...CHALLENGE, day: "2026-10-22" }]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    const newer = { ...CHALLENGE, sentences: ["我打电话。", "", "", "", ""], updatedAt: start + 1 };
+    await restored.challenges.add(newer);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ challenges: 1 }));
+    expect(await restored.challenges.toArray()).toEqual([
+      newer,
+      { ...CHALLENGE, day: "2026-10-22" },
+    ]);
+  });
+
   it("brings writing and typing cards back with their states", async () => {
     const writing = card("好", "hao3", "writing");
     const typing = card("好", "hao3", "typing");
@@ -184,7 +209,7 @@ describe("round trip", () => {
 
     const restored = openDatabase(`backup-test-${String(counter)}-restored`);
     expect(await importBackup(restored, parsed.value)).toEqual(
-      ok({ reviews: 3, cards: 2, decks: 0, words: 0, notes: 0 }),
+      ok({ reviews: 3, cards: 2, decks: 0, words: 0, notes: 0, challenges: 0 }),
     );
     expect(await restored.cards.toArray()).toEqual(
       states.toSorted((a, b) => (a.id < b.id ? -1 : 1)),
@@ -218,6 +243,7 @@ describe("parseBackup", () => {
     Reflect.deleteProperty(unstamped, "dailyGoal");
     const withoutNotes = { ...backup({}), settings: older, reviews: [unstamped] };
     Reflect.deleteProperty(withoutNotes, "notes");
+    Reflect.deleteProperty(withoutNotes, "challenges");
     expect(parseBackup(JSON.stringify(withoutNotes))).toEqual(
       ok(
         backup({
@@ -254,6 +280,15 @@ describe("parseBackup", () => {
     expect(parseBackup(JSON.stringify(backup({ notes: [preM5] })))).toEqual(
       ok(backup({ notes: [NOTE] })),
     );
+  });
+
+  it("refuses two challenges on one day, or a challenge without its five fields", () => {
+    expect(
+      parseBackup(JSON.stringify(backup({ challenges: [CHALLENGE, CHALLENGE] }))),
+    ).toMatchObject({ ok: false, error: { issues: [{ path: "challenges.1.day" }] } });
+    expect(
+      parseBackup(JSON.stringify(backup({ challenges: [{ ...CHALLENGE, sentences: ["好"] }] }))),
+    ).toMatchObject({ ok: false, error: { issues: [{ path: "challenges.0.sentences" }] } });
   });
 
   it("lists each failing path", () => {
@@ -309,7 +344,7 @@ describe("importBackup", () => {
 
     expect(
       await importBackup(db, backup({ cards: [RECALL], reviews: [local, lapse, recall, removed] })),
-    ).toEqual(ok({ reviews: 3, cards: 1, decks: 0, words: 0, notes: 0 }));
+    ).toEqual(ok({ reviews: 3, cards: 1, decks: 0, words: 0, notes: 0, challenges: 0 }));
     expect(await db.cards.get(RECOGNITION.id)).toEqual({
       ...RECOGNITION,
       ...replayed(RECOGNITION.id, [local, lapse]),
@@ -329,10 +364,10 @@ describe("importBackup", () => {
       ],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 1, decks: 1, words: 2, notes: 0 }),
+      ok({ reviews: 0, cards: 1, decks: 1, words: 2, notes: 0, challenges: 0 }),
     );
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }),
+      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0, challenges: 0 }),
     );
     expect(await db.decks.toArray()).toEqual([ANIMALS]);
     expect((await db.deckWords.toArray()).map((word) => word.id).toSorted()).toEqual(
@@ -353,7 +388,7 @@ describe("importBackup", () => {
       ],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 2, notes: 0 }),
+      ok({ reviews: 0, cards: 0, decks: 0, words: 2, notes: 0, challenges: 0 }),
     );
     expect(await db.decks.toArray()).toEqual([
       { id: ANIMALS.id, name: "Zoo" },
@@ -376,10 +411,10 @@ describe("importBackup", () => {
       notes: [NOTE, { ...older, meaning: "imported" }, { ...NOTE, id: "new" }],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 1, decks: 0, words: 1, notes: 2 }),
+      ok({ reviews: 0, cards: 1, decks: 0, words: 1, notes: 2, challenges: 0 }),
     );
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }),
+      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0, challenges: 0 }),
     );
     expect((await db.notes.toArray()).map(({ id, meaning }) => [id, meaning])).toEqual([
       [NOTE.id, "local"],

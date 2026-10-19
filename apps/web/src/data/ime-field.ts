@@ -24,6 +24,25 @@ export const NOT_TYPING: ImeTyping = { buffer: "", lookup: null, active: 0 };
 const HAN = /\p{Script=Han}/u;
 const PINYIN_CHARACTER = /[a-zü'’1-5]/iu;
 const PINYIN_INPUT = /^[a-zü'’1-5]+$/iu;
+const PUNCTUATION = /\p{P}/u;
+
+/** What a Chinese input method types for ASCII punctuation. */
+const FULL_WIDTH: Readonly<Record<string, string>> = {
+  ".": "。",
+  ",": "，",
+  "?": "？",
+  "!": "！",
+  ";": "；",
+  ":": "：",
+};
+
+/** Han characters, and punctuation while no pinyin is pending (it would land before its words). */
+const committedAs = (character: string, pending: boolean): string | null => {
+  if (HAN.test(character)) return character;
+  if (pending || PINYIN_CHARACTER.test(character)) return null;
+  const wide = (character.codePointAt(0) ?? 0) > 0x7f && PUNCTUATION.test(character);
+  return FULL_WIDTH[character] ?? (wide ? character : null);
+};
 
 /** The input to look candidates up for: `null` when nothing is typed or it is not pinyin. */
 export const lookupInput = ({ buffer }: ImeTyping): string | null =>
@@ -36,16 +55,17 @@ export const candidatesOf = ({ buffer, lookup }: ImeTyping): readonly ImeCandida
 /**
  * The input's new text. While the system's input method composes, it is kept as it is; otherwise
  * Han characters are committed as typed, pinyin letters, apostrophes and tones 1–5 stay in the
- * buffer, anything else is dropped.
+ * buffer, punctuation is committed full width while the buffer is empty, anything else is dropped.
  */
 export const typed = (state: ImeFieldState, value: string, composing: boolean): ImeFieldState => {
   if (composing) return { ...state, buffer: value };
   const characters = Array.from(value);
-  return {
-    ...state,
-    committed: state.committed + characters.filter((character) => HAN.test(character)).join(""),
-    buffer: characters.filter((character) => PINYIN_CHARACTER.test(character)).join(""),
-  };
+  const buffer = characters.filter((character) => PINYIN_CHARACTER.test(character)).join("");
+  const committed = characters.flatMap((character) => {
+    const text = committedAs(character, buffer !== "");
+    return text === null ? [] : [text];
+  });
+  return { ...state, committed: state.committed + committed.join(""), buffer };
 };
 
 /** A lookup came back: kept only if the buffer has not changed since, the first candidate active. */
