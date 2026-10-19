@@ -442,7 +442,7 @@ const Reading = ({
   );
 };
 
-export type SentenceHeading = "h2" | "h3";
+export type SentenceHeading = "h2" | "h3" | "h4";
 
 const Corrected = ({
   heading: Heading,

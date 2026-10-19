@@ -171,6 +171,7 @@ const Entry = ({ entry, editable, pack, language, level }: EntryProps) => {
             {t("correction.title")}
           </Heading>
           <CorrectionView
+            heading={level === "h2" ? "h3" : "h4"}
             corrections={current}
             prompts={prompts}
             features={pack.features}
