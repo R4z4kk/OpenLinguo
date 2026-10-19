@@ -4,91 +4,26 @@ import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { recorded, replay } from "./ai-replay.ts";
 import { test } from "./app.ts";
+import {
+  CORRECTED,
+  fill,
+  LOCAL_SERVER,
+  MODEL,
+  seedChallenge,
+  SENTENCES,
+  storedRows,
+} from "./challenge-seed.ts";
 
-/** Real answers of Ollama 0.35.1 with qwen3:30b-a3b: these sentences corrected, and another schema. */
-const CORRECTED = recorded(new URL("fixtures/ai/local-correction.json", import.meta.url));
+/** An answer to another schema. */
 const OFF_SCHEMA = recorded(
   new URL(
     "../../../packages/core/src/testing/ai-responses/local/schema-violation.json",
     import.meta.url,
   ),
 );
-const LOCAL_SERVER = "http://localhost:11434/v1";
-const MODEL = "qwen3:30b-a3b";
-const SENTENCES = [
-  "我给妈妈打电话。",
-  "你的电话号码是多少？",
-  "我电话很新。",
-  "晚上我不想接电话。",
-  "请你电话我。",
-];
-
-const fill = (template: string, values: Readonly<Record<string, string | number>>): string =>
-  template.replaceAll(/\{\{(\w+)\}\}/gu, (_, name: string) => String(values[name]));
-
-/** The local server set up, and today's challenge saved, as the app stores them. */
-const seed = (page: Page): Promise<void> =>
-  page.evaluate(
-    ({ sentences, model }) =>
-      new Promise<void>((resolve, reject) => {
-        const now = new Date();
-        const day = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
-          .map((part) => String(part).padStart(2, "0"))
-          .join("-");
-        const open = indexedDB.open("openlinguo");
-        open.onerror = () => {
-          reject(new Error(String(open.error)));
-        };
-        open.onsuccess = () => {
-          const transaction = open.result.transaction(["aiSettings", "challenges"], "readwrite");
-          transaction.objectStore("aiSettings").put({
-            id: "ai",
-            provider: "local",
-            localAddress: "http://localhost:11434",
-            rememberKey: true,
-            key: null,
-            model: { provider: "local", id: model, mode: "json_schema" },
-          });
-          transaction.objectStore("challenges").put({
-            day,
-            headword: "电话",
-            readingKey: "dian4 hua4",
-            sentences,
-            corrections: sentences.map(() => null),
-            updatedAt: 1,
-          });
-          transaction.onerror = () => {
-            reject(new Error(String(transaction.error)));
-          };
-          transaction.oncomplete = () => {
-            open.result.close();
-            resolve();
-          };
-        };
-      }),
-    { sentences: SENTENCES, model: MODEL },
-  );
 
 const storedCorrections = async (page: Page): Promise<readonly unknown[]> => {
-  const rows = await page.evaluate(
-    () =>
-      new Promise<unknown>((resolve, reject) => {
-        const open = indexedDB.open("openlinguo");
-        open.onerror = () => {
-          reject(new Error(String(open.error)));
-        };
-        open.onsuccess = () => {
-          const request = open.result.transaction("challenges").objectStore("challenges").getAll();
-          request.onerror = () => {
-            reject(new Error(String(request.error)));
-          };
-          request.onsuccess = () => {
-            open.result.close();
-            resolve(request.result);
-          };
-        };
-      }),
-  );
+  const rows = await storedRows(page, "challenges");
   const [row] = z.array(z.object({ corrections: z.array(z.unknown()) })).parse(rows);
   return row?.corrections ?? [];
 };
@@ -120,7 +55,7 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
   await page.evaluate(() => {
     localStorage.setItem("openlinguo.newCardsPerDay", "0");
   });
-  await seed(page);
+  await seedChallenge(page);
 
   // An empty session still ends with today's challenge.
   await page.goto("/review");

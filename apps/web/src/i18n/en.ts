@@ -717,6 +717,31 @@ export const en = {
     keep: "Keep mine",
     saveFailed: "The correction could not be saved: {{reason}}",
   },
+  cardProposal: {
+    make: "Make a card",
+    made: "Card made in “{{deck}}”.",
+    title: "New card",
+    intro:
+      "Proposed from corrected sentence {{number}}. Check it: nothing is made until you confirm.",
+    sentence: "Sentence",
+    pinyin: "Pinyin",
+    meaning: "Meaning",
+    deck: "Deck",
+    cards: "Two cards: recognition and recall.",
+    confirm: "Make the card",
+    cancel: "Cancel",
+    sentenceEmpty: "Write the sentence to make the card.",
+    meaningEmpty: "Write the meaning to make the card.",
+    readingFlag:
+      "“{{written}}” is not a reading of {{character}} in the dictionary ({{readings}}). Fix the pinyin to make the card.",
+    readingUnknown:
+      "{{character}} is not in the dictionary, so “{{written}}” cannot be checked. Change the sentence to make the card.",
+    readingInvalid:
+      "This pinyin does not follow the characters: one syllable per Chinese character. Fix it to make the card.",
+    alreadyFiled: "This sentence is already in “{{deck}}”.",
+    failed: "The card could not be made: {{reason}}",
+    decksFailed: "Your decks could not be read: {{reason}}",
+  },
   backup: {
     intro:
       "Keep your cards, review history, decks and settings in a file, and restore them on any device. Importing adds what this device lacks and keeps the rest.",

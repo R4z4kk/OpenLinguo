@@ -11,7 +11,7 @@ import {
   type Result,
   type StructuredMode,
 } from "@openlinguo/core";
-import { joinedToNumbered } from "@openlinguo/lang-zh";
+import { joinedToNumbered, toDiacritic } from "@openlinguo/lang-zh";
 import { z } from "zod";
 import type { AiConnection } from "./ai-settings.ts";
 
@@ -151,6 +151,12 @@ export const diffChars = (from: string, to: string): readonly DiffPart[] => {
 
 const HAN = /\p{Script=Han}/u;
 const NOT_PINYIN = /[^\p{L}\p{M}\s'’-]+/gu;
+
+/** A numbered syllable with tone marks, or as given when it is not one. */
+export const diacritic = (numbered: string): string => {
+  const shown = toDiacritic(numbered);
+  return shown.ok ? shown.value : numbered;
+};
 
 /** A syllable of the AI's reading, numbered, with the dictionary's objection to it. */
 export type ReadingSyllable = {

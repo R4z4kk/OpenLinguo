@@ -183,6 +183,7 @@ export const ChallengeForm = ({
         <Word challenge={challenge} pack={pack} language={language} />
         {correction.warning}
         <CorrectionView
+          heading={level === "h1" ? "h2" : "h3"}
           corrections={currentCorrections(sentences, corrections)}
           prompts={prompts}
           features={pack.features}

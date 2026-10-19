@@ -8,7 +8,6 @@ import {
   type ReadingMismatch,
   type Result,
 } from "@openlinguo/core";
-import { toDiacritic } from "@openlinguo/lang-zh";
 import { Check, CircleAlert, LoaderCircle } from "lucide-react";
 import {
   Fragment,
@@ -23,6 +22,7 @@ import { useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
 import { useAiNotice } from "@/components/ai-notice";
 import { AiSent } from "@/components/ai-sent";
+import { CardProposal } from "@/components/card-proposal";
 import { pinyinSyllables, type PinyinFeatures } from "@/components/pinyin";
 import { Button } from "@/components/ui/button";
 import type { AiCall } from "@/data/ai-notice";
@@ -30,6 +30,7 @@ import { rememberMode, type AiConnection } from "@/data/ai-settings";
 import {
   CORRECTION_CHOICES,
   correctionInput,
+  diacritic,
   diffChars,
   readingSyllables,
   requestCorrection,
@@ -331,11 +332,6 @@ const Removed = ({ text }: { readonly text: string }) => {
   );
 };
 
-const diacritic = (numbered: string): string => {
-  const shown = toDiacritic(numbered);
-  return shown.ok ? shown.value : numbered;
-};
-
 /** The AI's pinyin in tone colors; a syllable the dictionary does not give is flagged, never fixed. */
 const Reading = ({
   correction,
@@ -446,30 +442,40 @@ const Reading = ({
   );
 };
 
+export type SentenceHeading = "h2" | "h3" | "h4";
+
 const Corrected = ({
+  heading: Heading,
   number,
   correction,
   prompts,
   features,
   acceptButton,
   onChoose,
+  made,
+  onMake,
 }: {
+  readonly heading: SentenceHeading;
   readonly number: number;
   readonly correction: SentenceCorrection;
   readonly prompts: PromptPack;
   readonly features: PinyinFeatures;
   readonly acceptButton: RefObject<HTMLButtonElement | null> | null;
   readonly onChoose: (choice: CorrectionChoice) => Promise<Result<null, ReviewLogFailure>>;
+  /** The deck a card from this sentence was last made in. */
+  readonly made: string | null;
+  readonly onMake: (button: HTMLButtonElement) => void;
 }) => {
   const { t } = useTranslation();
   const id = useId();
+  const madeId = useId();
   const [failure, setFailure] = useState<string | null>(null);
   const { original, corrected, changes, meaning, choice } = correction;
   return (
     <section aria-labelledby={id} className="rounded-card border border-hairline bg-surface p-4">
-      <h3 id={id} className="font-semibold">
+      <Heading id={id} className="font-semibold">
         {t("correction.sentence", { number })}
-      </h3>
+      </Heading>
       <p lang="zh-Hans" className="mt-2 font-zh text-subtitle font-normal">
         {diffChars(original, corrected).map((part, index) =>
           part.kind === "same" ? (
@@ -523,7 +529,24 @@ const Corrected = ({
             {t(option === "accepted" ? "correction.accept" : "correction.keep")}
           </Button>
         ))}
+        {choice === "accepted" && (
+          <Button
+            variant="outline"
+            aria-describedby={made === null ? id : `${id} ${madeId}`}
+            onClick={(event) => {
+              onMake(event.currentTarget);
+            }}
+          >
+            {t("cardProposal.make")}
+          </Button>
+        )}
       </div>
+      {made !== null && (
+        <p id={madeId} className="mt-2 flex items-start gap-1.5 text-small">
+          <Check aria-hidden="true" className="mt-0.5 size-4 flex-none" />
+          {t("cardProposal.made", { deck: made })}
+        </p>
+      )}
       {failure !== null && (
         <p role="alert" className="mt-2 text-danger">
           {failure}
@@ -539,11 +562,14 @@ const Corrected = ({
  * explanations, then « Accept » or « Keep mine ». Focus lands on the first « Accept ».
  */
 export const CorrectionView = ({
+  heading,
   corrections,
   prompts,
   features,
   onChoose,
 }: {
+  /** One level under the caller's title. */
+  readonly heading: SentenceHeading;
   readonly corrections: Corrections;
   readonly prompts: PromptPack;
   readonly features: PinyinFeatures;
@@ -561,60 +587,94 @@ export const CorrectionView = ({
   const changed = items.filter(({ correction }) => correction.corrected !== correction.original);
   const first = changed[0]?.index ?? null;
   const provenance = items[0]?.correction.provenance ?? null;
+  const [proposal, setProposal] = useState<{
+    readonly index: number;
+    readonly correction: SentenceCorrection;
+  } | null>(null);
+  const [made, setMade] = useState<ReadonlyMap<number, string>>(new Map());
+  /** « Make a card » that opened the proposal: focus goes back to it. */
+  const opener = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     (firstAccept.current ?? summary.current)?.focus();
   }, []);
 
+  useEffect(() => {
+    if (proposal === null) opener.current?.focus();
+  }, [proposal]);
+
   return (
-    <div className="mt-4 flex flex-col">
-      {provenance !== null && <AiBadge provenance={provenance} />}
-      <p ref={summary} tabIndex={-1} className="mt-3 rounded-control text-muted">
-        {t("correction.summary", {
-          review: t("correction.toReview", { count: changed.length }),
-          same: t("correction.unchanged", { count: items.length - changed.length }),
-        })}
-      </p>
-      {changed.length > 0 && (
-        <p aria-hidden="true" className="mt-1 text-small text-muted">
-          <span className="text-ink underline decoration-2 underline-offset-4">
-            {t("correction.underlined")}
-          </span>
-          {t("correction.added")} ·{" "}
-          <span className="text-ink line-through decoration-2">
-            {t("correction.struckThrough")}
-          </span>
-          {t("correction.removed")}
+    <>
+      <div hidden={proposal !== null} className="mt-4 flex flex-col">
+        {provenance !== null && <AiBadge provenance={provenance} />}
+        <p ref={summary} tabIndex={-1} className="mt-3 rounded-control text-muted">
+          {t("correction.summary", {
+            review: t("correction.toReview", { count: changed.length }),
+            same: t("correction.unchanged", { count: items.length - changed.length }),
+          })}
         </p>
+        {changed.length > 0 && (
+          <p aria-hidden="true" className="mt-1 text-small text-muted">
+            <span className="text-ink underline decoration-2 underline-offset-4">
+              {t("correction.underlined")}
+            </span>
+            {t("correction.added")} ·{" "}
+            <span className="text-ink line-through decoration-2">
+              {t("correction.struckThrough")}
+            </span>
+            {t("correction.removed")}
+          </p>
+        )}
+        <ol className="mt-4 flex flex-col gap-3">
+          {items.map(({ correction, index }) => (
+            <li key={index}>
+              {correction.corrected === correction.original ? (
+                <div className="flex items-start gap-3 rounded-card border border-hairline bg-surface px-4 py-3">
+                  <Check aria-hidden="true" className="mt-1 size-5 flex-none" />
+                  <span className="flex flex-col">
+                    <span className="text-small text-muted">
+                      {t("correction.unchangedSentence", { number: index + 1 })}
+                    </span>
+                    <span lang="zh-Hans" className="font-zh text-pinyin">
+                      {correction.corrected}
+                    </span>
+                  </span>
+                </div>
+              ) : (
+                <Corrected
+                  heading={heading}
+                  number={index + 1}
+                  correction={correction}
+                  prompts={prompts}
+                  features={features}
+                  acceptButton={index === first ? firstAccept : null}
+                  onChoose={(choice) => onChoose(index, choice)}
+                  made={made.get(index) ?? null}
+                  onMake={(button) => {
+                    opener.current = button;
+                    setProposal({ index, correction });
+                  }}
+                />
+              )}
+            </li>
+          ))}
+        </ol>
+      </div>
+      {proposal !== null && (
+        <CardProposal
+          heading={heading}
+          number={proposal.index + 1}
+          correction={proposal.correction}
+          checkReading={prompts.checkReading}
+          onCancel={() => {
+            setProposal(null);
+          }}
+          onMade={(deck) => {
+            setMade(new Map(made).set(proposal.index, deck));
+            setProposal(null);
+          }}
+        />
       )}
-      <ol className="mt-4 flex flex-col gap-3">
-        {items.map(({ correction, index }) => (
-          <li key={index}>
-            {correction.corrected === correction.original ? (
-              <div className="flex items-start gap-3 rounded-card border border-hairline bg-surface px-4 py-3">
-                <Check aria-hidden="true" className="mt-1 size-5 flex-none" />
-                <span className="flex flex-col">
-                  <span className="text-small text-muted">
-                    {t("correction.unchangedSentence", { number: index + 1 })}
-                  </span>
-                  <span lang="zh-Hans" className="font-zh text-pinyin">
-                    {correction.corrected}
-                  </span>
-                </span>
-              </div>
-            ) : (
-              <Corrected
-                number={index + 1}
-                correction={correction}
-                prompts={prompts}
-                features={features}
-                acceptButton={index === first ? firstAccept : null}
-                onChoose={(choice) => onChoose(index, choice)}
-              />
-            )}
-          </li>
-        ))}
-      </ol>
-    </div>
+    </>
   );
 };
