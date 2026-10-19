@@ -117,9 +117,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await page.getByRole("link", { name: en.nav.profile }).click();
   const [chooser] = await Promise.all([page.waitForEvent("filechooser"), importButton.click()]);
   await chooser.setFiles(file);
-  await expect(status).toHaveText(
-    imported({ reviews: 1, cards: 2, decks: 0, words: 1, notes: 0, glosses: 0 }),
-  );
+  await expect(status).toHaveText(imported({ reviews: 1, cards: 2, decks: 0, words: 1, notes: 0 }));
   await expect(dark).toBeChecked();
   await expect(noNewCards).toBeChecked();
   await expect(showProgress).not.toBeChecked();
@@ -131,9 +129,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
 
   const [again] = await Promise.all([page.waitForEvent("filechooser"), importButton.click()]);
   await again.setFiles(file);
-  await expect(status).toHaveText(
-    imported({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0, glosses: 0 }),
-  );
+  await expect(status).toHaveText(imported({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }));
 
   await page.getByRole("link", { name: en.nav.learn }).click();
   await expect(counts.first()).toHaveText("1");

@@ -22,7 +22,6 @@ import {
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { wordAudioId, type AudioSource } from "./audio-packs.ts";
-import { withAiGlosses } from "./ai-glosses.ts";
 import { todayActivity } from "./daily-goal.ts";
 import type { Database, NoteContent } from "./database.ts";
 import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks.ts";
@@ -176,11 +175,6 @@ export const loadSession = (
         row == null ? [] : [[row.id, row] as const],
       ),
     );
-    const aiGlosses = new Map(
-      (await db.aiGlosses.bulkGet(words.map(entryId))).flatMap((row) =>
-        row == null ? [] : [[row.id, row] as const],
-      ),
-    );
     const contents = new Map(
       (await db.notes.bulkGet(notes.map((item) => item.note))).flatMap((note) =>
         note == null ? [] : [[note.id, note] as const],
@@ -205,9 +199,7 @@ export const loadSession = (
         return [{ ...item, ...shared, content: { characters, pinyin, meaning } }];
       }
       const row = entries.get(entryId(item));
-      if (row == null) return [];
-      const entry = withAiGlosses(toDictEntry(row, referential), aiGlosses.get(row.id) ?? null);
-      return [{ ...item, ...shared, entry }];
+      return row == null ? [] : [{ ...item, ...shared, entry: toDictEntry(row, referential) }];
     });
     return ok({
       items: joined,

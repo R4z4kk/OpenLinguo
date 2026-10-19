@@ -19,14 +19,13 @@ import {
   deckWordId,
   MY_WORDS,
   type Database,
-  type StoredAiGloss,
   type StoredCard,
   type StoredChallenge,
   type StoredDeck,
   type StoredDeckWord,
   type StoredNote,
 } from "./database.ts";
-import { DECK_NAME_MAX, entryId, sameDeckName, type DeckFailure } from "./decks.ts";
+import { DECK_NAME_MAX, sameDeckName, type DeckFailure } from "./decks.ts";
 import { Interests } from "./interests.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
 import { referentials } from "./referential.ts";
@@ -98,22 +97,8 @@ export const Backup = z
         }),
       )
       .default([]),
-    // Backups made before M5 have no AI glosses.
-    aiGlosses: z
-      .array(
-        z.object({
-          headword: z.string().min(1),
-          readingKey: z.string().min(1),
-          senses: z
-            .array(z.object({ english: z.string().min(1), french: z.string().min(1) }))
-            .min(1)
-            .readonly(),
-          provenance: AiProvenance,
-        }),
-      )
-      .default([]),
   })
-  .superRefine(({ reviews, decks, deckWords, notes, challenges, aiGlosses }, context) => {
+  .superRefine(({ reviews, decks, deckWords, notes, challenges }, context) => {
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -138,12 +123,6 @@ export const Backup = z
     challenges.forEach(({ day }, index) => {
       if (days.has(day)) issue(["challenges", index, "day"], "Duplicate challenge day");
       days.add(day);
-    });
-    const glossIds = new Set<string>();
-    aiGlosses.forEach((gloss, index) => {
-      const id = entryId(gloss);
-      if (glossIds.has(id)) issue(["aiGlosses", index], "Duplicate AI gloss for this reading");
-      glossIds.add(id);
     });
     const deckIds = new Set([MY_WORDS, ...decks.map((deck) => deck.id)]);
     deckWords.forEach(({ deckId }, index) => {
@@ -191,7 +170,7 @@ export const exportBackup = (
   guarded(() =>
     db.transaction(
       "r",
-      [db.cards, db.reviews, db.decks, db.deckWords, db.notes, db.challenges, db.aiGlosses],
+      [db.cards, db.reviews, db.decks, db.deckWords, db.notes, db.challenges],
       async (): Promise<Result<Backup, ReviewLogFailure>> =>
         ok({
           format: BACKUP_FORMAT,
@@ -212,14 +191,6 @@ export const exportBackup = (
           })),
           notes: await db.notes.toArray(),
           challenges: await db.challenges.toArray(),
-          aiGlosses: (await db.aiGlosses.toArray()).map(
-            ({ headword, readingKey, senses, provenance }) => ({
-              headword,
-              readingKey,
-              senses,
-              provenance,
-            }),
-          ),
         }),
     ),
   );
@@ -232,7 +203,6 @@ export type ImportSummary = {
   readonly words: number;
   readonly notes: number;
   readonly challenges: number;
-  readonly glosses: number;
 };
 
 const replayCards = (
@@ -262,7 +232,7 @@ export const importBackup = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.cards, db.reviews, db.decks, db.deckWords, db.notes, db.challenges, db.aiGlosses],
+      [db.cards, db.reviews, db.decks, db.deckWords, db.notes, db.challenges],
       async (): Promise<Result<ImportSummary, DeckFailure>> => {
         const reviews = await db.reviews.toArray();
         const reviewIds = new Set(reviews.map((review) => review.id));
@@ -307,23 +277,11 @@ export const importBackup = (
           (challenge, index) => challenge.updatedAt > (localChallenges[index]?.updatedAt ?? -1),
         );
 
-        const localGlosses = await db.aiGlosses.bulkGet(backup.aiGlosses.map(entryId));
-        const newerGlosses: StoredAiGloss[] = backup.aiGlosses
-          .filter((gloss, index) => {
-            const local = localGlosses[index] ?? null;
-            return (
-              local === null ||
-              Date.parse(gloss.provenance.createdAt) > Date.parse(local.provenance.createdAt)
-            );
-          })
-          .map((gloss) => ({ ...gloss, id: entryId(gloss) }));
-
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
         await db.decks.bulkAdd(newDecks);
         await db.deckWords.bulkAdd(newWords);
         await db.notes.bulkPut(newerNotes);
-        await db.aiGlosses.bulkPut(newerGlosses);
         await db.challenges.bulkPut(newerChallenges);
         return ok({
           reviews: newReviews.length,
@@ -332,7 +290,6 @@ export const importBackup = (
           words: newWords.length,
           notes: newerNotes.length,
           challenges: newerChallenges.length,
-          glosses: newerGlosses.length,
         });
       },
     ),

@@ -6,7 +6,6 @@ import {
   type LanguagePack,
   type LookupError,
   ok,
-  type PromptPack,
   type Result,
   type StrokeData,
 } from "@openlinguo/core";
@@ -15,7 +14,6 @@ import { Link, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Info } from "lucide-react";
 import { Suspense, use, useEffect, useId, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAiTranslation } from "@/components/ai-translation";
 import { CREDITS, Credits } from "@/components/credits";
 import { DecompositionTree } from "@/components/decomposition-tree";
 import { PlayAudio } from "@/components/play-audio";
@@ -65,28 +63,17 @@ const Glosses = ({
   entry,
   language,
   heading: Heading,
-  prompts,
 }: {
   readonly entry: DictEntry;
   readonly language: Language;
   /** One level below the reading's own heading, when it has one. */
   readonly heading: "h2" | "h3";
-  readonly prompts: PromptPack | null;
 }) => {
   const { t } = useTranslation();
   const groups = groupGlosses(entry.glosses, language);
-  const container = useRef<HTMLDivElement>(null);
-  const translation = useAiTranslation({
-    entry,
-    task: prompts?.glossTranslation ?? null,
-    language,
-    heading: Heading,
-    container,
-  });
   return (
-    <div ref={container} tabIndex={-1} className="mt-4 flex flex-col gap-4">
-      {translation.before}
-      {!translation.translated && !groups.some((group) => group.lang === language) && (
+    <div className="mt-4 flex flex-col gap-4">
+      {!groups.some((group) => group.lang === language) && (
         <p className="flex items-start gap-2 rounded-control border border-border-strong px-3 py-2 text-small">
           <Info aria-hidden="true" className="mt-0.5 size-4 shrink-0" />
           {t("word.noGlossIn", { language: t(`dictionary.glossesIn.${language}`) })}
@@ -107,7 +94,6 @@ const Glosses = ({
           </ol>
         </div>
       ))}
-      {translation.after}
     </div>
   );
 };
@@ -346,12 +332,7 @@ const Entries = ({
                 describedBy={headingId}
               />
             )}
-            <Glosses
-              entry={entry}
-              language={language}
-              heading={titled ? "h3" : "h2"}
-              prompts={pack.prompts}
-            />
+            <Glosses entry={entry} language={language} heading={titled ? "h3" : "h2"} />
           </section>
         );
       })}

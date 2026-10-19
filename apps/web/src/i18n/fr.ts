@@ -267,23 +267,6 @@ export const fr: Messages = {
     nextStroke: "Trait suivant",
     noStrokes: "Pas d’ordre des traits pour {{character}}.",
   },
-  translate: {
-    action: "Traduire en français",
-    pending: "Traduction en cours…",
-    retry: "Réessayer",
-    once: "La traduction est enregistrée avec ce mot\u00a0: elle n’est demandée qu’une fois.",
-    heading: "Français",
-    from: "de «\u00a0<0>{{source}}</0>\u00a0»",
-    disclaimer: "Traduit depuis l’anglais de CC-CEDICT. Peut contenir des erreurs.",
-    delete: "Supprimer la traduction",
-    onCards:
-      "Sur les cartes de ce mot, la traduction française s’affiche avec la mention «\u00a0IA\u00a0».",
-    mark: "IA",
-    markLabel: "traduit par IA",
-    loadFailed: "La traduction n’a pas pu être lue\u00a0: {{reason}}",
-    saveFailed: "La traduction n’a pas pu être enregistrée\u00a0: {{reason}}",
-    deleteFailed: "La traduction n’a pas pu être supprimée\u00a0: {{reason}}",
-  },
   pinyinChart: {
     title: "Tableau du pinyin",
     intro:
@@ -681,7 +664,7 @@ export const fr: Messages = {
     import: "Importer une sauvegarde",
     exported: "Sauvegarde exportée.",
     imported:
-      "Sauvegarde importée\u00a0: révisions +{{reviews}}, cartes +{{cards}}, paquets +{{decks}}, mots classés +{{words}}, notes mises à jour +{{notes}}, traductions IA +{{glosses}}.",
+      "Sauvegarde importée\u00a0: révisions +{{reviews}}, cartes +{{cards}}, paquets +{{decks}}, mots classés +{{words}}, notes mises à jour +{{notes}}.",
     exportFailed: "La sauvegarde n’a pas pu être exportée\u00a0: {{reason}}",
     readFailed: "Le fichier n’a pas pu être lu\u00a0: {{reason}}",
     notJson: "Ce fichier n’est pas une sauvegarde, ce n’est pas du JSON\u00a0: {{reason}}",
