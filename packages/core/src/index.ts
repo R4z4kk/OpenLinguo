@@ -1,5 +1,6 @@
 export {
   AI_BASE_URLS,
+  AI_PROVIDERS,
   chat,
   listModels,
   type AiAnswer,
@@ -10,6 +11,7 @@ export {
   type AiProvider,
   type StructuredMode,
 } from "./ai-client.ts";
+export { AiProvenance } from "./ai-provenance.ts";
 export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {

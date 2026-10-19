@@ -1,4 +1,5 @@
 import {
+  AiProvenance,
   Card,
   err,
   ok,
@@ -74,6 +75,8 @@ export const Backup = z
           pinyin: z.string(),
           meaning: z.string().min(1),
           updatedAt: z.number().int().nonnegative(),
+          // Backups made before M5 have no AI notes.
+          provenance: AiProvenance.nullable().default(null),
         }),
       )
       .default([]),

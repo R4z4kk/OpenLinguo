@@ -79,4 +79,17 @@ describe("openDatabase", () => {
     });
     db.close();
   });
+
+  it("marks notes stored before M5 as not from an AI", async () => {
+    const legacy = new Dexie("note-provenance-test");
+    legacy.version(14).stores({ notes: "id" });
+    const note = { id: "n1", characters: "字", pinyin: "zì", meaning: "m", updatedAt: 0 };
+    await legacy.table("notes").add(note);
+    legacy.close();
+
+    const db = openDatabase("note-provenance-test");
+    expect(await db.notes.get("n1")).toEqual({ ...note, provenance: null });
+    expect(await db.aiNotices.count()).toBe(0);
+    db.close();
+  });
 });

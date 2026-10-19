@@ -134,7 +134,14 @@ const unknown = (deckId: string) => ({ ok: false, error: { kind: "unknown-deck",
 const fileNote = async (deckId: string, note: NoteKey): Promise<void> => {
   await db.deckWords.put({ ...note, id: deckWordId(deckId, note), deckId });
   await putCards(db, [note]);
-  await db.notes.put({ id: note.note, characters: "字", pinyin: "", meaning: "m", updatedAt: 0 });
+  await db.notes.put({
+    id: note.note,
+    characters: "字",
+    pinyin: "",
+    meaning: "m",
+    updatedAt: 0,
+    provenance: null,
+  });
 };
 
 describe("named decks", () => {

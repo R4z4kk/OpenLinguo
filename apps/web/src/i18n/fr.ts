@@ -680,6 +680,64 @@ export const fr: Messages = {
     missingModel:
       "La reconnaissance vocale n’est plus sur cet appareil. Téléchargez-la à nouveau sur la page Lire.",
   },
+  aiNotice: {
+    badge: "Généré par IA · {{model}}",
+    sent: "Envoyé à {{provider}} : {{items}}, quand vous appuyez sur « {{action}} ».",
+    providers: {
+      groq: "Groq",
+      openrouter: "OpenRouter",
+      mistral: "Mistral",
+      local: "votre serveur local",
+    },
+    items: {
+      word: "le mot",
+      sentences_one: "votre phrase",
+      sentences_other: "vos {{count}} phrases",
+      entry: "le texte de cette entrée",
+      language: "la langue de l’interface",
+      themes: "les thèmes cochés",
+      note: "votre phrase",
+      level: "votre niveau",
+      reading: "son pinyin",
+      senses_one: "son sens anglais",
+      senses_other: "ses {{count}} sens anglais",
+    },
+    machine:
+      "C’est une machine : elle peut se tromper, même quand elle a l’air sûre d’elle. Gardez votre propre jugement.",
+    whatIsSent: "Ce qui est envoyé",
+    sentTo:
+      "À {{provider}}, quand vous appuyez sur « {{action}} » : {{items}}. Rien d’autre, et jamais en arrière-plan.",
+    sensitive:
+      "N’écrivez rien que vous ne diriez pas à un inconnu : santé, religion, opinions politiques, vie sexuelle.",
+    cancel: "Annuler",
+    notRemembered: "Ce message n’a pas pu être retenu et s’affichera de nouveau : {{reason}}",
+    features: {
+      challenge: {
+        title: "Avant votre première correction",
+        intro: "Une IA va lire vos phrases et proposer des corrections.",
+        confirm: "J’ai compris, corriger",
+        once: "Ce message ne s’affiche qu’une fois pour le défi.",
+      },
+      journal: {
+        title: "Avant votre première correction",
+        intro: "Une IA va lire votre texte et proposer des corrections.",
+        confirm: "J’ai compris, corriger",
+        once: "Ce message ne s’affiche qu’une fois pour le journal.",
+      },
+      interests: {
+        title: "Avant vos premières suggestions",
+        intro: "Une IA va choisir des mots d’après vos centres d’intérêt.",
+        confirm: "J’ai compris, proposer des mots",
+        once: "Ce message ne s’affiche qu’une fois pour les centres d’intérêt.",
+      },
+      translation: {
+        title: "Avant votre première traduction",
+        intro: "Une IA va traduire ce mot en français.",
+        confirm: "J’ai compris, traduire",
+        once: "Ce message ne s’affiche qu’une fois pour la traduction.",
+      },
+    },
+  },
   moduleError: { title: "Cette section n’a pas pu se charger", retry: "Réessayer" },
   notFound: { title: "Page introuvable", back: "Retour à Aujourd’hui" },
 };

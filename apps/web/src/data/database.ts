@@ -1,5 +1,14 @@
-import type { Card, CardState, Review, StrokeData, Subject, WordKey } from "@openlinguo/core";
+import type {
+  AiProvenance,
+  Card,
+  CardState,
+  Review,
+  StrokeData,
+  Subject,
+  WordKey,
+} from "@openlinguo/core";
 import { Dexie, type EntityTable, type Table } from "dexie";
+import type { AiFeature } from "./ai-notice.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
@@ -71,6 +80,8 @@ export type StoredNote = NoteContent & {
   /** The note key: Anki's guid for an imported note. */
   readonly id: string;
   readonly updatedAt: number;
+  /** Set when the content came from an AI answer; kept through edits (docs/compliance/ai.md §4). */
+  readonly provenance: AiProvenance | null;
 };
 
 /** Audio a deck gives one of its readings or notes, removed with its filing in that deck. */
@@ -142,6 +153,9 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
+/** An AI feature whose first-use notice the learner confirmed; never in the backup. */
+export type StoredAiNotice = { readonly feature: AiFeature };
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -166,6 +180,7 @@ export type Database = Dexie & {
   wordAudio: EntityTable<StoredWordAudio, "id">;
   audioBands: EntityTable<StoredAudioBand, "id">;
   recordings: EntityTable<StoredRecording, "id">;
+  aiNotices: EntityTable<StoredAiNotice, "feature">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -227,6 +242,17 @@ export const openDatabase = (name: string): Database => {
       }),
   );
   db.version(14).stores({ recordings: "id" });
+  // Notes stored before M5 were written by the learner or imported from Anki.
+  db.version(15)
+    .stores({ aiNotices: "feature" })
+    .upgrade((tx) =>
+      tx
+        .table<Omit<StoredNote, "provenance">, string>("notes")
+        .toCollection()
+        .modify((note) => {
+          Object.assign(note, { provenance: null });
+        }),
+    );
   return db;
 };
 
