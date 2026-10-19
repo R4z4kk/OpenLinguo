@@ -15,10 +15,10 @@ import {
   listModels,
   type AiEndpoint,
   type AiError,
-  type AiMessage,
   type AiProvider,
   type StructuredMode,
 } from "../ai-client.ts";
+import type { ChatMessage } from "../prompt-pack.ts";
 import type { Result } from "../result.ts";
 import {
   INVALID_KEY,
@@ -120,7 +120,7 @@ const outcome = (result: Result<{ readonly mode: StructuredMode }, AiError>): st
 const ask = (
   endpoint: AiEndpoint,
   model: string,
-  messages: readonly AiMessage[],
+  messages: readonly ChatMessage[],
   mode: StructuredMode,
   signal: AbortSignal,
 ) => chat({ endpoint, model, messages, schema: RECORDING_SCHEMA, mode, signal });

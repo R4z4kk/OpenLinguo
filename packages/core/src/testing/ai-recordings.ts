@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
-import type { AiMessage, AiProvider } from "../ai-client.ts";
+import type { AiProvider } from "../ai-client.ts";
+import type { ChatMessage } from "../prompt-pack.ts";
 
 export const SCENARIOS = [
   "models",
@@ -22,13 +23,13 @@ export const RECORDING_SCHEMA = z.object({
   meaning: z.string(),
 });
 
-export const RECORDING_MESSAGES: readonly AiMessage[] = [
+export const RECORDING_MESSAGES: readonly ChatMessage[] = [
   { role: "system", content: "You help a learner of Chinese. Answer in JSON." },
   { role: "user", content: "Give one common Chinese word for water, its pinyin and its meaning." },
 ];
 
 /** Asks for an answer that breaks RECORDING_SCHEMA, in json_object mode. */
-export const OFF_SCHEMA_MESSAGES: readonly AiMessage[] = [
+export const OFF_SCHEMA_MESSAGES: readonly ChatMessage[] = [
   { role: "system", content: "You help a learner of Chinese. Answer in JSON." },
   {
     role: "user",

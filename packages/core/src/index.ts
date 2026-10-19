@@ -7,7 +7,6 @@ export {
   type AiEndpoint,
   type AiError,
   type AiErrorKind,
-  type AiMessage,
   type AiProvider,
   type StructuredMode,
 } from "./ai-client.ts";

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ChatMessage } from "./prompt-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 import { parseWith, type ValidationError } from "./validation.ts";
 
@@ -16,11 +17,6 @@ export type AiEndpoint = {
   readonly provider: AiProvider;
   readonly baseUrl: string;
   readonly key: string | null;
-};
-
-export type AiMessage = {
-  readonly role: "system" | "user" | "assistant";
-  readonly content: string;
 };
 
 export type StructuredMode = "json_schema" | "json_object";
@@ -47,7 +43,7 @@ export type AiError = {
 export type AiChatRequest<T> = {
   readonly endpoint: AiEndpoint;
   readonly model: string;
-  readonly messages: readonly AiMessage[];
+  readonly messages: readonly ChatMessage[];
   readonly schema: z.ZodType<T>;
   readonly mode: StructuredMode;
   readonly signal: AbortSignal;
@@ -280,9 +276,9 @@ const jsonSchema = (schema: z.ZodType): Record<string, unknown> =>
   Object.fromEntries(Object.entries(z.toJSONSchema(schema)).filter(([key]) => key !== "$schema"));
 
 const withSchemaPrompt = (
-  messages: readonly AiMessage[],
+  messages: readonly ChatMessage[],
   schema: Record<string, unknown>,
-): readonly AiMessage[] => {
+): readonly ChatMessage[] => {
   const instruction = `Answer with one JSON object that follows this JSON Schema:\n${JSON.stringify(schema)}`;
   const [first, ...rest] = messages;
   return first?.role === "system"
