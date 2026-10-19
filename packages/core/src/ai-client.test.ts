@@ -195,14 +195,6 @@ describe("recorded Groq specifics", () => {
     expect(error).toMatchObject({ kind: "rate-limited", status: 429 });
     expect(calls.map((call) => call.at)).toEqual([0, 2_000, 10_000]);
   });
-
-  it("falls back to json_object when json_schema is refused", async () => {
-    const recording = loadRecording("groq", "fallback");
-    replay(recording);
-    const result = answer(await settle(ask("groq", { model: recording.model ?? "" })));
-    expect(result.mode).toBe("json_object");
-    expect(bodyOf(callAt(1))).toMatchObject({ response_format: { type: "json_object" } });
-  });
 });
 
 describe("chat requests", () => {
@@ -274,6 +266,24 @@ describe("chat requests", () => {
     answer(await settle(ask("groq", { mode: "json_object", messages })));
     expect(bodyOf(callAt(0))).toHaveProperty(["messages", 0, "role"], "system");
     expect(bodyOf(callAt(0))).toHaveProperty(["messages", 1], messages[0]);
+  });
+
+  // No model of Groq's free plan refuses strict json_schema (2026-10-19): a 400 in its shape, no code.
+  it("falls back to json_object with the schema in the prompt when json_schema is refused", async () => {
+    serve(
+      reply(400, {
+        error: { message: "json_schema is not supported", type: "invalid_request_error" },
+      }),
+      reply(200, completion(WATER)),
+    );
+    const result = answer(await settle(ask("groq", {})));
+    expect(result.mode).toBe("json_object");
+    expect(calls).toHaveLength(2);
+    expect(bodyOf(callAt(1))).toMatchObject({ response_format: { type: "json_object" } });
+    expect(bodyOf(callAt(1))).toHaveProperty(
+      ["messages", 0, "content"],
+      expect.stringContaining("JSON Schema"),
+    );
   });
 
   it("does not fall back on a 400 it can name", async () => {

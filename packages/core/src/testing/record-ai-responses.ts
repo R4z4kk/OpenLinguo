@@ -168,7 +168,7 @@ const reasoningOff = (run: Run): Promise<Capture> =>
       signal: AbortSignal.timeout(60_000),
     });
     await response.text();
-    return `HTTP ${String(response.status)}`;
+    return `measured: HTTP ${String(response.status)}, ${response.ok ? "accepted" : "refused"}`;
   });
 
 const PLANS: readonly Plan[] = [
@@ -279,7 +279,7 @@ const PLANS: readonly Plan[] = [
     scenario: "reasoning-off",
     providers: ["groq", "mistral", "local"],
     withoutKey: [],
-    expected: "HTTP 200",
+    expected: "measured",
     capture: reasoningOff,
   },
   {

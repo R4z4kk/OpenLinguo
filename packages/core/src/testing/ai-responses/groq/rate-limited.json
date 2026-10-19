@@ -29,8 +29,8 @@
         "status": 429,
         "body": {
           "error": {
-            "message": "Rate limit reached for model `openai/gpt-oss-20b` in organization `org_redacted` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 7680, Requested 385. Please try again in 487.5ms. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
-            "type": "tokens",
+            "message": "Rate limit reached for model `openai/gpt-oss-20b` in organization `org_redacted` service tier `on_demand` on requests per minute (RPM): Limit 30, Used 30, Requested 1. Please try again in 2s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+            "type": "requests",
             "code": "rate_limit_exceeded"
           }
         }
