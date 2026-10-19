@@ -102,6 +102,7 @@ export const TypingCard = ({
               {listen}
               <div className="mt-1 self-stretch">
                 <ImeField
+                  label={t("ime.answer")}
                   ime={ime}
                   features={pack.features}
                   value={answer}

@@ -158,6 +158,11 @@ test("completes a session of every card type with the keyboard only, writing and
   await answerTone();
   await expect(progress).toHaveAttribute("value", "6");
   await answerTyping();
+  // The band word was started today: its challenge comes last, and Skip ends the session.
+  await expect(focused).toContainText(en.challenge.title);
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await main.getByRole("button", { name: en.challenge.skip }).focus();
+  await page.keyboard.press("Enter");
   await expect(focused).toContainText("Session finished: 7 reviews.");
   expect(await accessibilityViolations(page)).toEqual([]);
 

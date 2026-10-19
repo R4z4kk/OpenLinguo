@@ -5,11 +5,13 @@ import {
   type LanguagePack,
   type Result,
 } from "@openlinguo/core";
+import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { Link } from "@tanstack/react-router";
 import {
   Suspense,
   use,
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -18,6 +20,7 @@ import {
   type RefObject,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { ChallengeForm } from "@/components/challenge";
 import { GlossSummary } from "@/components/gloss-summary";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
@@ -26,6 +29,7 @@ import { TypingCard } from "@/components/typing-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { WritingCard } from "@/components/writing-card";
+import { loadTodayChallenge, type Challenge } from "@/data/challenge";
 import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
@@ -137,15 +141,64 @@ const Ending = ({
   </div>
 );
 
+/** The session's last step when a word was started today; otherwise, or once done, `ending`. */
+const ChallengeStep = ({
+  challenge,
+  pack,
+  language,
+  focusTarget,
+  ending,
+  onDone,
+}: {
+  readonly challenge: Promise<Result<Challenge | null, ReviewLogFailure>>;
+  readonly pack: LanguagePack;
+  readonly language: Language;
+  readonly focusTarget: RefObject<HTMLDivElement | null>;
+  readonly ending: ReactNode;
+  readonly onDone: () => void;
+}) => {
+  const { t } = useTranslation();
+  const id = useId();
+  const result = use(challenge);
+
+  useEffect(() => {
+    focusTarget.current?.focus();
+  }, [focusTarget]);
+
+  if (!result.ok)
+    return (
+      <>
+        <p role="alert" className="mt-6 text-danger">
+          {t("challenge.loadFailed", { reason: describeFailure(result.error) })}
+        </p>
+        {ending}
+      </>
+    );
+  if (result.value === null) return ending;
+  return (
+    <section aria-labelledby={id} className="mt-6">
+      <div ref={focusTarget} tabIndex={-1} className="rounded-control">
+        <p className="text-small text-muted">{t("challenge.step")}</p>
+        <h2 id={id} className="text-subtitle">
+          {t("challenge.title")}
+        </h2>
+      </div>
+      <ChallengeForm challenge={result.value} pack={pack} language={language} onDone={onDone} />
+    </section>
+  );
+};
+
 /** One card at a time; Space and 1–4 work while focus is in the session (WCAG 2.1.4). */
 const Runner = ({
   initial,
   pack,
   language,
+  referential,
 }: {
   readonly initial: Session;
   readonly pack: LanguagePack;
   readonly language: Language;
+  readonly referential: ZhProficiency;
 }) => {
   const { t, i18n } = useTranslation();
   const [queue, setQueue] = useState(initial.items);
@@ -158,6 +211,13 @@ const Runner = ({
   const pending = useRef(false);
   const focusTarget = useRef<HTMLDivElement>(null);
   const current = queue[0] ?? null;
+  const ended = current === null;
+  const [challengeDone, setChallengeDone] = useState(false);
+  /** Read once the queue is empty: the word may have been started in this session. */
+  const challenge = useMemo(
+    () => (ended ? loadTodayChallenge(database, referential, localNow()) : null),
+    [ended, referential],
+  );
   /** A drawn card stays drawn once graded: the switch then applies to the next writing cards. */
   const paper = current?.type === "writing" && paperChecked && landed === null;
   /** Tone, typing and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
@@ -168,7 +228,7 @@ const Runner = ({
 
   useEffect(() => {
     focusTarget.current?.focus();
-  }, [done, revealedAt]);
+  }, [done, revealedAt, challengeDone]);
 
   const outcomes = useMemo(
     () =>
@@ -257,8 +317,8 @@ const Runner = ({
     </>
   );
 
-  if (current === null)
-    return (
+  if (current === null) {
+    const ending = (
       <>
         {skipped}
         <Ending focusTarget={focusTarget}>
@@ -285,6 +345,23 @@ const Runner = ({
         </Ending>
       </>
     );
+    return challenge === null || challengeDone ? (
+      ending
+    ) : (
+      <Suspense fallback={null}>
+        <ChallengeStep
+          challenge={challenge}
+          pack={pack}
+          language={language}
+          focusTarget={focusTarget}
+          ending={ending}
+          onDone={() => {
+            setChallengeDone(true);
+          }}
+        />
+      </Suspense>
+    );
+  }
 
   const total = done + queue.length;
   return (
@@ -414,10 +491,12 @@ const Loaded = ({
   session,
   pack,
   language,
+  referential,
 }: {
   readonly session: Promise<Result<Session, ReviewLogFailure>>;
   readonly pack: LanguagePack;
   readonly language: Language;
+  readonly referential: ZhProficiency;
 }) => {
   const { t } = useTranslation();
   const result = use(session);
@@ -427,7 +506,9 @@ const Loaded = ({
         {t("review.failed", { reason: describeFailure(result.error) })}
       </p>
     );
-  return <Runner initial={result.value} pack={pack} language={language} />;
+  return (
+    <Runner initial={result.value} pack={pack} language={language} referential={referential} />
+  );
 };
 
 /** The composed session: due cards, then new ones; nothing is stored until a card is graded. */
@@ -459,7 +540,7 @@ export const ReviewPage = () => {
         {t("review.title")}
       </h1>
       <Suspense fallback={null}>
-        <Loaded session={session} pack={pack} language={language} />
+        <Loaded session={session} pack={pack} language={language} referential={referential} />
       </Suspense>
     </section>
   );
