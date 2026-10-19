@@ -86,6 +86,31 @@ describe("loadSession", () => {
     expect(await db.cards.count()).toBe(2);
   });
 
+  it("adds a word's AI French glosses, marked by their source", async () => {
+    await db.aiGlosses.add({
+      id: "你	ni3",
+      ...NI,
+      senses: [{ english: "你 gloss", french: "toi" }],
+      provenance: {
+        origin: "ai",
+        provider: "local",
+        model: "qwen3:30b-a3b",
+        promptVersion: "zh-gloss-fr-v1",
+        createdAt: "2026-10-19T15:20:00.000Z",
+      },
+    });
+    const { items } = await session(NOON);
+    expect(items[0]).toMatchObject({
+      headword: "你",
+      entry: {
+        glosses: [
+          { lang: "en", text: "你 gloss", source: "cc-cedict" },
+          { lang: "fr", text: "toi", source: "ai" },
+        ],
+      },
+    });
+  });
+
   it("gives the audio a deck holds for the reading", async () => {
     await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
     const id = deckWordId(MY_WORDS, TIAN);
