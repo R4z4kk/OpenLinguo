@@ -92,6 +92,12 @@ const CODE_KINDS = new Map<string, AiErrorKind>([
   ["timeout", "timeout"],
 ]);
 
+// Errors that come without any code, as recorded.
+const MESSAGE_KINDS: readonly (readonly [RegExp, AiErrorKind])[] = [
+  // OpenRouter, a 400 with only `code: 400`.
+  [/is not a valid model id/i, "model-not-found"],
+];
+
 const nullable = <S extends z.ZodType>(schema: S) => schema.nullable().catch(null);
 
 const ErrorBody = z.union([
@@ -173,6 +179,7 @@ const providerError = (httpStatus: number, body: unknown): AiError => {
   const kind =
     STATUS_KINDS.get(status) ??
     CODE_KINDS.get(detail.code ?? "") ??
+    MESSAGE_KINDS.find(([pattern]) => pattern.test(detail.message ?? ""))?.[1] ??
     (status === 429 ? "rate-limited" : "server");
   return { kind, status, message: detail.message };
 };

@@ -24,8 +24,10 @@ type Answer = z.output<typeof RECORDING_SCHEMA>;
 const Listing = z.object({ data: z.array(z.object({ id: z.string() })) });
 const CLOUD = ["groq", "openrouter", "mistral"] as const;
 const PROVIDERS = [...CLOUD, "local"] as const;
-// Recorded with a key; OpenRouter and Mistral only without one so far.
-const RECORDED = ["groq", "local"] as const;
+// Recorded with a key; Mistral only without one (its API needs a paid plan).
+const RECORDED = ["groq", "openrouter", "local"] as const;
+// Probed with reasoning_effort "none"; OpenRouter gets no reasoning field by design.
+const REASONING_PROBED = ["groq", "local"] as const;
 const WATER = '{"word":"水","pinyin":"shuǐ","meaning":"water"}';
 
 let calls: Call[] = [];
@@ -140,10 +142,11 @@ describe.each(RECORDED)("recorded %s responses", (provider) => {
     const error = failure(await settle(ask(provider, {})));
     expect(error.kind).toBe("model-not-found");
     expect(error.message).not.toBeNull();
+    expect(calls).toHaveLength(1);
   });
 });
 
-describe.each([...RECORDED, "openrouter"] as const)("recorded %s model list", (provider) => {
+describe.each(RECORDED)("recorded %s model list", (provider) => {
   it("lists the models", async () => {
     const recording = loadRecording(provider, "models");
     replay(recording);
@@ -164,7 +167,7 @@ describe.each([...RECORDED, "openrouter"] as const)("recorded %s model list", (p
 describe.each(PROVIDERS)("%s reasoning", (provider) => {
   it("is turned off only where a recording shows the provider accepts it", async () => {
     const accepted =
-      RECORDED.some((recorded) => recorded === provider) &&
+      REASONING_PROBED.some((probed) => probed === provider) &&
       loadRecording(provider, "reasoning-off").exchanges.every(
         ({ response }) => response.status === 200,
       );
