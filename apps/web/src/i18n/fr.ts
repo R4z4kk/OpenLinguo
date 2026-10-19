@@ -739,6 +739,31 @@ export const fr: Messages = {
     keep: "Garder la mienne",
     saveFailed: "La correction n’a pas pu être enregistrée\u00a0: {{reason}}",
   },
+  cardProposal: {
+    make: "Créer une carte",
+    made: "Carte créée dans «\u00a0{{deck}}\u00a0».",
+    title: "Nouvelle carte",
+    intro:
+      "Proposée à partir de la phrase {{number}} corrigée. Vérifiez-la\u00a0: rien n’est créé avant que vous confirmiez.",
+    sentence: "Phrase",
+    pinyin: "Pinyin",
+    meaning: "Sens",
+    deck: "Paquet",
+    cards: "Deux cartes\u00a0: reconnaissance et rappel.",
+    confirm: "Créer la carte",
+    cancel: "Annuler",
+    sentenceEmpty: "Écrivez la phrase pour créer la carte.",
+    meaningEmpty: "Écrivez le sens pour créer la carte.",
+    readingFlag:
+      "«\u00a0{{written}}\u00a0» ne correspond à aucune lecture de {{character}} dans le dictionnaire ({{readings}}). Corrigez le pinyin pour créer la carte.",
+    readingUnknown:
+      "{{character}} n’est pas dans le dictionnaire\u00a0: «\u00a0{{written}}\u00a0» ne peut pas être vérifié. Changez la phrase pour créer la carte.",
+    readingInvalid:
+      "Ce pinyin ne suit pas les caractères\u00a0: une syllabe par caractère chinois. Corrigez-le pour créer la carte.",
+    alreadyFiled: "Cette phrase est déjà dans «\u00a0{{deck}}\u00a0».",
+    failed: "La carte n’a pas pu être créée\u00a0: {{reason}}",
+    decksFailed: "Vos paquets n’ont pas pu être lus\u00a0: {{reason}}",
+  },
   backup: {
     intro:
       "Gardez vos cartes, votre historique de révisions, vos paquets et vos réglages dans un fichier, et restaurez-les sur n’importe quel appareil. L’import ajoute ce qui manque sur cet appareil et garde le reste.",
