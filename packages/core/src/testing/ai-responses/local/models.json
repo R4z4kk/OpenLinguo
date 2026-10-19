@@ -1,0 +1,41 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "local",
+  "scenario": "models",
+  "model": null,
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/models",
+        "body": null
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "data": [
+            {
+              "id": "gemma3:4b",
+              "object": "model",
+              "created": 1786030139,
+              "owned_by": "library"
+            },
+            {
+              "id": "qwen3:30b-a3b",
+              "object": "model",
+              "created": 1786029867,
+              "owned_by": "library"
+            },
+            {
+              "id": "mxbai-embed-large:latest",
+              "object": "model",
+              "created": 1786029683,
+              "owned_by": "library"
+            }
+          ],
+          "object": "list"
+        }
+      }
+    }
+  ]
+}

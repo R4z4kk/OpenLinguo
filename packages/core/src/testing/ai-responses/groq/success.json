@@ -1,0 +1,86 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "groq",
+  "scenario": "success",
+  "model": "openai/gpt-oss-20b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "openai/gpt-oss-20b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "word": {
+                    "type": "string"
+                  },
+                  "pinyin": {
+                    "type": "string"
+                  },
+                  "meaning": {
+                    "type": "string"
+                  }
+                },
+                "required": ["word", "pinyin", "meaning"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "openai/gpt-oss-20b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"word\":\"水\",\"pinyin\":\"shuǐ\",\"meaning\":\"water\"}",
+                "reasoning": "We need to output JSON matching the schema: object with properties word, pinyin, meaning. All required. Must be valid compact JSON. Provide a common Chinese word for water. For example \"水\" with pinyin \"shuǐ\" meaning \"water\".\n\nCheck JSON: {\"word\":\"水\",\"pinyin\":\"shuǐ\",\"meaning\":\"water\"}.\n\nNeed to ensure JSON is compact, no whitespace. It parses as JSON.\n\nWe must include all fields: word, pinyin, meaning. Good.\n\nReturn ONLY JSON."
+              },
+              "logprobs": null,
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "queue_time": 0.017929811,
+            "prompt_tokens": 206,
+            "prompt_time": 0.010104134,
+            "completion_tokens": 136,
+            "completion_time": 0.186337979,
+            "total_tokens": 342,
+            "total_time": 0.196442113,
+            "completion_tokens_details": {
+              "reasoning_tokens": 108
+            }
+          },
+          "usage_breakdown": null,
+          "x_groq": {
+            "seed": 1828656275
+          },
+          "service_tier": "on_demand"
+        }
+      }
+    }
+  ]
+}

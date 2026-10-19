@@ -1,0 +1,37 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "groq",
+  "scenario": "reasoning-off",
+  "model": "openai/gpt-oss-20b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "openai/gpt-oss-20b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "reasoning_effort": "none"
+        }
+      },
+      "response": {
+        "status": 400,
+        "body": {
+          "error": {
+            "message": "`reasoning_effort` must be one of `low`, `medium`, or `high`",
+            "type": "invalid_request_error"
+          }
+        }
+      }
+    }
+  ]
+}

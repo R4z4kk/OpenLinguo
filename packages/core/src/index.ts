@@ -1,3 +1,15 @@
+export {
+  AI_BASE_URLS,
+  chat,
+  listModels,
+  type AiAnswer,
+  type AiChatRequest,
+  type AiEndpoint,
+  type AiError,
+  type AiErrorKind,
+  type AiProvider,
+  type StructuredMode,
+} from "./ai-client.ts";
 export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {

@@ -1,0 +1,60 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "groq",
+  "scenario": "unauthorized",
+  "model": "openai/gpt-oss-20b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "openai/gpt-oss-20b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "word": {
+                    "type": "string"
+                  },
+                  "pinyin": {
+                    "type": "string"
+                  },
+                  "meaning": {
+                    "type": "string"
+                  }
+                },
+                "required": ["word", "pinyin", "meaning"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 401,
+        "body": {
+          "error": {
+            "message": "Invalid API Key",
+            "type": "invalid_request_error",
+            "code": "invalid_api_key"
+          }
+        }
+      }
+    }
+  ]
+}

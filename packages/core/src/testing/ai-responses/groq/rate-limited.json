@@ -1,0 +1,40 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "groq",
+  "scenario": "rate-limited",
+  "model": "openai/gpt-oss-20b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "openai/gpt-oss-20b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON.\n\nAnswer with one JSON object that follows this JSON Schema:\n{\"type\":\"object\",\"properties\":{\"word\":{\"type\":\"string\"},\"pinyin\":{\"type\":\"string\"},\"meaning\":{\"type\":\"string\"}},\"required\":[\"word\",\"pinyin\",\"meaning\"],\"additionalProperties\":false}"
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "response_format": {
+            "type": "json_object"
+          }
+        }
+      },
+      "response": {
+        "status": 429,
+        "body": {
+          "error": {
+            "message": "Rate limit reached for model `openai/gpt-oss-20b` in organization `org_redacted` service tier `on_demand` on requests per minute (RPM): Limit 30, Used 30, Requested 1. Please try again in 2s. Need more tokens? Upgrade to Dev Tier today at https://console.groq.com/settings/billing",
+            "type": "requests",
+            "code": "rate_limit_exceeded"
+          }
+        }
+      }
+    }
+  ]
+}

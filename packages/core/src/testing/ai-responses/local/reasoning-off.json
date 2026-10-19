@@ -1,0 +1,53 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "local",
+  "scenario": "reasoning-off",
+  "model": "qwen3:30b-a3b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "qwen3:30b-a3b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "reasoning_effort": "none"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "qwen3:30b-a3b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Okay, the user is asking for a common Chinese word for \"water,\" along with its pinyin and meaning. Let me start by recalling basic Chinese vocabulary. The most straightforward word for water is \"水\" which is pronounced \"shuǐ.\" I should confirm if that's the most common term. \n\nHmm, sometimes people might confuse it with other words, like \"泉\" for spring water, but \"水\" is definitely the general term. Let me double-check. Yeah, in everyday contexts, \"水\" is used for water, whether it's drinking water, tap water, or any body of water. \n\nNext, pinyin: \"shuǐ\" with the third tone. Need to make sure the tone is correct. The third tone is a dipping tone, like a curve. Sometimes learners mix up the tones, so including the tone number might help.\n\nMeaning: just \"water.\" Simple. But maybe I should mention it's the literal translation. Also, check if there are homophones or common mistakes. For example, \"水\" can also refer to a liquid in other contexts, but the primary meaning is water.\n\nWait, the user specified \"one common word,\" so I don't need to list multiple. Just stick with the most common. \"Shuǐ\" is correct. Don't want to overcomplicate it. \n\nAlso, the user is a Chinese learner, so keeping it simple and fundamental is best. Avoid less common synonyms. Let me verify with some references. Yep, \"水\" is the basic term taught in beginner courses. \n\nSo, the JSON should have \"word\": \"水\", \"pinyin\": \"shuǐ\", \"meaning\": \"water\". Make sure the pinyin has the correct tone mark. Wait, in pinyin, it's \"shuǐ\" with the diacritic. But sometimes in text, people omit it, but the user asked for pinyin, so including the tone mark is better. \n\nCheck if \"shuǐ\" is written correctly. Yes, the third tone is indicated by the accent mark. So \"shuǐ\" is right. \n\nMeaning: just \"water.\" No need for extra details. The user asked for the meaning, so \"water\" suffices. \n\nWait, should the meaning be in Chinese? But the user's question is in English, so meaning should be in English. The example in the instructions says \"meaning: water,\" so English is fine. \n\nDouble-checking: other words like \"氺\" but that's a variant and not commonly used. \"水\" is the standard character. \n\nAlright, that's solid. I think that's the correct answer.\n</think>\n\n{\n  \"word\": \"水\",\n  \"pinyin\": \"shuǐ\",\n  \"meaning\": \"water\"\n}"
+              },
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 41,
+            "prompt_tokens_details": {
+              "cached_tokens": 40
+            },
+            "completion_tokens": 581,
+            "total_tokens": 622
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "local",
+  "scenario": "success",
+  "model": "qwen3:30b-a3b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "qwen3:30b-a3b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "word": {
+                    "type": "string"
+                  },
+                  "pinyin": {
+                    "type": "string"
+                  },
+                  "meaning": {
+                    "type": "string"
+                  }
+                },
+                "required": ["word", "pinyin", "meaning"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "reasoning_effort": "none"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "qwen3:30b-a3b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"word\": \"水\", \"pinyin\": \"shuǐ\", \"meaning\": \"water\"}"
+              },
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 41,
+            "prompt_tokens_details": {
+              "cached_tokens": 0
+            },
+            "completion_tokens": 22,
+            "total_tokens": 63
+          }
+        }
+      }
+    }
+  ]
+}
