@@ -1,11 +1,12 @@
-import type {
-  AiError,
-  AiErrorKind,
-  AiProvider,
-  CorrectionAnswer,
-  CorrectionInput,
-  PromptTask,
-  Result,
+import {
+  AI_PROVIDERS,
+  type AiError,
+  type AiErrorKind,
+  type AiProvider,
+  type CorrectionAnswer,
+  type CorrectionInput,
+  type PromptTask,
+  type Result,
 } from "@openlinguo/core";
 import { Check, CircleAlert, ExternalLink, Info, Send, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
@@ -13,7 +14,6 @@ import { useTranslation } from "react-i18next";
 import { Switch } from "@/components/switch";
 import { Button } from "@/components/ui/button";
 import {
-  AI_PROVIDERS,
   aiEndpoint,
   keyFor,
   loadAiSettings,
@@ -73,7 +73,7 @@ const Failure = ({
   readonly error: ShownError;
 }) => {
   const { t } = useTranslation();
-  const name = t(`ai.providers.${provider}.inText`);
+  const name = t(`aiNotice.providers.${provider}`);
   const local = provider === "local" && error.kind === "network";
   return (
     <div
@@ -429,7 +429,7 @@ const AiSettingsForm = ({
                   {outcome.kind === "listed" &&
                     t("ai.listed", {
                       count: outcome.count,
-                      provider: t(`ai.providers.${provider}.inText`),
+                      provider: t(`aiNotice.providers.${provider}`),
                     })}
                   {outcome.kind === "connected" && t("ai.connected", { model: outcome.model })}
                   {outcome.kind === "forgotten" && t("ai.forgotten")}

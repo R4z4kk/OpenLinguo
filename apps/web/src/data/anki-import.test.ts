@@ -699,6 +699,7 @@ describe("importPlan", () => {
       pinyin: "bù cún zài",
       meaning: "made up",
       updatedAt: expect.any(Number) as number,
+      provenance: null,
     });
     const audio = await audioRows();
     expect(audio.map(({ id, type }) => [id, type])).toEqual(

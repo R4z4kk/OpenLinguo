@@ -140,6 +140,7 @@ This section is how anyone can tell whether an OpenLinguo item came from an AI m
 | `createdAt` | string, ISO 8601 in UTC | When the answer was received |
 
 - **Where it appears.** Every stored AI item carries a `provenance` member, both in IndexedDB and in the backup file. These items are corrections, cards made from a corrected sentence, and AI glosses. The learner's own sentences carry none. Suggested words carry none either, because they are dictionary entries and contain no AI text.
+  - A note (`notes` in the backup file) has `provenance` set when it was made from a corrected sentence, and `null` when the learner wrote it or imported it from Anki. A backup made before M5 has no such member: it reads as `null`.
 - **Who sets it.** The code that validated the answer sets the field when it stores the item. The model's output never sets it.
 - **What it never holds.** No learner identity, key, endpoint address or prompt text. The guidelines say "the information related to the creator of the content should not be processed" (para 94).
 - **Edits.** The field stays when the learner accepts a correction, makes a card from it or edits the item: it records where the item came from, not who changed it last.

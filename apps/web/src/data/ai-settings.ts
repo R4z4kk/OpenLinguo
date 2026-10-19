@@ -17,13 +17,6 @@ import {
 import type { Database } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
-export const AI_PROVIDERS = [
-  "groq",
-  "openrouter",
-  "mistral",
-  "local",
-] as const satisfies readonly AiProvider[];
-
 export type CloudProvider = Exclude<AiProvider, "local">;
 
 export type ProviderLinks = {

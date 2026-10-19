@@ -664,6 +664,7 @@ export const importPlan = async (
             pinyin,
             meaning,
             updatedAt,
+            provenance: null,
           })),
         );
         await db.audio.bulkAdd(audio);

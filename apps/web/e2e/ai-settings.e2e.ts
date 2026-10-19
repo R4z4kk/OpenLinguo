@@ -120,7 +120,7 @@ test("sets up Groq: its notice, a key kept in memory only, a refused key named",
   const testButton = section.getByRole("button", { name: en.ai.test });
   await testButton.click();
   await expect(section.getByRole("alert")).toContainText(
-    fill(en.ai.errors.auth, { provider: groq.inText }),
+    fill(en.ai.errors.auth, { provider: en.aiNotice.providers.groq }),
   );
   await expect(section.getByRole("alert")).toContainText("Invalid API Key");
   await expect(testButton).toBeFocused();
@@ -162,7 +162,9 @@ test("connects to a local server: the how-to, a refused origin, then the test se
   running = true;
   await testButton.click();
   const status = section.getByRole("status");
-  await expect(status).toHaveText(fill(en.ai.listed_other, { count: 3, provider: local.inText }));
+  await expect(status).toHaveText(
+    fill(en.ai.listed_other, { count: 3, provider: en.aiNotice.providers.local }),
+  );
   const model = section.getByRole("combobox", { name: en.ai.model });
   await expect(model).toBeFocused();
   await model.selectOption("qwen3:30b-a3b");
