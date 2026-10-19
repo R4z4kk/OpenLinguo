@@ -8,6 +8,7 @@ import { AiSettingsSection } from "@/shell/ai-settings";
 import { BackupControls } from "@/shell/backup-controls";
 import { RecordingsControls } from "@/shell/recordings-controls";
 import { GoalSwitcher } from "@/shell/goal-switcher";
+import { InterestsSection } from "@/shell/interests";
 import { LanguageSwitcher } from "@/shell/language-switcher";
 import { LearningStats } from "@/shell/learning-stats";
 import { PracticeSwitches } from "@/shell/practice-switches";
@@ -24,6 +25,8 @@ export const ProfilePage = () => {
   // Switchers, progress and stats read their data again after a backup restores them.
   const [restored, setRestored] = useState(0);
   const [showProgress, setShowProgress] = useState(() => currentSetting(storage, SHOW_PROGRESS));
+  // Sections that call the AI read the connection again after each settings save.
+  const [aiVersion, setAiVersion] = useState(0);
   return (
     <section>
       <h1 className="text-title">{t("profile.title")}</h1>
@@ -49,7 +52,20 @@ export const ProfilePage = () => {
         <ThemeSwitcher />
       </div>
       {state.status === "ready" && state.pack.prompts !== null && (
-        <AiSettingsSection correction={state.pack.prompts.correction} />
+        <>
+          <AiSettingsSection
+            correction={state.pack.prompts.correction}
+            onSaved={() => {
+              setAiVersion((version) => version + 1);
+            }}
+          />
+          <InterestsSection
+            key={`interests-${String(restored)}`}
+            vocabulary={state.pack.prompts.vocabulary}
+            features={state.pack.features}
+            aiVersion={aiVersion}
+          />
+        </>
       )}
       <h2 className="mt-8 text-subtitle">{t("profile.data")}</h2>
       {persistence !== null && <p className="mt-4 text-muted">{t(`persistence.${persistence}`)}</p>}

@@ -27,6 +27,7 @@ import {
   deckCounts,
   deleteDeck,
   fileWord,
+  fileWords,
   introduceWord,
   nextNewReadings,
   putCards,
@@ -255,6 +256,28 @@ describe("fileWord", () => {
     });
     vi.spyOn(db.cards, "bulkPut").mockRejectedValueOnce(new Error("QuotaExceededError"));
     expect(await file(MY_WORDS, NI)).toEqual({
+      ok: false,
+      error: { kind: "storage", message: "Error: QuotaExceededError" },
+    });
+    expect(await db.cards.count()).toBe(0);
+    expect(await db.deckWords.count()).toBe(0);
+  });
+});
+
+describe("fileWords", () => {
+  it("files readings at once with their cards, ahead of the bands in the new-card order", async () => {
+    const zoo = await deckOf("Zoo");
+    expect(await fileWords(db, zoo, [HANG, E])).toEqual(ok(null));
+    expect(await db.cards.count()).toBe(4);
+    expect(await filedIn(HANG)).toEqual([zoo]);
+    expect(await filedIn(E)).toEqual([zoo]);
+    expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, NI, HAO, XING, TIAN]));
+  });
+
+  it("refuses an unknown deck and writes nothing when one reading fails", async () => {
+    expect(await fileWords(db, "gone", [HAO])).toEqual(unknown("gone"));
+    vi.spyOn(db.deckWords, "bulkPut").mockRejectedValueOnce(new Error("QuotaExceededError"));
+    expect(await fileWords(db, MY_WORDS, [HAO, NI])).toEqual({
       ok: false,
       error: { kind: "storage", message: "Error: QuotaExceededError" },
     });

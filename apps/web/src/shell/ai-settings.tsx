@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 type Correction = PromptTask<CorrectionInput, CorrectionAnswer>;
 
 /** An aborted test is the learner's doing: nothing to show. */
-type ShownError = Omit<AiError, "kind"> & { readonly kind: Exclude<AiErrorKind, "aborted"> };
+export type ShownError = Omit<AiError, "kind"> & { readonly kind: Exclude<AiErrorKind, "aborted"> };
 
 type Outcome =
   | { readonly kind: "listed"; readonly count: number }
@@ -40,7 +40,7 @@ type Outcome =
   | { readonly kind: "forgotten" }
   | { readonly kind: "failed"; readonly error: ShownError };
 
-const fieldClass =
+export const fieldClass =
   "min-h-12 w-full rounded-control border border-border-strong bg-surface px-3 aria-invalid:border-danger";
 
 const NewTabLink = ({
@@ -65,7 +65,8 @@ const NewTabLink = ({
   );
 };
 
-const Failure = ({
+/** One sentence per error kind, then the provider's own message. */
+export const AiFailure = ({
   provider,
   error,
 }: {
@@ -95,7 +96,14 @@ const Failure = ({
 };
 
 /** Profile › AI assistant: the provider, its key and model, and the connection test (ADR 0012). */
-export const AiSettingsSection = ({ correction }: { readonly correction: Correction }) => {
+export const AiSettingsSection = ({
+  correction,
+  onSaved,
+}: {
+  readonly correction: Correction;
+  /** After each save: other sections read the connection again. */
+  readonly onSaved: () => void;
+}) => {
   const { t } = useTranslation();
   const [loaded, setLoaded] = useState<Result<AiSettings, ReviewLogFailure> | null>(null);
 
@@ -120,7 +128,9 @@ export const AiSettingsSection = ({ correction }: { readonly correction: Correct
           {t("ai.loadFailed", { reason: describeFailure(loaded.error) })}
         </p>
       )}
-      {loaded?.ok === true && <AiSettingsForm initial={loaded.value} correction={correction} />}
+      {loaded?.ok === true && (
+        <AiSettingsForm initial={loaded.value} correction={correction} onSaved={onSaved} />
+      )}
     </section>
   );
 };
@@ -128,9 +138,11 @@ export const AiSettingsSection = ({ correction }: { readonly correction: Correct
 const AiSettingsForm = ({
   initial,
   correction,
+  onSaved,
 }: {
   readonly initial: AiSettings;
   readonly correction: Correction;
+  readonly onSaved: () => void;
 }) => {
   const { t, i18n } = useTranslation();
   const [settings, setSettings] = useState(initial);
@@ -170,6 +182,7 @@ const AiSettingsForm = ({
     setSettings(next);
     void saveAiSettings(database, next).then((saved) => {
       setSaveFailure(saved.ok ? null : describeFailure(saved.error));
+      if (saved.ok) onSaved();
     });
   };
 
@@ -437,7 +450,7 @@ const AiSettingsForm = ({
               </p>
             )}
           </div>
-          {outcome?.kind === "failed" && <Failure provider={provider} error={outcome.error} />}
+          {outcome?.kind === "failed" && <AiFailure provider={provider} error={outcome.error} />}
           <div className="mt-4 flex flex-col gap-2">
             <label htmlFor={`${id}-model`} className="font-semibold">
               {t("ai.model")}

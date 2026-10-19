@@ -1,19 +1,9 @@
-import { readFileSync } from "node:fs";
 import { AI_BASE_URLS } from "@openlinguo/core";
 import { expect, type Page } from "@playwright/test";
-import { z } from "zod";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
+import { recorded, replay } from "./ai-replay.ts";
 import { test } from "./app.ts";
-
-const Exchange = z.object({
-  request: z.object({ method: z.string(), path: z.string() }),
-  response: z.object({ status: z.number().int(), body: z.unknown() }),
-});
-type Exchange = z.output<typeof Exchange>;
-
-const recorded = (url: URL): readonly Exchange[] =>
-  z.object({ exchanges: z.array(Exchange) }).parse(JSON.parse(readFileSync(url, "utf8"))).exchanges;
 
 /** Real answers: Ollama 0.35.1 with qwen3:30b-a3b, and Groq refusing a wrong key. */
 const LOCAL = recorded(new URL("fixtures/ai/local-connection-test.json", import.meta.url));
@@ -27,42 +17,8 @@ const GROQ_REFUSED =
 const LOCAL_SERVER = "http://localhost:11434/v1";
 const KEY = "gsk_e2e-key-for-groq-only";
 
-type Sent = { readonly url: string; readonly authorization: string | null };
-
 const fill = (template: string, values: Readonly<Record<string, string | number>>): string =>
   template.replaceAll(/\{\{(\w+)\}\}/gu, (_, name: string) => String(values[name]));
-
-/** Answers the endpoint's requests with the exchanges of the same method and path; none: unreachable. */
-const replay = async (
-  page: Page,
-  baseUrl: string,
-  exchanges: () => readonly Exchange[] | null,
-): Promise<Sent[]> => {
-  const sent: Sent[] = [];
-  const cors = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "authorization, content-type",
-  };
-  await page.route(`${baseUrl}/**`, async (route) => {
-    const request = route.request();
-    if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors });
-    sent.push({ url: request.url(), authorization: await request.headerValue("authorization") });
-    const path = request.url().slice(baseUrl.length);
-    const exchange =
-      exchanges()?.find(
-        (candidate) =>
-          candidate.request.method === request.method() && candidate.request.path === path,
-      ) ?? null;
-    if (exchange === null) return route.abort("connectionrefused");
-    return route.fulfill({
-      status: exchange.response.status,
-      headers: cors,
-      contentType: "application/json",
-      body: JSON.stringify(exchange.response.body),
-    });
-  });
-  return sent;
-};
 
 const storedRows = (page: Page): Promise<unknown> =>
   page.evaluate(
@@ -124,7 +80,9 @@ test("sets up Groq: its notice, a key kept in memory only, a refused key named",
   );
   await expect(section.getByRole("alert")).toContainText("Invalid API Key");
   await expect(testButton).toBeFocused();
-  expect(sent).toEqual([{ url: `${AI_BASE_URLS.groq}/models`, authorization: `Bearer ${KEY}` }]);
+  expect(sent).toEqual([
+    { url: `${AI_BASE_URLS.groq}/models`, authorization: `Bearer ${KEY}`, body: null },
+  ]);
   expect(await accessibilityViolations(page)).toEqual([]);
   expect(JSON.stringify(await storedRows(page))).not.toContain(KEY);
 

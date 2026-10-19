@@ -65,16 +65,17 @@ describe("sentItems", () => {
     ).toBe("le texte de cette entrée et la langue de l’interface");
   });
 
-  it("leaves out the interests the learner did not give", () => {
-    const interests = { themes: ["cuisine"], note: "J’aime le thé.", level: 2, count: 10 };
-    expect(sentItems(fr, "fr", { feature: "interests", input: interests })).toBe(
-      "les thèmes cochés, votre phrase et votre niveau",
+  it("leaves out the interests the learner did not give and names the band", () => {
+    const input = { themes: ["Cuisine"], note: "J’aime le thé.", level: 2, count: 10 };
+    const payload = { feature: "interests", input, band: "HSK 2" } as const;
+    expect(sentItems(fr, "fr", payload)).toBe(
+      "les thèmes cochés, votre phrase et votre niveau (HSK 2)",
     );
-    expect(sentItems(fr, "fr", { feature: "interests", input: { ...interests, note: " " } })).toBe(
-      "les thèmes cochés et votre niveau",
+    expect(sentItems(fr, "fr", { ...payload, input: { ...input, note: " " } })).toBe(
+      "les thèmes cochés et votre niveau (HSK 2)",
     );
-    expect(sentItems(en, "en", { feature: "interests", input: { ...interests, themes: [] } })).toBe(
-      "your sentence and your level",
+    expect(sentItems(en, "en", { ...payload, input: { ...input, themes: [] } })).toBe(
+      "your sentence and your level (HSK 2)",
     );
   });
 
