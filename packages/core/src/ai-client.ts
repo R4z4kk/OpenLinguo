@@ -3,7 +3,8 @@ import type { ChatMessage } from "./prompt-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 import { parseWith, type ValidationError } from "./validation.ts";
 
-export type AiProvider = "groq" | "openrouter" | "mistral" | "local";
+export const AI_PROVIDERS = ["groq", "openrouter", "mistral", "local"] as const;
+export type AiProvider = (typeof AI_PROVIDERS)[number];
 
 /** Checked on 2026-10-19 (ADR 0012); `local` is Ollama's default address. */
 export const AI_BASE_URLS: Readonly<Record<AiProvider, string>> = {

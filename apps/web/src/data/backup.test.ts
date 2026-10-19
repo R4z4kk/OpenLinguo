@@ -43,7 +43,22 @@ const NOTE = {
   pinyin: "bù cún zài",
   meaning: "made up",
   updatedAt: start,
+  provenance: null,
 };
+const AI_NOTE = {
+  id: "corrected-1",
+  characters: "我的电话很新。",
+  pinyin: "Wǒ de diànhuà hěn xīn.",
+  meaning: "Mon téléphone est tout neuf.",
+  updatedAt: start,
+  provenance: {
+    origin: "ai",
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+    promptVersion: "zh-correct-v1",
+    createdAt: "2026-10-19T14:03:27.512Z",
+  },
+} as const;
 
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
 
@@ -135,6 +150,17 @@ describe("exportBackup", () => {
 });
 
 describe("round trip", () => {
+  it("keeps the provenance of AI notes", async () => {
+    await db.notes.bulkAdd([NOTE, AI_NOTE]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ notes: 2 }));
+    expect(await restored.notes.toArray()).toEqual([NOTE, AI_NOTE]);
+  });
+
   it("brings writing and typing cards back with their states", async () => {
     const writing = card("好", "hao3", "writing");
     const typing = card("好", "hao3", "typing");
@@ -195,6 +221,14 @@ describe("parseBackup", () => {
           reviews: [review(1, RECALL.id, start, "good")],
         }),
       ),
+    );
+  });
+
+  it("reads notes of a backup made before M5 as written by the learner", () => {
+    const preM5 = { ...NOTE };
+    Reflect.deleteProperty(preM5, "provenance");
+    expect(parseBackup(JSON.stringify(backup({ notes: [preM5] })))).toEqual(
+      ok(backup({ notes: [NOTE] })),
     );
   });
 

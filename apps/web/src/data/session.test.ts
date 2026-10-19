@@ -125,7 +125,7 @@ describe("loadSession", () => {
       await db.deckWords.add({ ...subject, id: deckWordId(MY_WORDS, subject), deckId: MY_WORDS });
     await putCards(db, [note, lost]);
     const content = { characters: "不存在", pinyin: "bù cún zài", meaning: "made up" };
-    await db.notes.add({ ...content, id: note.note, updatedAt: 0 });
+    await db.notes.add({ ...content, id: note.note, updatedAt: 0, provenance: null });
     const audio = deckWordId(MY_WORDS, note);
     await db.audio.add({ id: audio, type: "audio/mpeg", data: new ArrayBuffer(4) });
 
