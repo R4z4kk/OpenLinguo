@@ -11,7 +11,6 @@ import {
   Suspense,
   use,
   useEffect,
-  useId,
   useMemo,
   useRef,
   useState,
@@ -158,7 +157,6 @@ const ChallengeStep = ({
   readonly onDone: () => void;
 }) => {
   const { t } = useTranslation();
-  const id = useId();
   const result = use(challenge);
 
   useEffect(() => {
@@ -176,15 +174,17 @@ const ChallengeStep = ({
     );
   if (result.value === null) return ending;
   return (
-    <section aria-labelledby={id} className="mt-6">
-      <div ref={focusTarget} tabIndex={-1} className="rounded-control">
-        <p className="text-small text-muted">{t("challenge.step")}</p>
-        <h2 id={id} className="text-subtitle">
-          {t("challenge.title")}
-        </h2>
-      </div>
-      <ChallengeForm challenge={result.value} pack={pack} language={language} onDone={onDone} />
-    </section>
+    <div className="mt-6">
+      <ChallengeForm
+        challenge={result.value}
+        pack={pack}
+        language={language}
+        eyebrow={t("challenge.step")}
+        level="h2"
+        focusTarget={focusTarget}
+        onDone={onDone}
+      />
+    </div>
   );
 };
 

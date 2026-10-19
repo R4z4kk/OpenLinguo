@@ -1,8 +1,9 @@
 // Records a real model list and answer to a zh prompt, replayed by an E2E: the vocabulary prompt
-// for interests (#187), the gloss prompt for the word page (#188).
-// Usage: pnpm --filter @openlinguo/web record:ai <provider>=<model> [vocabulary|gloss]
+// for interests (#187), the gloss prompt for the word page (#188), the correction prompt for the
+// 5-sentence challenge (#183).
+// Usage: pnpm --filter @openlinguo/web record:ai <provider>=<model> [vocabulary|gloss|correction]
 // The key comes from GROQ_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY or a hidden prompt, and is
-// never written.
+// never written. LOCAL_BASE_URL replaces the local server's address.
 import { writeFile } from "node:fs/promises";
 import { argv, env, exit, stdin } from "node:process";
 import { fileURLToPath } from "node:url";
@@ -42,6 +43,19 @@ const GLOSS_INPUT = {
   glosses: ["to have a pleasant journey", "Bon voyage!"],
 };
 
+/** The challenge mockup's sentences, in the E2E's interface language. */
+const CORRECTION_INPUT = {
+  word: "电话",
+  sentences: [
+    "我给妈妈打电话。",
+    "你的电话号码是多少？",
+    "我电话很新。",
+    "晚上我不想接电话。",
+    "请你电话我。",
+  ],
+  language: "en",
+} as const;
+
 const fail = (message: string): never => {
   console.error(message);
   exit(1);
@@ -56,9 +70,9 @@ const parseBody = (text: string): unknown => {
   }
 };
 
-const USAGE = "Usage: record:ai <provider>=<model> [vocabulary|gloss]";
+const USAGE = "Usage: record:ai <provider>=<model> [vocabulary|gloss|correction]";
 const [target = "", taskName = "vocabulary"] = argv.slice(2);
-const task = z.enum(["vocabulary", "gloss"]).safeParse(taskName).data ?? fail(USAGE);
+const task = z.enum(["vocabulary", "gloss", "correction"]).safeParse(taskName).data ?? fail(USAGE);
 const [name = "", model = ""] = target.split(/=(.*)/su);
 const chosen = z.enum(AI_PROVIDERS).safeParse(name).data ?? fail(USAGE);
 if (model === "") fail(USAGE);
@@ -69,7 +83,8 @@ const keyOf = async (variable: string | null): Promise<string | null> => {
 };
 const key = await keyOf(KEY_VARIABLES[chosen]);
 
-const baseUrl = AI_BASE_URLS[chosen];
+const baseUrl =
+  chosen === "local" ? (env["LOCAL_BASE_URL"] ?? AI_BASE_URLS.local) : AI_BASE_URLS[chosen];
 const tape: Exchange[] = [];
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (...args: Parameters<typeof fetch>) => {
@@ -96,7 +111,7 @@ if (!models.ok) failed(models.error);
 else if (!models.value.includes(model))
   fail(`${model} is not in ${chosen}'s list: nothing written`);
 
-const { vocabulary, glossTranslation } = createPrompts({
+const { vocabulary, glossTranslation, correction } = createPrompts({
   lookup: () => Promise.resolve(ok([])),
   tokenize: () => [],
   proficiency: "hsk-2025",
@@ -111,7 +126,11 @@ const ask = <I, A>(prompt: PromptTask<I, A>, input: I) =>
     signal: new AbortController().signal,
   });
 const answer =
-  task === "gloss" ? await ask(glossTranslation, GLOSS_INPUT) : await ask(vocabulary, INPUT);
+  task === "gloss"
+    ? await ask(glossTranslation, GLOSS_INPUT)
+    : task === "correction"
+      ? await ask(correction, CORRECTION_INPUT)
+      : await ask(vocabulary, INPUT);
 if (!answer.ok) {
   failed(answer.error);
 } else {

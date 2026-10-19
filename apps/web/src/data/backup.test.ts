@@ -66,6 +66,7 @@ const CHALLENGE = {
   headword: "电话",
   readingKey: "dian4 hua4",
   sentences: ["我给妈妈打电话。", "", "请你电话我。", "", ""],
+  corrections: [null, null, null, null, null],
   updatedAt: start,
 };
 const GLOSS = {
@@ -78,6 +79,26 @@ const GLOSS = {
   provenance: { ...AI_NOTE.provenance, promptVersion: "zh-gloss-fr-v1" },
 } as const;
 const GLOSS_ID = "一路平安\tyi1 lu4 ping2 an1";
+
+const CORRECTED = {
+  ...CHALLENGE,
+  day: "2026-10-23",
+  corrections: [
+    null,
+    null,
+    {
+      original: "请你电话我。",
+      corrected: "请你打电话给我。",
+      changes: [{ from: "请你电话我", to: "请你打电话给我", explanation: "电话 is a noun." }],
+      reading: "qǐng nǐ dǎ diàn huà gěi wǒ .",
+      meaning: "Please call me.",
+      choice: "accepted",
+      provenance: AI_NOTE.provenance,
+    },
+    null,
+    null,
+  ],
+} as const;
 
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
 
@@ -184,7 +205,7 @@ describe("round trip", () => {
   });
 
   it("brings challenges back, the latest content of a day winning", async () => {
-    await db.challenges.bulkAdd([CHALLENGE, { ...CHALLENGE, day: "2026-10-22" }]);
+    await db.challenges.bulkAdd([CHALLENGE, { ...CHALLENGE, day: "2026-10-22" }, CORRECTED]);
     const exported = await exportBackup(db, SETTINGS, now);
     if (!exported.ok) throw new Error(exported.error.kind);
     const parsed = parseBackup(JSON.stringify(exported.value));
@@ -192,10 +213,11 @@ describe("round trip", () => {
     const restored = openDatabase(`backup-test-restored-${String(counter)}`);
     const newer = { ...CHALLENGE, sentences: ["我打电话。", "", "", "", ""], updatedAt: start + 1 };
     await restored.challenges.add(newer);
-    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ challenges: 1 }));
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ challenges: 2 }));
     expect(await restored.challenges.toArray()).toEqual([
       newer,
       { ...CHALLENGE, day: "2026-10-22" },
+      CORRECTED,
     ]);
   });
 
@@ -318,6 +340,14 @@ describe("parseBackup", () => {
     const preM5 = backup({});
     Reflect.deleteProperty(preM5, "aiGlosses");
     expect(parseBackup(JSON.stringify(preM5))).toEqual(ok(backup({})));
+  });
+
+  it("reads challenges of a backup made before corrections as uncorrected", () => {
+    const before = { ...CHALLENGE };
+    Reflect.deleteProperty(before, "corrections");
+    expect(parseBackup(JSON.stringify(backup({ challenges: [before] })))).toEqual(
+      ok(backup({ challenges: [CHALLENGE] })),
+    );
   });
 
   it("lists each failing path", () => {

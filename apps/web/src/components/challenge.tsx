@@ -1,7 +1,8 @@
 import type { LanguagePack, Result } from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
+import { CorrectionView, useCorrection } from "@/components/correction";
 import { GlossSummary } from "@/components/gloss-summary";
 import { ImeField } from "@/components/ime-field";
 import { Pinyin } from "@/components/pinyin";
@@ -10,6 +11,7 @@ import { SegmentedControl } from "@/components/segmented-control";
 import { Button } from "@/components/ui/button";
 import { loadAiConnection, type AiConnection } from "@/data/ai-settings";
 import { CHALLENGE_APP_IME, saveChallenge, type Challenge } from "@/data/challenge";
+import { currentCorrections, isCorrected, type Corrections } from "@/data/correction";
 import { currentSetting, saveSetting } from "@/data/daily-goal";
 import { database } from "@/data/database";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
@@ -23,7 +25,13 @@ type Props = {
   readonly challenge: Challenge;
   readonly pack: LanguagePack;
   readonly language: Language;
-  /** Ends the Today session's last step, after « Save » or « Skip »; `null`: a saved challenge opened again. */
+  /** Above the title: the session's step, or the challenge's day. */
+  readonly eyebrow: string;
+  /** `h2` under the session's title, `h1` on its own page. */
+  readonly level: "h1" | "h2";
+  /** Takes focus when the step appears. */
+  readonly focusTarget: RefObject<HTMLDivElement | null> | null;
+  /** Ends the Today session's last step; `null`: a saved challenge opened again. */
   readonly onDone: (() => void) | null;
 };
 
@@ -56,12 +64,28 @@ const Word = ({ challenge, pack, language }: Pick<Props, "challenge" | "pack" | 
   );
 };
 
-/** Five fields through the in-app input method or the device keyboard; kept on « Save » or « Skip ». */
-export const ChallengeForm = ({ challenge, pack, language, onDone }: Props) => {
+/**
+ * Five fields through the in-app input method or the device keyboard, kept on « Save » or « Skip »;
+ * once a provider is set, « Correct » and the correction of each sentence.
+ */
+export const ChallengeForm = ({
+  challenge,
+  pack,
+  language,
+  eyebrow,
+  level,
+  focusTarget,
+  onDone,
+}: Props) => {
   const { t } = useTranslation();
   const id = useId();
   const ime = pack.features.ime;
+  const prompts = pack.prompts;
   const [sentences, setSentences] = useState(challenge.sentences);
+  const [corrections, setCorrections] = useState<Corrections>(challenge.corrections);
+  const [reviewing, setReviewing] = useState(() =>
+    isCorrected(challenge.sentences, challenge.corrections),
+  );
   const [method, setMethod] = useState<InputMethod>(() =>
     currentSetting(storage, CHALLENGE_APP_IME) ? "app" : "device",
   );
@@ -83,25 +107,108 @@ export const ChallengeForm = ({ challenge, pack, language, onDone }: Props) => {
     };
   }, []);
 
+  const store = (next: Corrections): Promise<Result<boolean, ReviewLogFailure>> =>
+    saveChallenge(database, { ...challenge, sentences, corrections: next }, Date.now());
+
   /** `then`: what follows a successful save. */
   const keep = async (then: (() => void) | null): Promise<void> => {
     if (busy) return;
     setBusy(true);
-    const result = await saveChallenge(database, { ...challenge, sentences }, Date.now());
+    const result = await store(corrections);
     setBusy(false);
     setSaved(result);
     if (result.ok) then?.();
   };
+
+  const inSession = onDone !== null;
+  const skip = (
+    <Button variant="ghost" aria-disabled={busy} onClick={() => void keep(onDone)}>
+      {t("challenge.skip")}
+    </Button>
+  );
+  const save = (
+    <Button
+      variant={inSession ? "default" : "outline"}
+      aria-disabled={busy}
+      onClick={() => void keep(onDone)}
+    >
+      {t("challenge.save")}
+    </Button>
+  );
+  const correction = useCorrection({
+    feature: "challenge",
+    source:
+      connection?.ok === true && connection.value !== null && prompts !== null
+        ? { connection: connection.value, task: prompts.correction }
+        : null,
+    word: challenge.word.headword,
+    sentences,
+    language,
+    secondary: inSession ? skip : save,
+    onCorrected: (next) => {
+      void store(next).then((stored) => {
+        setSaved(stored);
+        if (!stored.ok) return;
+        setCorrections(next);
+        setReviewing(true);
+      });
+    },
+    onLater: () => void keep(onDone),
+  });
 
   const write = (index: number, value: string): void => {
     setSaved(null);
     setSentences((current) => current.map((sentence, at) => (at === index ? value : sentence)));
   };
 
+  const Heading = level;
+  const header = (
+    <div ref={focusTarget} tabIndex={-1} className="rounded-control">
+      <p className="text-small text-muted">{eyebrow}</p>
+      <Heading id={`${id}-title`} className={level === "h1" ? "text-title" : "text-subtitle"}>
+        {t(reviewing ? "correction.title" : "challenge.title")}
+      </Heading>
+    </div>
+  );
+  const failure = saved?.ok === false && (
+    <p role="alert" className="mt-2 text-danger">
+      {t("challenge.saveFailed", { reason: describeFailure(saved.error) })}
+    </p>
+  );
+
+  if (reviewing && prompts !== null)
+    return (
+      <section aria-labelledby={`${id}-title`}>
+        {header}
+        <Word challenge={challenge} pack={pack} language={language} />
+        {correction.warning}
+        <CorrectionView
+          corrections={currentCorrections(sentences, corrections)}
+          prompts={prompts}
+          features={pack.features}
+          onChoose={async (index, choice) => {
+            const next = corrections.map((item, at) =>
+              at === index && item !== null ? { ...item, choice } : item,
+            );
+            const stored = await store(next);
+            if (!stored.ok) return stored;
+            setCorrections(next);
+            return { ok: true, value: null };
+          }}
+        />
+        {onDone !== null && (
+          <Button variant="outline" className="mt-6" onClick={onDone}>
+            {t("challenge.finish")}
+          </Button>
+        )}
+        {failure}
+      </section>
+    );
+
   const appIme = method === "app" ? ime : null;
-  const inSession = onDone !== null;
   return (
-    <>
+    <section aria-labelledby={`${id}-title`}>
+      {header}
       <Word challenge={challenge} pack={pack} language={language} />
       {inSession && <p className="mt-4 text-muted">{t("challenge.intro")}</p>}
       {ime !== null && (
@@ -137,6 +244,7 @@ export const ChallengeForm = ({ challenge, pack, language, onDone }: Props) => {
               ime={appIme}
               features={pack.features}
               value={sentence}
+              readOnly={correction.running}
               onChange={(value) => {
                 write(index, value);
               }}
@@ -152,33 +260,32 @@ export const ChallengeForm = ({ challenge, pack, language, onDone }: Props) => {
                 type="text"
                 lang="zh-Hans"
                 value={sentence}
+                readOnly={correction.running}
                 onChange={(event) => {
                   write(index, event.target.value);
                 }}
-                className="min-h-13 w-full rounded-control border border-border-strong bg-surface px-3 font-zh text-pinyin"
+                className="min-h-13 w-full rounded-control border border-border-strong bg-surface px-3 font-zh text-pinyin read-only:bg-sunken"
               />
             </div>
           );
         })}
       </div>
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        <Button aria-disabled={busy} onClick={() => void keep(onDone)}>
-          {t("challenge.save")}
-        </Button>
-        {inSession && (
-          <Button variant="ghost" aria-disabled={busy} onClick={() => void keep(onDone)}>
-            {t("challenge.skip")}
-          </Button>
-        )}
-      </div>
-      {connection?.ok === true && connection.value === null && (
-        <p className="mt-2 text-small text-muted">
-          {t("challenge.providerBefore")}
-          <Link to="/profile" hash="ai" className="underline">
-            {t("challenge.providerLink")}
-          </Link>
-          {t("challenge.providerAfter")}
-        </p>
+      {correction.controls ?? (
+        <>
+          <div className="mt-6 flex flex-wrap items-center gap-2">
+            {save}
+            {inSession && skip}
+          </div>
+          {connection?.ok === true && connection.value === null && (
+            <p className="mt-2 text-small text-muted">
+              {t("challenge.providerBefore")}
+              <Link to="/profile" hash="ai" className="underline">
+                {t("challenge.providerLink")}
+              </Link>
+              {t("challenge.providerAfter")}
+            </p>
+          )}
+        </>
       )}
       {connection?.ok === false && (
         <p role="alert" className="mt-2 text-danger">
@@ -188,12 +295,9 @@ export const ChallengeForm = ({ challenge, pack, language, onDone }: Props) => {
       <p role="status" className="mt-2 text-small">
         {saved?.ok === true && !inSession && t("challenge.saved")}
       </p>
-      {saved?.ok === false && (
-        <p role="alert" className="mt-2 text-danger">
-          {t("challenge.saveFailed", { reason: describeFailure(saved.error) })}
-        </p>
-      )}
+      {failure}
+      {correction.warning}
       <p className="mt-4 text-small text-muted">{t("challenge.footnote")}</p>
-    </>
+    </section>
   );
 };

@@ -6,9 +6,11 @@ import {
   listChallenges,
   loadChallenge,
   loadTodayChallenge,
+  NO_CORRECTIONS,
   saveChallenge,
   type Challenge,
 } from "./challenge.ts";
+import type { SentenceCorrection } from "./correction.ts";
 import { openDatabase, type Database, type StoredEntry } from "./database.ts";
 import type { LocalTime } from "./decks.ts";
 import { gradeItem, loadSession } from "./session.ts";
@@ -109,6 +111,7 @@ describe("saveChallenge", () => {
     day,
     word: { ...NI, entry: null, audio: null },
     sentences: sentences(...filled),
+    corrections: NO_CORRECTIONS,
   });
 
   it("writes nothing while every field is empty", async () => {
@@ -128,10 +131,38 @@ describe("saveChallenge", () => {
       day: TODAY,
       ...NI,
       sentences: sentences("我是你。", "", "你好"),
+      corrections: NO_CORRECTIONS,
       updatedAt: NOON.at,
     });
     expect(await saveChallenge(db, challenge(TODAY), at(1).at)).toEqual({ ok: true, value: true });
     expect((await db.challenges.get(TODAY))?.sentences).toEqual(sentences());
+  });
+
+  it("keeps a correction while its field is the text corrected", async () => {
+    const corrected: SentenceCorrection = {
+      original: "我是你。",
+      corrected: "我是你。",
+      changes: [],
+      reading: "wǒ shì nǐ .",
+      meaning: "I am you.",
+      choice: null,
+      provenance: {
+        origin: "ai",
+        provider: "local",
+        model: "qwen3:30b-a3b",
+        promptVersion: "zh-correct-v1",
+        createdAt: "2026-10-21T10:00:00.000Z",
+      },
+    };
+    const corrections = [corrected, { ...corrected, original: "你好" }, null, null, null];
+    await saveChallenge(db, { ...challenge(TODAY, "我是你。", "你好！"), corrections }, NOON.at);
+    expect((await db.challenges.get(TODAY))?.corrections).toEqual([
+      corrected,
+      null,
+      null,
+      null,
+      null,
+    ]);
   });
 
   it("lists saved challenges, the latest day first, and loads a past one", async () => {
@@ -152,6 +183,7 @@ describe("saveChallenge", () => {
       headword: "猫",
       readingKey: "mao1",
       sentences: sentences("猫。"),
+      corrections: NO_CORRECTIONS,
       updatedAt: 1,
     });
     expect(await loadChallenge(db, "hsk-2025", TODAY)).toMatchObject({

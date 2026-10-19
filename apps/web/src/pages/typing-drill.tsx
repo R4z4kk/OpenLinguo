@@ -273,6 +273,7 @@ const Running = ({
           <ImeField
             key={done}
             label={t("ime.answer")}
+            readOnly={false}
             ime={ime}
             features={features}
             value={value}

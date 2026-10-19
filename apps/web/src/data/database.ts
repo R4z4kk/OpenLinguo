@@ -10,6 +10,7 @@ import type {
 import { Dexie, type EntityTable, type Table } from "dexie";
 import type { AiFeature } from "./ai-notice.ts";
 import type { AiSettings } from "./ai-settings.ts";
+import type { Corrections } from "./correction.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
@@ -174,6 +175,8 @@ export type StoredChallenge = WordKey & {
   readonly day: string;
   /** As typed, empty ones included: one per field. */
   readonly sentences: readonly string[];
+  /** One per field, kept while the field's text is the one corrected. */
+  readonly corrections: Corrections;
   readonly updatedAt: number;
 };
 
@@ -280,6 +283,15 @@ export const openDatabase = (name: string): Database => {
   db.version(16).stores({ aiSettings: "id" });
   db.version(17).stores({ challenges: "day" });
   db.version(18).stores({ aiGlosses: "id" });
+  // Challenges saved before corrections have none.
+  db.version(19).upgrade((tx) =>
+    tx
+      .table<Omit<StoredChallenge, "corrections">, string>("challenges")
+      .toCollection()
+      .modify((challenge) => {
+        Object.assign(challenge, { corrections: challenge.sentences.map(() => null) });
+      }),
+  );
   return db;
 };
 

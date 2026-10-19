@@ -18,6 +18,7 @@ import {
   type ImeFieldState,
   type ImeTyping,
 } from "@/data/ime-field";
+import { cn } from "@/lib/utils";
 
 /** Safari sends the Enter that ends a composition after `compositionend`, with this key code. */
 const COMPOSITION_KEY_CODE = 229;
@@ -28,6 +29,7 @@ type Props = {
   readonly features: PinyinFeatures;
   /** The characters committed: the answer. */
   readonly value: string;
+  readonly readOnly: boolean;
   readonly onChange: (value: string) => void;
   /** Enter with no pinyin left to commit; `null`: Enter does nothing more. */
   readonly onSubmit: (() => void) | null;
@@ -38,7 +40,7 @@ type Props = {
  * the characters committed, with the candidates in a listbox. The system's own input method passes
  * through.
  */
-export const ImeField = ({ label, ime, features, value, onChange, onSubmit }: Props) => {
+export const ImeField = ({ label, ime, features, value, readOnly, onChange, onSubmit }: Props) => {
   const { t } = useTranslation();
   const id = useId();
   const [typing, setTyping] = useState<ImeTyping>(NOT_TYPING);
@@ -72,6 +74,7 @@ export const ImeField = ({ label, ime, features, value, onChange, onSubmit }: Pr
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (readOnly) return;
     const outcome = keyDown(state, {
       key: event.key,
       composing:
@@ -104,7 +107,12 @@ export const ImeField = ({ label, ime, features, value, onChange, onSubmit }: Pr
       <label htmlFor={ids.input} className="font-semibold">
         {label}
       </label>
-      <div className="flex min-h-13 items-stretch gap-0.5 rounded-control border border-border-strong bg-surface px-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink">
+      <div
+        className={cn(
+          "flex min-h-13 items-stretch gap-0.5 rounded-control border border-border-strong px-3 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink",
+          readOnly ? "bg-sunken" : "bg-surface",
+        )}
+      >
         <span
           id={ids.committed}
           lang="zh-Hans"
@@ -124,6 +132,7 @@ export const ImeField = ({ label, ime, features, value, onChange, onSubmit }: Pr
             aria-autocomplete="list"
             aria-describedby={ids.committed}
             {...(expanded ? { "aria-activedescendant": ids.option(typing.active) } : {})}
+            readOnly={readOnly}
             autoComplete="off"
             autoCapitalize="off"
             autoCorrect="off"
