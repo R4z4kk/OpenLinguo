@@ -22,7 +22,8 @@ import type { ChatMessage } from "../prompt-pack.ts";
 import type { Result } from "../result.ts";
 import {
   INVALID_KEY,
-  OFF_SCHEMA_MESSAGES,
+  COLOUR_MESSAGES,
+  COLOUR_SCHEMA,
   RECORDING_MESSAGES,
   RECORDING_SCHEMA,
   recordingUrl,
@@ -204,19 +205,21 @@ const PLANS: readonly Plan[] = [
     scenario: "schema-violation",
     providers: ["groq", "openrouter", "mistral", "local"],
     withoutKey: [],
-    expected: "invalid-response",
+    expected: "breaks RECORDING_SCHEMA",
     capture: (run) =>
-      taped(async () =>
-        outcome(
-          await ask(
-            endpointOf(run, run.key),
-            run.model,
-            OFF_SCHEMA_MESSAGES,
-            "json_object",
-            new AbortController().signal,
-          ),
-        ),
-      ),
+      taped(async () => {
+        const result = await chat({
+          endpoint: endpointOf(run, run.key),
+          model: run.model,
+          messages: COLOUR_MESSAGES,
+          schema: COLOUR_SCHEMA,
+          mode: "json_schema",
+          signal: new AbortController().signal,
+        });
+        return result.ok && !RECORDING_SCHEMA.safeParse(result.value.value).success
+          ? "breaks RECORDING_SCHEMA"
+          : outcome(result);
+      }),
   },
   {
     scenario: "unauthorized",

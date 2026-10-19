@@ -56,7 +56,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "{ \"word\": \"水\", \"pinyin\": \"shuǐ\", \"meaning\": \"water\" }"
+                "content": "{\"word\": \"水\", \"pinyin\": \"shuǐ\", \"meaning\": \"water\"}"
               },
               "finish_reason": "stop"
             }
@@ -66,8 +66,8 @@
             "prompt_tokens_details": {
               "cached_tokens": 0
             },
-            "completion_tokens": 24,
-            "total_tokens": 65
+            "completion_tokens": 22,
+            "total_tokens": 63
           }
         }
       }

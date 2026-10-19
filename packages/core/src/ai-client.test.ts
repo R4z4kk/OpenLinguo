@@ -129,7 +129,7 @@ describe.each(PROVIDERS)("recorded %s responses", (provider) => {
 
   it("rejects an answer that breaks the schema", async () => {
     replay(loadRecording(provider, "schema-violation"));
-    const error = failure(await settle(ask(provider, { mode: "json_object" })));
+    const error = failure(await settle(ask(provider, {})));
     expect(error.kind).toBe("invalid-response");
   });
 
