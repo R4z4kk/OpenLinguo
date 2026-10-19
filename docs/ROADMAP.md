@@ -21,7 +21,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | UI / glosses | i18n FR + EN from day one. Glosses: EN (CC-CEDICT), FR (CFDICT if license verified) |
 | HSK | HSK 3.0, two referentials: **2025 exam syllabus** (新版HSK考试大纲, CLEC, Nov 2025, `hsk-2025`, default) and the free **GF0025-2021** national standard (`gf0025-2021`), selectable |
 | Script | Simplified only (traditional stored, toggle later) |
-| AI | BYOK, OpenAI-compatible endpoint (Groq, OpenRouter, Ollama…). Every AI output is a proposal, human validates |
+| AI | BYOK, OpenAI-compatible presets (Groq, OpenRouter, Mistral) + any local server (Ollama…), no provider preselected. Every AI output is a proposal, human validates ([ADR 0012](adr/0012-ai-mobilization-byok.md)) |
 | Audio | Pre-generated neural TTS (static files) + F0 contours extracted offline |
 | STT | Paraformer in browser (sherpa-onnx WebAssembly, Web Worker, model on demand) |
 | Reader content | AI-generated + coverage check, user import, in-app "submit to global library" → admin moderation |
@@ -99,7 +99,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **Pitch**: `pitchy` (MIT) F0 → semitones normalized to speaker mean → time-normalized comparison vs reference contour. Same code extracts reference contours in the pipeline and user contours in the browser.
 - **TTS**: Kokoro rejected for Mandarin (all zh voices graded D); used for English (af_bella A-). Mandarin (bake-off #112, ADR 0007): MOSS-TTS v1.5 for syllables, words and sentences, cloning a synthetic voice designed by MOSS-VoiceGenerator; a pinyin chart syllable missing in one tone is the same syllable recorded in another tone, re-pitched by the WORLD vocoder (#105). Engines run as Docker containers on a Radeon through WSL2 (ROCm), the TS pipeline calls their HTTP API.
 - **STT**: Paraformer-small run by sherpa-onnx WebAssembly in a Web Worker (replaced transformers.js Whisper, too slow on phones, #119); opencc-js t→s conversion kept. STT checks intelligibility only; tone accuracy comes from the pitch module (CER hides same-character tone errors).
-- **AI (BYOK)**: OpenAI-compatible client, JSON-schema structured output where supported, zod validation, retry/backoff on 429, explicit errors (CORS, 401, timeout). Key stays in IndexedDB, never sent to our API. Prompts versioned per language pack.
+- **AI (BYOK)**: in-house OpenAI-compatible client in `core` (`fetch` + zod, no dependency; `openai` and the Vercel AI SDK tested and rejected, [ADR 0012](adr/0012-ai-mobilization-byok.md)): strict JSON-schema output, `json_object` fallback with the schema in the prompt, zod validation, two retries on 429/5xx (providers hide `Retry-After` from scripts), typed errors parsed per provider shape. CSP `connect-src` lists the cloud presets and `localhost`/`127.0.0.1`. Key in IndexedDB or memory only, never in backups, sync or our API. Prompts versioned per language pack.
 - **Comprehensible input**: target ≥98% known-word coverage (Hu & Nation 2000), configurable.
 - **Backend security**: CORS allowlist, secure cookies, Better Auth CSRF, rate limits, zod + size limits, `secureHeaders`, plain-text submissions only, admin role via Better Auth admin plugin.
 
@@ -156,7 +156,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 | Inactive accounts: 2 years after last user action as the reference | CNIL guidance (commercial-activities reference, non-binding) | Yes (analogy) | Notice email, then deletion at 2 years of inactivity |
 | Legal notices: natural person → name, address, phone; publication director; host name/address/phone | LCEN art. 1-1 (created by SREN law 2024-449, in force 2024-05-23) | Yes | `/legal` page; self-hosted, so the maintainer is named as host |
 | AI interaction disclosure (providers) | AI Act art. 50(1), applies from 2026-08-02 (art. 113) | Yes, we build the AI-integrated system | Visible "AI" label on every AI feature and output |
-| Machine-readable marking of synthetic text (providers); standard-editing assistance exempt | AI Act art. 50(2) | Yes for generated stories/sentences; corrections likely under the editing exemption | `origin: "ai"` + model/provider metadata stored and exposed in exports and library API |
+| Machine-readable marking of synthetic text (providers); standard-editing assistance exempt | AI Act art. 50(2); Commission guidelines C(2026) 5054 (2026-07-20) | Yes for generated stories (M6); corrections and translations exempt as standard editing, single words outside (checked 2026-10-19, ADR 0012) | `origin: "ai"` + provider, model, prompt version, date stored and exposed in exports and library API; gap analysis against the code of practice |
 | AI-generated public-interest text disclosure (deployers) | AI Act art. 50(4) | Unlikely (learning content), human-reviewed library anyway | Badge kept on library items |
 | Accessibility of services (EAA) | Directive 2019/882 → Code de la consommation L.412-13, D.412-49 et seq., décret 2023-931; microenterprises providing services (<10 staff, ≤€2M) exempt | No (non-commercial individual, below thresholds) | WCAG 2.2 AA as a voluntary target + accessibility statement |
 
@@ -168,7 +168,7 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 - **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
 - **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, the speech-recognition model and its WebAssembly runtime served from our own origin (decided in #119, ADR 0007).
-- **BYOK AI**: clear notice before first call naming the endpoint the user configured; data flows device → provider, never through us.
+- **BYOK AI**: notice at setup naming the provider, its privacy policy and training opt-out; notice before each feature's first use saying what it sends; data flows device → provider on the learner's click, never through us. OpenLinguo is most likely not a controller of these transmissions (ADR 0012).
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
 - **Minors**: app usable without account by anyone; accounts 15+ (age declaration, France digital majority). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
@@ -214,9 +214,9 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M4 — Writing & typing.** Writing card type (in-house stroke quiz with Hanzi Writer's matcher) + write-on-paper self-graded alternative, practice settings (typing on, handwriting off by default), in-app pinyin IME from CC-CEDICT + wordfreq, typing card, typing drill (timer optional, off by default). See [ADR 0011](adr/0011-writing-and-typing.md). *Exit: write/typing cards scheduled by FSRS, keyboard-only path works.*
 
-**M5 — AI mobilization (BYOK).** Provider settings + connection test, 5-sentence challenge, daily journal, correction diff view, corrected sentences → proposed cards, personal vocabulary from profile (proposals filtered against dictionary, user validates), AI story generation with coverage check. *Exit: works against Groq, OpenRouter and Ollama, invalid responses rejected with visible error.*
+**M5 — AI mobilization (BYOK).** Provider settings + connection test, 5-sentence challenge, daily journal, correction diff view, corrected sentences → proposed cards, personal vocabulary from profile (proposals filtered against dictionary, user validates), « Translate to French » on entries without a French gloss, AI label + provenance. See [ADR 0012](adr/0012-ai-mobilization-byok.md). *Exit: works against Groq, OpenRouter and Ollama, invalid responses rejected with visible error.*
 
-**M6 — Graded reader.** Reader (segmentation, tap popup, add-to-SRS, known-word highlighting, coverage %), user import (paste, .txt), AI stories stored locally. *Exit: imported text shows coverage, popup lookup offline.*
+**M6 — Graded reader.** Reader (segmentation, tap popup, add-to-SRS, known-word highlighting, coverage %), user import (paste, .txt), unknown-word resolution cascade, AI story generation with coverage check and proper names, stored locally (moved from M5, ADR 0012). *Exit: imported text shows coverage, popup lookup offline.*
 
 **M7 — Backend & shared library.** Hono API, Drizzle migrations, Better Auth (email/password + Google + GitHub, email verification), submissions with CC BY-SA 4.0 attestation, server-side level estimate, admin moderation UI, public library endpoints (AI badge + origin), takedown process, age gate 15+, account export/delete, retention jobs (logs 6 months, inactive accounts 2 years), privacy policy + legal notices + records of processing, self-hosted deploy (see Deployment), PWA on Cloudflare Pages custom domain. *Exit: submit → admin approve → visible to another device; export/delete verified end to end.*
 
@@ -235,7 +235,7 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 3. Mandarin TTS tone quality → bake-off + human listening, fallback to CC-licensed native recordings.
 4. Speech-recognition size and speed on mobile → on-demand download, model benchmarked on a phone in M3 (Paraformer-small), feature optional.
 5. iOS PWA storage eviction → `persist()`, backups, Capacitor post-v1.
-6. BYOK CORS differs by provider → documented tested providers; CSP `connect-src` must allow user endpoints (trade-off in ADR).
+6. BYOK CORS differs by provider → cloud presets checked from our origin, CSP `connect-src` lists them plus local servers (ADR 0012); Safari cannot reach a local server from the HTTPS app.
 7. User submissions copyright → attestation, moderation, takedown.
 8. Homelab exposure → API only, TLS via Traefik, rate limits, backups, monitoring.
 9. Open choices deferred to their milestone: SMTP provider (M7). Audio hosting decided in #113 and speech-model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).

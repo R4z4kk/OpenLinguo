@@ -1,6 +1,6 @@
 # 0006 — AI integration (bring your own key)
 
-- Status: Accepted
+- Status: Accepted; endpoints amended by [ADR 0012](0012-ai-mobilization-byok.md) (cloud presets and local servers)
 - Date: 2026-10-09
 
 ## Context
