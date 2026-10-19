@@ -24,6 +24,8 @@ type Answer = z.output<typeof RECORDING_SCHEMA>;
 const Listing = z.object({ data: z.array(z.object({ id: z.string() })) });
 const CLOUD = ["groq", "openrouter", "mistral"] as const;
 const PROVIDERS = [...CLOUD, "local"] as const;
+// Recorded with a key; OpenRouter and Mistral only without one so far.
+const RECORDED = ["groq", "local"] as const;
 const WATER = '{"word":"水","pinyin":"shuǐ","meaning":"water"}';
 
 let calls: Call[] = [];
@@ -117,7 +119,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe.each(PROVIDERS)("recorded %s responses", (provider) => {
+describe.each(RECORDED)("recorded %s responses", (provider) => {
   it("returns a structured answer and sends what was recorded", async () => {
     const recording = loadRecording(provider, "success");
     replay(recording);
@@ -139,7 +141,9 @@ describe.each(PROVIDERS)("recorded %s responses", (provider) => {
     expect(error.kind).toBe("model-not-found");
     expect(error.message).not.toBeNull();
   });
+});
 
+describe.each([...RECORDED, "openrouter"] as const)("recorded %s model list", (provider) => {
   it("lists the models", async () => {
     const recording = loadRecording(provider, "models");
     replay(recording);
@@ -155,10 +159,12 @@ describe.each(PROVIDERS)("recorded %s responses", (provider) => {
       expect(ids).toEqual(all);
     }
   });
+});
 
-  it("turns reasoning off only where the provider accepted it", async () => {
+describe.each(PROVIDERS)("%s reasoning", (provider) => {
+  it("is turned off only where a recording shows the provider accepts it", async () => {
     const accepted =
-      provider !== "openrouter" &&
+      RECORDED.some((recorded) => recorded === provider) &&
       loadRecording(provider, "reasoning-off").exchanges.every(
         ({ response }) => response.status === 200,
       );
@@ -172,37 +178,30 @@ describe.each(PROVIDERS)("recorded %s responses", (provider) => {
   });
 });
 
-describe.each(CLOUD)("recorded %s errors", (provider) => {
-  it("reports a wrong key with the provider's message", async () => {
+describe.each(CLOUD)("recorded %s wrong key", (provider) => {
+  it("is reported with the provider's message", async () => {
     replay(loadRecording(provider, "unauthorized"));
     const error = failure(await settle(ask(provider, {})));
     expect(error).toMatchObject({ kind: "auth", status: 401 });
     expect(error.message).not.toBeNull();
     expect(calls).toHaveLength(1);
   });
+});
 
+describe("recorded Groq specifics", () => {
   it("retries a rate limit after 2 s then 8 s", async () => {
-    replay(loadRecording(provider, "rate-limited"));
-    const error = failure(await settle(ask(provider, {})));
+    replay(loadRecording("groq", "rate-limited"));
+    const error = failure(await settle(ask("groq", {})));
     expect(error).toMatchObject({ kind: "rate-limited", status: 429 });
     expect(calls.map((call) => call.at)).toEqual([0, 2_000, 10_000]);
   });
-});
 
-describe("recorded provider specifics", () => {
-  it("falls back to json_object when Groq refuses json_schema", async () => {
+  it("falls back to json_object when json_schema is refused", async () => {
     const recording = loadRecording("groq", "fallback");
     replay(recording);
     const result = answer(await settle(ask("groq", { model: recording.model ?? "" })));
     expect(result.mode).toBe("json_object");
     expect(bodyOf(callAt(1))).toMatchObject({ response_format: { type: "json_object" } });
-  });
-
-  it("reads the error OpenRouter sends inside a 200", async () => {
-    replay(loadRecording("openrouter", "error-in-200"));
-    const error = failure(await settle(ask("openrouter", {})));
-    expect(error.status).not.toBe(200);
-    expect(error.message).not.toBeNull();
   });
 });
 
