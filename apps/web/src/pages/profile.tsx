@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { currentSetting } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { SHOW_PROGRESS } from "@/data/progress";
+import { AiSettingsSection } from "@/shell/ai-settings";
 import { BackupControls } from "@/shell/backup-controls";
 import { RecordingsControls } from "@/shell/recordings-controls";
 import { GoalSwitcher } from "@/shell/goal-switcher";
@@ -19,7 +20,7 @@ const storage = (): Storage => localStorage;
 
 export const ProfilePage = () => {
   const { t } = useTranslation();
-  const { persistence } = useData();
+  const { state, persistence } = useData();
   // Switchers, progress and stats read their data again after a backup restores them.
   const [restored, setRestored] = useState(0);
   const [showProgress, setShowProgress] = useState(() => currentSetting(storage, SHOW_PROGRESS));
@@ -47,6 +48,9 @@ export const ProfilePage = () => {
         <LanguageSwitcher />
         <ThemeSwitcher />
       </div>
+      {state.status === "ready" && state.pack.prompts !== null && (
+        <AiSettingsSection correction={state.pack.prompts.correction} />
+      )}
       <h2 className="mt-8 text-subtitle">{t("profile.data")}</h2>
       {persistence !== null && <p className="mt-4 text-muted">{t(`persistence.${persistence}`)}</p>}
       <BackupControls

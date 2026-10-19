@@ -9,6 +9,7 @@ import type {
 } from "@openlinguo/core";
 import { Dexie, type EntityTable, type Table } from "dexie";
 import type { AiFeature } from "./ai-notice.ts";
+import type { AiSettings } from "./ai-settings.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
@@ -156,6 +157,9 @@ export type StoredName = {
 /** An AI feature whose first-use notice the learner confirmed; never in the backup. */
 export type StoredAiNotice = { readonly feature: AiFeature };
 
+/** The AI provider settings: one row, never in the backup (ADR 0012). */
+export type StoredAiSettings = AiSettings & { readonly id: string };
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -181,6 +185,7 @@ export type Database = Dexie & {
   audioBands: EntityTable<StoredAudioBand, "id">;
   recordings: EntityTable<StoredRecording, "id">;
   aiNotices: EntityTable<StoredAiNotice, "feature">;
+  aiSettings: EntityTable<StoredAiSettings, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -253,6 +258,7 @@ export const openDatabase = (name: string): Database => {
           Object.assign(note, { provenance: null });
         }),
     );
+  db.version(16).stores({ aiSettings: "id" });
   return db;
 };
 

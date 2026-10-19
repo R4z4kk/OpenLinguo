@@ -1,0 +1,189 @@
+import { readFileSync } from "node:fs";
+import { AI_BASE_URLS } from "@openlinguo/core";
+import { expect, type Page } from "@playwright/test";
+import { z } from "zod";
+import { en } from "../src/i18n/en.ts";
+import { accessibilityViolations } from "./accessibility.ts";
+import { test } from "./app.ts";
+
+const Exchange = z.object({
+  request: z.object({ method: z.string(), path: z.string() }),
+  response: z.object({ status: z.number().int(), body: z.unknown() }),
+});
+type Exchange = z.output<typeof Exchange>;
+
+const recorded = (url: URL): readonly Exchange[] =>
+  z.object({ exchanges: z.array(Exchange) }).parse(JSON.parse(readFileSync(url, "utf8"))).exchanges;
+
+/** Real answers: Ollama 0.35.1 with qwen3:30b-a3b, and Groq refusing a wrong key. */
+const LOCAL = recorded(new URL("fixtures/ai/local-connection-test.json", import.meta.url));
+const GROQ_REFUSED =
+  recorded(
+    new URL(
+      "../../../packages/core/src/testing/ai-responses/groq/unauthorized.json",
+      import.meta.url,
+    ),
+  )[0] ?? null;
+const LOCAL_SERVER = "http://localhost:11434/v1";
+const KEY = "gsk_e2e-key-for-groq-only";
+
+type Sent = { readonly url: string; readonly authorization: string | null };
+
+const fill = (template: string, values: Readonly<Record<string, string | number>>): string =>
+  template.replaceAll(/\{\{(\w+)\}\}/gu, (_, name: string) => String(values[name]));
+
+/** Answers the endpoint's requests with the exchanges of the same method and path; none: unreachable. */
+const replay = async (
+  page: Page,
+  baseUrl: string,
+  exchanges: () => readonly Exchange[] | null,
+): Promise<Sent[]> => {
+  const sent: Sent[] = [];
+  const cors = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, content-type",
+  };
+  await page.route(`${baseUrl}/**`, async (route) => {
+    const request = route.request();
+    if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers: cors });
+    sent.push({ url: request.url(), authorization: await request.headerValue("authorization") });
+    const path = request.url().slice(baseUrl.length);
+    const exchange =
+      exchanges()?.find(
+        (candidate) =>
+          candidate.request.method === request.method() && candidate.request.path === path,
+      ) ?? null;
+    if (exchange === null) return route.abort("connectionrefused");
+    return route.fulfill({
+      status: exchange.response.status,
+      headers: cors,
+      contentType: "application/json",
+      body: JSON.stringify(exchange.response.body),
+    });
+  });
+  return sent;
+};
+
+const storedRows = (page: Page): Promise<unknown> =>
+  page.evaluate(
+    () =>
+      new Promise<unknown>((resolve, reject) => {
+        const open = indexedDB.open("openlinguo");
+        open.onerror = () => {
+          reject(new Error(String(open.error)));
+        };
+        open.onsuccess = () => {
+          const request = open.result.transaction("aiSettings").objectStore("aiSettings").getAll();
+          request.onerror = () => {
+            reject(new Error(String(request.error)));
+          };
+          request.onsuccess = () => {
+            open.result.close();
+            resolve(request.result);
+          };
+        };
+      }),
+  );
+
+// Requests from a page a service worker controls escape `page.route` in WebKit.
+test.use({ serviceWorkers: "block" });
+
+test("sets up Groq: its notice, a key kept in memory only, a refused key named", async ({
+  page,
+}) => {
+  if (GROQ_REFUSED === null) throw new Error("empty Groq recording");
+  // Groq refuses a wrong key with the same 401 on every path (ADR 0012).
+  const sent = await replay(page, AI_BASE_URLS.groq, () => [
+    { request: { method: "GET", path: "/models" }, response: GROQ_REFUSED.response },
+  ]);
+  const groq = en.ai.providers.groq;
+  await page.goto("/profile");
+  const section = page.getByRole("region", { name: en.ai.title });
+  await expect(section.getByRole("radio")).toHaveCount(4, { timeout: 90_000 });
+  await expect(section.getByRole("radio", { checked: true })).toHaveCount(0);
+
+  await section.getByRole("radio", { name: groq.name }).focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Tab");
+  await expect(section.getByRole("button", { name: en.ai.changeLabel })).toBeVisible();
+  await expect(section.getByRole("radio")).toHaveCount(0);
+  const notice = section.getByRole("note", { name: groq.about });
+  await expect(notice).toContainText(fill(en.ai.notice, { provider: groq.name }));
+  await expect(notice.getByRole("link", { name: groq.privacy })).toHaveAttribute(
+    "href",
+    "https://groq.com/privacy-policy",
+  );
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  await section.getByRole("switch", { name: en.ai.dontRemember }).click();
+  await section.getByLabel(en.ai.key).fill(KEY);
+  const testButton = section.getByRole("button", { name: en.ai.test });
+  await testButton.click();
+  await expect(section.getByRole("alert")).toContainText(
+    fill(en.ai.errors.auth, { provider: en.aiNotice.providers.groq }),
+  );
+  await expect(section.getByRole("alert")).toContainText("Invalid API Key");
+  await expect(testButton).toBeFocused();
+  expect(sent).toEqual([{ url: `${AI_BASE_URLS.groq}/models`, authorization: `Bearer ${KEY}` }]);
+  expect(await accessibilityViolations(page)).toEqual([]);
+  expect(JSON.stringify(await storedRows(page))).not.toContain(KEY);
+
+  await page.reload();
+  await expect(section.getByRole("button", { name: en.ai.changeLabel })).toBeVisible({
+    timeout: 90_000,
+  });
+  await expect(section.getByLabel(en.ai.key)).toHaveValue("");
+  await expect(section.getByRole("switch", { name: en.ai.dontRemember })).toBeChecked();
+});
+
+test("connects to a local server: the how-to, a refused origin, then the test sentence", async ({
+  page,
+}) => {
+  let running = false;
+  const sent = await replay(page, LOCAL_SERVER, () => (running ? LOCAL : null));
+  const local = en.ai.providers.local;
+  await page.goto("/profile");
+  const section = page.getByRole("region", { name: en.ai.title });
+  await section.getByText(local.name, { exact: true }).click({ timeout: 90_000 });
+  await section.getByLabel(en.ai.address).click();
+  await expect(section.getByRole("button", { name: en.ai.changeLabel })).toBeVisible();
+  await expect(section.getByLabel(en.ai.key)).toHaveCount(0);
+  const origin = new URL(page.url()).origin;
+  await expect(section.getByText(`OLLAMA_ORIGINS=${origin} ollama serve`)).toBeVisible();
+
+  const testButton = section.getByRole("button", { name: en.ai.test });
+  await testButton.click();
+  const alert = section.getByRole("alert");
+  await expect(alert).toContainText(en.ai.errors.localNetwork);
+  await expect(alert).toContainText(fill(en.ai.errors.localNetworkHelp, { origin }));
+  await expect(testButton).toBeFocused();
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  running = true;
+  await testButton.click();
+  const status = section.getByRole("status");
+  await expect(status).toHaveText(
+    fill(en.ai.listed_other, { count: 3, provider: en.aiNotice.providers.local }),
+  );
+  const model = section.getByRole("combobox", { name: en.ai.model });
+  await expect(model).toBeFocused();
+  await model.selectOption("qwen3:30b-a3b");
+  await testButton.click();
+  await expect(status).toHaveText(fill(en.ai.connected, { model: "qwen3:30b-a3b" }));
+  await expect(model).toBeFocused();
+  expect(await accessibilityViolations(page)).toEqual([]);
+  expect(sent.map(({ url }) => url.slice(LOCAL_SERVER.length))).toEqual([
+    "/models",
+    "/models",
+    "/models",
+    "/chat/completions",
+  ]);
+  expect(sent.every(({ authorization }) => authorization === null)).toBe(true);
+
+  await page.reload();
+  await expect(section.getByText(local.name, { exact: true })).toBeVisible({ timeout: 90_000 });
+  await expect(model).toBeDisabled();
+  await expect(model).toHaveValue("qwen3:30b-a3b");
+  await expect(section.getByText(en.ai.howTo)).toBeVisible();
+  await expect(section.getByText(en.ai.howToStart)).toBeHidden();
+});

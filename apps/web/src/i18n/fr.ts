@@ -430,6 +430,117 @@ export const fr: Messages = {
     failed: "Vos statistiques n’ont pas pu être calculées\u00a0: {{reason}}",
   },
   profile: { title: "Profil", display: "Affichage", learning: "Apprentissage", data: "Données" },
+  ai: {
+    title: "Assistant IA",
+    intro:
+      "Faites corriger vos phrases et votre journal, proposer des mots selon vos centres d’intérêt, traduire en français les mots qui n’ont qu’une traduction anglaise. Avec votre propre fournisseur et votre clé\u00a0: vos textes partent de cet appareil directement chez lui, rien ne passe par OpenLinguo.",
+    provider: "Fournisseur",
+    noDefault: "Aucun n’est choisi par défaut.",
+    withoutProvider:
+      "Sans fournisseur, le défi 5 phrases et le journal restent disponibles, sans correction.",
+    chosen: "Fournisseur\u00a0:",
+    change: "Changer",
+    changeLabel: "Changer de fournisseur",
+    notice:
+      "Vos textes iront de cet appareil directement chez {{provider}}, avec votre clé. Rien ne passe par OpenLinguo.",
+    newTab: "(nouvel onglet)",
+    key: "Clé d’API",
+    keyHelp: "Créez une clé réservée à OpenLinguo, avec un plafond de dépenses, dans la",
+    dontRemember: "Ne pas mémoriser la clé",
+    dontRememberHint:
+      "La clé reste en mémoire jusqu’à la fermeture de l’onglet. Sinon elle est gardée sur cet appareil, jamais dans la sauvegarde.",
+    address: "Adresse du serveur",
+    addressHelp: "localhost ou 127.0.0.1, sur n’importe quel port.",
+    addressInvalid: "Saisissez une adresse comme http://localhost:11434 ou http://127.0.0.1:1234.",
+    howTo: "Autoriser OpenLinguo dans Ollama",
+    howToStart: "Ollama refuse les pages web qu’il ne connaît pas. Lancez-le avec\u00a0:",
+    howToBrowsers:
+      "Chrome vous demandera l’accès au réseau local à la première connexion. Safari bloque les serveurs locaux depuis une page sécurisée\u00a0: choisissez plutôt un fournisseur en ligne.",
+    model: "Modèle",
+    modelUntested: "Testez la connexion pour choisir un modèle",
+    modelChoose: "Choisissez un modèle",
+    test: "Tester la connexion",
+    testing: "Test en cours…",
+    testHelp:
+      "Le test liste les modèles, puis envoie une courte phrase pour vérifier le format des réponses.",
+    sentKey: "{{to}}\u00a0: votre clé et la phrase de test «\u00a0",
+    sentNoKey: "{{to}}\u00a0: la phrase de test «\u00a0",
+    sentEnd: "\u00a0».",
+    listed_zero: "{{provider}} ne liste aucun modèle.",
+    listed_one:
+      "{{count}} modèle disponible chez {{provider}}\u00a0: choisissez-le, puis testez de nouveau la connexion.",
+    listed_other:
+      "{{count}} modèles disponibles chez {{provider}}\u00a0: choisissez-en un, puis testez de nouveau la connexion.",
+    connected: "Connexion réussie\u00a0: réponse structurée reçue de {{model}}.",
+    forget: "Oublier la clé",
+    forgetHint:
+      "«\u00a0Oublier la clé\u00a0» l’efface de cet appareil. Les corrections déjà reçues restent.",
+    forgotten: "Clé effacée de cet appareil.",
+    notSaved: "Ce réglage ne peut pas être enregistré dans ce navigateur\u00a0: {{reason}}",
+    loadFailed: "Les réglages de l’assistant IA ne peuvent pas être lus\u00a0: {{reason}}",
+    providers: {
+      groq: {
+        name: "Groq",
+        summary:
+          "Offre gratuite limitée. Ne s’entraîne pas sur vos textes. Données conservées aux États-Unis.",
+        about: "À propos de Groq",
+        data: "Groq ne s’entraîne pas sur vos textes et les conserve aux États-Unis.",
+        privacy: "Politique de confidentialité de Groq",
+        console: "console de Groq",
+        models: "La liste vient de Groq. Le choix est gardé sur cet appareil.",
+        sentTo: "Envoyé à Groq",
+      },
+      openrouter: {
+        name: "OpenRouter",
+        summary:
+          "Nombreux modèles, dont quelques-uns gratuits. Les fournisseurs des modèles ont chacun leur politique.",
+        about: "À propos d’OpenRouter",
+        data: "OpenRouter ne s’entraîne pas sur vos textes et les traite aux États-Unis. Les fournisseurs de ses modèles ont chacun leur politique.",
+        privacy: "Politique de confidentialité d’OpenRouter",
+        training: "Refuser l’entraînement par les fournisseurs des modèles",
+        console: "console d’OpenRouter",
+        models:
+          "La liste vient d’OpenRouter, seulement les modèles à réponses structurées. Le choix est gardé sur cet appareil.",
+        sentTo: "Envoyé à OpenRouter",
+      },
+      mistral: {
+        name: "Mistral",
+        summary:
+          "Données dans l’Union européenne. Le mode gratuit s’entraîne sur vos textes, sauf si vous le refusez.",
+        about: "À propos de Mistral",
+        data: "Mistral conserve vos textes dans l’Union européenne. Son mode gratuit s’entraîne sur eux, sauf si vous le refusez.",
+        privacy: "Politique de confidentialité de Mistral",
+        training: "Refuser l’entraînement par Mistral",
+        console: "console de Mistral",
+        models: "La liste vient de Mistral. Le choix est gardé sur cet appareil.",
+        sentTo: "Envoyé à Mistral",
+      },
+      local: {
+        name: "Serveur local",
+        summary: "Ollama ou un autre serveur sur cet appareil. Rien ne quitte l’appareil.",
+        about: "À propos du serveur local",
+        data: "Le serveur tourne sur cet appareil\u00a0: vos textes ne le quittent pas. Pas de clé à saisir.",
+        models: "La liste vient du serveur local. Le choix est gardé sur cet appareil.",
+        sentTo: "Envoyé au serveur local",
+      },
+    },
+    errors: {
+      network: "{{provider}} ne répond pas\u00a0: vérifiez votre connexion.",
+      localNetwork: "Le serveur local ne répond pas à OpenLinguo.",
+      localNetworkHelp:
+        "Vérifiez qu’Ollama tourne et qu’OLLAMA_ORIGINS contient {{origin}}, puis réessayez.",
+      auth: "Clé refusée par {{provider}}\u00a0: vérifiez-la, ou créez-en une autre.",
+      forbidden: "Cette clé n’a pas accès à ce modèle.",
+      "model-not-found": "Ce modèle n’existe plus chez {{provider}}\u00a0: choisissez-en un autre.",
+      "rate-limited": "Trop de requêtes\u00a0: réessayez dans une minute.",
+      quota: "Quota du jour épuisé chez {{provider}}.",
+      "too-large": "Texte trop long pour ce modèle.",
+      server: "Erreur chez {{provider}}\u00a0: réessayez plus tard.",
+      timeout: "Pas de réponse en 60 secondes.",
+      "invalid-response":
+        "La réponse ne suit pas le format attendu\u00a0: rien n’a été enregistré.",
+    },
+  },
   referential: {
     legend: "Niveaux HSK",
     "hsk-2025": "Examen HSK 2025",

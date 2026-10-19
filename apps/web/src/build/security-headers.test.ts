@@ -1,3 +1,4 @@
+import { AI_BASE_URLS } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import headersFile from "../../public/_headers?raw";
 import { headersFor, parseHeaderRules, parseHeaders } from "./security-headers.ts";
@@ -25,6 +26,16 @@ describe("public/_headers", () => {
     expect(directives.get("frame-ancestors")).toBe("'none'");
   });
 
+  it("connects to the AI presets and local servers only (ADR 0012)", () => {
+    const connect = directives.get("connect-src") ?? "";
+    expect(connect).toBe(
+      "'self' https://api.groq.com https://openrouter.ai https://api.mistral.ai http://localhost:* http://127.0.0.1:*",
+    );
+    for (const provider of ["groq", "openrouter", "mistral"] as const) {
+      expect(connect.split(" ")).toContain(new URL(AI_BASE_URLS[provider]).origin);
+    }
+  });
+
   it("plays stored audio from Blob URLs, nothing else from outside", () => {
     expect(directives.get("media-src")).toBe("'self' blob:");
   });
@@ -44,6 +55,7 @@ describe("public/_headers", () => {
       "'self' 'wasm-unsafe-eval'",
     );
     expect(worker["Content-Security-Policy"]).not.toContain(",");
+    expect(worker["Content-Security-Policy"]).not.toContain("connect-src");
     expect(worker["Strict-Transport-Security"]).toBe(headers["Strict-Transport-Security"]);
     const other = headersFor(rules.value, "/assets/index-AbC123.js");
     expect(other["Content-Security-Policy"]).toBe(headers["Content-Security-Policy"]);

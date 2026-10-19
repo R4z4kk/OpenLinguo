@@ -13,6 +13,7 @@ import {
   type Review,
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it } from "vitest";
+import { DEFAULT_AI_SETTINGS, saveAiSettings } from "./ai-settings.ts";
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
@@ -198,6 +199,16 @@ describe("parseBackup", () => {
       ok: false,
       error: { kind: "newer-version", version: 2 },
     });
+  });
+
+  it("leaves out the AI settings and key", async () => {
+    const key = { provider: "groq", value: "gsk_backup-test-key" } as const;
+    await saveAiSettings(db, { ...DEFAULT_AI_SETTINGS, provider: "groq", key });
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const text = JSON.stringify(exported.value);
+    expect(text).not.toContain(key.value);
+    expect(text).not.toContain("groq");
   });
 
   it("gives settings and review goals missing from an older backup their fallback", () => {
