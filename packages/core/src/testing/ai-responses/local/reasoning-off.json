@@ -1,0 +1,53 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "local",
+  "scenario": "reasoning-off",
+  "model": "qwen3:30b-a3b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "qwen3:30b-a3b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "reasoning_effort": "none"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "qwen3:30b-a3b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "Okay, the user is asking for a common Chinese word for \"water,\" along with its pinyin and meaning. Let me think about this carefully.\n\nFirst, I need to confirm the most fundamental and commonly used term for water in Chinese. The most basic word is \"水\" (shuǐ), which directly translates to \"water\" in English. This is definitely the word that would come to mind for a beginner learner.\n\nNow, checking if there's any ambiguity - \"water\" could refer to drinking water, rainwater, or just the element itself. But \"水\" covers all these contexts. I should stick with this standard term rather than more specific terms like \"雨水\" (rainwater) or \"泉水\" (spring water) since the user asked for the most common word.\n\nFor the pinyin, it's \"shuǐ\" with the third tone (falling-rising). Need to make sure I get the tone mark correct - it's the third tone, so I'll write it as shuǐ in the response.\n\nMeaning is straightforward: \"water\" in English. Should I add more detail? Probably not - the user specifically asked for the meaning, so just \"water\" is sufficient.\n\nDouble-checking with reliable sources: Yes, in HSK beginner vocabulary, \"水\" is definitely the first water-related word taught. It's used in countless everyday contexts like \"喝水\" (drink water), \"水杯\" (cup), etc.\n\nI wonder if the user might confuse it with other homophones? But since they're asking for a beginner term, there's no need to complicate it. Just the clean, basic answer they requested.\n\nHmm, the user said \"one common word\" - good, that means I shouldn't list multiple options. Just give the simplest, most universal one. \"Water\" is the most fundamental term for this concept.\n\nAlso noting the JSON format requirement - must structure the response exactly as specified without extra fluff. The assistant should only output the JSON with the three required fields.\n\nAlright, triple-checking everything: Word = 水, Pinyin = shuǐ, Meaning = water. All correct. Time to format it in JSON as requested.\n</think>\n\n{\n  \"word\": \"水\",\n  \"pinyin\": \"shuǐ\",\n  \"meaning\": \"water\"\n}"
+              },
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 41,
+            "prompt_tokens_details": {
+              "cached_tokens": 40
+            },
+            "completion_tokens": 481,
+            "total_tokens": 522
+          }
+        }
+      }
+    }
+  ]
+}
