@@ -1,5 +1,6 @@
 import type { Card, CardState, Review, StrokeData, Subject, WordKey } from "@openlinguo/core";
 import { Dexie, type EntityTable, type Table } from "dexie";
+import type { AiSettings } from "./ai-settings.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
@@ -142,6 +143,9 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
+/** The AI provider settings: one row, never in the backup (ADR 0012). */
+export type StoredAiSettings = AiSettings & { readonly id: string };
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -166,6 +170,7 @@ export type Database = Dexie & {
   wordAudio: EntityTable<StoredWordAudio, "id">;
   audioBands: EntityTable<StoredAudioBand, "id">;
   recordings: EntityTable<StoredRecording, "id">;
+  aiSettings: EntityTable<StoredAiSettings, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -227,6 +232,7 @@ export const openDatabase = (name: string): Database => {
       }),
   );
   db.version(14).stores({ recordings: "id" });
+  db.version(15).stores({ aiSettings: "id" });
   return db;
 };
 

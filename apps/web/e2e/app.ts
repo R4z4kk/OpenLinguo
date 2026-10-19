@@ -55,7 +55,7 @@ const temporaryDir = (name: string): Promise<string> =>
  * Each test gets its own `vite preview` of `dist` (built beforehand) with the `_headers` CSP, and its
  * own browser profile: a copy of the one where its worker imported the offline data, or an empty one
  * with `seeded: false`. Offline is a stopped server: WebKit's emulated offline also fails service
- * worker responses.
+ * worker responses. `serviceWorkers: "block"` keeps the page's requests in `page.route` in WebKit.
  */
 export const test = base.extend<{ server: Server; seeded: boolean }, { profile: Profile }>({
   seeded: [true, { option: true }],
@@ -102,11 +102,13 @@ export const test = base.extend<{ server: Server; seeded: boolean }, { profile: 
   baseURL: async ({ server }, use) => {
     await use(server.url);
   },
-  context: async ({ playwright, browserName, seeded, profile }, use) => {
+  context: async ({ playwright, browserName, seeded, profile, serviceWorkers }, use) => {
     const dir = await temporaryDir("profile");
     try {
       if (seeded) await cp(profile.dir, dir, { recursive: true });
-      const context = await playwright[browserName].launchPersistentContext(dir);
+      const context = await playwright[browserName].launchPersistentContext(dir, {
+        serviceWorkers,
+      });
       try {
         await use(context);
       } finally {
