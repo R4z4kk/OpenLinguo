@@ -256,6 +256,22 @@ export const en = {
     nextStroke: "Next stroke",
     noStrokes: "No stroke order for {{character}}.",
   },
+  translate: {
+    action: "Translate to French",
+    pending: "Translating…",
+    retry: "Try again",
+    once: "The translation is saved with this word: it is asked for once only.",
+    heading: "French",
+    from: "from “<0>{{source}}</0>”",
+    disclaimer: "Translated from the English of CC-CEDICT. May contain mistakes.",
+    delete: "Delete the translation",
+    onCards: "On this word’s cards, the French translation shows with the mark “AI”.",
+    mark: "AI",
+    markLabel: "translated by AI",
+    loadFailed: "The translation could not be read: {{reason}}",
+    saveFailed: "The translation could not be saved: {{reason}}",
+    deleteFailed: "The translation could not be deleted: {{reason}}",
+  },
   pinyinChart: {
     title: "Pinyin chart",
     intro:
@@ -647,7 +663,7 @@ export const en = {
     import: "Import a backup",
     exported: "Backup exported.",
     imported:
-      "Backup imported: reviews +{{reviews}}, cards +{{cards}}, decks +{{decks}}, filed words +{{words}}, updated notes +{{notes}}.",
+      "Backup imported: reviews +{{reviews}}, cards +{{cards}}, decks +{{decks}}, filed words +{{words}}, updated notes +{{notes}}, AI translations +{{glosses}}.",
     exportFailed: "The backup could not be exported: {{reason}}",
     readFailed: "The file could not be read: {{reason}}",
     notJson: "This file is not a backup, it is not JSON: {{reason}}",

@@ -157,6 +157,14 @@ export type StoredName = {
 /** An AI feature whose first-use notice the learner confirmed; never in the backup. */
 export type StoredAiNotice = { readonly feature: AiFeature };
 
+/** French glosses an AI translated from an entry's English ones, each with its source. */
+export type StoredAiGloss = WordKey & {
+  /** `headword \t readingKey`, as in `wordAudio`. */
+  readonly id: string;
+  readonly senses: readonly { readonly english: string; readonly french: string }[];
+  readonly provenance: AiProvenance;
+};
+
 /** The AI provider settings: one row, never in the backup (ADR 0012). */
 export type StoredAiSettings = AiSettings & { readonly id: string };
 
@@ -196,6 +204,7 @@ export type Database = Dexie & {
   aiNotices: EntityTable<StoredAiNotice, "feature">;
   aiSettings: EntityTable<StoredAiSettings, "id">;
   challenges: EntityTable<StoredChallenge, "day">;
+  aiGlosses: EntityTable<StoredAiGloss, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -270,6 +279,7 @@ export const openDatabase = (name: string): Database => {
     );
   db.version(16).stores({ aiSettings: "id" });
   db.version(17).stores({ challenges: "day" });
+  db.version(18).stores({ aiGlosses: "id" });
   return db;
 };
 

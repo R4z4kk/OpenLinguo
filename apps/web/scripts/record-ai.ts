@@ -1,12 +1,20 @@
-// Records a real model list and answer to the zh vocabulary prompt, replayed by the interests E2E
-// (#187).
-// Usage: pnpm --filter @openlinguo/web record:ai <provider>=<model>
+// Records a real model list and answer to a zh prompt, replayed by an E2E: the vocabulary prompt
+// for interests (#187), the gloss prompt for the word page (#188).
+// Usage: pnpm --filter @openlinguo/web record:ai <provider>=<model> [vocabulary|gloss]
 // The key comes from GROQ_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY or a hidden prompt, and is
 // never written.
 import { writeFile } from "node:fs/promises";
 import { argv, env, exit, stdin } from "node:process";
 import { fileURLToPath } from "node:url";
-import { AI_BASE_URLS, AI_PROVIDERS, chat, listModels, ok, type AiError } from "@openlinguo/core";
+import {
+  AI_BASE_URLS,
+  AI_PROVIDERS,
+  chat,
+  listModels,
+  ok,
+  type AiError,
+  type PromptTask,
+} from "@openlinguo/core";
 import { createPrompts } from "@openlinguo/lang-zh";
 import { format, resolveConfig } from "prettier";
 import { z } from "zod";
@@ -27,6 +35,13 @@ const INPUT = {
   count: 10,
 };
 
+/** What the word page sends for 一路平安: HSK 2, no French gloss (data/gaps/missing-french.tsv). */
+const GLOSS_INPUT = {
+  headword: "一路平安",
+  reading: "yi1 lu4 ping2 an1",
+  glosses: ["to have a pleasant journey", "Bon voyage!"],
+};
+
 const fail = (message: string): never => {
   console.error(message);
   exit(1);
@@ -41,8 +56,9 @@ const parseBody = (text: string): unknown => {
   }
 };
 
-const USAGE = "Usage: record:ai <provider>=<model>";
-const [target = ""] = argv.slice(2);
+const USAGE = "Usage: record:ai <provider>=<model> [vocabulary|gloss]";
+const [target = "", taskName = "vocabulary"] = argv.slice(2);
+const task = z.enum(["vocabulary", "gloss"]).safeParse(taskName).data ?? fail(USAGE);
 const [name = "", model = ""] = target.split(/=(.*)/su);
 const chosen = z.enum(AI_PROVIDERS).safeParse(name).data ?? fail(USAGE);
 if (model === "") fail(USAGE);
@@ -80,23 +96,26 @@ if (!models.ok) failed(models.error);
 else if (!models.value.includes(model))
   fail(`${model} is not in ${chosen}'s list: nothing written`);
 
-const { vocabulary } = createPrompts({
+const { vocabulary, glossTranslation } = createPrompts({
   lookup: () => Promise.resolve(ok([])),
   tokenize: () => [],
   proficiency: "hsk-2025",
 });
-const answer = await chat({
-  endpoint,
-  model,
-  messages: vocabulary.messages(INPUT),
-  schema: vocabulary.schema(INPUT),
-  mode: "json_schema",
-  signal: new AbortController().signal,
-});
+const ask = <I, A>(prompt: PromptTask<I, A>, input: I) =>
+  chat({
+    endpoint,
+    model,
+    messages: prompt.messages(input),
+    schema: prompt.schema(input),
+    mode: "json_schema",
+    signal: new AbortController().signal,
+  });
+const answer =
+  task === "gloss" ? await ask(glossTranslation, GLOSS_INPUT) : await ask(vocabulary, INPUT);
 if (!answer.ok) {
   failed(answer.error);
 } else {
-  console.log(`${answer.value.mode}: ${answer.value.value.headwords.join(" ")}`);
+  console.log(`${answer.value.mode}: ${JSON.stringify(answer.value.value)}`);
 }
 
 const text = JSON.stringify(
@@ -113,9 +132,7 @@ const text = JSON.stringify(
   2,
 );
 if (holdsKey(text, key)) fail("The recording looks like it contains a key: nothing written");
-const file = fileURLToPath(
-  new URL(`../e2e/fixtures/ai/${chosen}-vocabulary.json`, import.meta.url),
-);
+const file = fileURLToPath(new URL(`../e2e/fixtures/ai/${chosen}-${task}.json`, import.meta.url));
 await writeFile(
   file,
   await format(text, { ...((await resolveConfig(file)) ?? {}), filepath: file }),
