@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
-    "@openlinguo/core": "workspace:*"
+    "@openlinguo/core": "workspace:*",
+    "zod": "^4.6.5"
   }
 }
