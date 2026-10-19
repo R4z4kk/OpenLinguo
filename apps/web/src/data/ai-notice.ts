@@ -17,7 +17,12 @@ export type AiFeature = (typeof AI_FEATURES)[number];
 /** The input the feature's PromptTask builds its request from. */
 export type AiPayload =
   | { readonly feature: "challenge" | "journal"; readonly input: CorrectionInput }
-  | { readonly feature: "interests"; readonly input: VocabularyInput }
+  | {
+      readonly feature: "interests";
+      readonly input: VocabularyInput;
+      /** The level sent, as the learner reads it: « HSK 2 ». */
+      readonly band: string;
+    }
   | { readonly feature: "translation"; readonly input: GlossInput };
 
 /** One AI button: what its click sends, and where. */
@@ -43,7 +48,8 @@ export const markNoticeSeen = (
     return ok(null);
   });
 
-const itemsOf = (t: TFunction, { feature, input }: AiPayload): string[] => {
+const itemsOf = (t: TFunction, payload: AiPayload): string[] => {
+  const { feature, input } = payload;
   switch (feature) {
     case "challenge":
     case "journal":
@@ -58,7 +64,7 @@ const itemsOf = (t: TFunction, { feature, input }: AiPayload): string[] => {
       return [
         ...(input.themes.length === 0 ? [] : [t("aiNotice.items.themes")]),
         ...(input.note.trim() === "" ? [] : [t("aiNotice.items.note")]),
-        t("aiNotice.items.level"),
+        t("aiNotice.items.level", { band: payload.band }),
       ];
     case "translation":
       return [

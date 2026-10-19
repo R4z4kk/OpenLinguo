@@ -86,6 +86,9 @@ const listDecks = async (db: Database): Promise<Deck[]> => [
   ...(await db.decks.toArray()).sort((a, b) => names.compare(a.name, b.name)),
 ];
 
+export const loadDecks = (db: Database): Promise<Result<readonly Deck[], ReviewLogFailure>> =>
+  guarded(async () => ok(await listDecks(db)));
+
 /** The trimmed name when no other deck has it. */
 export const checkName = async (
   db: Database,
@@ -233,6 +236,29 @@ export const fileWord = (
         const stored = await putCards(db, [word]);
         if (!stored.ok) return stored;
         await db.deckWords.put({ ...subjectOf(word), id, deckId });
+        return ok(null);
+      },
+    ),
+  );
+
+/** Files readings in a deck all at once, with their cards; nothing is written if one fails. */
+export const fileWords = (
+  db: Database,
+  deckId: string,
+  words: readonly WordKey[],
+): Promise<Result<null, DeckFailure>> =>
+  guarded(() =>
+    db.transaction(
+      "rw",
+      [db.decks, db.deckWords, db.cards, db.reviews],
+      async (): Promise<Result<null, DeckFailure>> => {
+        if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
+          return err({ kind: "unknown-deck", deckId });
+        const stored = await putCards(db, words);
+        if (!stored.ok) return stored;
+        await db.deckWords.bulkPut(
+          words.map((word) => ({ ...subjectOf(word), id: deckWordId(deckId, word), deckId })),
+        );
         return ok(null);
       },
     ),

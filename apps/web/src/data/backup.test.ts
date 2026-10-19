@@ -89,6 +89,7 @@ const SETTINGS: Settings = {
   practiceTyping: false,
   practiceWriting: true,
   writeOnPaper: true,
+  interests: { themes: ["cooking", "nature"], note: "J’aime le thé." },
 };
 const ANIMALS = { id: uuid(100), name: "Animals" };
 
@@ -228,11 +229,23 @@ describe("parseBackup", () => {
             practiceTyping: true,
             practiceWriting: false,
             writeOnPaper: false,
+            interests: null,
           },
           reviews: [review(1, RECALL.id, start, "good")],
         }),
       ),
     );
+  });
+
+  it("refuses interests the form could not have saved", () => {
+    const interests = { themes: ["politics"], note: "x".repeat(121) };
+    const parsed = parseBackup(
+      JSON.stringify({ ...backup({}), settings: { ...SETTINGS, interests } }),
+    );
+    expect(parsed.ok ? [] : parsed.error.kind === "invalid" ? parsed.error.issues : []).toEqual([
+      expect.objectContaining({ path: "settings.interests.themes.0" }),
+      expect.objectContaining({ path: "settings.interests.note" }),
+    ]);
   });
 
   it("reads notes of a backup made before M5 as written by the learner", () => {

@@ -12,7 +12,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | Review log (append-only) | Yes (learning data) | Synced if sync is on; XP is derived from it |
 | Personal decks: names typed by the learner, words filed in them | Yes (learning data) | Synced if sync is on |
 | Imported Anki decks: the words matched in the `.apkg`, the notes added as cards of their own, their audio and, when the learner chooses it, their review history | Yes (learning data) | The file is read on the device and never uploaded; only the text of notes added as cards is kept. Imported reviews join the review log, dated in the device's time zone. Audio stays on the device, is not in the backup file and is deleted with its deck |
-| Interests: the themes ticked and one short free field (#187) | Yes | Never synced; sent to the learner's AI provider only when they press « Suggest words », after the same warning as the journal |
+| Interests: the themes ticked and one short free field of 120 characters (#187) | Yes | In the browser's local storage and the backup file, never synced; sent to the learner's AI provider only when they press « Suggest words », with their level, after the same warning as the journal. The suggested words are dictionary entries, filed in a personal deck only when the learner adds them |
 | 5-sentence challenges: the word and the 5 sentences (#184) | Yes | In the backup file, never synced; sent to the learner's AI provider only when they press « Correct » |
 | Journal: one entry per learning day (#185) | Yes | Same as the challenges. Free text can reveal special categories (GDPR art. 9): the notice before the first correction warns against health, religion, politics and sex life |
 | AI corrections: per sentence, the corrected text, each change with its explanation, pinyin and French meaning, « Accept » or « Keep mine », and the provenance (#183) | Yes (derived from the learner's text) | In the backup file with the challenge or entry they correct; received from the provider, never sent anywhere |
@@ -21,7 +21,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | AI settings: provider, local server address, model, the structured-output mode that worked per model, the first-use notices seen (#181, #182) | No | Consent-exempt storage (Loi Informatique et Libertés art. 82, see [AI features](ai.md#13-storing-the-key)) |
 | AI key (#181) | Secret | In IndexedDB, or in memory only with « Don't remember the key »; sent only to its provider, in the `Authorization` header; never in the backup file, sync or any other request; « Forget the key » deletes it. Consent-exempt like the settings |
 | Preferences (language, theme, tone colors, Anki field and card template choices per note type) | No | Consent-exempt UI personalization |
-| Backup file (JSON, exported from Profile) | Yes (learning data) | Cards, review log, personal decks, settings, challenges, journal entries, AI corrections and AI glosses with their provenance; no dictionary data, never the AI key. Saved wherever the user chooses; OpenLinguo never receives it. Import merges by ids |
+| Backup file (JSON, exported from Profile) | Yes (learning data) | Cards, review log, personal decks, settings, interests, challenges, journal entries, AI corrections and AI glosses with their provenance; no dictionary data, never the AI key. Saved wherever the user chooses; OpenLinguo never receives it. Import merges by ids |
 
 ## On the OpenLinguo server (from M7)
 

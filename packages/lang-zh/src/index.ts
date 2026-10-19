@@ -40,7 +40,7 @@ export {
   type PinyinQuery,
   type ToneAt,
 } from "./pinyin-search.ts";
-export type { ZhProficiency } from "./prompts.ts";
+export { createPrompts, type ZhProficiency } from "./prompts.ts";
 export { applySandhi, type ReadingWord, type SandhiError } from "./sandhi.ts";
 export { createSegmenter } from "./segment.ts";
 export { alignChars, readingChars, type CharMatch, type SpokenChar } from "./transcript.ts";

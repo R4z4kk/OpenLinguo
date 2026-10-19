@@ -162,6 +162,21 @@ export const loadAiConnection = async (
   return settings.ok ? ok(aiConnection(settings.value)) : settings;
 };
 
+/** Keeps the structured-output mode a call ended with, for the model it was sent to. */
+export const rememberMode = async (
+  db: Database,
+  connection: AiConnection,
+  mode: StructuredMode,
+): Promise<Result<null, ReviewLogFailure>> => {
+  if (mode === connection.mode) return ok(null);
+  const settings = await loadAiSettings(db);
+  if (!settings.ok) return settings;
+  const { model } = settings.value;
+  if (model?.provider !== connection.endpoint.provider || model.id !== connection.model)
+    return ok(null);
+  return saveAiSettings(db, { ...settings.value, model: { ...model, mode } });
+};
+
 /** The sentence the connection test sends, corrected with the real correction prompt. */
 export const TEST_SENTENCE = "我很好。";
 

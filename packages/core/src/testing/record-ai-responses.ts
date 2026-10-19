@@ -3,9 +3,7 @@
 // Keys come from GROQ_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY or a hidden prompt, and are never written.
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
-import { argv, env, exit, stdin, stdout } from "node:process";
-import { createInterface } from "node:readline/promises";
-import { Writable } from "node:stream";
+import { argv, env, exit, stdin } from "node:process";
 import { fileURLToPath } from "node:url";
 import { format, resolveConfig } from "prettier";
 import { z } from "zod";
@@ -21,36 +19,23 @@ import {
 import type { ChatMessage } from "../prompt-pack.ts";
 import type { Result } from "../result.ts";
 import {
+  askHidden,
   INVALID_KEY,
+  KEY_VARIABLES,
   COLOUR_MESSAGES,
   COLOUR_SCHEMA,
+  holdsKey,
   RECORDING_MESSAGES,
   RECORDING_SCHEMA,
   recordingUrl,
+  strip,
   UNKNOWN_MODEL,
   type Exchange,
   type Recording,
   type Scenario,
 } from "./ai-recordings.ts";
 
-const KEY_VARIABLES: Readonly<Record<AiProvider, string | null>> = {
-  groq: "GROQ_API_KEY",
-  openrouter: "OPENROUTER_API_KEY",
-  mistral: "MISTRAL_API_KEY",
-  local: null,
-};
-
 const CLOUD: readonly AiProvider[] = ["groq", "openrouter", "mistral"];
-const KEY_SHAPES = /gsk_[A-Za-z0-9]{20,}|sk-or-v1-[a-f0-9]{20,}|sk-[A-Za-z0-9-]{20,}/;
-const DROPPED_KEYS = new Set(["id", "created", "system_fingerprint"]);
-const REDACTIONS: readonly (readonly [RegExp, string])[] = [
-  [/\borg_[A-Za-z0-9]+/g, "org_redacted"],
-  [/\breq_[A-Za-z0-9]+/g, "req_redacted"],
-  [/\buser_[A-Za-z0-9]+/g, "user_redacted"],
-  [/\bgen-[A-Za-z0-9-]+/g, "gen-redacted"],
-  [/\bchatcmpl-[A-Za-z0-9-]+/g, "chatcmpl-redacted"],
-  [/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "redacted-uuid"],
-];
 
 type Run = {
   readonly provider: AiProvider;
@@ -297,21 +282,6 @@ const PLANS: readonly Plan[] = [
   },
 ];
 
-const strip = (value: unknown, keepIds: boolean): unknown => {
-  if (typeof value === "string") {
-    return REDACTIONS.reduce((text, [pattern, by]) => text.replace(pattern, by), value);
-  }
-  if (Array.isArray(value)) return value.map((item: unknown) => strip(item, keepIds));
-  if (typeof value === "object" && value !== null) {
-    return Object.fromEntries(
-      Object.entries(value)
-        .filter(([key]) => keepIds || !DROPPED_KEYS.has(key))
-        .map(([key, item]: [string, unknown]) => [key, strip(item, keepIds)]),
-    );
-  }
-  return value;
-};
-
 const hasStructuredOutputs = (model: unknown): boolean =>
   z
     .object({ supported_parameters: z.array(z.string()) })
@@ -358,29 +328,13 @@ const save = async (
     exchanges: exchanges.map(sanitize),
   };
   const text = JSON.stringify(recording, null, 2);
-  if ((run.key !== null && text.includes(run.key)) || KEY_SHAPES.test(text)) {
+  if (holdsKey(text, run.key)) {
     throw new Error(`${run.provider}/${scenario} looks like it contains a key: not written`);
   }
   const file = fileURLToPath(recordingUrl(run.provider, scenario));
   mkdirSync(dirname(file), { recursive: true });
   const options = await resolveConfig(file);
   writeFileSync(file, await format(text, { ...(options ?? {}), filepath: file }));
-};
-
-const askHidden = async (question: string): Promise<string> => {
-  stdout.write(question);
-  const muted = new Writable({
-    write: (_chunk, _encoding, callback) => {
-      callback();
-    },
-  });
-  const prompt = createInterface({ input: stdin, output: muted, terminal: true });
-  try {
-    return (await prompt.question("")).trim();
-  } finally {
-    prompt.close();
-    stdout.write("\n");
-  }
 };
 
 const keyFor = async (provider: AiProvider): Promise<string | null> => {

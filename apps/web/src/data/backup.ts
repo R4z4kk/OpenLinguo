@@ -24,6 +24,7 @@ import {
   type StoredNote,
 } from "./database.ts";
 import { DECK_NAME_MAX, sameDeckName, type DeckFailure } from "./decks.ts";
+import { Interests } from "./interests.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
 import { referentials } from "./referential.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
@@ -42,6 +43,8 @@ export const Settings = z.object({
   practiceTyping: z.boolean().default(PRACTICE_TYPING.fallback),
   practiceWriting: z.boolean().default(PRACTICE_WRITING.fallback),
   writeOnPaper: z.boolean().default(WRITE_ON_PAPER.fallback),
+  /** `null`: none to restore, so an older backup leaves the device's own. */
+  interests: Interests.nullable().default(null),
 });
 export type Settings = z.output<typeof Settings>;
 

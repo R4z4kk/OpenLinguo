@@ -11,6 +11,7 @@ import {
   loadAiConnection,
   loadAiSettings,
   localBaseUrl,
+  rememberMode,
   PROVIDER_FACTS_CHECKED_ON,
   saveAiSettings,
   testConnection,
@@ -167,6 +168,20 @@ const replay = (recording: string): Sent[] => {
 const local: AiEndpoint = { provider: "local", baseUrl: "http://localhost:11434/v1", key: null };
 const test = (endpoint: AiEndpoint, model: AiSettings["model"]) =>
   testConnection(endpoint, model, prompts.correction, "en", new AbortController().signal);
+
+describe("rememberMode", () => {
+  it("keeps the mode a call ended with, for the model it was sent to only", async () => {
+    await saveAiSettings(db, groq);
+    const connection = aiConnection(groq);
+    if (connection === null) throw new Error("no connection");
+    expect(await rememberMode(db, connection, "json_object")).toEqual(ok(null));
+    expect(await loadAiConnection(db)).toEqual(ok({ ...connection, mode: "json_object" }));
+    const other = { provider: "groq", id: "other", mode: "json_object" } as const;
+    await saveAiSettings(db, { ...groq, model: other });
+    expect(await rememberMode(db, connection, "json_schema")).toEqual(ok(null));
+    expect(await loadAiSettings(db)).toEqual(ok({ ...groq, model: other }));
+  });
+});
 
 describe("testConnection", () => {
   it("lists the models, then corrects the test sentence with the chosen one", async () => {
