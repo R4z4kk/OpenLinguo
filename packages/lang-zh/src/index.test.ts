@@ -1,7 +1,7 @@
 import { inMemoryDictionary, ok, type DictEntry, type StrokeData } from "@openlinguo/core";
 import { describeLanguagePackContract } from "@openlinguo/core/testing";
 import { describe, expect, it } from "vitest";
-import { createZhPack } from "./index.ts";
+import { createZhPack, searchKey, type ImeWordsOf } from "./index.ts";
 
 const fixture: readonly DictEntry[] = [
   {
@@ -32,6 +32,17 @@ const strokes: ReadonlyMap<string, StrokeData> = new Map([
 ]);
 const strokesOf = (character: string) => Promise.resolve(ok(strokes.get(character) ?? null));
 
+const wordsOfPinyin: ImeWordsOf = (key) =>
+  Promise.resolve(
+    ok(
+      fixture.flatMap(({ headword, reading }) =>
+        reading !== null && searchKey(reading) === key
+          ? [{ headword, reading, frequency: null }]
+          : [],
+      ),
+    ),
+  );
+
 describeLanguagePackContract(
   () =>
     createZhPack({
@@ -40,11 +51,13 @@ describeLanguagePackContract(
       decompositions: new Map([["电", "⿻曰乚"]]),
       proficiency: "hsk-2025",
       strokesOf,
+      wordsOfPinyin,
     }),
   {
     knownTerm: "电话",
     unknownTerm: "龘",
     sampleText: "我想打电话给你。",
+    typedTerm: "dian4hua",
   },
 );
 
@@ -56,6 +69,7 @@ describe("createZhPack", () => {
       decompositions: new Map(),
       proficiency: "gf0025-2021",
       strokesOf,
+      wordsOfPinyin,
     });
     expect(pack.proficiency).toBe("gf0025-2021");
   });

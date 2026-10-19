@@ -9,6 +9,7 @@ import { ProfilePage } from "@/pages/profile";
 import { ReadPage } from "@/pages/read";
 import { ReviewPage } from "@/pages/review";
 import { TodayPage } from "@/pages/today";
+import { TypingDrillPage } from "@/pages/typing-drill";
 import { WordPage } from "@/pages/word";
 import { AppShell } from "@/shell/app-shell";
 import { ModuleError } from "@/shell/module-error";
@@ -45,6 +46,12 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/learn/pinyin",
     component: PinyinChartPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/typing",
+    component: TypingDrillPage,
     errorComponent: ModuleError,
   }),
   createRoute({

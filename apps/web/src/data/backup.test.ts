@@ -70,6 +70,9 @@ const SETTINGS: Settings = {
   dailyGoal: 50,
   newCardsPerDay: 0,
   showProgress: false,
+  practiceTyping: false,
+  practiceWriting: true,
+  writeOnPaper: true,
 };
 const ANIMALS = { id: uuid(100), name: "Animals" };
 
@@ -131,6 +134,36 @@ describe("exportBackup", () => {
   });
 });
 
+describe("round trip", () => {
+  it("brings writing and typing cards back with their states", async () => {
+    const writing = card("好", "hao3", "writing");
+    const typing = card("好", "hao3", "typing");
+    const log = [
+      review(1, writing.id, start, "hard"),
+      review(2, typing.id, start + DAY, "good"),
+      review(3, typing.id, start + 2 * DAY, "again"),
+    ];
+    const states = [
+      { ...writing, ...replayed(writing.id, log.slice(0, 1)) },
+      { ...typing, ...replayed(typing.id, log.slice(1)) },
+    ];
+    await db.cards.bulkAdd(states);
+    await db.reviews.bulkAdd(log);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+
+    const restored = openDatabase(`backup-test-${String(counter)}-restored`);
+    expect(await importBackup(restored, parsed.value)).toEqual(
+      ok({ reviews: 3, cards: 2, decks: 0, words: 0, notes: 0 }),
+    );
+    expect(await restored.cards.toArray()).toEqual(
+      states.toSorted((a, b) => (a.id < b.id ? -1 : 1)),
+    );
+  });
+});
+
 describe("parseBackup", () => {
   it("names a file that is not JSON, not a backup or from a newer version", () => {
     expect(parseBackup("{")).toMatchObject({ ok: false, error: { kind: "not-json" } });
@@ -150,7 +183,15 @@ describe("parseBackup", () => {
     expect(parseBackup(JSON.stringify(withoutNotes))).toEqual(
       ok(
         backup({
-          settings: { ...SETTINGS, dailyGoal: 20, newCardsPerDay: 20, showProgress: true },
+          settings: {
+            ...SETTINGS,
+            dailyGoal: 20,
+            newCardsPerDay: 20,
+            showProgress: true,
+            practiceTyping: true,
+            practiceWriting: false,
+            writeOnPaper: false,
+          },
           reviews: [review(1, RECALL.id, start, "good")],
         }),
       ),

@@ -386,7 +386,12 @@ const StrokeOrders = ({ strokes }: { readonly strokes: Strokes }) => {
           ) : shown[1].value === null ? (
             <p>{t("word.noStrokes", { character: shown[0] })}</p>
           ) : (
-            <StrokeOrder key={shown[0]} character={shown[0]} data={shown[1].value} />
+            <StrokeOrder
+              key={shown[0]}
+              character={shown[0]}
+              data={shown[1].value}
+              compact={false}
+            />
           )}
         </div>
       )}

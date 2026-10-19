@@ -27,6 +27,7 @@ const pack = createZhPack({
   proficiency: "hsk-2025",
   decompositions: new Map(),
   strokesOf: () => Promise.resolve(ok(null)),
+  wordsOfPinyin: () => Promise.resolve(ok([])),
 });
 
 describe("toSimplified", () => {

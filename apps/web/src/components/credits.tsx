@@ -13,7 +13,10 @@ type Credit = {
 
 const CC_BY_SA_4 = "https://creativecommons.org/licenses/by-sa/4.0/";
 
-/** Attribution of every shipped dataset (data/SOURCES.md). License texts ship in /data/licenses/. */
+/**
+ * Attribution of every shipped dataset (data/SOURCES.md) and ported code. License texts ship in
+ * /data/licenses/.
+ */
 export const CREDITS = {
   "cc-cedict": {
     name: "CC-CEDICT",
@@ -88,6 +91,14 @@ export const CREDITS = {
     site: null,
     license: "Arphic Public License",
     licenseUrl: "/data/licenses/hanzi-writer-data/ARPHICPL.txt",
+  },
+  "hanzi-writer": {
+    name: "Hanzi Writer",
+    url: "https://github.com/chanind/hanzi-writer",
+    holder: "David Chanin",
+    site: null,
+    license: "MIT",
+    licenseUrl: "https://github.com/chanind/hanzi-writer/blob/master/LICENSE",
   },
   jieba: {
     name: "jieba",

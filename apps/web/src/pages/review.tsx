@@ -1,4 +1,10 @@
-import { Grade, previewGrades, type LanguagePack, type Result } from "@openlinguo/core";
+import {
+  Grade,
+  hasFeatures,
+  previewGrades,
+  type LanguagePack,
+  type Result,
+} from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import {
   Suspense,
@@ -16,12 +22,15 @@ import { GlossSummary } from "@/components/gloss-summary";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
 import { ToneCard } from "@/components/tone-card";
+import { TypingCard } from "@/components/typing-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { WritingCard } from "@/components/writing-card";
 import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { localNow, type LocalTime } from "@/data/decks";
+import { PRACTICE_TYPING, PRACTICE_WRITING, WRITE_ON_PAPER } from "@/data/practice";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import { gradeItem, loadSession, type ReviewItem, type Session } from "@/data/session";
 import { languages, type Language } from "@/i18n/language";
@@ -108,7 +117,7 @@ const Card = ({
     </div>
   ) : (
     <div className="flex flex-col items-center gap-4">
-      <p className="text-small text-muted">{t("review.recall")}</p>
+      <p className="text-small text-muted">{t(`review.${item.type}`)}</p>
       {meaning}
       <div {...focus}>{word}</div>
       {audio}
@@ -143,11 +152,19 @@ const Runner = ({
   const [done, setDone] = useState(0);
   const [revealedAt, setRevealedAt] = useState<LocalTime | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
-  /** A tone card's stored grade, while its answer is shown: what the queue takes at Continue. */
+  /** A self-graded card's stored grade, while its answer is shown: what the queue takes at Continue. */
   const [landed, setLanded] = useState<{ readonly again: ReviewItem | null } | null>(null);
+  const [paperChecked, setPaperChecked] = useState(() => currentSetting(storage, WRITE_ON_PAPER));
   const pending = useRef(false);
   const focusTarget = useRef<HTMLDivElement>(null);
   const current = queue[0] ?? null;
+  /** A drawn card stays drawn once graded: the switch then applies to the next writing cards. */
+  const paper = current?.type === "writing" && paperChecked && landed === null;
+  /** Tone, typing and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
+  const selfGraded =
+    current?.type === "tone" ||
+    current?.type === "typing" ||
+    (current?.type === "writing" && !paper);
 
   useEffect(() => {
     focusTarget.current?.focus();
@@ -189,6 +206,17 @@ const Runner = ({
     setLanded(null);
   };
 
+  const gradeSelf = async (grade: Grade): Promise<boolean> => {
+    const recorded = await record(grade);
+    if (recorded === null) return false;
+    setLanded(recorded);
+    return true;
+  };
+
+  const continueSelf = (): void => {
+    if (landed !== null) advance(landed);
+  };
+
   const submit = async (grade: Grade): Promise<void> => {
     if (revealedAt === null) return;
     const recorded = await record(grade);
@@ -196,9 +224,10 @@ const Runner = ({
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    if (current?.type === "tone") return;
+    if (selfGraded) return;
     if (event.altKey || event.ctrlKey || event.metaKey) return;
-    if (event.key === " " && revealedAt === null) {
+    // Space on a button is the button's own: the switch, Listen or Show the answer.
+    if (event.key === " " && revealedAt === null && !(event.target instanceof HTMLButtonElement)) {
       event.preventDefault();
       setRevealedAt(localNow());
       return;
@@ -268,39 +297,64 @@ const Runner = ({
         </span>
       </div>
       {skipped}
-      <div className="mt-6 rounded-card border border-hairline bg-surface p-6 text-center">
-        {current.type === "tone" && !("note" in current) ? (
-          <ToneCard
-            key={done}
-            headword={current.headword}
-            readingKey={current.readingKey}
-            glosses={current.entry.glosses}
-            audio={current.audio}
-            features={pack.features}
-            language={language}
-            focusTarget={focusTarget}
-            onGrade={async (grade) => {
-              const recorded = await record(grade);
-              if (recorded === null) return false;
-              setLanded(recorded);
-              return true;
-            }}
-            onContinue={() => {
-              if (landed !== null) advance(landed);
-            }}
-          />
-        ) : (
-          <Card
-            key={done}
-            item={current}
-            revealed={revealedAt !== null}
-            pack={pack}
-            language={language}
-            focusTarget={focusTarget}
-          />
-        )}
-      </div>
-      {current.type === "tone" ? null : revealedAt === null ? (
+      {current.type === "typing" && !("note" in current) ? (
+        <TypingCard
+          key={done}
+          headword={current.headword}
+          readingKey={current.readingKey}
+          glosses={current.entry.glosses}
+          audio={current.audio}
+          pack={pack}
+          language={language}
+          focusTarget={focusTarget}
+          onGrade={gradeSelf}
+          onContinue={continueSelf}
+        />
+      ) : (
+        <div className="mt-6 rounded-card border border-hairline bg-surface p-6 text-center">
+          {current.type === "tone" && !("note" in current) ? (
+            <ToneCard
+              key={done}
+              headword={current.headword}
+              readingKey={current.readingKey}
+              glosses={current.entry.glosses}
+              audio={current.audio}
+              features={pack.features}
+              language={language}
+              focusTarget={focusTarget}
+              onGrade={gradeSelf}
+              onContinue={continueSelf}
+            />
+          ) : current.type === "writing" && !("note" in current) ? (
+            <WritingCard
+              key={done}
+              headword={current.headword}
+              readingKey={current.readingKey}
+              glosses={current.entry.glosses}
+              audio={current.audio}
+              features={pack.features}
+              language={language}
+              focusTarget={focusTarget}
+              paperChecked={paperChecked}
+              paper={paper}
+              revealed={revealedAt !== null}
+              onPaperChange={setPaperChecked}
+              onGrade={gradeSelf}
+              onContinue={continueSelf}
+            />
+          ) : (
+            <Card
+              key={done}
+              item={current}
+              revealed={revealedAt !== null}
+              pack={pack}
+              language={language}
+              focusTarget={focusTarget}
+            />
+          )}
+        </div>
+      )}
+      {selfGraded ? null : revealedAt === null ? (
         <Button
           className="mt-6 w-full"
           aria-keyshortcuts="Space"
@@ -308,7 +362,7 @@ const Runner = ({
             setRevealedAt(localNow());
           }}
         >
-          {t("review.showAnswer")}
+          {t(paper ? "review.showStrokes" : "review.showAnswer")}
         </Button>
       ) : outcomes?.ok === true ? (
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -329,7 +383,21 @@ const Runner = ({
         </div>
       ) : null}
       <p className="mt-4 text-small text-muted">
-        {t(current.type === "tone" ? "review.toneKeys" : "review.keys")}
+        {t(
+          current.type === "tone"
+            ? "review.toneKeys"
+            : current.type === "typing"
+              ? landed === null
+                ? "review.typingKeys"
+                : "review.continueKeys"
+              : current.type !== "writing"
+                ? "review.keys"
+                : paper
+                  ? "review.paperKeys"
+                  : landed === null
+                    ? "review.writingKeys"
+                    : "review.continueKeys",
+        )}
       </p>
       {(failure !== null || outcomes?.ok === false) && (
         <p role="alert" className="mt-4 text-danger">
@@ -366,20 +434,32 @@ const Loaded = ({
 export const ReviewPage = () => {
   const { t, i18n } = useTranslation();
   const { state, referential } = useData();
+  const pack = state.status === "ready" ? state.pack : null;
   const session = useMemo(
     () =>
-      loadSession(database, referential, localNow(), currentSetting(storage, NEW_CARDS_PER_DAY)),
-    [referential],
+      pack === null
+        ? null
+        : loadSession(
+            database,
+            referential,
+            localNow(),
+            currentSetting(storage, NEW_CARDS_PER_DAY),
+            {
+              writing: currentSetting(storage, PRACTICE_WRITING),
+              typing: currentSetting(storage, PRACTICE_TYPING) && hasFeatures(pack, ["ime"]),
+            },
+          ),
+    [referential, pack],
   );
   const language = languages.find((lang) => lang === i18n.language) ?? "en";
-  if (state.status !== "ready") return null;
+  if (pack === null || session === null) return null;
   return (
     <section aria-labelledby="review-title" className="mx-auto max-w-2xl">
       <h1 id="review-title" className="text-title">
         {t("review.title")}
       </h1>
       <Suspense fallback={null}>
-        <Loaded session={session} pack={state.pack} language={language} />
+        <Loaded session={session} pack={pack} language={language} />
       </Suspense>
     </section>
   );

@@ -5,6 +5,8 @@ export type ContractFixture = {
   readonly knownTerm: string;
   readonly unknownTerm: string;
   readonly sampleText: string;
+  /** The known term as typed through the pack's input method, `null` without the `ime` feature. */
+  readonly typedTerm: string | null;
 };
 
 export const describeLanguagePackContract = (
@@ -67,6 +69,25 @@ export const describeLanguagePackContract = (
       expect(data.ok).toBe(true);
       if (!data.ok || data.value === null) return;
       expect(data.value.medians).toHaveLength(data.value.strokes.length);
+    });
+
+    it("has an input method exactly when the fixture types the known term", () => {
+      expect(pack.features.ime === null).toBe(fixture.typedTerm === null);
+    });
+
+    it("offers the known term for all of its typed form, when the feature exists", async () => {
+      const { ime } = pack.features;
+      if (ime === null || fixture.typedTerm === null) return;
+      const candidates = await ime.candidates(fixture.typedTerm);
+      expect(
+        candidates.ok && candidates.value.find(({ text }) => text === fixture.knownTerm),
+      ).toEqual({ text: fixture.knownTerm, consumed: fixture.typedTerm.length });
+    });
+
+    it("answers empty input with an error, not an empty list, when the feature exists", async () => {
+      const { ime } = pack.features;
+      if (ime === null) return;
+      expect(await ime.candidates("")).toMatchObject({ ok: false });
     });
 
     it("returns an empty list for an unknown term", async () => {

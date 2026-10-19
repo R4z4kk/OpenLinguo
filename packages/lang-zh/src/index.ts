@@ -5,6 +5,7 @@ import type {
   StrokeFeature,
 } from "@openlinguo/core";
 import { createDecomposition } from "./decomposition.ts";
+import { createIme, type ImeWordsOf } from "./ime.ts";
 import { toDiacritic, tonesOf } from "./pinyin.ts";
 import { createSegmenter } from "./segment.ts";
 
@@ -20,6 +21,13 @@ export {
   type ReadingToken,
   type Tone,
 } from "./pinyin.ts";
+export {
+  createIme,
+  splitPinyin,
+  type ImeWord,
+  type ImeWordsOf,
+  type TypedSyllable,
+} from "./ime.ts";
 export {
   FINALS,
   INITIALS,
@@ -52,6 +60,8 @@ export type ZhPackSources = {
   readonly decompositions: ReadonlyMap<string, string>;
   /** Stroke order (hanzi-writer-data, from Make Me a Hanzi). */
   readonly strokesOf: StrokeFeature["strokesOf"];
+  /** CC-CEDICT words by toneless reading, for the input method. */
+  readonly wordsOfPinyin: ImeWordsOf;
 };
 
 export const createZhPack = ({
@@ -60,6 +70,7 @@ export const createZhPack = ({
   proficiency,
   decompositions,
   strokesOf,
+  wordsOfPinyin,
 }: ZhPackSources): LanguagePack => ({
   id: "zh",
   proficiency,
@@ -70,5 +81,6 @@ export const createZhPack = ({
     strokes: { strokesOf },
     romanization: { system: "pinyin", toDisplay: toDiacritic },
     decomposition: createDecomposition(lookup, decompositions),
+    ime: createIme(wordsOfPinyin),
   },
 });

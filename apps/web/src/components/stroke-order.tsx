@@ -5,18 +5,34 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/lib/reduced-motion";
 import { medianPath, polylineLength, strokeDuration } from "@/lib/strokes";
+import { cn } from "@/lib/utils";
 
 /** Wide enough to cover any stroke outline, which clips it. */
 const MEDIAN_WIDTH = 200;
 const PAUSE_MS = 150;
 
-type Props = { readonly character: string; readonly data: StrokeData };
+/** The 米 grid's guides, in the strokes' `viewBox="0 0 1024 1024"`. */
+export const GridLines = () => (
+  <g className="stroke-hairline" strokeWidth={4} strokeDasharray="16 16" aria-hidden="true">
+    <line x1={0} y1={0} x2={1024} y2={1024} />
+    <line x1={1024} y1={0} x2={0} y2={1024} />
+    <line x1={512} y1={0} x2={512} y2={1024} />
+    <line x1={0} y1={512} x2={1024} y2={512} />
+  </g>
+);
+
+type Props = {
+  readonly character: string;
+  readonly data: StrokeData;
+  /** Smaller, centred, with icon-only buttons below 1024 px: several side by side on a card. */
+  readonly compact: boolean;
+};
 
 /**
  * Stroke order on a 米 grid: played on demand (never automatically), or stepped stroke by
  * stroke; under reduced motion the steps are the only mode, drawn without motion.
  */
-export const StrokeOrder = ({ character, data }: Props) => {
+export const StrokeOrder = ({ character, data, compact }: Props) => {
   const { t } = useTranslation();
   const total = data.strokes.length;
   const reducedMotion = useReducedMotion();
@@ -53,19 +69,17 @@ export const StrokeOrder = ({ character, data }: Props) => {
         : "fill-muted";
 
   return (
-    <figure className="flex flex-col items-start gap-3">
+    <figure className={cn("flex flex-col gap-3", compact ? "items-center" : "items-start")}>
       <svg
         viewBox="0 0 1024 1024"
         role="img"
         aria-label={t("word.strokeImage", { character })}
-        className="size-64 rounded-card border border-hairline bg-surface text-ink"
+        className={cn(
+          "rounded-card border border-hairline bg-surface text-ink",
+          compact ? "size-34 lg:size-60" : "size-64",
+        )}
       >
-        <g className="stroke-hairline" strokeWidth={4} strokeDasharray="16 16" aria-hidden="true">
-          <line x1={0} y1={0} x2={1024} y2={1024} />
-          <line x1={1024} y1={0} x2={0} y2={1024} />
-          <line x1={512} y1={0} x2={512} y2={1024} />
-          <line x1={0} y1={512} x2={1024} y2={512} />
-        </g>
+        <GridLines />
         <g transform="translate(0 900) scale(1 -1)">
           {data.strokes.map((stroke, index) => (
             // Strokes never move: the index is a stable key.
@@ -102,6 +116,7 @@ export const StrokeOrder = ({ character, data }: Props) => {
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"
+          className={cn(compact && "w-11 px-0")}
           aria-label={t("word.previousStroke")}
           disabled={playing || step <= 1}
           onClick={() => {
@@ -113,6 +128,7 @@ export const StrokeOrder = ({ character, data }: Props) => {
         {!reducedMotion && (
           <Button
             variant="outline"
+            className={cn(compact && "max-lg:w-11 max-lg:px-0")}
             onClick={() => {
               setStep(playing ? total : 0);
               setAnimating(!playing);
@@ -123,11 +139,14 @@ export const StrokeOrder = ({ character, data }: Props) => {
             ) : (
               <Play aria-hidden="true" className="size-4" />
             )}
-            {t(playing ? "word.stop" : "word.play")}
+            <span className={cn(compact && "max-lg:sr-only")}>
+              {t(playing ? "word.stop" : "word.play")}
+            </span>
           </Button>
         )}
         <Button
           variant="outline"
+          className={cn(compact && "w-11 px-0")}
           aria-label={t("word.nextStroke")}
           disabled={playing || step >= total}
           onClick={() => {

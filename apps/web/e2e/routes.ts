@@ -29,6 +29,7 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   },
   "/learn/import": { url: "/learn/import", ready: title(en.ankiImport.title) },
   "/learn/pinyin": { url: "/learn/pinyin", ready: title(en.pinyinChart.title) },
+  "/learn/typing": { url: "/learn/typing", ready: (page) => page.getByText(en.drill.empty) },
   "/learn/dictionary": {
     url: "/learn/dictionary?q=hao",
     ready: (page) => page.getByRole("link", { name: "好", exact: true }).first(),

@@ -1,6 +1,6 @@
 # Design system — Ink and tone
 
-Approved by the maintainer on 2026-10-09 (issue #9), from a private design canvas with the token sheet and eight key mobile screens. Implementation starts with the PWA shell (#22).
+Approved by the maintainer on 2026-10-09 (issue #9), from a private design canvas with the token sheet and eight key mobile screens. Implementation starts with the PWA shell (#22). The M4 writing and typing screens (issue #152) are on two more pages of the same canvas, described under [Writing and typing](#writing-and-typing-m4).
 
 ## Principle
 
@@ -83,7 +83,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 ## Screen patterns
 
 - **Review**: progress bar, one card, grading buttons À revoir / Difficile / Bien / Facile with next intervals; "Bien" is the single filled button.
-- **Card types**: recognition, recall (French → Chinese), listening, tone choice (four buttons with diacritic, color and tone number), writing with a stroke-order quiz alternative.
+- **Card types**: recognition, recall (French → Chinese), listening, tone choice (four buttons with diacritic, color and tone number), writing (draw the strokes on the 米 grid, or write on paper, reveal the stroke order and self-grade), typing (in-app pinyin IME with a candidate list).
 - **Word page**: pinyin, audio, FR and EN glosses, decomposition as a nested list (word → characters → components), stroke count and stroke order.
 - **Pronunciation studio**: reference (dashed) and user (solid) pitch curves, per-syllable text result, sandhi hint, on-device processing notice, "Je ne peux pas parler maintenant".
 - **Writing studio**: five contexts, AI correction shown as a labeled proposal ("Généré par IA") with inserted characters underlined, accept or keep, optional card creation.
@@ -91,10 +91,22 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 - **Profile**: streak, retention, words learned, time; league table with the user's row highlighted; settings for AI provider, display, data and privacy (export, delete).
 - **Stats heatmap**: 12 weeks of learning days in three shades, `sunken` (no review), `border-strong` (reviews) and `ink` (daily goal met), each ≥ 3:1 from its neighbour in both themes (checked in CI). The same numbers follow as a table in a disclosure (WCAG 1.4.11 lets a graph rely on "a table that follows the graph").
 
+## Writing and typing (M4)
+
+Mocked up for issue #152 from [ADR 0011](../adr/0011-writing-and-typing.md): every state on a phone (390 px) and a desktop (1280 px), light and dark, each with its focus order. The copy is French, from `apps/web/src/i18n/fr.ts` where a string exists. Stroke shapes come from `data/hanzi-writer-data`; the input method's candidates are ranked from CC-CEDICT and wordfreq as the ADR specifies.
+
+- **Writing card, draw mode**: meaning, pinyin and audio above the word page's 米 grid, without outline, framed in `border-strong` because it takes input (WCAG 1.4.11); 280 px on a phone, 320 px from 1024 px. Boxes after "Caractère 1 sur 2" show the progress through the word, a finished character in its box. A right stroke settles into its true shape in ink; the status line (`aria-live="polite"`) names the stroke, never how many are left. A miss says "pas tout à fait", a reversed stroke "tracé à l'envers". After three misses the stroke's outline appears, dashed `border-strong` over `sunken`, with an `ink` dot at its start, without motion under reduced motion. Three misses more and the stroke is drawn for the learner ("tracé pour vous"), counted as hinted, so a learner who is stuck always finishes; the keyboard path stays "Écrire sur papier". The result keeps the learner's strokes, the hinted one in `muted` and named in the caption, and states the grade before Continue, as on the tone card.
+- **Writing card, on paper**: the "Écrire sur papier" switch sits in the card's header, the first stop after the card, so a keyboard user reaches it at once. Empty 米 boxes give the number of characters. Space reveals each character with the word page's stroke-order stepper (136 px on a phone, 240 px from 1024 px, play left out under reduced motion), then 1–4 grade with their intervals, "Bien" filled.
+- **Typing card**: meaning and audio, no pinyin. The answer field is an ARIA combobox: committed characters sit before the input, the pinyin being typed is in it, underlined with dots. The candidate list below shows the syllables matched ("dian · hua", "guan3 · ton 3"), 9 candidates per page and a button for the next page; the active candidate is outlined in `ink` over `sunken` (candidates carry no tone color). Once checked: the grade, what was typed with its pinyin, then the answer with ruby pinyin and its audio; focus moves to Continue.
+- **Typing drill** (Learn): the setup shows the timer switch, off by default; turned on, it reveals the duration (1, 2, 3 or 5 min) as a segmented control. A round reuses the typing card's field without a grade step: the status line reports the previous word, the time left is `role="timer"` and never announced, "Arrêter" ends the round. The result gives the words right and the characters per minute (characters of the right answers over the time spent), then the missed words with their answer, pinyin, meaning and what was typed.
+- **Practice settings**: Profile › Apprentissage gains a "Pratique" group with two switches, Saisie on and Écriture à la main off, each with a description, and a line saying that turning one off hides its cards and keeps their history.
+- **Switch** (new control): a `button` with `role="switch"` and `aria-checked`, its description tied by `aria-describedby`, the whole 44 px row as target. The 44 × 26 px track is a `border-strong` outline with a `border-strong` thumb at the start when off, filled `ink` with an `on-ink` thumb at the end when on, so the position tells the state as well as the fill.
+- **Focus order**: skip link, navigation, then the content in reading order. The card takes focus on arrival, as in review; the drawing grid is not a tab stop, the keyboard path being "Écrire sur papier"; after an automatic grade, focus moves to Continue.
+
 ## Accessibility rules
 
 - `lang="zh-Hans"` on Chinese text and `lang="zh-Latn-pinyin"` on pinyin.
-- Stroke drawing always has a single-pointer alternative (WCAG 2.5.7).
+- Stroke drawing always has a single-pointer, keyboard-operable alternative (WCAG 2.5.1, 2.5.7).
 - Every microphone exercise offers a non-speech alternative without penalty.
 - No mandatory time limit (WCAG 2.2.1).
 - Curves, trees and heatmaps have a text equivalent.
