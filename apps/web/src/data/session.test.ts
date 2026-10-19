@@ -88,7 +88,7 @@ describe("loadSession", () => {
 
   it("adds a word's AI French glosses, marked by their source", async () => {
     await db.aiGlosses.add({
-      id: "你	ni3",
+      id: "你\tni3",
       ...NI,
       senses: [{ english: "你 gloss", french: "toi" }],
       provenance: {

@@ -61,6 +61,15 @@ describe("typed", () => {
     expect(typed({ ...NOT_TYPING, committed: "" }, "ni0 hao9!", false).buffer).toBe("nihao");
   });
 
+  it("commits punctuation full width while no pinyin is pending", () => {
+    expect(typed({ ...NOT_TYPING, committed: "你好" }, "?", false).committed).toBe("你好？");
+    expect(typed({ ...NOT_TYPING, committed: "" }, "“好”。", false).committed).toBe("“好”。");
+    expect(typed({ ...NOT_TYPING, committed: "你" }, "hao.", false)).toMatchObject({
+      committed: "你",
+      buffer: "hao",
+    });
+  });
+
   it("commits Han characters as typed, from the system's input method", () => {
     const state = typed({ ...NOT_TYPING, committed: "图书" }, "馆", false);
     expect(state).toMatchObject({ committed: "图书馆", buffer: "" });

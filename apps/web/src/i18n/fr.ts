@@ -642,6 +642,38 @@ export const fr: Messages = {
     back: "Retour à Apprendre",
     noReview: "Ni révision ni XP\u00a0: l’exercice ne change pas votre planning.",
   },
+  challenge: {
+    step: "Dernière étape de la séance",
+    title: "Défi 5 phrases",
+    intro: "Écrivez 5 phrases avec ce mot, le dernier commencé aujourd’hui.",
+    inputMethod: "Méthode de saisie",
+    appIme: "Pinyin de l’application",
+    deviceKeyboard: "Clavier de l’appareil",
+    imeNotSaved:
+      "La méthode de saisie s’applique maintenant mais ne peut pas être enregistrée dans ce navigateur\u00a0: {{reason}}",
+    sentence: "Phrase {{number}}",
+    save: "Enregistrer",
+    skip: "Passer",
+    saved: "Phrases enregistrées.",
+    saveFailed: "Vos phrases n’ont pas pu être enregistrées\u00a0: {{reason}}",
+    providerBefore: "Pour faire corriger vos phrases, ",
+    providerLink: "choisissez un fournisseur IA",
+    providerAfter: " dans Profil.",
+    footnote:
+      "Vos phrases restent sur cet appareil. Le défi ne compte pas dans l’XP et peut être passé sans pénalité.",
+    noEntry: "Ce mot n’est plus dans le dictionnaire.",
+    loadFailed: "Le défi n’a pas pu être chargé\u00a0: {{reason}}",
+    imported: "Défis mis à jour +{{count}}.",
+    listTitle: "Défis 5 phrases",
+    listIntro:
+      "Un défi par jour d’apprentissage, à la fin de la séance du jour. Ils restent sur cet appareil et ne comptent pas dans l’XP.",
+    learnIntro: "Les phrases écrites avec le dernier mot commencé chaque jour.",
+    empty:
+      "Aucun défi pour l’instant\u00a0: il arrive en fin de séance quand vous commencez un mot.",
+    noSentence: "Aucune phrase",
+    notFound: "Aucun défi n’a été enregistré ce jour-là.",
+    back: "Défis",
+  },
   backup: {
     intro:
       "Gardez vos cartes, votre historique de révisions, vos paquets et vos réglages dans un fichier, et restaurez-les sur n’importe quel appareil. L’import ajoute ce qui manque sur cet appareil et garde le reste.",
