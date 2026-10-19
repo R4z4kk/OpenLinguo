@@ -377,6 +377,25 @@ describe("chat errors", () => {
     });
   });
 
+  // Shape from OpenRouter's errors docs: none came up while recording on 2026-10-19.
+  it("reads OpenRouter's error inside a 200 by its own code, and retries it", async () => {
+    serve(
+      reply(200, {
+        error: {
+          code: 502,
+          message: "Provider returned error",
+          metadata: { error_type: "provider_unavailable" },
+        },
+      }),
+    );
+    expect(failure(await settle(ask("openrouter", {})))).toEqual({
+      kind: "server",
+      status: 502,
+      message: "Provider returned error",
+    });
+    expect(calls).toHaveLength(3);
+  });
+
   it("reports a failed fetch as a network error", async () => {
     vi.stubGlobal("fetch", () => Promise.reject(new TypeError("Failed to fetch")));
     expect(failure(await settle(ask("local", {})))).toEqual({

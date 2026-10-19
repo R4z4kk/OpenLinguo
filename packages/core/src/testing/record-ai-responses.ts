@@ -141,15 +141,21 @@ const rateLimited = async (run: Run): Promise<Capture> => {
       stop.abort();
     }
   };
+  const outcomes = new Map<string, number>();
   for (let wave = 0; wave < 6 && hits.length === 0; wave += 1) {
-    await Promise.all(
+    const results = await Promise.all(
       Array.from({ length: 10 }, () =>
         ask(endpointOf(run, run.key), run.model, RECORDING_MESSAGES, "json_object", stop.signal),
       ),
     );
+    for (const result of results) {
+      const key = result.ok ? "ok" : `${result.error.kind} ${String(result.error.status)}`;
+      outcomes.set(key, (outcomes.get(key) ?? 0) + 1);
+    }
   }
   onExchange = null;
-  return { got: hits.length === 0 ? "no 429 after 60 calls" : "429", exchanges: hits };
+  const tally = [...outcomes].map(([key, count]) => `${key} ×${String(count)}`).join(", ");
+  return { got: hits.length === 0 ? `no 429 after 60 calls: ${tally}` : "429", exchanges: hits };
 };
 
 const reasoningOff = (run: Run): Promise<Capture> =>
