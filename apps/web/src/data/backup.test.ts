@@ -100,6 +100,13 @@ const CORRECTED = {
   ],
 } as const;
 
+const ENTRY = {
+  day: "2026-10-21",
+  text: "我给妈妈打电话。 请你电话我。",
+  corrections: [null, CORRECTED.corrections[2]],
+  updatedAt: start,
+};
+
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
 
 const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Review => ({
@@ -144,6 +151,7 @@ const backup = (data: Partial<Backup>): Backup => ({
   notes: [],
   challenges: [],
   aiGlosses: [],
+  journal: [],
   ...data,
 });
 
@@ -221,6 +229,19 @@ describe("round trip", () => {
     ]);
   });
 
+  it("brings journal entries back with their corrections, the latest content of a day winning", async () => {
+    await db.journal.bulkAdd([ENTRY, { ...ENTRY, day: "2026-10-22", corrections: [null, null] }]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    const newer = { ...ENTRY, day: "2026-10-22", text: "我打电话。", updatedAt: start + 1 };
+    await restored.journal.add(newer);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ journal: 1 }));
+    expect(await restored.journal.toArray()).toEqual([ENTRY, newer]);
+  });
+
   it("keeps the AI glosses with their provenance", async () => {
     await db.aiGlosses.add({ ...GLOSS, id: GLOSS_ID });
     const exported = await exportBackup(db, SETTINGS, now);
@@ -254,7 +275,16 @@ describe("round trip", () => {
 
     const restored = openDatabase(`backup-test-${String(counter)}-restored`);
     expect(await importBackup(restored, parsed.value)).toEqual(
-      ok({ reviews: 3, cards: 2, decks: 0, words: 0, notes: 0, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 3,
+        cards: 2,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await restored.cards.toArray()).toEqual(
       states.toSorted((a, b) => (a.id < b.id ? -1 : 1)),
@@ -336,6 +366,19 @@ describe("parseBackup", () => {
     ).toMatchObject({ ok: false, error: { issues: [{ path: "challenges.0.sentences" }] } });
   });
 
+  it("refuses two journal entries on one day", () => {
+    expect(parseBackup(JSON.stringify(backup({ journal: [ENTRY, ENTRY] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "journal.1.day" }] },
+    });
+  });
+
+  it("reads a backup made before the journal as having no entries", () => {
+    const before = backup({});
+    Reflect.deleteProperty(before, "journal");
+    expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
   it("reads a backup made before M5 as having no AI glosses", () => {
     const preM5 = backup({});
     Reflect.deleteProperty(preM5, "aiGlosses");
@@ -406,7 +449,16 @@ describe("importBackup", () => {
     expect(
       await importBackup(db, backup({ cards: [RECALL], reviews: [local, lapse, recall, removed] })),
     ).toEqual(
-      ok({ reviews: 3, cards: 1, decks: 0, words: 0, notes: 0, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 3,
+        cards: 1,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await db.cards.get(RECOGNITION.id)).toEqual({
       ...RECOGNITION,
@@ -427,10 +479,28 @@ describe("importBackup", () => {
       ],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 1, decks: 1, words: 2, notes: 0, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 0,
+        cards: 1,
+        decks: 1,
+        words: 2,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 0,
+        cards: 0,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await db.decks.toArray()).toEqual([ANIMALS]);
     expect((await db.deckWords.toArray()).map((word) => word.id).toSorted()).toEqual(
@@ -451,7 +521,16 @@ describe("importBackup", () => {
       ],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 2, notes: 0, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 0,
+        cards: 0,
+        decks: 0,
+        words: 2,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await db.decks.toArray()).toEqual([
       { id: ANIMALS.id, name: "Zoo" },
@@ -474,10 +553,28 @@ describe("importBackup", () => {
       notes: [NOTE, { ...older, meaning: "imported" }, { ...NOTE, id: "new" }],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 1, decks: 0, words: 1, notes: 2, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 0,
+        cards: 1,
+        decks: 0,
+        words: 1,
+        notes: 2,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0, challenges: 0, glosses: 0 }),
+      ok({
+        reviews: 0,
+        cards: 0,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect((await db.notes.toArray()).map(({ id, meaning }) => [id, meaning])).toEqual([
       [NOTE.id, "local"],

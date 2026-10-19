@@ -25,6 +25,7 @@ import {
   type StoredChallenge,
   type StoredDeck,
   type StoredDeckWord,
+  type StoredJournalEntry,
   type StoredNote,
 } from "./database.ts";
 import { DECK_NAME_MAX, entryId, sameDeckName, type DeckFailure } from "./decks.ts";
@@ -118,8 +119,19 @@ export const Backup = z
         }),
       )
       .default([]),
+    // Backups made before the journal have none.
+    journal: z
+      .array(
+        z.object({
+          day: z.iso.date(),
+          text: z.string(),
+          corrections: z.array(SentenceCorrection.nullable()).readonly(),
+          updatedAt: z.number().int().nonnegative(),
+        }),
+      )
+      .default([]),
   })
-  .superRefine(({ reviews, decks, deckWords, notes, challenges, aiGlosses }, context) => {
+  .superRefine(({ reviews, decks, deckWords, notes, challenges, aiGlosses, journal }, context) => {
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -144,6 +156,11 @@ export const Backup = z
     challenges.forEach(({ day }, index) => {
       if (days.has(day)) issue(["challenges", index, "day"], "Duplicate challenge day");
       days.add(day);
+    });
+    const entryDays = new Set<string>();
+    journal.forEach(({ day }, index) => {
+      if (entryDays.has(day)) issue(["journal", index, "day"], "Duplicate journal day");
+      entryDays.add(day);
     });
     const glossIds = new Set<string>();
     aiGlosses.forEach((gloss, index) => {
@@ -189,44 +206,53 @@ export const parseBackup = (text: string): Result<Backup, BackupFailure> => {
       });
 };
 
+const learningTables = (db: Database) => [
+  db.cards,
+  db.reviews,
+  db.decks,
+  db.deckWords,
+  db.notes,
+  db.challenges,
+  db.aiGlosses,
+  db.journal,
+];
+
 export const exportBackup = (
   db: Database,
   settings: Settings,
   now: Date,
 ): Promise<Result<Backup, ReviewLogFailure>> =>
   guarded(() =>
-    db.transaction(
-      "r",
-      [db.cards, db.reviews, db.decks, db.deckWords, db.notes, db.challenges, db.aiGlosses],
-      async (): Promise<Result<Backup, ReviewLogFailure>> =>
-        ok({
-          format: BACKUP_FORMAT,
-          version: BACKUP_VERSION,
-          exportedAt: now.toISOString(),
-          settings,
-          cards: (await db.cards.toArray()).map((card) => ({
-            ...subjectOf(card),
-            id: card.id,
-            language: card.language,
-            type: card.type,
-          })),
-          reviews: await db.reviews.toArray(),
-          decks: await db.decks.toArray(),
-          deckWords: (await db.deckWords.toArray()).map((word) => ({
-            ...subjectOf(word),
-            deckId: word.deckId,
-          })),
-          notes: await db.notes.toArray(),
-          challenges: await db.challenges.toArray(),
-          aiGlosses: (await db.aiGlosses.toArray()).map(
-            ({ headword, readingKey, senses, provenance }) => ({
-              headword,
-              readingKey,
-              senses,
-              provenance,
-            }),
-          ),
-        }),
+    db.transaction("r", learningTables(db), async (): Promise<Result<Backup, ReviewLogFailure>> =>
+      ok({
+        format: BACKUP_FORMAT,
+        version: BACKUP_VERSION,
+        exportedAt: now.toISOString(),
+        settings,
+        cards: (await db.cards.toArray()).map((card) => ({
+          ...subjectOf(card),
+          id: card.id,
+          language: card.language,
+          type: card.type,
+        })),
+        reviews: await db.reviews.toArray(),
+        decks: await db.decks.toArray(),
+        deckWords: (await db.deckWords.toArray()).map((word) => ({
+          ...subjectOf(word),
+          deckId: word.deckId,
+        })),
+        notes: await db.notes.toArray(),
+        challenges: await db.challenges.toArray(),
+        aiGlosses: (await db.aiGlosses.toArray()).map(
+          ({ headword, readingKey, senses, provenance }) => ({
+            headword,
+            readingKey,
+            senses,
+            provenance,
+          }),
+        ),
+        journal: await db.journal.toArray(),
+      }),
     ),
   );
 
@@ -239,6 +265,7 @@ export type ImportSummary = {
   readonly notes: number;
   readonly challenges: number;
   readonly glosses: number;
+  readonly journal: number;
 };
 
 const replayCards = (
@@ -258,8 +285,8 @@ const replayCards = (
 /**
  * Merges by ids, so importing twice changes nothing: the union of review logs, then every card
  * replayed. A local deck keeps its name and takes in an imported deck of the same id or name; a
- * note or a day's challenge keeps its latest content. Nothing is written unless the whole merge
- * succeeds.
+ * note, a day's challenge or a day's journal entry keeps its latest content. Nothing is written
+ * unless the whole merge succeeds.
  */
 export const importBackup = (
   db: Database,
@@ -268,7 +295,7 @@ export const importBackup = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.cards, db.reviews, db.decks, db.deckWords, db.notes, db.challenges, db.aiGlosses],
+      learningTables(db),
       async (): Promise<Result<ImportSummary, DeckFailure>> => {
         const reviews = await db.reviews.toArray();
         const reviewIds = new Set(reviews.map((review) => review.id));
@@ -323,6 +350,10 @@ export const importBackup = (
             );
           })
           .map((gloss) => ({ ...gloss, id: entryId(gloss) }));
+        const localEntries = await db.journal.bulkGet(backup.journal.map(({ day }) => day));
+        const newerEntries: StoredJournalEntry[] = backup.journal.filter(
+          (entry, index) => entry.updatedAt > (localEntries[index]?.updatedAt ?? -1),
+        );
 
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
@@ -331,6 +362,7 @@ export const importBackup = (
         await db.notes.bulkPut(newerNotes);
         await db.aiGlosses.bulkPut(newerGlosses);
         await db.challenges.bulkPut(newerChallenges);
+        await db.journal.bulkPut(newerEntries);
         return ok({
           reviews: newReviews.length,
           cards: cards.size - localCards,
@@ -339,6 +371,7 @@ export const importBackup = (
           notes: newerNotes.length,
           challenges: newerChallenges.length,
           glosses: newerGlosses.length,
+          journal: newerEntries.length,
         });
       },
     ),

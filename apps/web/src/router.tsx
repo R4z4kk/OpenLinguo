@@ -3,6 +3,7 @@ import { AboutPage } from "@/pages/about";
 import { AnkiImportPage } from "@/pages/anki-import";
 import { ChallengePage, ChallengesPage } from "@/pages/challenges";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
+import { JournalEntryPage, JournalPage } from "@/pages/journal";
 import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
@@ -53,6 +54,18 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/learn/typing",
     component: TypingDrillPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/journal",
+    component: JournalPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/learn/journal/$day",
+    component: JournalEntryPage,
     errorComponent: ModuleError,
   }),
   createRoute({

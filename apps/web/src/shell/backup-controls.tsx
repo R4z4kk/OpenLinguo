@@ -208,6 +208,9 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
         {outcome?.kind === "imported" &&
           outcome.summary.challenges > 0 &&
           ` ${t("challenge.imported", { count: outcome.summary.challenges })}`}
+        {outcome?.kind === "imported" &&
+          outcome.summary.journal > 0 &&
+          ` ${t("journal.imported", { count: outcome.summary.journal })}`}
       </p>
       {outcome?.kind === "imported" && outcome.unsaved !== null && (
         <p role="alert" className="mt-2 text-danger">
