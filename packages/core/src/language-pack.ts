@@ -1,3 +1,4 @@
+import type { PromptPack } from "./prompt-pack.ts";
 import type { Result } from "./result.ts";
 
 export const LANGUAGE_IDS = ["zh", "en"] as const;
@@ -112,4 +113,6 @@ export type LanguagePack = {
   readonly tokenize: (text: string) => readonly Token[];
   readonly lookup: DictionaryLookup;
   readonly features: LanguageFeatures;
+  /** AI prompts, `null` until the language has them. */
+  readonly prompts: PromptPack | null;
 };
