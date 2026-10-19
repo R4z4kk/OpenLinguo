@@ -1,12 +1,8 @@
-import type {
-  DictionaryLookup,
-  LanguagePack,
-  ProficiencyFramework,
-  StrokeFeature,
-} from "@openlinguo/core";
+import type { DictionaryLookup, LanguagePack, StrokeFeature } from "@openlinguo/core";
 import { createDecomposition } from "./decomposition.ts";
 import { createIme, type ImeWordsOf } from "./ime.ts";
 import { toDiacritic, tonesOf } from "./pinyin.ts";
+import { createPrompts, type ZhProficiency } from "./prompts.ts";
 import { createSegmenter } from "./segment.ts";
 
 export {
@@ -44,11 +40,10 @@ export {
   type PinyinQuery,
   type ToneAt,
 } from "./pinyin-search.ts";
+export type { ZhProficiency } from "./prompts.ts";
 export { applySandhi, type ReadingWord, type SandhiError } from "./sandhi.ts";
 export { createSegmenter } from "./segment.ts";
 export { alignChars, readingChars, type CharMatch, type SpokenChar } from "./transcript.ts";
-
-export type ZhProficiency = Extract<ProficiencyFramework, "hsk-2025" | "gf0025-2021">;
 
 export type ZhPackSources = {
   readonly lookup: DictionaryLookup;
@@ -71,16 +66,20 @@ export const createZhPack = ({
   decompositions,
   strokesOf,
   wordsOfPinyin,
-}: ZhPackSources): LanguagePack => ({
-  id: "zh",
-  proficiency,
-  tokenize: createSegmenter(lexicon),
-  lookup,
-  features: {
-    tones: { tonesOf },
-    strokes: { strokesOf },
-    romanization: { system: "pinyin", toDisplay: toDiacritic },
-    decomposition: createDecomposition(lookup, decompositions),
-    ime: createIme(wordsOfPinyin),
-  },
-});
+}: ZhPackSources): LanguagePack => {
+  const tokenize = createSegmenter(lexicon);
+  return {
+    id: "zh",
+    proficiency,
+    tokenize,
+    lookup,
+    features: {
+      tones: { tonesOf },
+      strokes: { strokesOf },
+      romanization: { system: "pinyin", toDisplay: toDiacritic },
+      decomposition: createDecomposition(lookup, decompositions),
+      ime: createIme(wordsOfPinyin),
+    },
+    prompts: createPrompts({ lookup, tokenize, proficiency }),
+  };
+};

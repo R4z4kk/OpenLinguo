@@ -58,6 +58,7 @@ describeLanguagePackContract(
     unknownTerm: "龘",
     sampleText: "我想打电话给你。",
     typedTerm: "dian4hua",
+    readTerm: "diànhuà",
   },
 );
 
