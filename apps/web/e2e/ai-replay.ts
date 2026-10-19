@@ -27,11 +27,14 @@ type Reply = {
   readonly response: { readonly status: number; readonly body: unknown };
 };
 
-/** Answers the endpoint's requests with the exchanges of the same method and path; none: unreachable. */
+/**
+ * Answers the endpoint's requests with the exchanges of the same method and path; none: unreachable.
+ * `exchanges` may wait, to show a call in progress.
+ */
 export const replay = async (
   page: Page,
   baseUrl: string,
-  exchanges: () => readonly Reply[] | null,
+  exchanges: () => readonly Reply[] | null | Promise<readonly Reply[] | null>,
 ): Promise<Sent[]> => {
   const sent: Sent[] = [];
   const cors = {
@@ -49,17 +52,20 @@ export const replay = async (
     });
     const path = request.url().slice(baseUrl.length);
     const exchange =
-      exchanges()?.find(
+      (await exchanges())?.find(
         (candidate) =>
           candidate.request.method === request.method() && candidate.request.path === path,
       ) ?? null;
-    if (exchange === null) return route.abort("connectionrefused");
-    return route.fulfill({
-      status: exchange.response.status,
-      headers: cors,
-      contentType: "application/json",
-      body: JSON.stringify(exchange.response.body),
-    });
+    // The page may have aborted the request meanwhile.
+    if (exchange === null) return route.abort("connectionrefused").catch(() => null);
+    return route
+      .fulfill({
+        status: exchange.response.status,
+        headers: cors,
+        contentType: "application/json",
+        body: JSON.stringify(exchange.response.body),
+      })
+      .catch(() => null);
   });
   return sent;
 };

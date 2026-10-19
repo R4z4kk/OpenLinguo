@@ -12,7 +12,8 @@ import {
 import { z } from "zod";
 import { languages } from "@/i18n/language";
 import { themePreferences } from "@/theme";
-import { CHALLENGE_SENTENCES } from "./challenge.ts";
+import { CHALLENGE_SENTENCES, NO_CORRECTIONS } from "./challenge.ts";
+import { SentenceCorrection } from "./correction.ts";
 import { DAILY_GOAL, NEW_CARDS_PER_DAY } from "./daily-goal.ts";
 import { PRACTICE_TYPING, PRACTICE_WRITING, WRITE_ON_PAPER } from "./practice.ts";
 import {
@@ -94,6 +95,11 @@ export const Backup = z
           headword: z.string().min(1),
           readingKey: z.string().min(1),
           sentences: z.array(z.string()).length(CHALLENGE_SENTENCES).readonly(),
+          corrections: z
+            .array(SentenceCorrection.nullable())
+            .length(CHALLENGE_SENTENCES)
+            .readonly()
+            .default(NO_CORRECTIONS),
           updatedAt: z.number().int().nonnegative(),
         }),
       )

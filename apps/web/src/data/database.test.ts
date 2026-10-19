@@ -92,4 +92,25 @@ describe("openDatabase", () => {
     expect(await db.aiNotices.count()).toBe(0);
     db.close();
   });
+
+  it("gives challenges saved before corrections none", async () => {
+    const legacy = new Dexie("challenge-corrections-test");
+    legacy.version(17).stores({ challenges: "day" });
+    const challenge = {
+      day: "2026-10-19",
+      headword: "电话",
+      readingKey: "dian4 hua4",
+      sentences: ["我打电话。", "", "", "", ""],
+      updatedAt: 0,
+    };
+    await legacy.table("challenges").add(challenge);
+    legacy.close();
+
+    const db = openDatabase("challenge-corrections-test");
+    expect(await db.challenges.get("2026-10-19")).toEqual({
+      ...challenge,
+      corrections: [null, null, null, null, null],
+    });
+    db.close();
+  });
 });

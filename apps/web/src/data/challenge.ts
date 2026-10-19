@@ -9,6 +9,7 @@ import {
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import type { AudioSource } from "./audio-packs.ts";
+import { currentCorrections, type Corrections } from "./correction.ts";
 import type { PresetSetting } from "./daily-goal.ts";
 import type { Database, StoredChallenge } from "./database.ts";
 import { entryId, type LocalTime } from "./decks.ts";
@@ -35,9 +36,11 @@ export type Challenge = {
   readonly day: string;
   readonly word: ChallengeWord;
   readonly sentences: readonly string[];
+  readonly corrections: Corrections;
 };
 
 const EMPTY: readonly string[] = Array.from({ length: CHALLENGE_SENTENCES }, () => "");
+export const NO_CORRECTIONS: Corrections = Array.from({ length: CHALLENGE_SENTENCES }, () => null);
 
 /** The word whose first review, all its cards together, came last on `day`. */
 export const latestStartedWord = async (db: Database, day: string): Promise<WordKey | null> => {
@@ -66,6 +69,7 @@ const withWord = async (
   day: string,
   word: WordKey,
   sentences: readonly string[],
+  corrections: Corrections,
 ): Promise<Challenge> => {
   const row = (await db.entries.get(entryId(word))) ?? null;
   const audio = await audioFinder(db, [word]);
@@ -78,6 +82,7 @@ const withWord = async (
       audio: audio.deck(word) ?? audio.pack(word),
     },
     sentences,
+    corrections,
   };
 };
 
@@ -92,7 +97,16 @@ export const loadTodayChallenge = (
     const stored = (await db.challenges.get(day)) ?? null;
     const word = stored ?? (await latestStartedWord(db, day));
     if (word === null) return ok(null);
-    return ok(await withWord(db, referential, day, word, stored?.sentences ?? EMPTY));
+    return ok(
+      await withWord(
+        db,
+        referential,
+        day,
+        word,
+        stored?.sentences ?? EMPTY,
+        stored?.corrections ?? NO_CORRECTIONS,
+      ),
+    );
   });
 
 /** The challenge saved on `day`, `null` when none was. */
@@ -104,7 +118,7 @@ export const loadChallenge = (
   guarded(async () => {
     const stored = (await db.challenges.get(day)) ?? null;
     if (stored === null) return ok(null);
-    return ok(await withWord(db, referential, day, stored, stored.sentences));
+    return ok(await withWord(db, referential, day, stored, stored.sentences, stored.corrections));
   });
 
 /** Every saved challenge, the latest day first. */
@@ -114,12 +128,12 @@ export const listChallenges = (
   guarded(async () => ok(await db.challenges.reverse().toArray()));
 
 /**
- * Keeps the sentences of the challenge's day. Nothing is written while every field is empty and
- * none was saved: `false`.
+ * Keeps the sentences of the challenge's day, with the corrections still about them. Nothing is
+ * written while every field is empty and none was saved: `false`.
  */
 export const saveChallenge = (
   db: Database,
-  { day, word, sentences }: Challenge,
+  { day, word, sentences, corrections }: Challenge,
   at: number,
 ): Promise<Result<boolean, ReviewLogFailure>> =>
   guarded(async () => {
@@ -130,6 +144,7 @@ export const saveChallenge = (
       headword: word.headword,
       readingKey: word.readingKey,
       sentences,
+      corrections: currentCorrections(sentences, corrections),
       updatedAt: at,
     });
     return ok(true);

@@ -86,24 +86,43 @@ export const ChallengesPage = () => {
 };
 
 const Saved = ({
+  day,
   challenge,
   pack,
   language,
 }: {
+  readonly day: string;
   readonly challenge: Promise<Result<Challenge | null, ReviewLogFailure>>;
   readonly pack: LanguagePack;
   readonly language: Language;
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const result = use(challenge);
-  if (!result.ok)
+  if (result.ok && result.value !== null)
     return (
-      <p role="alert" className="mt-6 text-danger">
-        {t("challenge.loadFailed", { reason: describeFailure(result.error) })}
-      </p>
+      <ChallengeForm
+        challenge={result.value}
+        pack={pack}
+        language={language}
+        eyebrow={formatDay(day, i18n.language)}
+        level="h1"
+        focusTarget={null}
+        onDone={null}
+      />
     );
-  if (result.value === null) return <p className="mt-6">{t("challenge.notFound")}</p>;
-  return <ChallengeForm challenge={result.value} pack={pack} language={language} onDone={null} />;
+  return (
+    <>
+      <p className="text-small text-muted">{formatDay(day, i18n.language)}</p>
+      <h1 className="text-title">{t("challenge.title")}</h1>
+      {result.ok ? (
+        <p className="mt-6">{t("challenge.notFound")}</p>
+      ) : (
+        <p role="alert" className="mt-6 text-danger">
+          {t("challenge.loadFailed", { reason: describeFailure(result.error) })}
+        </p>
+      )}
+    </>
+  );
 };
 
 /** One day's challenge, opened again from the list. */
@@ -119,11 +138,9 @@ export const ChallengePage = () => {
         <ChevronLeft aria-hidden="true" className="size-5" />
         {t("challenge.back")}
       </Link>
-      <p className="text-small text-muted">{formatDay(day, i18n.language)}</p>
-      <h1 className="text-title">{t("challenge.title")}</h1>
       {state.status === "ready" && (
         <Suspense fallback={null}>
-          <Saved challenge={challenge} pack={state.pack} language={language} />
+          <Saved day={day} challenge={challenge} pack={state.pack} language={language} />
         </Suspense>
       )}
     </section>
