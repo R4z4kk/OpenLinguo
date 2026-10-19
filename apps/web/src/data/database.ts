@@ -180,6 +180,17 @@ export type StoredChallenge = WordKey & {
   readonly updatedAt: number;
 };
 
+/** A learning day's journal entry, kept on the device and in the backup, never synced (ADR 0012). */
+export type StoredJournalEntry = {
+  /** The learning day, `YYYY-MM-DD`. */
+  readonly day: string;
+  /** As typed. */
+  readonly text: string;
+  /** One per sentence of the text, kept while the sentence is the one corrected. */
+  readonly corrections: Corrections;
+  readonly updatedAt: number;
+};
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -208,6 +219,7 @@ export type Database = Dexie & {
   aiSettings: EntityTable<StoredAiSettings, "id">;
   challenges: EntityTable<StoredChallenge, "day">;
   aiGlosses: EntityTable<StoredAiGloss, "id">;
+  journal: EntityTable<StoredJournalEntry, "day">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -292,6 +304,7 @@ export const openDatabase = (name: string): Database => {
         Object.assign(challenge, { corrections: challenge.sentences.map(() => null) });
       }),
   );
+  db.version(20).stores({ journal: "day" });
   return db;
 };
 

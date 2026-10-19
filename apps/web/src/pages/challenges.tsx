@@ -11,14 +11,14 @@ import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import { languages, type Language } from "@/i18n/language";
 
 /** A learning day, `YYYY-MM-DD`, as a date; anything else as it is. */
-const formatDay = (day: string, language: string): string => {
+export const formatDay = (day: string, language: string): string => {
   const date = new Date(`${day}T00:00:00Z`);
   return Number.isNaN(date.getTime())
     ? day
     : new Intl.DateTimeFormat(language, { dateStyle: "long", timeZone: "UTC" }).format(date);
 };
 
-const dayParam = (params: unknown): string =>
+export const dayParam = (params: unknown): string =>
   typeof params === "object" && params !== null && "day" in params && typeof params.day === "string"
     ? params.day
     : "";
