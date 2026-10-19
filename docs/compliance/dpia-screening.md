@@ -11,7 +11,7 @@ Screening against the nine criteria of the Article 29 Working Party guidelines o
 | 5 | Large scale | No, for now | Small open-source project; reassess if accounts grow significantly |
 | 6 | Matching or combining datasets | No | No data enrichment or cross-referencing |
 | 7 | Vulnerable data subjects | **Possibly** | Accounts open to 15–17-year-olds |
-| 8 | Innovative use of technology | No on the server | AI runs through the user's own provider; speech runs on the device |
+| 8 | Innovative use of technology | No on the server | Speech runs on the device. The AI features (M5) use generative models, a new technology, but the requests go from the learner's device to the provider they chose, and OpenLinguo is most likely not a controller of them ([AI features](ai.md#12-gdpr-most-likely-not-a-controller-of-the-ai-calls)); art. 35 binds controllers. Reassess if OpenLinguo adds a relay, a shared key or server-side AI |
 | 9 | Prevents exercising a right or using a service | No | The app works fully without an account |
 
 ## Conclusion

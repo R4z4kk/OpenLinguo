@@ -12,6 +12,8 @@ Values in `[BRACKETS]` are filled in M7, when the server and accounts go live.
 | [Sub-processors](sub-processors.md) | Third parties that process personal data, and transfers |
 | [Breach procedure](breach-procedure.md) | GDPR art. 33–34 response and internal register |
 | [DPIA screening](dpia-screening.md) | Whether a data protection impact assessment is required |
+| [AI features](ai.md) | Roles, AI Act art. 50 per output, gap analysis against the code of practice, provenance specification |
+| [Privacy notice](privacy-notice.md) | Public text, AI features and key storage so far; completed in M7 |
 | [Accessibility statement template](accessibility-statement-template.md) | Published at v1 |
 
 Every pull request goes through the privacy and accessibility checklist in [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
