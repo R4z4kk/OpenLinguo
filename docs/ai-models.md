@@ -24,3 +24,10 @@ With the maintainer's own keys, in the browsers named.
 
 | Date | Provider | Model | Browsers | Result |
 | --- | --- | --- | --- | --- |
+| 2026-10-20 | Groq | `openai/gpt-oss-20b` | Brave (Chromium) | Works: challenge corrected, card made from a sentence, 一路平安 translated, words suggested, journal corrected |
+| 2026-10-20 | Groq | `openai/gpt-oss-20b` | Firefox | Works: journal corrected |
+| 2026-10-20 | Ollama (local) | `qwen3:30b-a3b` | Brave (Chromium), Firefox | Works: journal corrected. Weak corrections: an entry without its final full stop is flagged with many errors, the same entry with it with none |
+| 2026-10-20 | OpenRouter | — | — | Not run: the maintainer's free quota was used up by the recording runs of that day. Covered by the recorded E2E |
+| 2026-10-20 | Mistral | — | — | Not run: the API needs a paid plan |
+
+The run found that the provider could not be changed with the mouse (fixed in #205).
