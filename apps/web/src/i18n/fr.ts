@@ -330,7 +330,8 @@ export const fr: Messages = {
       approximant: "approximante",
     },
     finals: "Finales",
-    finalsIntro: "Le reste de la syllabe, après l’initiale.",
+    finalsIntro:
+      "Le reste de la syllabe, après l’initiale. Seule, une finale s’écrit avec y ou w\u00a0: yi, wu, yu, ya.",
     group: "Groupe {{letter}}",
     final: "Finale",
     kind: "Nature",

@@ -51,7 +51,27 @@ const PinyinText = ({ text }: { readonly text: string }) => (
   </span>
 );
 
-/** An initial said alone plays in tone 1, else in the first tone recorded. */
+/** A sound said alone plays `written` in tone 1, else in the first tone recorded; none: no button. */
+const SaidAlone = ({
+  written,
+  recordings,
+  play,
+}: {
+  readonly written: string | null;
+  readonly recordings: Recordings;
+  readonly play: (keys: readonly string[]) => Promise<void>;
+}) => {
+  const key =
+    written === null ? null : (keysOf(written, TONES).find((tone) => recordings.has(tone)) ?? null);
+  return (
+    key !== null && (
+      <button type="button" className={SYLLABLE_BUTTON} onClick={() => void play([key])}>
+        <PinyinText text={spoken(key)} />
+      </button>
+    )
+  );
+};
+
 const Initials = ({ recordings }: { readonly recordings: Recordings | null }) => {
   const { t } = useTranslation();
   const id = useId();
@@ -79,43 +99,31 @@ const Initials = ({ recordings }: { readonly recordings: Recordings | null }) =>
           </tr>
         </thead>
         <tbody>
-          {INITIALS.map(({ letters, reading, ipa, chaoIpa, place, manner }) => {
-            const key =
-              keysOf(reading, TONES).find((tone) => recordings?.has(tone) === true) ?? null;
-            return (
-              <tr key={letters} className="border-b border-hairline align-top">
-                <th scope="row" className="py-2 pe-3 text-pinyin">
-                  <PinyinText text={letters} />
-                </th>
-                <td className="py-2 pe-3">
-                  <PinyinText text={reading} />
-                </td>
-                <td className="py-2 pe-3">
-                  <Ipa ipa={ipa} />
-                  {chaoIpa !== null && (
-                    <span className="block text-small text-muted">
-                      {t("pinyinChart.chao")} <Ipa ipa={chaoIpa} />
-                    </span>
-                  )}
-                </td>
-                <td className="py-2 pe-3">{t(`pinyinChart.places.${place}`)}</td>
-                <td className="py-2 pe-3">{t(`pinyinChart.manners.${manner}`)}</td>
-                {recordings !== null && (
-                  <td className="py-2">
-                    {key !== null && (
-                      <button
-                        type="button"
-                        className={SYLLABLE_BUTTON}
-                        onClick={() => void play([key])}
-                      >
-                        <PinyinText text={spoken(key)} />
-                      </button>
-                    )}
-                  </td>
+          {INITIALS.map(({ letters, reading, ipa, chaoIpa, place, manner }) => (
+            <tr key={letters} className="border-b border-hairline align-top">
+              <th scope="row" className="py-2 pe-3 text-pinyin">
+                <PinyinText text={letters} />
+              </th>
+              <td className="py-2 pe-3">
+                <PinyinText text={reading} />
+              </td>
+              <td className="py-2 pe-3">
+                <Ipa ipa={ipa} />
+                {chaoIpa !== null && (
+                  <span className="block text-small text-muted">
+                    {t("pinyinChart.chao")} <Ipa ipa={chaoIpa} />
+                  </span>
                 )}
-              </tr>
-            );
-          })}
+              </td>
+              <td className="py-2 pe-3">{t(`pinyinChart.places.${place}`)}</td>
+              <td className="py-2 pe-3">{t(`pinyinChart.manners.${manner}`)}</td>
+              {recordings !== null && (
+                <td className="py-2">
+                  <SaidAlone written={reading} recordings={recordings} play={play} />
+                </td>
+              )}
+            </tr>
+          ))}
         </tbody>
       </table>
       {recordings !== null && (
@@ -127,9 +135,11 @@ const Initials = ({ recordings }: { readonly recordings: Recordings | null }) =>
   );
 };
 
-const Finals = () => {
+/** A final said alone plays its zero-initial spelling: yi, wu, yu, ya… */
+const Finals = ({ recordings }: { readonly recordings: Recordings | null }) => {
   const { t } = useTranslation();
   const id = useId();
+  const { play, notice } = useSyllablePlayer(recordings ?? new Map());
   return (
     <section aria-labelledby={id} className="mt-10 max-w-5xl">
       <h2 id={id} className="text-subtitle">
@@ -149,24 +159,43 @@ const Finals = () => {
                     {t(`pinyinChart.${column}`)}
                   </th>
                 ))}
+                {recordings !== null && (
+                  <th scope="col" className="border-b border-hairline py-1">
+                    {t("pinyinChart.hear")}
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody>
-              {finalsOf(group).map(({ letters, ipa, kind }) => (
-                <tr key={letters} className="border-b border-hairline">
+              {finalsOf(group).map((pinyinFinal) => (
+                <tr key={pinyinFinal.letters} className="border-b border-hairline">
                   <th scope="row" className="py-1 pe-3">
-                    <PinyinText text={letters} />
+                    <PinyinText text={pinyinFinal.letters} />
                   </th>
                   <td className="py-1 pe-3">
-                    <Ipa ipa={ipa} />
+                    <Ipa ipa={pinyinFinal.ipa} />
                   </td>
-                  <td className="py-1">{t(`pinyinChart.kinds.${kind}`)}</td>
+                  <td className="py-1 pe-3">{t(`pinyinChart.kinds.${pinyinFinal.kind}`)}</td>
+                  {recordings !== null && (
+                    <td className="py-1">
+                      <SaidAlone
+                        written={spell(null, pinyinFinal)}
+                        recordings={recordings}
+                        play={play}
+                      />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         ))}
       </div>
+      {recordings !== null && (
+        <p role="status" className={notice?.failed === true ? "mt-3 text-danger" : "mt-3"}>
+          {notice?.text}
+        </p>
+      )}
     </section>
   );
 };
@@ -327,10 +356,10 @@ export const PinyinChartPage = () => {
       </h1>
       <p className="mt-2 max-w-3xl text-muted">{t("pinyinChart.intro")}</p>
       <SyllableSound audio={audio} refresh={refresh} />
-      <Initials recordings={recordings} />
-      <Finals />
-      <SpellingRules />
       <SyllableGrid recordings={recordings} />
+      <Initials recordings={recordings} />
+      <Finals recordings={recordings} />
+      <SpellingRules />
       <h2 className="mt-10 text-subtitle">{t("pinyinChart.sources")}</h2>
       <ul className="mt-2 grid max-w-3xl gap-1 text-small">
         <li>
