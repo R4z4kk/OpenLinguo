@@ -119,7 +119,10 @@ export const test = base.extend<{ server: Server; seeded: boolean }, { profile: 
     }
   },
   // The persistent context opens with a page: a second one would take its focus away (WebKit).
+  // WebKit only activates it on bringToFront: until then, focus moved by the app is not seen.
   page: async ({ context }, use) => {
-    await use(context.pages()[0] ?? (await context.newPage()));
+    const page = context.pages()[0] ?? (await context.newPage());
+    await page.bringToFront();
+    await use(page);
   },
 });
