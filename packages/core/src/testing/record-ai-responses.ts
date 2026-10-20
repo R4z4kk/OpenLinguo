@@ -6,7 +6,6 @@ import { dirname } from "node:path";
 import { argv, env, exit, stdin } from "node:process";
 import { fileURLToPath } from "node:url";
 import { format, resolveConfig } from "prettier";
-import { z } from "zod";
 import {
   AI_BASE_URLS,
   chat,
@@ -29,6 +28,7 @@ import {
   RECORDING_SCHEMA,
   recordingUrl,
   strip,
+  trimModels,
   UNKNOWN_MODEL,
   type Exchange,
   type Recording,
@@ -282,34 +282,16 @@ const PLANS: readonly Plan[] = [
   },
 ];
 
-const hasStructuredOutputs = (model: unknown): boolean =>
-  z
-    .object({ supported_parameters: z.array(z.string()) })
-    .safeParse(model)
-    .data?.supported_parameters.includes("structured_outputs") === true;
-
-const trimModels = (body: unknown): unknown => {
-  const listing = z.looseObject({ data: z.array(z.unknown()) }).safeParse(body);
-  if (!listing.success) return body;
-  const structured = listing.data.data.filter(hasStructuredOutputs);
-  const others = listing.data.data.filter((model) => !hasStructuredOutputs(model));
-  const short = (model: unknown): unknown =>
-    typeof model === "object" && model !== null
-      ? Object.fromEntries(Object.entries(model).filter(([key]) => key !== "description"))
-      : model;
-  return {
-    ...listing.data,
-    data: [...structured.slice(0, 3), ...others.slice(0, 3)].map(short),
-  };
-};
-
 const sanitize = (exchange: Exchange): Exchange => {
   const isList = exchange.request.path === "/models";
   return {
     request: { ...exchange.request, body: strip(exchange.request.body, false) },
     response: {
       status: exchange.response.status,
-      body: strip(isList ? trimModels(exchange.response.body) : exchange.response.body, isList),
+      body: strip(
+        isList ? trimModels(exchange.response.body, null) : exchange.response.body,
+        isList,
+      ),
     },
   };
 };
