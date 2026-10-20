@@ -231,7 +231,7 @@ test("sets up OpenRouter, then refuses a correction whose index names another se
 
   // Retried, the answers come back in reverse order: each goes to the sentence its index names.
   answers = rewritten((items) => [...items].reverse());
-  await page.keyboard.press("Enter");
+  await press(page, main.getByRole("button", { name: en.correction.retry }));
   await expect(main.getByRole("heading", { level: 2, name: en.correction.title })).toBeVisible();
   const items = answerItems(CORRECTION.at(-1)?.response.body ?? null);
   const [corrected] = z
