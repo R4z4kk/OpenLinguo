@@ -118,4 +118,8 @@ export const test = base.extend<{ server: Server; seeded: boolean }, { profile: 
       await rm(dir, { recursive: true, force: true });
     }
   },
+  // The persistent context opens with a page: a second one would take its focus away (WebKit).
+  page: async ({ context }, use) => {
+    await use(context.pages()[0] ?? (await context.newPage()));
+  },
 });
