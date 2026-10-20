@@ -34,6 +34,7 @@ const review = (n: number, reviewedAt: number, utcOffsetMinutes: number): Review
   utcOffsetMinutes,
   scheduler: CURRENT_SCHEDULER,
   dailyGoal: 20,
+  wordDone: null,
 });
 
 describe("settings", () => {
@@ -94,11 +95,11 @@ describe("todayActivity", () => {
     const now = { at: Date.UTC(2026, 9, 22, 1, 30), utcOffsetMinutes: PARIS };
     expect(await todayActivity(db, now)).toEqual({
       ok: true,
-      value: { reviews: 2, goalMet: false },
+      value: { reviews: 2, words: 2, goalMet: false },
     });
     expect(await todayActivity(db, { ...now, at: now.at + 30 * 60_000 })).toEqual({
       ok: true,
-      value: { reviews: 0, goalMet: false },
+      value: { reviews: 0, words: 0, goalMet: false },
     });
   });
 });

@@ -18,7 +18,7 @@ export type PresetSetting<Value extends number | boolean> = {
   readonly fallback: Value;
 };
 
-/** Reviews per learning day. */
+/** Words done per learning day (ADR 0013). */
 export const DAILY_GOAL = {
   key: "openlinguo.dailyGoal",
   values: [10, 20, 50, 100],
@@ -57,7 +57,7 @@ export const currentSetting = <Value extends number | boolean>(
   return loaded.ok ? loaded.value : setting.fallback;
 };
 
-/** The current learning day's reviews, each dated with its own offset as the streak counts it. */
+/** The current learning day's activity, each review dated with its own offset as the streak counts it. */
 export const todayActivity = (
   db: Database,
   now: LocalTime,
@@ -70,5 +70,5 @@ export const todayActivity = (
         .toArray(),
     );
     if (!tallied.ok) return tallied;
-    return ok(tallied.value.days.get(today) ?? { reviews: 0, goalMet: false });
+    return ok(tallied.value.days.get(today) ?? { reviews: 0, words: 0, goalMet: false });
   });

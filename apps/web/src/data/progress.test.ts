@@ -16,6 +16,7 @@ const review = (n: number, card: string): Review => ({
   utcOffsetMinutes: PARIS,
   scheduler: CURRENT_SCHEDULER,
   dailyGoal: 2,
+  wordDone: null,
 });
 
 const RECOGNITION = cardId({
@@ -77,6 +78,7 @@ describe("loadStats", () => {
     expect(result.value.weeks.at(-1)?.days[2]).toEqual({
       day: "2026-10-21",
       reviews: 2,
+      words: 2,
       goalMet: true,
     });
   });

@@ -16,7 +16,7 @@ export const fr: Messages = {
     intro: "La séance du jour commence ici.",
     start: "Commencer la séance",
     goal: "Objectif du jour",
-    goalCount: "{{done}} sur {{goal}} révisions aujourd’hui",
+    goalCount: "{{done}} sur {{goal}} mots aujourd’hui",
     goalMet: "Objectif du jour atteint. Vous pouvez continuer.",
     goalCleared: "Objectif du jour atteint\u00a0: plus rien à réviser aujourd’hui.",
     failed: "Les révisions du jour n’ont pas pu être comptées\u00a0: {{reason}}",
@@ -31,13 +31,17 @@ export const fr: Messages = {
     grades: { again: "À revoir", hard: "Difficile", good: "Bien", easy: "Facile" },
     keys: "Clavier\u00a0: Espace affiche la réponse, 1 à 4 la notent.",
     progress: "Progression de la séance",
-    progressCount: "{{done}} sur {{total}}",
+    progressCount_one: "{{done}} sur {{count}} mot",
+    progressCount_other: "{{done}} sur {{count}} mots",
     noReading: "Pas de pinyin pour ce mot.",
     empty: "Rien à réviser pour l’instant.",
     emptyHint:
       "Ajoutez des mots depuis le dictionnaire, ou revenez quand des cartes seront à revoir.",
-    finished_one: "Séance terminée\u00a0: {{count}} révision.",
-    finished_other: "Séance terminée\u00a0: {{count}} révisions.",
+    finished_one: "Séance terminée\u00a0: {{count}} mot.",
+    finished_other: "Séance terminée\u00a0: {{count}} mots.",
+    ahead: "Commencer la séance de demain",
+    aheadHint:
+      "Révisez dès maintenant les cartes prévues demain et commencez ses nouveaux mots. Demain gardera ses propres nouveaux mots.",
     back: "Retour à Aujourd’hui",
     skipped_one:
       "{{count}} carte ignorée\u00a0: son mot ou l’ordre de ses traits n’est plus dans le dictionnaire.",
@@ -568,7 +572,7 @@ export const fr: Messages = {
       "Les niveaux s’appliquent maintenant mais le choix ne peut pas être enregistré dans ce navigateur\u00a0: {{reason}}",
   },
   goal: {
-    dailyGoal: "Objectif du jour (révisions)",
+    dailyGoal: "Objectif du jour (mots)",
     newCardsPerDay: "Nouvelles cartes par jour",
     notSaved: "Le choix ne peut pas être enregistré dans ce navigateur\u00a0: {{reason}}",
   },
