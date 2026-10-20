@@ -70,7 +70,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 
 - Spacing on a 4 px step: 4, 8, 12, 16, 24, 32, 48, 64.
 - Radius: 6 px for controls, 12 px for cards, full pill for chips.
-- Touch targets ≥ 44 px (above the WCAG 2.5.8 minimum of 24 px).
+- Touch targets ≥ 44 px (above the WCAG 2.5.8 minimum of 24 px). Words inside a text in the reader follow its line height, as 2.5.8 allows for targets in a sentence (ADR 0014).
 - Motion: 150 ms ease-out; removed under `prefers-reduced-motion`.
 - Focus: 2 px ink ring, 2 px offset, never hidden by sticky elements.
 
