@@ -103,7 +103,7 @@ test("makes a card from an accepted correction: pinyin checked, confirmed, once 
     characters: "我的电话很新。",
     pinyin: "wǒ de diàn huà hěn xīn .",
     meaning: "My phone is brand new.",
-    provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v1" },
+    provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v2" },
   });
   const note = notes[0]?.id ?? "";
   const filings = z.array(Filing).parse(await storedRows(page, "deckWords"));

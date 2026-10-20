@@ -8,7 +8,7 @@ export type PromptTask<Input, Answer> = {
   /** Versioned, such as `zh-correct-v1`: the `promptVersion` in the provenance of every output. */
   readonly id: string;
   readonly messages: (input: Input) => readonly ChatMessage[];
-  /** Per input, so that counts are checked: one answer per sentence or per sense. */
+  /** Per input, so that counts and indices are checked: one answer per sentence or per sense. */
   readonly schema: (input: Input) => z.ZodType<Answer>;
 };
 
@@ -28,6 +28,8 @@ export type CorrectionChange = {
 };
 
 export type CorrectedSentence = {
+  /** 1-based position of the sentence in the input: answers may come in any order. */
+  readonly index: number;
   readonly corrected: string;
   readonly changes: readonly CorrectionChange[];
   readonly reading: string;

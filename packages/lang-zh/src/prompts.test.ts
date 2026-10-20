@@ -19,7 +19,8 @@ const correction = {
   language: "fr",
 } as const;
 
-const sentence = (corrected: string) => ({
+const sentence = (index: number, corrected: string) => ({
+  index,
   corrected,
   changes: [],
   reading: "wǒ hěn hǎo",
@@ -28,7 +29,9 @@ const sentence = (corrected: string) => ({
 
 const answer = {
   sentences: [
+    sentence(2, "我很好。"),
     {
+      index: 1,
       corrected: "我给你打电话。",
       changes: [
         { from: "", to: "给你", explanation: "Le destinataire se place avant le verbe avec 给." },
@@ -37,7 +40,6 @@ const answer = {
       reading: "wǒ gěi nǐ dǎ diàn huà",
       meaning: "Je t'appelle.",
     },
-    sentence("我很好。"),
   ],
 };
 
@@ -52,26 +54,53 @@ describe("correction prompt", () => {
     );
   });
 
-  it("sends the word and the sentences as data", () => {
+  it("sends the word and the numbered sentences as data", () => {
+    const numbered = [
+      { index: 1, text: "我打电话你。" },
+      { index: 2, text: "我很好。" },
+    ];
     const user = contentOf(prompts.correction.messages(correction), 1);
-    expect(JSON.parse(user)).toEqual({ word: "电话", sentences: correction.sentences });
+    expect(JSON.parse(user)).toEqual({ word: "电话", sentences: numbered });
     const free = contentOf(prompts.correction.messages({ ...correction, word: null }), 1);
-    expect(JSON.parse(free)).toEqual({ word: null, sentences: correction.sentences });
+    expect(JSON.parse(free)).toEqual({ word: null, sentences: numbered });
   });
 
-  it("round-trips a valid answer", () => {
+  it("round-trips a valid answer, in any order", () => {
     expect(prompts.correction.schema(correction).parse(answer)).toEqual(answer);
   });
 
   it("rejects a missing sentence, an empty field or a missing key", () => {
     const schema = prompts.correction.schema(correction);
-    expect(schema.safeParse({ sentences: [sentence("我很好。")] }).success).toBe(false);
-    expect(schema.safeParse({ sentences: [sentence(" "), sentence("我很好。")] }).success).toBe(
+    expect(schema.safeParse({ sentences: [sentence(1, "我很好。")] }).success).toBe(false);
+    expect(
+      schema.safeParse({ sentences: [sentence(1, " "), sentence(2, "我很好。")] }).success,
+    ).toBe(false);
+    expect(
+      schema.safeParse({
+        sentences: [{ index: 1, corrected: "我很好。" }, sentence(2, "我很好。")],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects an index missing, repeated or out of range", () => {
+    const schema = prompts.correction.schema(correction);
+    const indexed = (...indices: number[]) => ({
+      sentences: indices.map((index) => sentence(index, "我很好。")),
+    });
+    expect(schema.safeParse(indexed(2, 1)).success).toBe(true);
+    expect(schema.safeParse(indexed(1, 1)).success).toBe(false);
+    expect(schema.safeParse(indexed(0, 1)).success).toBe(false);
+    expect(schema.safeParse(indexed(1, 3)).success).toBe(false);
+    expect(schema.safeParse(indexed(1, 1.5)).success).toBe(false);
+    const unindexed = {
+      corrected: "我很好。",
+      changes: [],
+      reading: "wǒ hěn hǎo",
+      meaning: "Bien.",
+    };
+    expect(schema.safeParse({ sentences: [unindexed, sentence(2, "我很好。")] }).success).toBe(
       false,
     );
-    expect(
-      schema.safeParse({ sentences: [{ corrected: "我很好。" }, sentence("我很好。")] }).success,
-    ).toBe(false);
   });
 });
 
@@ -133,7 +162,7 @@ describe("answer schemas", () => {
     ];
     for (const schema of schemas) {
       expect(JSON.stringify(z.toJSONSchema(schema))).not.toMatch(
-        /minLength|maxLength|pattern|minItems|maxItems|format/u,
+        /minLength|maxLength|minimum|maximum|pattern|minItems|maxItems|format/u,
       );
     }
   });

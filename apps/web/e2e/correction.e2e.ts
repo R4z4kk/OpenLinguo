@@ -122,7 +122,12 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
     model: MODEL,
     messages: [
       { role: "system" },
-      { content: JSON.stringify({ word: "电话", sentences: SENTENCES }) },
+      {
+        content: JSON.stringify({
+          word: "电话",
+          sentences: SENTENCES.map((text, at) => ({ index: at + 1, text })),
+        }),
+      },
     ],
   });
 
@@ -140,7 +145,7 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
     original: "我电话很新。",
     corrected: "我的电话很新。",
     choice: "accepted",
-    provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v1" },
+    provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v2" },
   });
   expect(corrections[4]).toMatchObject({ corrected: "请你打电话给我。", choice: "kept" });
   expect(corrections[0]).toMatchObject({ corrected: SENTENCES[0], choice: null });
@@ -154,4 +159,88 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
   await main.getByRole("button", { name: en.challenge.finish }).focus();
   await page.keyboard.press("Enter");
   await expect(focused).toContainText(en.review.empty);
+});
+
+test("still shows a challenge corrected by the first prompt version", async ({ page }) => {
+  // As zh-correct-v1 answered on 2026-10-19, before answers named their sentence (#206).
+  const answers = [
+    ["我给妈妈打电话。", [], "wǒ gěi māma dǎ diàn huà .", "I am calling my mom."],
+    [
+      "你的电话号码是多少？",
+      [],
+      "nǐ de diàn huà hào mǎ shì duō shǎo ？",
+      "What is your phone number?",
+    ],
+    [
+      "我的电话很新。",
+      [
+        {
+          from: "我电话",
+          to: "我的电话",
+          explanation: "Added a possessive 'my' for grammatical correctness",
+        },
+      ],
+      "wǒ de diàn huà hěn xīn .",
+      "My phone is new.",
+    ],
+    [
+      "晚上我不想接电话。",
+      [],
+      "wǎn shàng wǒ xiǎng bù jiē diàn huà .",
+      "I don't want to answer the phone in the evening.",
+    ],
+    [
+      "请你打电话给我。",
+      [
+        {
+          from: "请你电话我",
+          to: "请你打电话给我",
+          explanation: "Replaced '电话' with '打电话' to form the correct verb phrase",
+        },
+      ],
+      "qǐng nǐ dǎ diàn huà gěi wǒ .",
+      "Please call me.",
+    ],
+  ] as const;
+  const provenance = {
+    origin: "ai",
+    provider: "local",
+    model: MODEL,
+    promptVersion: "zh-correct-v1",
+    createdAt: "2026-10-19T20:00:00.000Z",
+  };
+  const main = page.getByRole("main");
+  const noon = new Date();
+  noon.setHours(12, 0, 0, 0);
+  await page.clock.setFixedTime(noon);
+  const day = [noon.getFullYear(), noon.getMonth() + 1, noon.getDate()]
+    .map((part) => String(part).padStart(2, "0"))
+    .join("-");
+  await page.goto("/");
+  await seedChallenge(
+    page,
+    answers.map(([corrected, changes, reading, meaning], index) => ({
+      original: SENTENCES[index],
+      corrected,
+      changes,
+      reading,
+      meaning,
+      choice: index === 2 ? "accepted" : null,
+      provenance,
+    })),
+  );
+
+  await page.goto(`/learn/challenges/${day}`);
+  await expect(main.getByRole("heading", { level: 2, name: en.correction.title })).toBeVisible({
+    timeout: 90_000,
+  });
+  await expect(main).toContainText(fill(en.aiNotice.badge, { model: MODEL }));
+  await expect(main).toContainText("2 sentences to review, 3 unchanged.");
+  const third = main.getByRole("region", { name: "Sentence 3" });
+  await expect(third.locator("p ins")).toHaveText("[added: 的]");
+  await expect(third.getByRole("button", { name: en.correction.accept })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  expect(await accessibilityViolations(page)).toEqual([]);
 });

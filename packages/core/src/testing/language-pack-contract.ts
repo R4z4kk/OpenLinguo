@@ -156,6 +156,7 @@ export const describeLanguagePackContract = (
         language: "en",
       });
       const sentence = {
+        index: 1,
         corrected: fixture.sampleText,
         changes: [],
         reading: fixture.readTerm,

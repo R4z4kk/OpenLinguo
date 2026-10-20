@@ -4,15 +4,23 @@ import { z } from "zod";
 import { en } from "../src/i18n/en.ts";
 import { fr } from "../src/i18n/fr.ts";
 import { accessibilityViolations } from "./accessibility.ts";
-import { recorded, recording, replay, type Exchange } from "./ai-replay.ts";
+import {
+  answerItems,
+  recorded,
+  recording,
+  replay,
+  rewriteItems,
+  type AnswerItem,
+  type Exchange,
+} from "./ai-replay.ts";
 import { test } from "./app.ts";
 import { fill, SENTENCES, storedRows } from "./challenge-seed.ts";
 
 /** M5 exit (#190): the providers the other AI tests leave out, and answers that must be refused. */
 
-/** OpenRouter, 2026-10-20: the model list and the connection test, then the challenge reordered. */
+/** OpenRouter: the model list and the connection test, then the challenge corrected. */
 const CONNECTION = recording(new URL("fixtures/ai/openrouter-connection.json", import.meta.url));
-const REORDERED = recorded(new URL("fixtures/ai/openrouter-correction.json", import.meta.url));
+const CORRECTION = recorded(new URL("fixtures/ai/openrouter-correction.json", import.meta.url));
 const OPENROUTER_MODEL = CONNECTION.model ?? "";
 /** Mistral refuses a wrong key with the same 401 on /models and /chat/completions (checked 2026-10-20). */
 const MISTRAL_REFUSED =
@@ -29,6 +37,19 @@ const NOT_STRUCTURED = [
 ];
 const KEY = "e2e-key-for-openrouter";
 const WORD = "一路平安";
+
+/** The recorded correction, its answer items rewritten. */
+const rewritten = (
+  rewrite: (items: readonly AnswerItem[]) => readonly AnswerItem[],
+): readonly Exchange[] =>
+  CORRECTION.map((exchange) =>
+    exchange.request.path === "/chat/completions"
+      ? {
+          ...exchange,
+          response: { ...exchange.response, body: rewriteItems(exchange.response.body, rewrite) },
+        }
+      : exchange,
+  );
 
 const chatReply = (body: unknown): readonly Exchange[] => [
   {
@@ -95,7 +116,7 @@ const press = async (page: Page, target: Locator): Promise<void> => {
 // Requests from a page a service worker controls escape `page.route` in WebKit.
 test.use({ serviceWorkers: "block" });
 
-test("sets up OpenRouter, then refuses its correction with the sentences out of order", async ({
+test("sets up OpenRouter, then refuses a correction whose index names another sentence, then places one out of order", async ({
   page,
 }) => {
   const noon = new Date();
@@ -144,8 +165,13 @@ test("sets up OpenRouter, then refuses its correction with the sentences out of 
     provider: { require_parameters: true },
   });
 
-  // Today's challenge: the model sends the five sentences back in another order.
-  answers = REORDERED;
+  // Today's challenge: sentence 1's answer says it is sentence 3's, and the other way round (#206).
+  answers = rewritten((items) =>
+    items.map((item) => ({
+      ...item,
+      index: item.index === 1 ? 3 : item.index === 3 ? 1 : item.index,
+    })),
+  );
   await page.evaluate(() => {
     localStorage.setItem("openlinguo.newCardsPerDay", "0");
   });
@@ -171,7 +197,28 @@ test("sets up OpenRouter, then refuses its correction with the sentences out of 
     .parse(await storedRows(page, "challenges"));
   expect(row?.corrections).toEqual([null, null, null, null, null]);
   expect(await accessibilityViolations(page)).toEqual([]);
-  expect(sent.filter(({ url }) => url.endsWith("/chat/completions"))).toHaveLength(2);
+
+  // Retried, the answers come back in reverse order: each goes to the sentence its index names.
+  answers = rewritten((items) => [...items].reverse());
+  await page.keyboard.press("Enter");
+  await expect(main.getByRole("heading", { level: 2, name: en.correction.title })).toBeVisible();
+  const items = answerItems(CORRECTION.at(-1)?.response.body ?? null);
+  const [corrected] = z
+    .array(z.object({ corrections: z.array(z.unknown()) }))
+    .parse(await storedRows(page, "challenges"));
+  expect(corrected?.corrections).toMatchObject(
+    SENTENCES.map((original, at) => ({
+      original,
+      corrected: items.find(({ index }) => index === at + 1)?.corrected ?? null,
+      provenance: {
+        provider: "openrouter",
+        model: OPENROUTER_MODEL,
+        promptVersion: "zh-correct-v2",
+      },
+    })),
+  );
+  expect(await accessibilityViolations(page)).toEqual([]);
+  expect(sent.filter(({ url }) => url.endsWith("/chat/completions"))).toHaveLength(3);
 });
 
 test("names Mistral's refusal of a key, with its training opt-out", async ({ page }) => {

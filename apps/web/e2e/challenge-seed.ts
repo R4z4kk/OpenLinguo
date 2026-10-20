@@ -17,9 +17,12 @@ export const fill = (template: string, values: Readonly<Record<string, string | 
   template.replaceAll(/\{\{(\w+)\}\}/gu, (_, name: string) => String(values[name]));
 
 /** The local server set up, and today's challenge saved, as the app stores them. */
-export const seedChallenge = (page: Page): Promise<void> =>
+export const seedChallenge = (
+  page: Page,
+  corrections: readonly unknown[] = SENTENCES.map(() => null),
+): Promise<void> =>
   page.evaluate(
-    ({ sentences, model }) =>
+    ({ sentences, model, corrections }) =>
       new Promise<void>((resolve, reject) => {
         const now = new Date();
         const day = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
@@ -44,7 +47,7 @@ export const seedChallenge = (page: Page): Promise<void> =>
             headword: "电话",
             readingKey: "dian4 hua4",
             sentences,
-            corrections: sentences.map(() => null),
+            corrections,
             updatedAt: 1,
           });
           transaction.onerror = () => {
@@ -56,7 +59,7 @@ export const seedChallenge = (page: Page): Promise<void> =>
           };
         };
       }),
-    { sentences: SENTENCES, model: MODEL },
+    { sentences: SENTENCES, model: MODEL, corrections },
   );
 
 /** Every row of an IndexedDB store of the app. */
