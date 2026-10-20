@@ -195,23 +195,26 @@ test("changes the provider with the mouse", async ({ page }) => {
   const section = page.getByRole("region", { name: en.ai.title });
   const groq = en.ai.providers.groq;
   const openrouter = en.ai.providers.openrouter;
+  // The provider's card: Groq's name shares it with the « Recommended » pill.
+  const card = (name: string) =>
+    section.locator("label").filter({ has: page.getByRole("radio", { name }) });
   await page.goto("/profile");
   await expect(section.getByRole("radio")).toHaveCount(4, { timeout: 90_000 });
   // The sections above stop moving the page once filled.
   await expect(main.getByText(en.progress.longestStreak)).toBeVisible();
   await expect(main.getByText(en.stats.words)).toBeVisible();
 
-  await section.getByText(groq.name, { exact: true }).click();
+  await card(groq.name).click();
   await section.getByLabel(en.ai.key).fill(KEY);
   await section.getByRole("button", { name: en.ai.changeLabel }).click();
   await expect(section.getByRole("radio", { name: groq.name })).toBeFocused();
-  await section.getByText(openrouter.name, { exact: true }).click();
+  await card(openrouter.name).click();
   await expect(section.getByRole("note", { name: openrouter.about })).toBeVisible();
   await expect(section.getByRole("radio")).toHaveCount(0);
   await expect(section.getByLabel(en.ai.key)).toHaveValue("");
 
   await section.getByRole("button", { name: en.ai.changeLabel }).click();
-  await section.getByText(groq.name, { exact: true }).click();
+  await card(groq.name).click();
   await expect(section.getByRole("note", { name: groq.about })).toBeVisible();
   await expect(section.getByLabel(en.ai.key)).toHaveValue(KEY);
 });
