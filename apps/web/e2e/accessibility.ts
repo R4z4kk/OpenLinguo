@@ -7,6 +7,8 @@ const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-prac
 /** The axe violations of the page as it is now, one readable line each. */
 export const accessibilityViolations = async (page: Page): Promise<readonly string[]> => {
   const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
+  // axe finishes its run in a blank page of this context: WebKit leaves this one without focus.
+  await page.bringToFront();
   return violations.map(
     ({ id, impact, help, nodes }) =>
       `${id} (${impact ?? "no impact"}): ${help} at ${nodes.map((node) => node.target.join(" ")).join(", ")}`,
