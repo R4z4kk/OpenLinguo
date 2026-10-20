@@ -161,10 +161,28 @@ const AiSettingsForm = ({
   const modelSelect = useRef<HTMLSelectElement>(null);
   const reopened = useRef(false);
   const focusModel = useRef(false);
+  // A pointer press blurs the checked radio before its click lands: the list must stay open.
+  const pointing = useRef(false);
   const id = useId();
   const language = languages.find((code) => code === i18n.language) ?? DEFAULT_LANGUAGE;
 
   useEffect(() => () => running.current?.abort(), []);
+
+  useEffect(() => {
+    const press = (event: PointerEvent): void => {
+      pointing.current =
+        event.target instanceof Node && group.current?.contains(event.target) === true;
+    };
+    const key = (): void => {
+      pointing.current = false;
+    };
+    document.addEventListener("pointerdown", press, true);
+    document.addEventListener("keydown", key, true);
+    return () => {
+      document.removeEventListener("pointerdown", press, true);
+      document.removeEventListener("keydown", key, true);
+    };
+  }, []);
 
   useEffect(() => {
     if (reopened.current) {
@@ -192,14 +210,14 @@ const AiSettingsForm = ({
     setTesting(false);
   };
 
-  const choose = (provider: AiProvider): void => {
+  const choose = (provider: AiProvider, byPointer: boolean): void => {
     stopTest();
     setModels(null);
     setOutcome(null);
     setFieldError(null);
     update({ ...latest.current, provider });
-    // A click that did not focus the radio (Safari) ends the choice; arrows keep the list open.
-    if (group.current?.contains(document.activeElement) !== true) setChoosing(false);
+    // A click ends the choice; arrows keep the list open.
+    if (byPointer || group.current?.contains(document.activeElement) !== true) setChoosing(false);
   };
 
   const runTest = async (): Promise<void> => {
@@ -267,10 +285,16 @@ const AiSettingsForm = ({
                 aria-labelledby={`${id}-${option}`}
                 aria-describedby={`${id}-${option}-summary`}
                 onChange={() => {
-                  choose(option);
+                  const byPointer = pointing.current;
+                  pointing.current = false;
+                  choose(option, byPointer);
                 }}
                 onBlur={(event) => {
-                  if (provider !== null && group.current?.contains(event.relatedTarget) !== true) {
+                  if (
+                    !pointing.current &&
+                    provider !== null &&
+                    group.current?.contains(event.relatedTarget) !== true
+                  ) {
                     setChoosing(false);
                   }
                 }}
