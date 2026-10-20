@@ -89,7 +89,7 @@ describe("openDatabase", () => {
 
     const db = openDatabase("note-provenance-test");
     expect(await db.notes.get("n1")).toEqual({ ...note, provenance: null });
-    expect(await db.aiNotices.count()).toBe(0);
+    expect(await db.aiNotice.count()).toBe(0);
     db.close();
   });
 
@@ -111,6 +111,18 @@ describe("openDatabase", () => {
       ...challenge,
       corrections: [null, null, null, null, null],
     });
+    db.close();
+  });
+
+  it("shows the one AI notice to learners who saw a per-feature one", async () => {
+    const legacy = new Dexie("ai-notice-migration-test");
+    legacy.version(20).stores({ aiNotices: "feature" });
+    await legacy.table("aiNotices").add({ feature: "journal" });
+    legacy.close();
+
+    const db = openDatabase("ai-notice-migration-test");
+    expect(await db.aiNotice.count()).toBe(0);
+    expect(db.tables.map(({ name }) => name)).not.toContain("aiNotices");
     db.close();
   });
 });

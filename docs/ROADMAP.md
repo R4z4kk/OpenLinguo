@@ -168,7 +168,7 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 - **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
 - **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, the speech-recognition model and its WebAssembly runtime served from our own origin (decided in #119, ADR 0007).
-- **BYOK AI**: notice at setup naming the provider, its privacy policy and training opt-out; notice before each feature's first use saying what it sends; data flows device → provider on the learner's click, never through us. OpenLinguo is most likely not a controller of these transmissions (ADR 0012).
+- **BYOK AI**: notice at setup naming the provider, its privacy policy and training opt-out; one notice before the first AI call of any kind saying what each AI button sends (#207); data flows device → provider on the learner's click, never through us. OpenLinguo is most likely not a controller of these transmissions (ADR 0012).
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
 - **Minors**: app usable without account by anyone; accounts 15+ (age declaration, France digital majority). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.

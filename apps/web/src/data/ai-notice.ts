@@ -10,9 +10,7 @@ import type { TFunction } from "i18next";
 import type { Database } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
-/** Each has its own first-use notice (ADR 0012). */
-export const AI_FEATURES = ["challenge", "journal", "interests", "translation"] as const;
-export type AiFeature = (typeof AI_FEATURES)[number];
+export type AiFeature = "challenge" | "journal" | "interests" | "translation";
 
 /** The input the feature's PromptTask builds its request from. */
 export type AiPayload =
@@ -33,18 +31,13 @@ export type AiCall = {
   readonly payload: AiPayload;
 };
 
-export const noticeSeen = (
-  db: Database,
-  feature: AiFeature,
-): Promise<Result<boolean, ReviewLogFailure>> =>
-  guarded(async () => ok((await db.aiNotices.get(feature)) != null));
+/** The one notice before the first AI call of any kind (ADR 0012). */
+export const noticeSeen = (db: Database): Promise<Result<boolean, ReviewLogFailure>> =>
+  guarded(async () => ok((await db.aiNotice.get("seen")) != null));
 
-export const markNoticeSeen = (
-  db: Database,
-  feature: AiFeature,
-): Promise<Result<null, ReviewLogFailure>> =>
+export const markNoticeSeen = (db: Database): Promise<Result<null, ReviewLogFailure>> =>
   guarded(async () => {
-    await db.aiNotices.put({ feature });
+    await db.aiNotice.put({ id: "seen" });
     return ok(null);
   });
 

@@ -1,6 +1,6 @@
 # Privacy notice
 
-This is the text of the public privacy notice. The page that shows it is published in M7 with the legal notices (ADR 0009), and the sections still missing are written then. Until that page exists, Profile › AI says where the key is kept (#181), and each AI feature's notices say what it sends (#182). The analysis behind this text is in [ai.md](ai.md).
+This is the text of the public privacy notice. The page that shows it is published in M7 with the legal notices (ADR 0009), and the sections still missing are written then. Until that page exists, Profile › AI says where the key is kept (#181), and the AI notice says what each AI button sends (#207). The analysis behind this text is in [ai.md](ai.md).
 
 ## AI features
 
@@ -20,7 +20,7 @@ This is the text of the public privacy notice. The page that shows it is publish
 
 Every request also contains OpenLinguo's instructions to the model and the language of the interface.
 
-**Your key.** By default, the key is stored in your browser (IndexedDB) on this device, so you don't have to paste it each time. With « Don't remember the key », it stays in memory only and is gone when you close the app. Either way, it is never put in your backup file, never synced and never sent anywhere but to your provider. « Forget the key » deletes it. Your provider, your model and the notices you have already seen are stored the same way.
+**Your key.** By default, the key is stored in your browser (IndexedDB) on this device, so you don't have to paste it each time. With « Don't remember the key », it stays in memory only and is gone when you close the app. Either way, it is never put in your backup file, never synced and never sent anywhere but to your provider. « Forget the key » deletes it. Your provider, your model and whether you have seen the AI notice are stored the same way.
 
 This storage is strictly necessary for the service you ask for, so it needs no consent (Loi Informatique et Libertés, art. 82). We mention it here, as the CNIL recommends (délibération 2020-092, para 49).
 

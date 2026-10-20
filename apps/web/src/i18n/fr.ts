@@ -453,6 +453,7 @@ export const fr: Messages = {
       "Faites corriger vos phrases et votre journal, proposer des mots selon vos centres d’intérêt, traduire en français les mots qui n’ont qu’une traduction anglaise. Avec votre propre fournisseur et votre clé\u00a0: vos textes partent de cet appareil directement chez lui, rien ne passe par OpenLinguo.",
     provider: "Fournisseur",
     noDefault: "Aucun n’est choisi par défaut.",
+    recommended: "Recommandé",
     withoutProvider:
       "Sans fournisseur, le défi 5 phrases et le journal restent disponibles, sans correction.",
     chosen: "Fournisseur\u00a0:",
@@ -476,6 +477,7 @@ export const fr: Messages = {
     model: "Modèle",
     modelUntested: "Testez la connexion pour choisir un modèle",
     modelChoose: "Choisissez un modèle",
+    recommendedModel: "{{model}} (recommandé)",
     test: "Tester la connexion",
     testing: "Test en cours…",
     testHelp:
@@ -1004,41 +1006,28 @@ export const fr: Messages = {
       senses_one: "son sens anglais",
       senses_other: "ses {{count}} sens anglais",
     },
+    title: "Avant d’utiliser l’IA",
+    intro:
+      "Les corrections, les mots proposés et les traductions en français sont écrits par une IA.",
     machine:
       "C’est une machine : elle peut se tromper, même quand elle a l’air sûre d’elle. Gardez votre propre jugement.",
     whatIsSent: "Ce qui est envoyé",
     sentTo:
-      "À {{provider}}, quand vous appuyez sur « {{action}} » : {{items}}. Rien d’autre, et jamais en arrière-plan.",
+      "À {{provider}}, seulement quand vous appuyez sur l’un de ces boutons. Rien d’autre, et jamais en arrière-plan.",
+    uses: {
+      test: "« {{action}} » : votre clé et une phrase de test.",
+      testNoKey: "« {{action}} » : une phrase de test.",
+      challenge: "« {{action}} » ({{place}}) : le mot, vos phrases et la langue de l’interface.",
+      journal: "« {{action}} » ({{place}}) : le texte de l’entrée et la langue de l’interface.",
+      interests: "« {{action}} » : les thèmes cochés, votre phrase et votre niveau.",
+      translation: "« {{action}} » : le mot, son pinyin et ses sens anglais.",
+    },
     sensitive:
       "N’écrivez rien que vous ne diriez pas à un inconnu : santé, religion, opinions politiques, vie sexuelle.",
+    confirm: "J’ai compris, continuer",
     cancel: "Annuler",
+    once: "Ce message ne s’affiche qu’une fois.",
     notRemembered: "Ce message n’a pas pu être retenu et s’affichera de nouveau : {{reason}}",
-    features: {
-      challenge: {
-        title: "Avant votre première correction",
-        intro: "Une IA va lire vos phrases et proposer des corrections.",
-        confirm: "J’ai compris, corriger",
-        once: "Ce message ne s’affiche qu’une fois pour le défi.",
-      },
-      journal: {
-        title: "Avant votre première correction",
-        intro: "Une IA va lire votre texte et proposer des corrections.",
-        confirm: "J’ai compris, corriger",
-        once: "Ce message ne s’affiche qu’une fois pour le journal.",
-      },
-      interests: {
-        title: "Avant vos premières suggestions",
-        intro: "Une IA va choisir des mots d’après vos centres d’intérêt.",
-        confirm: "J’ai compris, proposer des mots",
-        once: "Ce message ne s’affiche qu’une fois pour les centres d’intérêt.",
-      },
-      translation: {
-        title: "Avant votre première traduction",
-        intro: "Une IA va traduire ce mot en français.",
-        confirm: "J’ai compris, traduire",
-        once: "Ce message ne s’affiche qu’une fois pour la traduction.",
-      },
-    },
   },
   moduleError: { title: "Cette section n’a pas pu se charger", retry: "Réessayer" },
   notFound: { title: "Page introuvable", back: "Retour à Aujourd’hui" },

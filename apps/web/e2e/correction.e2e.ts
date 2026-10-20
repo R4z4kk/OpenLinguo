@@ -66,9 +66,7 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
 
   await correct.focus();
   await page.keyboard.press("Enter");
-  const confirm = page
-    .getByRole("dialog")
-    .getByRole("button", { name: en.aiNotice.features.challenge.confirm });
+  const confirm = page.getByRole("dialog").getByRole("button", { name: en.aiNotice.confirm });
   await expect(confirm).toBeFocused();
   await page.keyboard.press("Enter");
 

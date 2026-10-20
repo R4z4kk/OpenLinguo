@@ -163,9 +163,7 @@ test("corrects an earlier entry, then today's, with the keyboard in the dark the
   await page.keyboard.press("Enter");
   const notice = page.getByRole("dialog");
   await expect(notice).toContainText(en.aiNotice.sensitive);
-  await expect(
-    notice.getByRole("button", { name: en.aiNotice.features.journal.confirm }),
-  ).toBeFocused();
+  await expect(notice.getByRole("button", { name: en.aiNotice.confirm })).toBeFocused();
   await page.keyboard.press("Enter");
 
   await expect(main.getByRole("heading", { level: 2, name: en.correction.title })).toBeVisible();

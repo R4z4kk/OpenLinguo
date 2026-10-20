@@ -8,7 +8,6 @@ import type {
   WordKey,
 } from "@openlinguo/core";
 import { Dexie, type EntityTable, type Table } from "dexie";
-import type { AiFeature } from "./ai-notice.ts";
 import type { AiSettings } from "./ai-settings.ts";
 import type { Corrections } from "./correction.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
@@ -155,8 +154,8 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
-/** An AI feature whose first-use notice the learner confirmed; never in the backup. */
-export type StoredAiNotice = { readonly feature: AiFeature };
+/** Present once the learner confirmed the AI notice; never in the backup. */
+export type StoredAiNotice = { readonly id: "seen" };
 
 /** French glosses an AI translated from an entry's English ones, each with its source. */
 export type StoredAiGloss = WordKey & {
@@ -215,7 +214,7 @@ export type Database = Dexie & {
   wordAudio: EntityTable<StoredWordAudio, "id">;
   audioBands: EntityTable<StoredAudioBand, "id">;
   recordings: EntityTable<StoredRecording, "id">;
-  aiNotices: EntityTable<StoredAiNotice, "feature">;
+  aiNotice: EntityTable<StoredAiNotice, "id">;
   aiSettings: EntityTable<StoredAiSettings, "id">;
   challenges: EntityTable<StoredChallenge, "day">;
   aiGlosses: EntityTable<StoredAiGloss, "id">;
@@ -305,6 +304,8 @@ export const openDatabase = (name: string): Database => {
       }),
   );
   db.version(20).stores({ journal: "day" });
+  // One notice for every AI feature replaces the per-feature ones.
+  db.version(21).stores({ aiNotices: null, aiNotice: "id" });
   return db;
 };
 

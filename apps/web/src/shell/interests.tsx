@@ -263,7 +263,7 @@ export const InterestsSection = ({
             aria-describedby={`${id}-sent`}
             aria-disabled={running}
             onClick={() => {
-              if (!running) notice.ask(call, () => void suggest(link, request));
+              if (!running) notice.ask(call.provider, () => void suggest(link, request));
             }}
           >
             {running ? t("interests.suggesting") : action}

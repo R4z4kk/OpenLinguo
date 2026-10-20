@@ -116,9 +116,15 @@ test("sets up OpenRouter, then refuses its correction with the sentences out of 
   await expect(notice.getByRole("link", { name: openrouter.training })).toBeVisible();
   await section.getByLabel(en.ai.key).fill(KEY);
 
-  // The list keeps the models with structured answers only.
+  // The list keeps the models with structured answers only, after the one AI notice.
   const testButton = section.getByRole("button", { name: en.ai.test });
   await press(page, testButton);
+  await expect(
+    page.getByRole("dialog", { name: en.aiNotice.title }).getByRole("button", {
+      name: en.aiNotice.confirm,
+    }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
   const status = section.getByRole("status");
   await expect(status).toHaveText(fill(en.ai.listed_other, { count: 4, provider }));
   const model = section.getByRole("combobox", { name: en.ai.model });
@@ -154,14 +160,10 @@ test("sets up OpenRouter, then refuses its correction with the sentences out of 
   await page.goto("/review");
   const main = page.getByRole("main");
   await expect(page.locator(":focus")).toContainText(en.challenge.title, { timeout: 90_000 });
+  // Seen in the settings, the notice does not show again before the first correction.
   await press(page, main.getByRole("button", { name: en.correction.correct, exact: true }));
-  const confirm = page
-    .getByRole("dialog")
-    .getByRole("button", { name: en.aiNotice.features.challenge.confirm });
-  await expect(confirm).toBeFocused();
-  await page.keyboard.press("Enter");
-
   await expect(main.getByRole("button", { name: en.correction.retry })).toBeFocused();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(main.getByRole("alert")).toContainText(en.correction.unreadable);
   await expect(main.getByRole("heading", { name: en.correction.title })).toHaveCount(0);
   const [row] = z
@@ -190,6 +192,10 @@ test("names Mistral's refusal of a key, with its training opt-out", async ({ pag
   await section.getByLabel(en.ai.key).fill(KEY);
   const testButton = section.getByRole("button", { name: en.ai.test });
   await press(page, testButton);
+  await page
+    .getByRole("dialog", { name: en.aiNotice.title })
+    .getByRole("button", { name: en.aiNotice.confirm })
+    .click();
   const alert = section.getByRole("alert");
   await expect(alert).toContainText(
     fill(en.ai.errors.auth, { provider: en.aiNotice.providers.mistral }),
@@ -233,8 +239,8 @@ test("refuses an answer that is not JSON and an error inside a 200, and stores n
   await press(page, translate);
   await expect(
     page
-      .getByRole("dialog", { name: fr.aiNotice.features.translation.title })
-      .getByRole("button", { name: fr.aiNotice.features.translation.confirm }),
+      .getByRole("dialog", { name: fr.aiNotice.title })
+      .getByRole("button", { name: fr.aiNotice.confirm }),
   ).toBeFocused();
   await page.keyboard.press("Enter");
 

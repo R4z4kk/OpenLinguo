@@ -1,5 +1,6 @@
 import {
   AI_PROVIDERS,
+  type AiEndpoint,
   type AiError,
   type AiErrorKind,
   type AiProvider,
@@ -11,6 +12,7 @@ import {
 import { Check, CircleAlert, ExternalLink, Info, Send, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useAiNotice } from "@/components/ai-notice";
 import { Switch } from "@/components/switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,6 +20,8 @@ import {
   keyFor,
   loadAiSettings,
   PROVIDER_LINKS,
+  RECOMMENDED_PROVIDER,
+  recommendedModel,
   saveAiSettings,
   TEST_SENTENCE,
   testConnection,
@@ -153,6 +157,7 @@ const AiSettingsForm = ({
   const [fieldError, setFieldError] = useState<"key" | "address" | null>(null);
   const [saveFailure, setSaveFailure] = useState<string | null>(null);
   const [howToOpen] = useState(initial.model?.provider !== "local");
+  const [openedAt] = useState(() => Date.now());
   const latest = useRef(initial);
   const running = useRef<AbortController | null>(null);
   const group = useRef<HTMLFieldSetElement>(null);
@@ -162,6 +167,7 @@ const AiSettingsForm = ({
   const reopened = useRef(false);
   const focusModel = useRef(false);
   const id = useId();
+  const notice = useAiNotice();
   const language = languages.find((code) => code === i18n.language) ?? DEFAULT_LANGUAGE;
 
   useEffect(() => () => running.current?.abort(), []);
@@ -202,7 +208,7 @@ const AiSettingsForm = ({
     if (group.current?.contains(document.activeElement) !== true) setChoosing(false);
   };
 
-  const runTest = async (): Promise<void> => {
+  const requestTest = (): void => {
     if (running.current !== null) return;
     const endpoint = aiEndpoint(latest.current);
     if (endpoint === null) {
@@ -211,6 +217,11 @@ const AiSettingsForm = ({
       (field === "address" ? addressInput : keyInput).current?.focus();
       return;
     }
+    notice.ask(endpoint.provider, () => void runTest(endpoint));
+  };
+
+  const runTest = async (endpoint: AiEndpoint): Promise<void> => {
+    if (running.current !== null) return;
     const controller = new AbortController();
     running.current = controller;
     setTesting(true);
@@ -247,6 +258,8 @@ const AiSettingsForm = ({
   const key = provider !== null && settings.key?.provider === provider ? settings.key.value : "";
   const model = provider !== null && settings.model?.provider === provider ? settings.model : null;
   const listedModel = models?.includes(model?.id ?? "") === true ? (model?.id ?? "") : "";
+  const recommended =
+    provider === null || models === null ? null : recommendedModel(provider, models, openedAt);
 
   return (
     <>
@@ -285,6 +298,14 @@ const AiSettingsForm = ({
               <span className="flex flex-col">
                 <span id={`${id}-${option}`} className="font-semibold">
                   {t(`ai.providers.${option}.name`)}
+                  {option === RECOMMENDED_PROVIDER && (
+                    <>
+                      {" "}
+                      <span className="ms-1 rounded-full border border-border-strong px-2 text-caption">
+                        {t("ai.recommended")}
+                      </span>
+                    </>
+                  )}
                 </span>
                 <span id={`${id}-${option}-summary`} className="text-small text-muted">
                   {t(`ai.providers.${option}.summary`)}
@@ -483,7 +504,9 @@ const AiSettingsForm = ({
                   {listedModel === "" && <option value="">{t("ai.modelChoose")}</option>}
                   {models.map((listed) => (
                     <option key={listed} value={listed}>
-                      {listed}
+                      {listed === recommended
+                        ? t("ai.recommendedModel", { model: listed })
+                        : listed}
                     </option>
                   ))}
                 </>
@@ -500,7 +523,7 @@ const AiSettingsForm = ({
               variant="outline"
               aria-disabled={testing}
               aria-describedby={`${id}-sent`}
-              onClick={() => void runTest()}
+              onClick={requestTest}
             >
               {t(testing ? "ai.testing" : "ai.test")}
             </Button>
@@ -518,6 +541,7 @@ const AiSettingsForm = ({
               </Button>
             )}
           </div>
+          {notice.view}
           <p className="mt-2 text-small text-muted">{t("ai.testHelp")}</p>
           <p id={`${id}-sent`} className="mt-2 flex items-start gap-1.5 text-small text-muted">
             <Send aria-hidden="true" className="mt-0.5 size-4 flex-none" />
