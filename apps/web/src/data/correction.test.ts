@@ -3,6 +3,7 @@ import { ok } from "@openlinguo/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import recorded from "../../e2e/fixtures/ai/local-correction.json?raw";
+import reordered from "../../e2e/fixtures/ai/openrouter-correction.json?raw";
 import type { AiConnection } from "./ai-settings.ts";
 import {
   currentCorrections,
@@ -122,6 +123,28 @@ describe("requestCorrection", () => {
         model: "qwen3:30b-a3b",
         promptVersion: "zh-correct-v1",
       },
+    });
+  });
+
+  it("refuses an answer whose sentences come back in another order", async () => {
+    // dots-3-note-preview on OpenRouter, 2026-10-20: sentence 3 first, then 1 and 2.
+    const { exchanges } = z
+      .object({ exchanges: z.array(z.object({ response: z.object({ body: z.unknown() }) })) })
+      .parse(JSON.parse(reordered));
+    vi.stubGlobal("fetch", () =>
+      Promise.resolve(new Response(JSON.stringify(exchanges.at(-1)?.response.body))),
+    );
+    const reply = await requestCorrection(
+      { ...LOCAL, model: "dots-studio/dots-3-note-preview:free" },
+      correction,
+      "电话",
+      SENTENCES,
+      "en",
+      new AbortController().signal,
+    );
+    expect(reply).toEqual({
+      ok: false,
+      error: { kind: "invalid-response", status: null, message: null },
     });
   });
 });

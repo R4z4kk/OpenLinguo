@@ -1,6 +1,7 @@
 import {
   AiProvenance,
   chat,
+  err,
   ok,
   type AiError,
   type CorrectionAnswer,
@@ -86,6 +87,10 @@ export const requestCorrection = async (
     signal,
   });
   if (!answer.ok) return answer;
+  const filled = sentences.filter((original) => original.trim() !== "");
+  if (!inOrder(filled, answer.value.value.sentences)) {
+    return err({ kind: "invalid-response", status: null, message: null });
+  }
   const provenance: AiProvenance = {
     origin: "ai",
     provider: connection.endpoint.provider,
@@ -148,6 +153,24 @@ export const diffChars = (from: string, to: string): readonly DiffPart[] => {
   }
   return parts;
 };
+
+const likeness = (a: string, b: string): number => {
+  const total = Array.from(a).length + Array.from(b).length;
+  const common = diffChars(a, b)
+    .filter(({ kind }) => kind === "same")
+    .reduce((sum, { text }) => sum + Array.from(text).length, 0);
+  return total === 0 ? 1 : (2 * common) / total;
+};
+
+/** Answers are matched by position, so each must be closest to its own sentence. */
+const inOrder = (
+  originals: readonly string[],
+  answers: readonly { readonly corrected: string }[],
+): boolean =>
+  answers.every(({ corrected }, index) => {
+    const own = likeness(originals[index] ?? "", corrected);
+    return originals.every((other, at) => at === index || likeness(other, corrected) <= own);
+  });
 
 const HAN = /\p{Script=Han}/u;
 const NOT_PINYIN = /[^\p{L}\p{M}\s'’-]+/gu;

@@ -112,6 +112,33 @@ export const strip = (value: unknown, keepIds: boolean): unknown => {
   return value;
 };
 
+const hasStructuredOutputs = (model: unknown): boolean =>
+  z
+    .object({ supported_parameters: z.array(z.string()) })
+    .safeParse(model)
+    .data?.supported_parameters.includes("structured_outputs") === true;
+
+const idOf = (model: unknown): string | null =>
+  z.object({ id: z.string() }).safeParse(model).data?.id ?? null;
+
+/** Three models with structured outputs and three without, plus `keep`, without descriptions. */
+export const trimModels = (body: unknown, keep: string | null): unknown => {
+  const listing = z.looseObject({ data: z.array(z.unknown()) }).safeParse(body);
+  if (!listing.success) return body;
+  const kept = listing.data.data.filter((model) => keep !== null && idOf(model) === keep);
+  const rest = listing.data.data.filter((model) => !kept.includes(model));
+  const structured = rest.filter(hasStructuredOutputs);
+  const others = rest.filter((model) => !hasStructuredOutputs(model));
+  const short = (model: unknown): unknown =>
+    typeof model === "object" && model !== null
+      ? Object.fromEntries(Object.entries(model).filter(([key]) => key !== "description"))
+      : model;
+  return {
+    ...listing.data,
+    data: [...kept, ...structured.slice(0, 3), ...others.slice(0, 3)].map(short),
+  };
+};
+
 /** A recording is never written when this holds: the key itself or anything shaped like one. */
 export const holdsKey = (text: string, key: string | null): boolean =>
   (key !== null && text.includes(key)) || KEY_SHAPES.test(text);
