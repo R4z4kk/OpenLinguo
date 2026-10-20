@@ -1015,12 +1015,14 @@ export const fr: Messages = {
     sentTo:
       "À {{provider}}, seulement quand vous appuyez sur l’un de ces boutons. Rien d’autre, et jamais en arrière-plan.",
     uses: {
-      test: "« {{action}} » : votre clé et une phrase de test.",
-      testNoKey: "« {{action}} » : une phrase de test.",
-      challenge: "« {{action}} » ({{place}}) : le mot, vos phrases et la langue de l’interface.",
-      journal: "« {{action}} » ({{place}}) : le texte de l’entrée et la langue de l’interface.",
-      interests: "« {{action}} » : les thèmes cochés, votre phrase et votre niveau.",
-      translation: "« {{action}} » : le mot, son pinyin et ses sens anglais.",
+      test: "«\u00a0{{action}}\u00a0»\u00a0: votre clé et une phrase de test.",
+      testNoKey: "«\u00a0{{action}}\u00a0»\u00a0: une phrase de test.",
+      challenge:
+        "«\u00a0{{action}}\u00a0» ({{place}})\u00a0: le mot, vos phrases et la langue de l’interface.",
+      journal:
+        "«\u00a0{{action}}\u00a0» ({{place}})\u00a0: le texte de l’entrée et la langue de l’interface.",
+      interests: "«\u00a0{{action}}\u00a0»\u00a0: les thèmes cochés, votre phrase et votre niveau.",
+      translation: "«\u00a0{{action}}\u00a0»\u00a0: le mot, son pinyin et ses sens anglais.",
     },
     sensitive:
       "N’écrivez rien que vous ne diriez pas à un inconnu : santé, religion, opinions politiques, vie sexuelle.",

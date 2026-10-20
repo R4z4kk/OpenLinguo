@@ -161,8 +161,9 @@ test("sets up OpenRouter, then refuses its correction with the sentences out of 
   const main = page.getByRole("main");
   await expect(page.locator(":focus")).toContainText(en.challenge.title, { timeout: 90_000 });
   // Seen in the settings, the notice does not show again before the first correction.
+  // `:focus`: WebKit gives the document focus on a click or a dialog, and here there is neither.
   await press(page, main.getByRole("button", { name: en.correction.correct, exact: true }));
-  await expect(main.getByRole("button", { name: en.correction.retry })).toBeFocused();
+  await expect(page.locator(":focus")).toHaveText(en.correction.retry);
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(main.getByRole("alert")).toContainText(en.correction.unreadable);
   await expect(main.getByRole("heading", { name: en.correction.title })).toHaveCount(0);
