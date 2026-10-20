@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import groqUnauthorized from "../../../../packages/core/src/testing/ai-responses/groq/unauthorized.json?raw";
 import groqVocabulary from "../../e2e/fixtures/ai/groq-vocabulary.json?raw";
-import localTest from "../../e2e/fixtures/ai/local-connection-test.json?raw";
+import localTest from "../../e2e/fixtures/ai/local-connection.json?raw";
 import {
   aiConnection,
   DEFAULT_AI_SETTINGS,
@@ -220,7 +220,7 @@ describe("testConnection", () => {
     const sent = replay(localTest);
     const model = { provider: "local", id: "qwen3:30b-a3b", mode: "json_schema" } as const;
     expect(await test(local, model)).toEqual({
-      models: ["gemma3:4b", "qwen3:30b-a3b", "mxbai-embed-large:latest"],
+      models: ["qwen3:30b-a3b", "gemma3:4b", "mxbai-embed-large:latest"],
       answer: ok(model),
     });
     expect(sent).toEqual([
@@ -232,7 +232,7 @@ describe("testConnection", () => {
   it("only lists the models while none is chosen", async () => {
     const sent = replay(localTest);
     expect(await test(local, null)).toEqual({
-      models: ["gemma3:4b", "qwen3:30b-a3b", "mxbai-embed-large:latest"],
+      models: ["qwen3:30b-a3b", "gemma3:4b", "mxbai-embed-large:latest"],
       answer: ok(null),
     });
     expect(sent).toHaveLength(1);

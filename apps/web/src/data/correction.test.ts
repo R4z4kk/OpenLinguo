@@ -2,8 +2,8 @@ import { createPrompts } from "@openlinguo/lang-zh";
 import { ok } from "@openlinguo/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { rewriteItems, type AnswerItem } from "../../e2e/ai-replay.ts";
 import recorded from "../../e2e/fixtures/ai/local-correction.json?raw";
-import reordered from "../../e2e/fixtures/ai/openrouter-correction.json?raw";
 import type { AiConnection } from "./ai-settings.ts";
 import {
   currentCorrections,
@@ -33,6 +33,18 @@ const LOCAL: AiConnection = {
   model: "qwen3:30b-a3b",
   mode: "json_schema",
 };
+
+/** The recorded answer of qwen3:30b-a3b to SENTENCES, its items rewritten. */
+const answering = (rewrite: (items: readonly AnswerItem[]) => readonly AnswerItem[]): void => {
+  const { exchanges } = z
+    .object({ exchanges: z.array(z.object({ response: z.object({ body: z.unknown() }) })) })
+    .parse(JSON.parse(recorded));
+  const body = rewriteItems(exchanges.at(-1)?.response.body ?? null, rewrite);
+  vi.stubGlobal("fetch", () => Promise.resolve(new Response(JSON.stringify(body))));
+};
+
+const correct = () =>
+  requestCorrection(LOCAL, correction, "电话", SENTENCES, "en", new AbortController().signal);
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -78,14 +90,14 @@ describe("diffChars", () => {
 });
 
 describe("requestCorrection", () => {
-  it("sends the filled fields only, and gives each field its correction and provenance", async () => {
+  it("sends the filled fields only, numbered, and gives each field its correction and provenance", async () => {
     const { exchanges } = z
       .object({ exchanges: z.array(z.object({ response: z.object({ body: z.unknown() }) })) })
       .parse(JSON.parse(recorded));
     const sent: unknown[] = [];
     vi.stubGlobal("fetch", (_input: string, init: RequestInit) => {
       sent.push(JSON.parse(typeof init.body === "string" ? init.body : ""));
-      return Promise.resolve(new Response(JSON.stringify(exchanges[0]?.response.body)));
+      return Promise.resolve(new Response(JSON.stringify(exchanges.at(-1)?.response.body)));
     });
     const fields = [...SENTENCES.slice(0, 2), "  ", ...SENTENCES.slice(2)];
     const reply = await requestCorrection(
@@ -101,7 +113,12 @@ describe("requestCorrection", () => {
       {
         messages: [
           { role: "system" },
-          { content: JSON.stringify({ word: "电话", sentences: SENTENCES }) },
+          {
+            content: JSON.stringify({
+              word: "电话",
+              sentences: SENTENCES.map((text, at) => ({ index: at + 1, text })),
+            }),
+          },
         ],
       },
     ]);
@@ -115,34 +132,42 @@ describe("requestCorrection", () => {
       SENTENCES[4],
     ]);
     expect(corrections[3]).toMatchObject({
-      corrected: "我的电话很新。",
+      corrected: "我手机很新。",
       choice: null,
       provenance: {
         origin: "ai",
         provider: "local",
         model: "qwen3:30b-a3b",
-        promptVersion: "zh-correct-v1",
+        promptVersion: "zh-correct-v2",
       },
     });
+    expect(corrections[3]).not.toHaveProperty("index");
   });
 
-  it("refuses an answer whose sentences come back in another order", async () => {
-    // dots-3-note-preview on OpenRouter, 2026-10-20: sentence 3 first, then 1 and 2.
-    const { exchanges } = z
-      .object({ exchanges: z.array(z.object({ response: z.object({ body: z.unknown() }) })) })
-      .parse(JSON.parse(reordered));
-    vi.stubGlobal("fetch", () =>
-      Promise.resolve(new Response(JSON.stringify(exchanges.at(-1)?.response.body))),
+  it("matches answers by their index, in any order", async () => {
+    // dots-3-note-preview on OpenRouter, 2026-10-20, put the corrected sentence first (#206).
+    const withoutDate = async () => {
+      const reply = await correct();
+      if (!reply.ok) throw new Error(reply.error.kind);
+      return reply.value.corrections.map((item) =>
+        item === null ? null : { ...item, provenance: { ...item.provenance, createdAt: "" } },
+      );
+    };
+    answering((items) => items);
+    const inOrder = await withoutDate();
+    answering((items) => [...items].reverse());
+    expect(await withoutDate()).toEqual(inOrder);
+    expect(inOrder.map((item) => item?.original ?? null)).toEqual(SENTENCES);
+  });
+
+  it("refuses an answer whose index names another sentence", async () => {
+    answering((items) =>
+      items.map((item) => ({
+        ...item,
+        index: item.index === 1 ? 3 : item.index === 3 ? 1 : item.index,
+      })),
     );
-    const reply = await requestCorrection(
-      { ...LOCAL, model: "dots-studio/dots-3-note-preview:free" },
-      correction,
-      "电话",
-      SENTENCES,
-      "en",
-      new AbortController().signal,
-    );
-    expect(reply).toEqual({
+    expect(await correct()).toEqual({
       ok: false,
       error: { kind: "invalid-response", status: null, message: null },
     });

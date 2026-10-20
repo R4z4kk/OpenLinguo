@@ -9,9 +9,10 @@ Real answers, replayed without a key by the unit tests (`packages/core/src/testi
 | Provider | Model | Recorded | Covers |
 | --- | --- | --- | --- |
 | Groq | `openai/gpt-oss-20b` | 2026-10-19 | model list, structured answer, reasoning off, schema violation, wrong key, rate limit, unknown model; interests vocabulary and French gloss in the app |
-| Ollama 0.35.1 (local) | `qwen3:30b-a3b` | 2026-10-19 | model list, structured answer, reasoning off, schema violation, unknown model; connection test, challenge and journal corrections, card from a sentence in the app |
+| Ollama 0.35.1 (local) | `qwen3:30b-a3b` | 2026-10-19 | model list, structured answer, reasoning off, schema violation, unknown model |
+| Ollama 0.35.1 (local) | `qwen3:30b-a3b` | 2026-10-20 | with `zh-correct-v2` (#206): connection test, challenge and journal corrections, card from a sentence in the app |
 | OpenRouter | `nvidia/nemotron-3-super-120b-a12b:free` | 2026-10-19 | model list, structured answer, schema violation, wrong key, unknown model (a 400) |
-| OpenRouter | `dots-studio/dots-3-note-preview:free` | 2026-10-20 | model list filtered to structured answers, connection test; its challenge correction came back with the sentences out of order and is refused |
+| OpenRouter | `dots-studio/dots-3-note-preview:free` | 2026-10-20 | model list filtered to structured answers, connection test, challenge correction with the sentences out of order (3, 1, 2, 4, 5); recorded with `zh-correct-v1`, the E2E adds each answer's index (#206) |
 | Mistral | `mistral-small-latest` | 2026-10-19 | wrong key only: the API needs a paid plan |
 
 On 2026-10-20 the free endpoint of `nvidia/nemotron-3-super-120b-a12b:free` was down (OpenRouter's 30-minute uptime at 0, a 404 « Provider returned error »), so the app recordings of that day use another free model.

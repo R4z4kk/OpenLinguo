@@ -177,7 +177,12 @@ test("corrects an earlier entry, then today's, with the keyboard in the dark the
     model: MODEL,
     messages: [
       { role: "system" },
-      { content: JSON.stringify({ word: null, sentences: SENTENCES }) },
+      {
+        content: JSON.stringify({
+          word: null,
+          sentences: SENTENCES.map((text, at) => ({ index: at + 1, text })),
+        }),
+      },
     ],
   });
   await page.keyboard.press("Enter");

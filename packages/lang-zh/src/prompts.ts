@@ -28,6 +28,17 @@ const hanWord = z.string().refine((text) => /^\p{Script=Han}+$/u.test(text), "No
 const counted = <T extends z.ZodType>(item: T, count: number) =>
   z.array(item).refine((items) => items.length === count, `Expected ${String(count)} items`);
 
+/** Each index from 1 to the count once, in any order. */
+const indexed = <T extends z.ZodType<{ readonly index: number }>>(item: T, count: number) =>
+  counted(item, count).refine(
+    (items) =>
+      items
+        .map(({ index }) => index)
+        .sort((a, b) => a - b)
+        .every((index, at) => index === at + 1),
+    "Expected each index once",
+  );
+
 const lines = (...parts: readonly string[]): string => parts.join("\n");
 
 export type ZhPromptSources = {
@@ -38,7 +49,7 @@ export type ZhPromptSources = {
 
 export const createPrompts = ({ lookup, tokenize, proficiency }: ZhPromptSources): PromptPack => ({
   correction: {
-    id: "zh-correct-v1",
+    id: "zh-correct-v2",
     messages: ({ word, sentences, language }) => [
       {
         role: "system",
@@ -49,19 +60,27 @@ export const createPrompts = ({ lookup, tokenize, proficiency }: ZhPromptSources
           `For each change, "from" is the text replaced (empty for an insertion), "to" the new text (empty for a removal), and "explanation" says why in ${LANGUAGE_NAMES[language]}, in one short sentence a learner understands.`,
           `"reading" is the Hanyu Pinyin of the corrected sentence with tone marks: one syllable per Chinese character, separated by spaces, each with its dictionary tone, without tone sandhi.`,
           `"meaning" translates the corrected sentence into ${LANGUAGE_NAMES[language]}.`,
-          "Answer one item per sentence, in the same order.",
+          `The sentences are numbered from 1 to ${String(sentences.length)}. Answer exactly ${String(sentences.length)} items, one per sentence in that order, each with its sentence's index: a correct sentence too, unchanged. Never merge or split sentences.`,
           DATA_ONLY,
           JSON_ONLY,
         ),
       },
-      { role: "user", content: JSON.stringify({ word, sentences }) },
+      {
+        role: "user",
+        content: JSON.stringify({
+          word,
+          sentences: sentences.map((text, at) => ({ index: at + 1, text })),
+        }),
+      },
     ],
     schema: ({ sentences }) =>
       z.object({
-        sentences: counted(
+        sentences: indexed(
+          // The changes before the sentence they make: qwen3 then writes it with them applied.
           z.object({
-            corrected: filled,
+            index: z.number(),
             changes: z.array(z.object({ from: z.string(), to: z.string(), explanation: filled })),
+            corrected: filled,
             reading: filled,
             meaning: filled,
           }),

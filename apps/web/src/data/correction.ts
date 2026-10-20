@@ -88,7 +88,10 @@ export const requestCorrection = async (
   });
   if (!answer.ok) return answer;
   const filled = sentences.filter((original) => original.trim() !== "");
-  if (!inOrder(filled, answer.value.value.sentences)) {
+  const replies = filled.map(
+    (_, at) => answer.value.value.sentences.find(({ index }) => index === at + 1) ?? null,
+  );
+  if (!ownSentences(filled, replies)) {
     return err({ kind: "invalid-response", status: null, message: null });
   }
   const provenance: AiProvenance = {
@@ -98,13 +101,14 @@ export const requestCorrection = async (
     promptVersion: task.id,
     createdAt: new Date().toISOString(),
   };
-  const replies = [...answer.value.value.sentences];
   return ok({
     mode: answer.value.mode,
     corrections: sentences.map((original) => {
       if (original.trim() === "") return null;
       const reply = replies.shift() ?? null;
-      return reply === null ? null : { ...reply, original, choice: null, provenance };
+      if (reply === null) return null;
+      const { corrected, changes, reading, meaning } = reply;
+      return { original, corrected, changes, reading, meaning, choice: null, provenance };
     }),
   });
 };
@@ -162,14 +166,15 @@ const likeness = (a: string, b: string): number => {
   return total === 0 ? 1 : (2 * common) / total;
 };
 
-/** Answers are matched by position, so each must be closest to its own sentence. */
-const inOrder = (
+/** The index is the model's word: each answer must also be closest to the sentence it names. */
+const ownSentences = (
   originals: readonly string[],
-  answers: readonly { readonly corrected: string }[],
+  answers: readonly ({ readonly corrected: string } | null)[],
 ): boolean =>
-  answers.every(({ corrected }, index) => {
-    const own = likeness(originals[index] ?? "", corrected);
-    return originals.every((other, at) => at === index || likeness(other, corrected) <= own);
+  answers.every((answer, index) => {
+    if (answer === null) return false;
+    const own = likeness(originals[index] ?? "", answer.corrected);
+    return originals.every((other, at) => at === index || likeness(other, answer.corrected) <= own);
   });
 
 const HAN = /\p{Script=Han}/u;
