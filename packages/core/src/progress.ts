@@ -55,11 +55,19 @@ export type ProgressError =
 export const addDays = (day: string, count: number): string =>
   new Date(Date.parse(day) + count * DAY).toISOString().slice(0, 10);
 
-export type DayActivity = { readonly reviews: number; readonly goalMet: boolean };
+/**
+ * `words`: readings and notes done that day (ADR 0013), plus each review logged before words were
+ * counted, so past days keep the count their goal was met with.
+ */
+export type DayActivity = {
+  readonly reviews: number;
+  readonly words: number;
+  readonly goalMet: boolean;
+};
 
 /**
- * Reviews per learning day and distinct readings and notes, in any order. A day is met once its
- * count reaches the goal stamped on the review just made, so lowering the goal counts at the next
+ * Activity per learning day and distinct readings and notes, in any order. A day is met once its
+ * words reach the goal stamped on the review just made, so lowering the goal counts at the next
  * review and raising it never unmeets a day.
  */
 export const tally = (
@@ -70,17 +78,25 @@ export const tally = (
 > => {
   const ids = new Set<string>();
   const words = new Set<string>();
+  const done = new Set<string>();
   const days = new Map<string, DayActivity>();
   for (const review of [...reviews].sort(chronological)) {
     if (ids.has(review.id)) return err({ kind: "duplicate-review", reviewId: review.id });
     ids.add(review.id);
     const key = cardKey(review.cardId);
     if (key === null) return err({ kind: "invalid-card-id", reviewId: review.id });
-    words.add(JSON.stringify([key.language, subjectId(key)]));
+    const word = JSON.stringify([key.language, subjectId(key)]);
+    words.add(word);
     const day = learningDay(review.reviewedAt, review.utcOffsetMinutes);
-    const before = days.get(day) ?? { reviews: 0, goalMet: false };
-    const count = before.reviews + 1;
-    days.set(day, { reviews: count, goalMet: before.goalMet || count >= review.dailyGoal });
+    const before = days.get(day) ?? { reviews: 0, words: 0, goalMet: false };
+    const counted = review.wordDone === null || (review.wordDone && !done.has(`${day}${word}`));
+    if (review.wordDone === true) done.add(`${day}${word}`);
+    const count = before.words + (counted ? 1 : 0);
+    days.set(day, {
+      reviews: before.reviews + 1,
+      words: count,
+      goalMet: before.goalMet || count >= review.dailyGoal,
+    });
   }
   return ok({ days, words: words.size });
 };

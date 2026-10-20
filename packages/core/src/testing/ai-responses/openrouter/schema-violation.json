@@ -1,0 +1,101 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "openrouter",
+  "scenario": "schema-violation",
+  "model": "nvidia/nemotron-3-super-120b-a12b:free",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "nvidia/nemotron-3-super-120b-a12b:free",
+          "messages": [
+            {
+              "role": "system",
+              "content": "Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Name one colour in English."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "colour": {
+                    "type": "string"
+                  }
+                },
+                "required": ["colour"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "provider": {
+            "require_parameters": true
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "nvidia/nemotron-3-super-120b-a12b:free",
+          "provider": "Nvidia",
+          "service_tier": null,
+          "choices": [
+            {
+              "index": 0,
+              "logprobs": null,
+              "finish_reason": "stop",
+              "native_finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "{\"colour\": \"red\"}",
+                "refusal": null,
+                "reasoning": "Okay, the user is asking me to name one colour in English. This seems like a very simple request, probably testing if I can follow basic instructions. \n\nHmm, they might be a young child learning English, or someone verifying if the AI understands simple queries. Could also be a trick question to see if I overcomplicate things. \n\nI should keep it straightforward - no need for multiple options or explanations since they specifically asked for \"one colour\". Red is a safe, universal choice that's unambiguous in English. \n\n*checks mental list* Yeah, red works - it's a primary colour, commonly known, and the spelling is standard. No risk of confusion with other languages here. \n\nBetter just give the single word as requested. No fluff.",
+                "reasoning_details": [
+                  {
+                    "type": "reasoning.text",
+                    "text": "Okay, the user is asking me to name one colour in English. This seems like a very simple request, probably testing if I can follow basic instructions. \n\nHmm, they might be a young child learning English, or someone verifying if the AI understands simple queries. Could also be a trick question to see if I overcomplicate things. \n\nI should keep it straightforward - no need for multiple options or explanations since they specifically asked for \"one colour\". Red is a safe, universal choice that's unambiguous in English. \n\n*checks mental list* Yeah, red works - it's a primary colour, commonly known, and the spelling is standard. No risk of confusion with other languages here. \n\nBetter just give the single word as requested. No fluff.",
+                    "format": "unknown",
+                    "index": 0
+                  }
+                ]
+              }
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 26,
+            "completion_tokens": 169,
+            "total_tokens": 195,
+            "cost": 0,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0,
+              "upstream_inference_prompt_cost": 0,
+              "upstream_inference_completions_cost": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 160,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

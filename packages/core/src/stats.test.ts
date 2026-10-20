@@ -26,6 +26,7 @@ const review = (cardOf: string, grade: Grade, reviewedAt: number): Review => {
     utcOffsetMinutes: 0,
     scheduler: CURRENT_SCHEDULER,
     dailyGoal: 2,
+    wordDone: null,
   };
 };
 
@@ -75,12 +76,12 @@ describe("stats", () => {
     ]);
     expect(weeks).toHaveLength(HEATMAP_WEEKS);
     expect(weeks[0]?.start).toBe("2026-08-24");
-    expect(weeks[0]?.days[0]).toEqual({ day: "2026-08-24", reviews: 0, goalMet: false });
+    expect(weeks[0]?.days[0]).toEqual({ day: "2026-08-24", reviews: 0, words: 0, goalMet: false });
     expect(weeks.at(-1)).toEqual({
       start: "2026-11-09",
       days: [
-        { day: "2026-11-09", reviews: 2, goalMet: true },
-        { day: "2026-11-10", reviews: 2, goalMet: true },
+        { day: "2026-11-09", reviews: 2, words: 2, goalMet: true },
+        { day: "2026-11-10", reviews: 2, words: 2, goalMet: true },
         null,
         null,
         null,

@@ -272,6 +272,8 @@ const Running = ({
         <div ref={field} className="mt-1 self-stretch">
           <ImeField
             key={done}
+            label={t("ime.answer")}
+            readOnly={false}
             ime={ime}
             features={features}
             value={value}

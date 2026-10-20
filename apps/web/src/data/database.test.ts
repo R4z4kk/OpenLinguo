@@ -50,14 +50,16 @@ describe("openDatabase", () => {
     db.close();
   });
 
-  it("stamps reviews made before the daily goal with its fallback", async () => {
+  it("stamps reviews made before the daily goal with its fallback, before words with null", async () => {
     const legacy = new Dexie("goal-test");
     legacy.version(6).stores({ reviews: "id, cardId" });
     await legacy.table("reviews").add({ id: "r1", cardId: "c1" });
     legacy.close();
 
     const db = openDatabase("goal-test");
-    expect(await db.reviews.toArray()).toEqual([{ id: "r1", cardId: "c1", dailyGoal: 20 }]);
+    expect(await db.reviews.toArray()).toEqual([
+      { id: "r1", cardId: "c1", dailyGoal: 20, wordDone: null },
+    ]);
     db.close();
   });
 
@@ -77,6 +79,52 @@ describe("openDatabase", () => {
       f0Version: null,
       bands: ["hsk-2025:1"],
     });
+    db.close();
+  });
+
+  it("marks notes stored before M5 as not from an AI", async () => {
+    const legacy = new Dexie("note-provenance-test");
+    legacy.version(14).stores({ notes: "id" });
+    const note = { id: "n1", characters: "字", pinyin: "zì", meaning: "m", updatedAt: 0 };
+    await legacy.table("notes").add(note);
+    legacy.close();
+
+    const db = openDatabase("note-provenance-test");
+    expect(await db.notes.get("n1")).toEqual({ ...note, provenance: null });
+    expect(await db.aiNotice.count()).toBe(0);
+    db.close();
+  });
+
+  it("gives challenges saved before corrections none", async () => {
+    const legacy = new Dexie("challenge-corrections-test");
+    legacy.version(17).stores({ challenges: "day" });
+    const challenge = {
+      day: "2026-10-19",
+      headword: "电话",
+      readingKey: "dian4 hua4",
+      sentences: ["我打电话。", "", "", "", ""],
+      updatedAt: 0,
+    };
+    await legacy.table("challenges").add(challenge);
+    legacy.close();
+
+    const db = openDatabase("challenge-corrections-test");
+    expect(await db.challenges.get("2026-10-19")).toEqual({
+      ...challenge,
+      corrections: [null, null, null, null, null],
+    });
+    db.close();
+  });
+
+  it("shows the one AI notice to learners who saw a per-feature one", async () => {
+    const legacy = new Dexie("ai-notice-migration-test");
+    legacy.version(20).stores({ aiNotices: "feature" });
+    await legacy.table("aiNotices").add({ feature: "journal" });
+    legacy.close();
+
+    const db = openDatabase("ai-notice-migration-test");
+    expect(await db.aiNotice.count()).toBe(0);
+    expect(db.tables.map(({ name }) => name)).not.toContain("aiNotices");
     db.close();
   });
 });

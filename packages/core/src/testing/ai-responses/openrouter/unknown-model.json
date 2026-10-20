@@ -1,0 +1,63 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "openrouter",
+  "scenario": "unknown-model",
+  "model": "nvidia/nemotron-3-super-120b-a12b:free",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "openlinguo/no-such-model",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "word": {
+                    "type": "string"
+                  },
+                  "pinyin": {
+                    "type": "string"
+                  },
+                  "meaning": {
+                    "type": "string"
+                  }
+                },
+                "required": ["word", "pinyin", "meaning"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "provider": {
+            "require_parameters": true
+          }
+        }
+      },
+      "response": {
+        "status": 400,
+        "body": {
+          "error": {
+            "message": "openlinguo/no-such-model is not a valid model ID",
+            "code": 400
+          },
+          "user_id": "user_redacted"
+        }
+      }
+    }
+  ]
+}

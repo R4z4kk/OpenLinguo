@@ -113,8 +113,10 @@ test("completes a session of every card type with the keyboard only, writing and
     expect(await accessibilityViolations(page)).toEqual([]);
     await page.keyboard.press("Enter");
   };
+  // Good leaves a new card learning: its word is not done, and the total stays.
   await answerTone();
-  await expect(progress).toHaveAttribute("value", "2");
+  await expect(progress).toHaveAttribute("value", "1");
+  await expect(main).toContainText("1 of 5 words");
 
   const answerTyping = async () => {
     await expect(focused).toContainText(en.review.typing);
@@ -135,7 +137,7 @@ test("completes a session of every card type with the keyboard only, writing and
     await page.keyboard.press("Enter");
   };
   await answerTyping();
-  await expect(progress).toHaveAttribute("value", "3");
+  await expect(main).toContainText("1 of 5 words");
 
   await expect(focused).toContainText(en.review.recall);
   expect(await accessibilityViolations(page)).toEqual([]);
@@ -143,7 +145,7 @@ test("completes a session of every card type with the keyboard only, writing and
   await expect(focused).toContainText("xiè");
   expect(await accessibilityViolations(page)).toEqual([]);
   await page.keyboard.press("4");
-  await expect(progress).toHaveAttribute("value", "4");
+  await expect(progress).toHaveAttribute("value", "2");
 
   // The first band word, never reviewed.
   await expect(focused).toContainText(en.review.recognition);
@@ -152,13 +154,19 @@ test("completes a session of every card type with the keyboard only, writing and
   await expect(main.getByRole("button", { name: /^Easy/u })).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
   await page.keyboard.press("4");
-  await expect(progress).toHaveAttribute("value", "5");
+  await expect(progress).toHaveAttribute("value", "3");
 
-  // Good leaves a new card learning: tone and typing come back once.
+  // Tone and typing come back once, and Good then ends their learning: their words are done.
   await answerTone();
-  await expect(progress).toHaveAttribute("value", "6");
+  await expect(progress).toHaveAttribute("value", "4");
+  await expect(main).toContainText("4 of 5 words");
   await answerTyping();
-  await expect(focused).toContainText("Session finished: 7 reviews.");
+  // The band word was started today: its challenge comes last, and Skip ends the session.
+  await expect(focused).toContainText(en.challenge.title);
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await main.getByRole("button", { name: en.challenge.skip }).focus();
+  await page.keyboard.press("Enter");
+  await expect(focused).toContainText("Session finished: 5 words.");
   expect(await accessibilityViolations(page)).toEqual([]);
 
   for (const [word, type, grades] of [

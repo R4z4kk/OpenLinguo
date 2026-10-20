@@ -1,3 +1,17 @@
+export {
+  AI_BASE_URLS,
+  AI_PROVIDERS,
+  chat,
+  listModels,
+  type AiAnswer,
+  type AiChatRequest,
+  type AiEndpoint,
+  type AiError,
+  type AiErrorKind,
+  type AiProvider,
+  type StructuredMode,
+} from "./ai-client.ts";
+export { AiProvenance } from "./ai-provenance.ts";
 export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {
@@ -37,6 +51,7 @@ export {
   supportedModules,
   type ModuleDefinition,
   type PackWith,
+  type Requirement,
 } from "./module-registry.ts";
 export {
   ACHIEVEMENTS,
@@ -52,6 +67,21 @@ export {
   type Progress,
   type ProgressError,
 } from "./progress.ts";
+export type {
+  ChatMessage,
+  CorrectedSentence,
+  CorrectionAnswer,
+  CorrectionChange,
+  CorrectionInput,
+  GlossAnswer,
+  GlossInput,
+  PromptPack,
+  PromptTask,
+  ReadingCheckError,
+  ReadingMismatch,
+  VocabularyAnswer,
+  VocabularyInput,
+} from "./prompt-pack.ts";
 export {
   OTHER_CONFIDENCE,
   RIGHT_CONFIDENCE,

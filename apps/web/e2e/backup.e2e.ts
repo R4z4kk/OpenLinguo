@@ -78,7 +78,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await expect(page.locator(":focus")).toContainText("你好");
   await page.keyboard.press("Space");
   await expect(page.locator(":focus")).toContainText("hello; hi");
-  await page.keyboard.press("3");
+  await page.keyboard.press("4");
   await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
     "value",
     "1",
@@ -115,9 +115,16 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await expect(counts.first()).toHaveText("0");
 
   await page.getByRole("link", { name: en.nav.profile }).click();
-  const [chooser] = await Promise.all([page.waitForEvent("filechooser"), importButton.click()]);
+  // Keyboard: the Profile sections still loading above it would move a pointer click.
+  await importButton.focus();
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.keyboard.press("Enter"),
+  ]);
   await chooser.setFiles(file);
-  await expect(status).toHaveText(imported({ reviews: 1, cards: 2, decks: 0, words: 1, notes: 0 }));
+  await expect(status).toHaveText(
+    imported({ reviews: 1, cards: 2, decks: 0, words: 1, notes: 0, glosses: 0 }),
+  );
   await expect(dark).toBeChecked();
   await expect(noNewCards).toBeChecked();
   await expect(showProgress).not.toBeChecked();
@@ -129,7 +136,9 @@ test("exports, clears and imports back the same cards, counts and settings", asy
 
   const [again] = await Promise.all([page.waitForEvent("filechooser"), importButton.click()]);
   await again.setFiles(file);
-  await expect(status).toHaveText(imported({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }));
+  await expect(status).toHaveText(
+    imported({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0, glosses: 0 }),
+  );
 
   await page.getByRole("link", { name: en.nav.learn }).click();
   await expect(counts.first()).toHaveText("1");
@@ -140,9 +149,10 @@ test("exports, clears and imports back the same cards, counts and settings", asy
 test("lists the failing paths of an invalid backup", async ({ page }) => {
   const main = page.getByRole("main");
   await page.goto("/profile");
+  await main.getByRole("button", { name: en.backup.import }).focus();
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
-    main.getByRole("button", { name: en.backup.import }).click(),
+    page.keyboard.press("Enter"),
   ]);
   await chooser.setFiles({
     name: "backup.json",

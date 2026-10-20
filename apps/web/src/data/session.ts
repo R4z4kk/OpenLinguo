@@ -22,6 +22,7 @@ import {
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { wordAudioId, type AudioSource } from "./audio-packs.ts";
+import { withAiGlosses } from "./ai-glosses.ts";
 import { todayActivity } from "./daily-goal.ts";
 import type { Database, NoteContent } from "./database.ts";
 import { entryId, introduceWord, nextNewReadings, type LocalTime } from "./decks.ts";
@@ -101,12 +102,14 @@ export const audioFinder = async (
   };
 };
 
+/** `ahead`: tomorrow's session now (see `composeSession`). */
 export const loadSession = (
   db: Database,
   referential: ZhProficiency,
   now: LocalTime,
   newLimit: number,
   practice: Practice,
+  ahead: boolean,
 ): Promise<Result<Session, ReviewLogFailure>> =>
   guarded(async () => {
     const newReadings = await nextNewReadings(db, referential, newLimit);
@@ -166,12 +169,18 @@ export const loadSession = (
       newLimit,
       at: now.at,
       utcOffsetMinutes: now.utcOffsetMinutes,
+      ahead,
     });
     const states = new Map(cards.map((card) => [card.id, card]));
     const words = items.filter(isWord);
     const notes = items.filter((item) => "note" in item);
     const entries = new Map(
       (await db.entries.bulkGet(words.map(entryId))).flatMap((row) =>
+        row == null ? [] : [[row.id, row] as const],
+      ),
+    );
+    const aiGlosses = new Map(
+      (await db.aiGlosses.bulkGet(words.map(entryId))).flatMap((row) =>
         row == null ? [] : [[row.id, row] as const],
       ),
     );
@@ -199,7 +208,9 @@ export const loadSession = (
         return [{ ...item, ...shared, content: { characters, pinyin, meaning } }];
       }
       const row = entries.get(entryId(item));
-      return row == null ? [] : [{ ...item, ...shared, entry: toDictEntry(row, referential) }];
+      if (row == null) return [];
+      const entry = withAiGlosses(toDictEntry(row, referential), aiGlosses.get(row.id) ?? null);
+      return [{ ...item, ...shared, entry }];
     });
     return ok({
       items: joined,
@@ -208,30 +219,26 @@ export const loadSession = (
     });
   });
 
+/** Still due today: the item comes back, and its word is not done yet (ADR 0013). */
 const comesBack = (state: CardState, now: LocalTime): boolean =>
   state.phase !== "review" && dueToday(state.due, now.at, now.utcOffsetMinutes);
 
-/** The goal in effect, capped at the day's count by the grade that empties the session. */
+/** The goal in effect, capped at the day's words by the grade that empties the session. */
 const goalToStamp = async (
   db: Database,
-  item: ReviewItem,
-  grading: Grading,
   now: LocalTime,
   dailyGoal: number,
-  last: boolean,
+  emptied: boolean,
 ): Promise<Result<number, ReviewLogFailure | ProgressError>> => {
-  if (!last) return ok(dailyGoal);
-  const next = applyReview(item.state, grading);
-  if (!next.ok) return next;
-  if (comesBack(next.value, now)) return ok(dailyGoal);
+  if (!emptied) return ok(dailyGoal);
   const today = await todayActivity(db, now);
   if (!today.ok) return today;
-  return ok(Math.min(dailyGoal, today.value.reviews + 1));
+  return ok(Math.min(dailyGoal, today.value.words + 1));
 };
 
 /**
- * Records a grade, storing the cards of a band word first; the item comes back if still due today.
- * `last`: no other item is left in the session.
+ * Records a grade, storing the cards of a band word first; the item comes back if still due today,
+ * else its word is done. `last`: no other item is left in the session.
  */
 export const gradeItem = async (
   db: Database,
@@ -241,13 +248,16 @@ export const gradeItem = async (
   dailyGoal: number,
   last: boolean,
 ): Promise<Result<ReviewItem | null, ReviewLogFailure | ProgressError>> => {
-  const grading = {
+  const grading: Grading = {
     grade,
     reviewedAt: now.at,
     utcOffsetMinutes: now.utcOffsetMinutes,
     scheduler: CURRENT_SCHEDULER,
   };
-  const goal = await goalToStamp(db, item, grading, now, dailyGoal, last);
+  const next = applyReview(item.state, grading);
+  if (!next.ok) return next;
+  const wordDone = !comesBack(next.value, now);
+  const goal = await goalToStamp(db, now, dailyGoal, last && wordDone);
   if (!goal.ok) return goal;
   if (item.new) {
     const stored = await introduceWord(
@@ -262,6 +272,7 @@ export const gradeItem = async (
     id: crypto.randomUUID(),
     cardId: item.cardId,
     dailyGoal: goal.value,
+    wordDone,
   });
   if (!state.ok) return state;
   return ok(comesBack(state.value, now) ? { ...item, new: false, state: state.value } : null);

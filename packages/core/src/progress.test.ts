@@ -22,6 +22,7 @@ const review = (n: number, reviewedAt: number, fields: Partial<Review> = {}): Re
   utcOffsetMinutes: 0,
   scheduler: CURRENT_SCHEDULER,
   dailyGoal: 2,
+  wordDone: null,
   ...fields,
 });
 
@@ -117,6 +118,36 @@ describe("daily goal", () => {
       streak: 2,
       totals: { goalDays: 2 },
     });
+  });
+
+  test("a word counts once done, however many passes it took; XP stays per review", () => {
+    const passes = [
+      review(1, at(0), { wordDone: false }),
+      review(2, at(0, 10), { wordDone: true }),
+      review(3, at(0, 11), { cardId: card("人"), wordDone: false }),
+    ];
+    expect(run(passes, 0)).toMatchObject({ xp: 30, totals: { goalDays: 0 } });
+    const done = review(4, at(0, 21), { cardId: card("人"), wordDone: true });
+    expect(run([...passes, done], 0)).toMatchObject({ xp: 40, streak: 1, totals: { goalDays: 1 } });
+  });
+
+  test("a word done through two of its cards counts once a day", () => {
+    const twice = [
+      review(1, at(0), { wordDone: true }),
+      review(2, at(0, 1), { cardId: card("好", "recall"), wordDone: true }),
+    ];
+    expect(run(twice, 0).totals.goalDays).toBe(0);
+    expect(run([...twice, review(3, at(1), { wordDone: true })], 1).totals.goalDays).toBe(0);
+  });
+
+  test("reviews logged before words were counted keep counting one each", () => {
+    const wordDay = [
+      review(9, at(1), { wordDone: false }),
+      review(10, at(1, 10), { wordDone: true }),
+    ];
+    expect(run([...metOn(0), ...wordDay], 1)).toMatchObject({ streak: 1, totals: { goalDays: 1 } });
+    const mixed = [review(11, at(2)), review(12, at(2, 1), { cardId: card("人"), wordDone: true })];
+    expect(run([...metOn(0), ...wordDay, ...mixed], 2).totals.goalDays).toBe(2);
   });
 
   test("a learning day starts at 4:00 local time", () => {

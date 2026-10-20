@@ -1,3 +1,4 @@
+import { ok } from "@openlinguo/core";
 import { Download, Upload } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,6 +15,7 @@ import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY, saveSetting } from "@/da
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import { describeDeckFailure } from "@/data/decks";
+import { loadInterests, saveInterests } from "@/data/interests";
 import { PRACTICE_TYPING, PRACTICE_WRITING, WRITE_ON_PAPER } from "@/data/practice";
 import { SHOW_PROGRESS } from "@/data/progress";
 import { describeFailure } from "@/data/review-log";
@@ -89,17 +91,22 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
   const [busy, setBusy] = useState(false);
   const [outcome, setOutcome] = useState<Outcome | null>(null);
 
-  const settings = (): Settings => ({
-    language: languages.find((language) => language === i18n.language) ?? DEFAULT_LANGUAGE,
-    theme: parsePreference(document.documentElement.getAttribute("data-theme")),
-    referential,
-    dailyGoal: currentSetting(storage, DAILY_GOAL),
-    newCardsPerDay: currentSetting(storage, NEW_CARDS_PER_DAY),
-    showProgress: currentSetting(storage, SHOW_PROGRESS),
-    practiceTyping: currentSetting(storage, PRACTICE_TYPING),
-    practiceWriting: currentSetting(storage, PRACTICE_WRITING),
-    writeOnPaper: currentSetting(storage, WRITE_ON_PAPER),
-  });
+  const settings = (): Settings => {
+    // Unreadable interests are reported in their own section and left out.
+    const kept = loadInterests(storage);
+    return {
+      language: languages.find((language) => language === i18n.language) ?? DEFAULT_LANGUAGE,
+      theme: parsePreference(document.documentElement.getAttribute("data-theme")),
+      referential,
+      dailyGoal: currentSetting(storage, DAILY_GOAL),
+      newCardsPerDay: currentSetting(storage, NEW_CARDS_PER_DAY),
+      showProgress: currentSetting(storage, SHOW_PROGRESS),
+      practiceTyping: currentSetting(storage, PRACTICE_TYPING),
+      practiceWriting: currentSetting(storage, PRACTICE_WRITING),
+      writeOnPaper: currentSetting(storage, WRITE_ON_PAPER),
+      interests: kept.ok ? kept.value : null,
+    };
+  };
 
   const exportFile = async (): Promise<void> => {
     const now = new Date();
@@ -122,6 +129,7 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
     practiceTyping,
     practiceWriting,
     writeOnPaper,
+    interests,
   }: Settings): string | null => {
     void i18n.changeLanguage(language);
     applyPreference(document.documentElement, theme);
@@ -135,6 +143,7 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
       saveSetting(storage, PRACTICE_TYPING, practiceTyping),
       saveSetting(storage, PRACTICE_WRITING, practiceWriting),
       saveSetting(storage, WRITE_ON_PAPER, writeOnPaper),
+      interests === null ? ok(null) : saveInterests(storage, interests),
     ];
     return saved.flatMap((result) => (result.ok ? [] : [result.error]))[0] ?? null;
   };
@@ -196,6 +205,12 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
       <p role="status" className="mt-3 text-small">
         {outcome?.kind === "exported" && t("backup.exported")}
         {outcome?.kind === "imported" && t("backup.imported", outcome.summary)}
+        {outcome?.kind === "imported" &&
+          outcome.summary.challenges > 0 &&
+          ` ${t("challenge.imported", { count: outcome.summary.challenges })}`}
+        {outcome?.kind === "imported" &&
+          outcome.summary.journal > 0 &&
+          ` ${t("journal.imported", { count: outcome.summary.journal })}`}
       </p>
       {outcome?.kind === "imported" && outcome.unsaved !== null && (
         <p role="alert" className="mt-2 text-danger">

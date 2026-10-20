@@ -6,6 +6,7 @@
   "scripts": {
     "data": "node scripts/pack-data.ts",
     "gaps": "node scripts/gaps.ts",
+    "record:ai": "node scripts/record-ai.ts",
     "dev": "pnpm data && vite",
     "build": "pnpm data && vite build",
     "preview": "vite preview",

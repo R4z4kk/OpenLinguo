@@ -30,6 +30,22 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   "/learn/import": { url: "/learn/import", ready: title(en.ankiImport.title) },
   "/learn/pinyin": { url: "/learn/pinyin", ready: title(en.pinyinChart.title) },
   "/learn/typing": { url: "/learn/typing", ready: (page) => page.getByText(en.drill.empty) },
+  "/learn/journal": {
+    url: "/learn/journal",
+    ready: (page) => page.getByText(en.journal.sensitive),
+  },
+  "/learn/journal/$day": {
+    url: "/learn/journal/2026-10-19",
+    ready: (page) => page.getByText(en.journal.notFound),
+  },
+  "/learn/challenges": {
+    url: "/learn/challenges",
+    ready: (page) => page.getByText(en.challenge.empty),
+  },
+  "/learn/challenges/$day": {
+    url: "/learn/challenges/2026-10-19",
+    ready: (page) => page.getByText(en.challenge.notFound),
+  },
   "/learn/dictionary": {
     url: "/learn/dictionary?q=hao",
     ready: (page) => page.getByRole("link", { name: "好", exact: true }).first(),

@@ -5,6 +5,7 @@ import {
   type LanguagePack,
   type Result,
 } from "@openlinguo/core";
+import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { Link } from "@tanstack/react-router";
 import {
   Suspense,
@@ -18,6 +19,7 @@ import {
   type RefObject,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { ChallengeForm } from "@/components/challenge";
 import { GlossSummary } from "@/components/gloss-summary";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
@@ -26,6 +28,7 @@ import { TypingCard } from "@/components/typing-card";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { WritingCard } from "@/components/writing-card";
+import { loadTodayChallenge, type Challenge } from "@/data/challenge";
 import { currentSetting, DAILY_GOAL, NEW_CARDS_PER_DAY } from "@/data/daily-goal";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
@@ -137,19 +140,74 @@ const Ending = ({
   </div>
 );
 
+/** The session's last step when a word was started today; otherwise, or once done, `ending`. */
+const ChallengeStep = ({
+  challenge,
+  pack,
+  language,
+  focusTarget,
+  ending,
+  onDone,
+}: {
+  readonly challenge: Promise<Result<Challenge | null, ReviewLogFailure>>;
+  readonly pack: LanguagePack;
+  readonly language: Language;
+  readonly focusTarget: RefObject<HTMLDivElement | null>;
+  readonly ending: ReactNode;
+  readonly onDone: () => void;
+}) => {
+  const { t } = useTranslation();
+  const result = use(challenge);
+
+  useEffect(() => {
+    focusTarget.current?.focus();
+  }, [focusTarget]);
+
+  if (!result.ok)
+    return (
+      <>
+        <p role="alert" className="mt-6 text-danger">
+          {t("challenge.loadFailed", { reason: describeFailure(result.error) })}
+        </p>
+        {ending}
+      </>
+    );
+  if (result.value === null) return ending;
+  return (
+    <div className="mt-6">
+      <ChallengeForm
+        challenge={result.value}
+        pack={pack}
+        language={language}
+        eyebrow={t("challenge.step")}
+        level="h2"
+        focusTarget={focusTarget}
+        onDone={onDone}
+      />
+    </div>
+  );
+};
+
 /** One card at a time; Space and 1–4 work while focus is in the session (WCAG 2.1.4). */
 const Runner = ({
   initial,
   pack,
   language,
+  referential,
+  onAhead,
 }: {
   readonly initial: Session;
   readonly pack: LanguagePack;
   readonly language: Language;
+  readonly referential: ZhProficiency;
+  /** Starts tomorrow's session; `null` in that session. */
+  readonly onAhead: (() => void) | null;
 }) => {
   const { t, i18n } = useTranslation();
   const [queue, setQueue] = useState(initial.items);
   const [done, setDone] = useState(0);
+  /** Words whose card left the queue: next due on a later learning day (ADR 0013). */
+  const [words, setWords] = useState(0);
   const [revealedAt, setRevealedAt] = useState<LocalTime | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   /** A self-graded card's stored grade, while its answer is shown: what the queue takes at Continue. */
@@ -158,6 +216,13 @@ const Runner = ({
   const pending = useRef(false);
   const focusTarget = useRef<HTMLDivElement>(null);
   const current = queue[0] ?? null;
+  const ended = current === null;
+  const [challengeDone, setChallengeDone] = useState(false);
+  /** Read once the queue is empty: the word may have been started in this session. */
+  const challenge = useMemo(
+    () => (ended ? loadTodayChallenge(database, referential, localNow()) : null),
+    [ended, referential],
+  );
   /** A drawn card stays drawn once graded: the switch then applies to the next writing cards. */
   const paper = current?.type === "writing" && paperChecked && landed === null;
   /** Tone, typing and drawn writing cards grade themselves: no Space, 1–4 or grade buttons. */
@@ -168,7 +233,7 @@ const Runner = ({
 
   useEffect(() => {
     focusTarget.current?.focus();
-  }, [done, revealedAt]);
+  }, [done, revealedAt, challengeDone]);
 
   const outcomes = useMemo(
     () =>
@@ -202,6 +267,7 @@ const Runner = ({
   const advance = ({ again }: { readonly again: ReviewItem | null }): void => {
     setQueue(([, ...rest]) => (again === null ? rest : [...rest, again]));
     setDone((count) => count + 1);
+    if (again === null) setWords((count) => count + 1);
     setRevealedAt(null);
     setLanded(null);
   };
@@ -257,8 +323,16 @@ const Runner = ({
     </>
   );
 
-  if (current === null)
-    return (
+  if (current === null) {
+    const ahead = onAhead !== null && (
+      <>
+        <p className="text-muted">{t("review.aheadHint")}</p>
+        <Button variant="outline" onClick={onAhead}>
+          {t("review.ahead")}
+        </Button>
+      </>
+    );
+    const ending = (
       <>
         {skipped}
         <Ending focusTarget={focusTarget}>
@@ -273,27 +347,46 @@ const Runner = ({
               >
                 {t("dictionary.title")}
               </Link>
+              {ahead}
             </>
           ) : (
             <>
-              <p>{t("review.finished", { count: done })}</p>
+              <p>{t("review.finished", { count: words })}</p>
               <Link to="/" className={buttonVariants({ variant: "outline" })}>
                 {t("review.back")}
               </Link>
+              {ahead}
             </>
           )}
         </Ending>
       </>
     );
+    return challenge === null || challengeDone ? (
+      ending
+    ) : (
+      <Suspense fallback={null}>
+        <ChallengeStep
+          challenge={challenge}
+          pack={pack}
+          language={language}
+          focusTarget={focusTarget}
+          ending={ending}
+          onDone={() => {
+            setChallengeDone(true);
+          }}
+        />
+      </Suspense>
+    );
+  }
 
-  const total = done + queue.length;
+  const total = initial.items.length;
   return (
     // eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- Shortcuts bubble from the focusable card and buttons, so they only work in the session (WCAG 2.1.4).
     <div className="mt-6" onKeyDown={onKeyDown}>
       <div className="flex items-center gap-3">
-        <Progress aria-label={t("review.progress")} value={done} max={total} />
+        <Progress aria-label={t("review.progress")} value={words} max={total} />
         <span className="shrink-0 text-small text-muted tabular-nums">
-          {t("review.progressCount", { done, total })}
+          {t("review.progressCount", { done: words, count: total })}
         </span>
       </div>
       {skipped}
@@ -414,10 +507,14 @@ const Loaded = ({
   session,
   pack,
   language,
+  referential,
+  onAhead,
 }: {
   readonly session: Promise<Result<Session, ReviewLogFailure>>;
   readonly pack: LanguagePack;
   readonly language: Language;
+  readonly referential: ZhProficiency;
+  readonly onAhead: (() => void) | null;
 }) => {
   const { t } = useTranslation();
   const result = use(session);
@@ -427,7 +524,15 @@ const Loaded = ({
         {t("review.failed", { reason: describeFailure(result.error) })}
       </p>
     );
-  return <Runner initial={result.value} pack={pack} language={language} />;
+  return (
+    <Runner
+      initial={result.value}
+      pack={pack}
+      language={language}
+      referential={referential}
+      onAhead={onAhead}
+    />
+  );
 };
 
 /** The composed session: due cards, then new ones; nothing is stored until a card is graded. */
@@ -435,6 +540,7 @@ export const ReviewPage = () => {
   const { t, i18n } = useTranslation();
   const { state, referential } = useData();
   const pack = state.status === "ready" ? state.pack : null;
+  const [ahead, setAhead] = useState(false);
   const session = useMemo(
     () =>
       pack === null
@@ -448,8 +554,9 @@ export const ReviewPage = () => {
               writing: currentSetting(storage, PRACTICE_WRITING),
               typing: currentSetting(storage, PRACTICE_TYPING) && hasFeatures(pack, ["ime"]),
             },
+            ahead,
           ),
-    [referential, pack],
+    [referential, pack, ahead],
   );
   const language = languages.find((lang) => lang === i18n.language) ?? "en";
   if (pack === null || session === null) return null;
@@ -459,7 +566,20 @@ export const ReviewPage = () => {
         {t("review.title")}
       </h1>
       <Suspense fallback={null}>
-        <Loaded session={session} pack={pack} language={language} />
+        <Loaded
+          key={String(ahead)}
+          session={session}
+          pack={pack}
+          language={language}
+          referential={referential}
+          onAhead={
+            ahead
+              ? null
+              : () => {
+                  setAhead(true);
+                }
+          }
+        />
       </Suspense>
     </section>
   );

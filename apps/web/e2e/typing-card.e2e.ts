@@ -71,8 +71,9 @@ test("answers a typing card right and one wrong through the in-app IME, keyboard
   await expect(main.getByRole("button", { name: en.review.toneContinue })).toBeFocused();
   await expect(main.getByText(en.review.continueKeys)).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
+  // Good leaves the new card learning: it comes back, its word not done yet.
   await page.keyboard.press("Enter");
-  await expect(progress).toHaveAttribute("value", "1");
+  await expect(progress).toHaveAttribute("value", "0");
 
   // Wrong: arrows to a homophone, Enter commits it, Enter again checks.
   await expect(card).toContainText(en.review.typing);
@@ -99,6 +100,7 @@ test("answers a typing card right and one wrong through the in-app IME, keyboard
   await expect(main.getByRole("button", { name: en.review.toneContinue })).toBeFocused();
   expect(await accessibilityViolations(page)).toEqual([]);
   await page.keyboard.press("Enter");
-  await expect(progress).toHaveAttribute("value", "2");
+  await expect(result).toHaveCount(0);
+  await expect(progress).toHaveAttribute("value", "0");
   await expect(page.locator("html")).not.toHaveAttribute("data-played", "true");
 });

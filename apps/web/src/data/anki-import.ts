@@ -569,8 +569,8 @@ export const deviceOffset = (at: number): number => -new Date(at).getTimezoneOff
 
 /**
  * The answers as review log entries. Anki does not record the time zone of an answer: it is dated
- * with `utcOffset`, this device's. Each takes the current daily goal, so a past day is met when its
- * answers reached it.
+ * with `utcOffset`, this device's. Each takes the current daily goal and counts toward it on its
+ * own, so a past day is met when its answers reached it.
  */
 export const historyReviews = async (
   planned: readonly PlannedReview[],
@@ -589,6 +589,7 @@ export const historyReviews = async (
         utcOffsetMinutes: utcOffset(at),
         scheduler: CURRENT_SCHEDULER,
         dailyGoal,
+        wordDone: null,
       }));
     }),
   );
@@ -664,6 +665,7 @@ export const importPlan = async (
             pinyin,
             meaning,
             updatedAt,
+            provenance: null,
           })),
         );
         await db.audio.bulkAdd(audio);

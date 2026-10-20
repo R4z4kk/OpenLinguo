@@ -1,4 +1,5 @@
 import {
+  AiProvenance,
   Card,
   err,
   ok,
@@ -11,18 +12,24 @@ import {
 import { z } from "zod";
 import { languages } from "@/i18n/language";
 import { themePreferences } from "@/theme";
+import { CHALLENGE_SENTENCES, NO_CORRECTIONS } from "./challenge.ts";
+import { SentenceCorrection } from "./correction.ts";
 import { DAILY_GOAL, NEW_CARDS_PER_DAY } from "./daily-goal.ts";
 import { PRACTICE_TYPING, PRACTICE_WRITING, WRITE_ON_PAPER } from "./practice.ts";
 import {
   deckWordId,
   MY_WORDS,
   type Database,
+  type StoredAiGloss,
   type StoredCard,
+  type StoredChallenge,
   type StoredDeck,
   type StoredDeckWord,
+  type StoredJournalEntry,
   type StoredNote,
 } from "./database.ts";
-import { DECK_NAME_MAX, sameDeckName, type DeckFailure } from "./decks.ts";
+import { DECK_NAME_MAX, entryId, sameDeckName, type DeckFailure } from "./decks.ts";
+import { Interests } from "./interests.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
 import { referentials } from "./referential.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
@@ -41,6 +48,8 @@ export const Settings = z.object({
   practiceTyping: z.boolean().default(PRACTICE_TYPING.fallback),
   practiceWriting: z.boolean().default(PRACTICE_WRITING.fallback),
   writeOnPaper: z.boolean().default(WRITE_ON_PAPER.fallback),
+  /** `null`: none to restore, so an older backup leaves the device's own. */
+  interests: Interests.nullable().default(null),
 });
 export type Settings = z.output<typeof Settings>;
 
@@ -57,7 +66,10 @@ export const Backup = z
     settings: Settings,
     cards: z.array(Card),
     reviews: z.array(
-      Review.extend({ dailyGoal: Review.shape.dailyGoal.default(DAILY_GOAL.fallback) }),
+      Review.extend({
+        dailyGoal: Review.shape.dailyGoal.default(DAILY_GOAL.fallback),
+        wordDone: Review.shape.wordDone.default(null),
+      }),
     ),
     decks: z.array(z.object({ id: z.uuid(), name: z.string().trim().min(1).max(DECK_NAME_MAX) })),
     deckWords: z.array(
@@ -74,11 +86,55 @@ export const Backup = z
           pinyin: z.string(),
           meaning: z.string().min(1),
           updatedAt: z.number().int().nonnegative(),
+          // Backups made before M5 have no AI notes.
+          provenance: AiProvenance.nullable().default(null),
+        }),
+      )
+      .default([]),
+    // Backups made before M5 have no challenges.
+    challenges: z
+      .array(
+        z.object({
+          day: z.iso.date(),
+          headword: z.string().min(1),
+          readingKey: z.string().min(1),
+          sentences: z.array(z.string()).length(CHALLENGE_SENTENCES).readonly(),
+          corrections: z
+            .array(SentenceCorrection.nullable())
+            .length(CHALLENGE_SENTENCES)
+            .readonly()
+            .default(NO_CORRECTIONS),
+          updatedAt: z.number().int().nonnegative(),
+        }),
+      )
+      .default([]),
+    // Backups made before M5 have no AI glosses.
+    aiGlosses: z
+      .array(
+        z.object({
+          headword: z.string().min(1),
+          readingKey: z.string().min(1),
+          senses: z
+            .array(z.object({ english: z.string().min(1), french: z.string().min(1) }))
+            .min(1)
+            .readonly(),
+          provenance: AiProvenance,
+        }),
+      )
+      .default([]),
+    // Backups made before the journal have none.
+    journal: z
+      .array(
+        z.object({
+          day: z.iso.date(),
+          text: z.string(),
+          corrections: z.array(SentenceCorrection.nullable()).readonly(),
+          updatedAt: z.number().int().nonnegative(),
         }),
       )
       .default([]),
   })
-  .superRefine(({ reviews, decks, deckWords, notes }, context) => {
+  .superRefine(({ reviews, decks, deckWords, notes, challenges, aiGlosses, journal }, context) => {
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -98,6 +154,22 @@ export const Backup = z
     notes.forEach(({ id }, index) => {
       if (noteIds.has(id)) issue(["notes", index, "id"], "Duplicate note id");
       noteIds.add(id);
+    });
+    const days = new Set<string>();
+    challenges.forEach(({ day }, index) => {
+      if (days.has(day)) issue(["challenges", index, "day"], "Duplicate challenge day");
+      days.add(day);
+    });
+    const entryDays = new Set<string>();
+    journal.forEach(({ day }, index) => {
+      if (entryDays.has(day)) issue(["journal", index, "day"], "Duplicate journal day");
+      entryDays.add(day);
+    });
+    const glossIds = new Set<string>();
+    aiGlosses.forEach((gloss, index) => {
+      const id = entryId(gloss);
+      if (glossIds.has(id)) issue(["aiGlosses", index], "Duplicate AI gloss for this reading");
+      glossIds.add(id);
     });
     const deckIds = new Set([MY_WORDS, ...decks.map((deck) => deck.id)]);
     deckWords.forEach(({ deckId }, index) => {
@@ -137,35 +209,53 @@ export const parseBackup = (text: string): Result<Backup, BackupFailure> => {
       });
 };
 
+const learningTables = (db: Database) => [
+  db.cards,
+  db.reviews,
+  db.decks,
+  db.deckWords,
+  db.notes,
+  db.challenges,
+  db.aiGlosses,
+  db.journal,
+];
+
 export const exportBackup = (
   db: Database,
   settings: Settings,
   now: Date,
 ): Promise<Result<Backup, ReviewLogFailure>> =>
   guarded(() =>
-    db.transaction(
-      "r",
-      [db.cards, db.reviews, db.decks, db.deckWords, db.notes],
-      async (): Promise<Result<Backup, ReviewLogFailure>> =>
-        ok({
-          format: BACKUP_FORMAT,
-          version: BACKUP_VERSION,
-          exportedAt: now.toISOString(),
-          settings,
-          cards: (await db.cards.toArray()).map((card) => ({
-            ...subjectOf(card),
-            id: card.id,
-            language: card.language,
-            type: card.type,
-          })),
-          reviews: await db.reviews.toArray(),
-          decks: await db.decks.toArray(),
-          deckWords: (await db.deckWords.toArray()).map((word) => ({
-            ...subjectOf(word),
-            deckId: word.deckId,
-          })),
-          notes: await db.notes.toArray(),
-        }),
+    db.transaction("r", learningTables(db), async (): Promise<Result<Backup, ReviewLogFailure>> =>
+      ok({
+        format: BACKUP_FORMAT,
+        version: BACKUP_VERSION,
+        exportedAt: now.toISOString(),
+        settings,
+        cards: (await db.cards.toArray()).map((card) => ({
+          ...subjectOf(card),
+          id: card.id,
+          language: card.language,
+          type: card.type,
+        })),
+        reviews: await db.reviews.toArray(),
+        decks: await db.decks.toArray(),
+        deckWords: (await db.deckWords.toArray()).map((word) => ({
+          ...subjectOf(word),
+          deckId: word.deckId,
+        })),
+        notes: await db.notes.toArray(),
+        challenges: await db.challenges.toArray(),
+        aiGlosses: (await db.aiGlosses.toArray()).map(
+          ({ headword, readingKey, senses, provenance }) => ({
+            headword,
+            readingKey,
+            senses,
+            provenance,
+          }),
+        ),
+        journal: await db.journal.toArray(),
+      }),
     ),
   );
 
@@ -176,6 +266,9 @@ export type ImportSummary = {
   readonly decks: number;
   readonly words: number;
   readonly notes: number;
+  readonly challenges: number;
+  readonly glosses: number;
+  readonly journal: number;
 };
 
 const replayCards = (
@@ -195,7 +288,8 @@ const replayCards = (
 /**
  * Merges by ids, so importing twice changes nothing: the union of review logs, then every card
  * replayed. A local deck keeps its name and takes in an imported deck of the same id or name; a
- * note keeps its latest content. Nothing is written unless the whole merge succeeds.
+ * note, a day's challenge or a day's journal entry keeps its latest content. Nothing is written
+ * unless the whole merge succeeds.
  */
 export const importBackup = (
   db: Database,
@@ -204,7 +298,7 @@ export const importBackup = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.cards, db.reviews, db.decks, db.deckWords, db.notes],
+      learningTables(db),
       async (): Promise<Result<ImportSummary, DeckFailure>> => {
         const reviews = await db.reviews.toArray();
         const reviewIds = new Set(reviews.map((review) => review.id));
@@ -242,18 +336,45 @@ export const importBackup = (
         const newerNotes: StoredNote[] = backup.notes.filter(
           (note, index) => note.updatedAt > (localNotes[index]?.updatedAt ?? -1),
         );
+        const localChallenges = await db.challenges.bulkGet(
+          backup.challenges.map(({ day }) => day),
+        );
+        const newerChallenges: StoredChallenge[] = backup.challenges.filter(
+          (challenge, index) => challenge.updatedAt > (localChallenges[index]?.updatedAt ?? -1),
+        );
+
+        const localGlosses = await db.aiGlosses.bulkGet(backup.aiGlosses.map(entryId));
+        const newerGlosses: StoredAiGloss[] = backup.aiGlosses
+          .filter((gloss, index) => {
+            const local = localGlosses[index] ?? null;
+            return (
+              local === null ||
+              Date.parse(gloss.provenance.createdAt) > Date.parse(local.provenance.createdAt)
+            );
+          })
+          .map((gloss) => ({ ...gloss, id: entryId(gloss) }));
+        const localEntries = await db.journal.bulkGet(backup.journal.map(({ day }) => day));
+        const newerEntries: StoredJournalEntry[] = backup.journal.filter(
+          (entry, index) => entry.updatedAt > (localEntries[index]?.updatedAt ?? -1),
+        );
 
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
         await db.decks.bulkAdd(newDecks);
         await db.deckWords.bulkAdd(newWords);
         await db.notes.bulkPut(newerNotes);
+        await db.aiGlosses.bulkPut(newerGlosses);
+        await db.challenges.bulkPut(newerChallenges);
+        await db.journal.bulkPut(newerEntries);
         return ok({
           reviews: newReviews.length,
           cards: cards.size - localCards,
           decks: newDecks.length,
           words: newWords.length,
           notes: newerNotes.length,
+          challenges: newerChallenges.length,
+          glosses: newerGlosses.length,
+          journal: newerEntries.length,
         });
       },
     ),

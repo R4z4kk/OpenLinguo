@@ -1,0 +1,107 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "openrouter",
+  "scenario": "success",
+  "model": "nvidia/nemotron-3-super-120b-a12b:free",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "nvidia/nemotron-3-super-120b-a12b:free",
+          "messages": [
+            {
+              "role": "system",
+              "content": "You help a learner of Chinese. Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Give one common Chinese word for water, its pinyin and its meaning."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "word": {
+                    "type": "string"
+                  },
+                  "pinyin": {
+                    "type": "string"
+                  },
+                  "meaning": {
+                    "type": "string"
+                  }
+                },
+                "required": ["word", "pinyin", "meaning"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "provider": {
+            "require_parameters": true
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "nvidia/nemotron-3-super-120b-a12b:free",
+          "provider": "Nvidia",
+          "service_tier": null,
+          "choices": [
+            {
+              "index": 0,
+              "logprobs": null,
+              "finish_reason": "stop",
+              "native_finish_reason": "stop",
+              "message": {
+                "role": "assistant",
+                "content": "{\"word\": \"水\", \"pinyin\": \"shuǐ\", \"meaning\": \"water\"}",
+                "refusal": null,
+                "reasoning": "The user wants: \"Give one common Chinese word for water, its pinyin and its meaning.\" So answer in JSON. Likely format: {\"word\":\"水\",\"pinyin\":\"shuǐ\",\"meaning\":\"water\"} Need to ensure JSON is valid. Probably include characters, pinyin with tone marks, meaning. Provide just JSON object. No extra text.\n\nThus final answer.",
+                "reasoning_details": [
+                  {
+                    "type": "reasoning.text",
+                    "text": "The user wants: \"Give one common Chinese word for water, its pinyin and its meaning.\" So answer in JSON. Likely format: {\"word\":\"水\",\"pinyin\":\"shuǐ\",\"meaning\":\"water\"} Need to ensure JSON is valid. Probably include characters, pinyin with tone marks, meaning. Provide just JSON object. No extra text.\n\nThus final answer.",
+                    "format": "unknown",
+                    "index": 0
+                  }
+                ]
+              }
+            }
+          ],
+          "usage": {
+            "prompt_tokens": 42,
+            "completion_tokens": 102,
+            "total_tokens": 144,
+            "cost": 0,
+            "is_byok": false,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "cache_write_tokens": 0,
+              "audio_tokens": 0,
+              "video_tokens": 0
+            },
+            "cost_details": {
+              "upstream_inference_cost": 0,
+              "upstream_inference_prompt_cost": 0,
+              "upstream_inference_completions_cost": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 78,
+              "image_tokens": 0,
+              "audio_tokens": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}

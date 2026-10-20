@@ -515,6 +515,7 @@ describe("reviewId and historyReviews", () => {
         utcOffsetMinutes: 120,
         scheduler: CURRENT_SCHEDULER,
         dailyGoal: 50,
+        wordDone: null,
       },
       {
         cardId: "y",
@@ -523,6 +524,7 @@ describe("reviewId and historyReviews", () => {
         utcOffsetMinutes: 120,
         scheduler: CURRENT_SCHEDULER,
         dailyGoal: 50,
+        wordDone: null,
       },
     ]);
     const [x, y] = reviews;
@@ -678,6 +680,7 @@ describe("importPlan", () => {
     utcOffsetMinutes: 0,
     scheduler: CURRENT_SCHEDULER,
     dailyGoal: 20,
+    wordDone: null,
   });
 
   it("creates the deck with the cards and audio of its readings and notes", async () => {
@@ -699,6 +702,7 @@ describe("importPlan", () => {
       pinyin: "bù cún zài",
       meaning: "made up",
       updatedAt: expect.any(Number) as number,
+      provenance: null,
     });
     const audio = await audioRows();
     expect(audio.map(({ id, type }) => [id, type])).toEqual(

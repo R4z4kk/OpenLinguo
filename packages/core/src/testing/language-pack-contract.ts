@@ -7,6 +7,8 @@ export type ContractFixture = {
   readonly sampleText: string;
   /** The known term as typed through the pack's input method, `null` without the `ime` feature. */
   readonly typedTerm: string | null;
+  /** The known term's reading as an AI writes it, `null` without prompts. */
+  readonly readTerm: string | null;
 };
 
 export const describeLanguagePackContract = (
@@ -106,6 +108,71 @@ export const describeLanguagePackContract = (
           expect(entry.level).toBeLessThanOrEqual(levelCount);
         }
       }
+    });
+
+    it("has prompts exactly when the fixture reads the known term", () => {
+      expect(pack.prompts === null).toBe(fixture.readTerm === null);
+    });
+
+    it("gives each prompt its own versioned id, when the pack has prompts", () => {
+      const { prompts } = pack;
+      if (prompts === null) return;
+      const ids = [prompts.correction.id, prompts.vocabulary.id, prompts.glossTranslation.id];
+      expect(new Set(ids).size).toBe(ids.length);
+      for (const id of ids) {
+        expect(id.startsWith(`${pack.id}-`)).toBe(true);
+        expect(id).toMatch(/^[a-z-]+-v\d+$/u);
+      }
+    });
+
+    it("sends instructions as system and the learner's text as user, when the pack has prompts", () => {
+      const { prompts } = pack;
+      if (prompts === null) return;
+      const all = [
+        prompts.correction.messages({
+          word: fixture.knownTerm,
+          sentences: [fixture.sampleText],
+          language: "fr",
+        }),
+        prompts.vocabulary.messages({ themes: ["food"], note: "", level: 1, count: 5 }),
+        prompts.glossTranslation.messages({
+          headword: fixture.knownTerm,
+          reading: fixture.readTerm ?? "",
+          glosses: ["a sense"],
+        }),
+      ];
+      for (const messages of all) {
+        expect(messages.map(({ role }) => role)).toEqual(["system", "user"]);
+      }
+      expect(all[0]?.at(-1)?.content).toContain(fixture.sampleText);
+    });
+
+    it("rejects a correction with a sentence too many, when the pack has prompts", () => {
+      const { prompts } = pack;
+      if (prompts === null) return;
+      const schema = prompts.correction.schema({
+        word: null,
+        sentences: [fixture.sampleText],
+        language: "en",
+      });
+      const sentence = {
+        index: 1,
+        corrected: fixture.sampleText,
+        changes: [],
+        reading: fixture.readTerm,
+        meaning: "a meaning",
+      };
+      expect(schema.safeParse({ sentences: [sentence] }).success).toBe(true);
+      expect(schema.safeParse({ sentences: [sentence, sentence] }).success).toBe(false);
+    });
+
+    it("finds no mismatch in the known term's reading, when the pack has prompts", async () => {
+      const { prompts } = pack;
+      if (prompts === null || fixture.readTerm === null) return;
+      expect(await prompts.checkReading(fixture.knownTerm, fixture.readTerm)).toEqual({
+        ok: true,
+        value: [],
+      });
     });
   });
 };

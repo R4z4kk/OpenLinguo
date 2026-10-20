@@ -13,6 +13,7 @@ import {
   type Review,
 } from "@openlinguo/core";
 import { beforeEach, describe, expect, it } from "vitest";
+import { DEFAULT_AI_SETTINGS, saveAiSettings } from "./ai-settings.ts";
 import {
   BACKUP_FORMAT,
   BACKUP_VERSION,
@@ -43,6 +44,67 @@ const NOTE = {
   pinyin: "bù cún zài",
   meaning: "made up",
   updatedAt: start,
+  provenance: null,
+};
+const AI_NOTE = {
+  id: "corrected-1",
+  characters: "我的电话很新。",
+  pinyin: "Wǒ de diànhuà hěn xīn.",
+  meaning: "Mon téléphone est tout neuf.",
+  updatedAt: start,
+  provenance: {
+    origin: "ai",
+    provider: "groq",
+    model: "openai/gpt-oss-120b",
+    promptVersion: "zh-correct-v1",
+    createdAt: "2026-10-19T14:03:27.512Z",
+  },
+} as const;
+
+const CHALLENGE = {
+  day: "2026-10-21",
+  headword: "电话",
+  readingKey: "dian4 hua4",
+  sentences: ["我给妈妈打电话。", "", "请你电话我。", "", ""],
+  corrections: [null, null, null, null, null],
+  updatedAt: start,
+};
+const GLOSS = {
+  headword: "一路平安",
+  readingKey: "yi1 lu4 ping2 an1",
+  senses: [
+    { english: "to have a pleasant journey", french: "faire bon voyage" },
+    { english: "Bon voyage!", french: "Bon voyage !" },
+  ],
+  provenance: { ...AI_NOTE.provenance, promptVersion: "zh-gloss-fr-v1" },
+} as const;
+const GLOSS_ID = "一路平安\tyi1 lu4 ping2 an1";
+
+const CORRECTED = {
+  ...CHALLENGE,
+  day: "2026-10-23",
+  corrections: [
+    null,
+    null,
+    {
+      original: "请你电话我。",
+      corrected: "请你打电话给我。",
+      changes: [{ from: "请你电话我", to: "请你打电话给我", explanation: "电话 is a noun." }],
+      reading: "qǐng nǐ dǎ diàn huà gěi wǒ .",
+      meaning: "Please call me.",
+      choice: "accepted",
+      provenance: AI_NOTE.provenance,
+    },
+    null,
+    null,
+  ],
+} as const;
+
+const ENTRY = {
+  day: "2026-10-21",
+  text: "我给妈妈打电话。 请你电话我。",
+  corrections: [null, CORRECTED.corrections[2]],
+  updatedAt: start,
 };
 
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
@@ -55,6 +117,7 @@ const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Re
   utcOffsetMinutes: 120,
   scheduler: CURRENT_SCHEDULER,
   dailyGoal: 20,
+  wordDone: null,
 });
 
 const replayed = (id: string, log: readonly Review[]): CardState => {
@@ -73,6 +136,7 @@ const SETTINGS: Settings = {
   practiceTyping: false,
   practiceWriting: true,
   writeOnPaper: true,
+  interests: { themes: ["cooking", "nature"], note: "J’aime le thé." },
 };
 const ANIMALS = { id: uuid(100), name: "Animals" };
 
@@ -86,6 +150,9 @@ const backup = (data: Partial<Backup>): Backup => ({
   decks: [],
   deckWords: [],
   notes: [],
+  challenges: [],
+  aiGlosses: [],
+  journal: [],
   ...data,
 });
 
@@ -135,6 +202,59 @@ describe("exportBackup", () => {
 });
 
 describe("round trip", () => {
+  it("keeps the provenance of AI notes", async () => {
+    await db.notes.bulkAdd([NOTE, AI_NOTE]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ notes: 2 }));
+    expect(await restored.notes.toArray()).toEqual([NOTE, AI_NOTE]);
+  });
+
+  it("brings challenges back, the latest content of a day winning", async () => {
+    await db.challenges.bulkAdd([CHALLENGE, { ...CHALLENGE, day: "2026-10-22" }, CORRECTED]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    const newer = { ...CHALLENGE, sentences: ["我打电话。", "", "", "", ""], updatedAt: start + 1 };
+    await restored.challenges.add(newer);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ challenges: 2 }));
+    expect(await restored.challenges.toArray()).toEqual([
+      newer,
+      { ...CHALLENGE, day: "2026-10-22" },
+      CORRECTED,
+    ]);
+  });
+
+  it("brings journal entries back with their corrections, the latest content of a day winning", async () => {
+    await db.journal.bulkAdd([ENTRY, { ...ENTRY, day: "2026-10-22", corrections: [null, null] }]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    const newer = { ...ENTRY, day: "2026-10-22", text: "我打电话。", updatedAt: start + 1 };
+    await restored.journal.add(newer);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ journal: 1 }));
+    expect(await restored.journal.toArray()).toEqual([ENTRY, newer]);
+  });
+
+  it("keeps the AI glosses with their provenance", async () => {
+    await db.aiGlosses.add({ ...GLOSS, id: GLOSS_ID });
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    expect(exported.value.aiGlosses).toEqual([GLOSS]);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ glosses: 1 }));
+    expect(await restored.aiGlosses.toArray()).toEqual([{ ...GLOSS, id: GLOSS_ID }]);
+  });
+
   it("brings writing and typing cards back with their states", async () => {
     const writing = card("好", "hao3", "writing");
     const typing = card("好", "hao3", "typing");
@@ -156,7 +276,16 @@ describe("round trip", () => {
 
     const restored = openDatabase(`backup-test-${String(counter)}-restored`);
     expect(await importBackup(restored, parsed.value)).toEqual(
-      ok({ reviews: 3, cards: 2, decks: 0, words: 0, notes: 0 }),
+      ok({
+        reviews: 3,
+        cards: 2,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await restored.cards.toArray()).toEqual(
       states.toSorted((a, b) => (a.id < b.id ? -1 : 1)),
@@ -174,12 +303,24 @@ describe("parseBackup", () => {
     });
   });
 
+  it("leaves out the AI settings and key", async () => {
+    const key = { provider: "groq", value: "gsk_backup-test-key" } as const;
+    await saveAiSettings(db, { ...DEFAULT_AI_SETTINGS, provider: "groq", key });
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const text = JSON.stringify(exported.value);
+    expect(text).not.toContain(key.value);
+    expect(text).not.toContain("groq");
+  });
+
   it("gives settings and review goals missing from an older backup their fallback", () => {
     const older = { language: "fr", theme: "dark", referential: "gf0025-2021" };
     const unstamped = { ...review(1, RECALL.id, start, "good") };
     Reflect.deleteProperty(unstamped, "dailyGoal");
+    Reflect.deleteProperty(unstamped, "wordDone");
     const withoutNotes = { ...backup({}), settings: older, reviews: [unstamped] };
     Reflect.deleteProperty(withoutNotes, "notes");
+    Reflect.deleteProperty(withoutNotes, "challenges");
     expect(parseBackup(JSON.stringify(withoutNotes))).toEqual(
       ok(
         backup({
@@ -191,10 +332,66 @@ describe("parseBackup", () => {
             practiceTyping: true,
             practiceWriting: false,
             writeOnPaper: false,
+            interests: null,
           },
           reviews: [review(1, RECALL.id, start, "good")],
         }),
       ),
+    );
+  });
+
+  it("refuses interests the form could not have saved", () => {
+    const interests = { themes: ["politics"], note: "x".repeat(121) };
+    const parsed = parseBackup(
+      JSON.stringify({ ...backup({}), settings: { ...SETTINGS, interests } }),
+    );
+    expect(parsed.ok ? [] : parsed.error.kind === "invalid" ? parsed.error.issues : []).toEqual([
+      expect.objectContaining({ path: "settings.interests.themes.0" }),
+      expect.objectContaining({ path: "settings.interests.note" }),
+    ]);
+  });
+
+  it("reads notes of a backup made before M5 as written by the learner", () => {
+    const preM5 = { ...NOTE };
+    Reflect.deleteProperty(preM5, "provenance");
+    expect(parseBackup(JSON.stringify(backup({ notes: [preM5] })))).toEqual(
+      ok(backup({ notes: [NOTE] })),
+    );
+  });
+
+  it("refuses two challenges on one day, or a challenge without its five fields", () => {
+    expect(
+      parseBackup(JSON.stringify(backup({ challenges: [CHALLENGE, CHALLENGE] }))),
+    ).toMatchObject({ ok: false, error: { issues: [{ path: "challenges.1.day" }] } });
+    expect(
+      parseBackup(JSON.stringify(backup({ challenges: [{ ...CHALLENGE, sentences: ["好"] }] }))),
+    ).toMatchObject({ ok: false, error: { issues: [{ path: "challenges.0.sentences" }] } });
+  });
+
+  it("refuses two journal entries on one day", () => {
+    expect(parseBackup(JSON.stringify(backup({ journal: [ENTRY, ENTRY] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "journal.1.day" }] },
+    });
+  });
+
+  it("reads a backup made before the journal as having no entries", () => {
+    const before = backup({});
+    Reflect.deleteProperty(before, "journal");
+    expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
+  it("reads a backup made before M5 as having no AI glosses", () => {
+    const preM5 = backup({});
+    Reflect.deleteProperty(preM5, "aiGlosses");
+    expect(parseBackup(JSON.stringify(preM5))).toEqual(ok(backup({})));
+  });
+
+  it("reads challenges of a backup made before corrections as uncorrected", () => {
+    const before = { ...CHALLENGE };
+    Reflect.deleteProperty(before, "corrections");
+    expect(parseBackup(JSON.stringify(backup({ challenges: [before] })))).toEqual(
+      ok(backup({ challenges: [CHALLENGE] })),
     );
   });
 
@@ -222,6 +419,7 @@ describe("parseBackup", () => {
           decks: [ANIMALS, { id: uuid(101), name: " animals " }],
           deckWords: [{ deckId: uuid(102), headword: "猫", readingKey: "mao1" }],
           notes: [NOTE, NOTE],
+          aiGlosses: [GLOSS, GLOSS],
         }),
       ),
     );
@@ -233,6 +431,7 @@ describe("parseBackup", () => {
           { path: "reviews.1.id" },
           { path: "decks.1.name" },
           { path: "notes.1.id" },
+          { path: "aiGlosses.1" },
           { path: "deckWords.0.deckId" },
         ],
       },
@@ -251,7 +450,18 @@ describe("importBackup", () => {
 
     expect(
       await importBackup(db, backup({ cards: [RECALL], reviews: [local, lapse, recall, removed] })),
-    ).toEqual(ok({ reviews: 3, cards: 1, decks: 0, words: 0, notes: 0 }));
+    ).toEqual(
+      ok({
+        reviews: 3,
+        cards: 1,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
+    );
     expect(await db.cards.get(RECOGNITION.id)).toEqual({
       ...RECOGNITION,
       ...replayed(RECOGNITION.id, [local, lapse]),
@@ -271,10 +481,28 @@ describe("importBackup", () => {
       ],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 1, decks: 1, words: 2, notes: 0 }),
+      ok({
+        reviews: 0,
+        cards: 1,
+        decks: 1,
+        words: 2,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }),
+      ok({
+        reviews: 0,
+        cards: 0,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await db.decks.toArray()).toEqual([ANIMALS]);
     expect((await db.deckWords.toArray()).map((word) => word.id).toSorted()).toEqual(
@@ -295,7 +523,16 @@ describe("importBackup", () => {
       ],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 2, notes: 0 }),
+      ok({
+        reviews: 0,
+        cards: 0,
+        decks: 0,
+        words: 2,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await db.decks.toArray()).toEqual([
       { id: ANIMALS.id, name: "Zoo" },
@@ -318,10 +555,28 @@ describe("importBackup", () => {
       notes: [NOTE, { ...older, meaning: "imported" }, { ...NOTE, id: "new" }],
     });
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 1, decks: 0, words: 1, notes: 2 }),
+      ok({
+        reviews: 0,
+        cards: 1,
+        decks: 0,
+        words: 1,
+        notes: 2,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect(await importBackup(db, data)).toEqual(
-      ok({ reviews: 0, cards: 0, decks: 0, words: 0, notes: 0 }),
+      ok({
+        reviews: 0,
+        cards: 0,
+        decks: 0,
+        words: 0,
+        notes: 0,
+        challenges: 0,
+        glosses: 0,
+        journal: 0,
+      }),
     );
     expect((await db.notes.toArray()).map(({ id, meaning }) => [id, meaning])).toEqual([
       [NOTE.id, "local"],
@@ -333,6 +588,19 @@ describe("importBackup", () => {
       deckId: MY_WORDS,
       note: NOTE.id,
     });
+  });
+
+  it("keeps the latest translation of each word, the second time too", async () => {
+    const later = { ...GLOSS.provenance, createdAt: "2026-10-20T08:00:00.000Z" };
+    const other = { ...GLOSS, headword: "一路顺风", readingKey: "yi1 lu4 shun4 feng1" };
+    await db.aiGlosses.add({ ...GLOSS, id: GLOSS_ID, provenance: later });
+    const data = backup({ aiGlosses: [GLOSS, other] });
+    expect(await importBackup(db, data)).toMatchObject(ok({ glosses: 1 }));
+    expect(await importBackup(db, data)).toMatchObject(ok({ glosses: 0 }));
+    expect((await db.aiGlosses.toArray()).map(({ id, provenance }) => [id, provenance])).toEqual([
+      [GLOSS_ID, later],
+      ["一路顺风\tyi1 lu4 shun4 feng1", GLOSS.provenance],
+    ]);
   });
 
   it("writes nothing when the merged log cannot be replayed", async () => {

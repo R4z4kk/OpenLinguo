@@ -1,0 +1,80 @@
+{
+  "recordedAt": "2026-10-19",
+  "provider": "groq",
+  "scenario": "schema-violation",
+  "model": "openai/gpt-oss-20b",
+  "exchanges": [
+    {
+      "request": {
+        "method": "POST",
+        "path": "/chat/completions",
+        "body": {
+          "model": "openai/gpt-oss-20b",
+          "messages": [
+            {
+              "role": "system",
+              "content": "Answer in JSON."
+            },
+            {
+              "role": "user",
+              "content": "Name one colour in English."
+            }
+          ],
+          "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+              "name": "answer",
+              "strict": true,
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "colour": {
+                    "type": "string"
+                  }
+                },
+                "required": ["colour"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "object": "chat.completion",
+          "model": "openai/gpt-oss-20b",
+          "choices": [
+            {
+              "index": 0,
+              "message": {
+                "role": "assistant",
+                "content": "{\"colour\":\"red\"}",
+                "reasoning": "We need to respond in JSON, compact format, with \"colour\" field. The schema: type object, required [\"colour\"], property \"colour\" string. Output only final JSON object.\n\nWe need to choose a colour. e.g., \"red\". So output {\"colour\":\"red\"}. Ensure valid JSON, compact."
+              },
+              "logprobs": null,
+              "finish_reason": "stop"
+            }
+          ],
+          "usage": {
+            "queue_time": 0.692390556,
+            "prompt_tokens": 170,
+            "prompt_time": 0.010587167,
+            "completion_tokens": 83,
+            "completion_time": 0.112753474,
+            "total_tokens": 253,
+            "total_time": 0.123340641,
+            "completion_tokens_details": {
+              "reasoning_tokens": 66
+            }
+          },
+          "usage_breakdown": null,
+          "x_groq": {
+            "seed": 2045453093
+          },
+          "service_tier": "on_demand"
+        }
+      }
+    }
+  ]
+}

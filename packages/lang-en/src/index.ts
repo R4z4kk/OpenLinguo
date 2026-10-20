@@ -6,4 +6,5 @@ export const createEnPack = (lookup: DictionaryLookup): LanguagePack => ({
   tokenize: intlTokenizer("en"),
   lookup,
   features: { tones: null, strokes: null, romanization: null, decomposition: null, ime: null },
+  prompts: null,
 });

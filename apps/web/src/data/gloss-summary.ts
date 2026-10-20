@@ -1,6 +1,9 @@
 import type { Gloss, GlossLanguage } from "@openlinguo/core";
 import { fold } from "./search-keys.ts";
 
+/** The `source` of the French glosses an AI translated, merged into an entry's. */
+export const AI_GLOSS_SOURCE = "ai";
+
 export type GlossSummary = { readonly lang: GlossLanguage; readonly texts: readonly string[] };
 
 /**

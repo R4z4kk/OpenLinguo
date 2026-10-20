@@ -1,5 +1,15 @@
-import type { Card, CardState, Review, StrokeData, Subject, WordKey } from "@openlinguo/core";
+import type {
+  AiProvenance,
+  Card,
+  CardState,
+  Review,
+  StrokeData,
+  Subject,
+  WordKey,
+} from "@openlinguo/core";
 import { Dexie, type EntityTable, type Table } from "dexie";
+import type { AiSettings } from "./ai-settings.ts";
+import type { Corrections } from "./correction.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
@@ -71,6 +81,8 @@ export type StoredNote = NoteContent & {
   /** The note key: Anki's guid for an imported note. */
   readonly id: string;
   readonly updatedAt: number;
+  /** Set when the content came from an AI answer; kept through edits (docs/compliance/ai.md §4). */
+  readonly provenance: AiProvenance | null;
 };
 
 /** Audio a deck gives one of its readings or notes, removed with its filing in that deck. */
@@ -142,6 +154,42 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
+/** Present once the learner confirmed the AI notice; never in the backup. */
+export type StoredAiNotice = { readonly id: "seen" };
+
+/** French glosses an AI translated from an entry's English ones, each with its source. */
+export type StoredAiGloss = WordKey & {
+  /** `headword \t readingKey`, as in `wordAudio`. */
+  readonly id: string;
+  readonly senses: readonly { readonly english: string; readonly french: string }[];
+  readonly provenance: AiProvenance;
+};
+
+/** The AI provider settings: one row, never in the backup (ADR 0012). */
+export type StoredAiSettings = AiSettings & { readonly id: string };
+
+/** A learning day's 5-sentence challenge, kept on the device and in the backup (ADR 0012). */
+export type StoredChallenge = WordKey & {
+  /** The learning day, `YYYY-MM-DD`. */
+  readonly day: string;
+  /** As typed, empty ones included: one per field. */
+  readonly sentences: readonly string[];
+  /** One per field, kept while the field's text is the one corrected. */
+  readonly corrections: Corrections;
+  readonly updatedAt: number;
+};
+
+/** A learning day's journal entry, kept on the device and in the backup, never synced (ADR 0012). */
+export type StoredJournalEntry = {
+  /** The learning day, `YYYY-MM-DD`. */
+  readonly day: string;
+  /** As typed. */
+  readonly text: string;
+  /** One per sentence of the text, kept while the sentence is the one corrected. */
+  readonly corrections: Corrections;
+  readonly updatedAt: number;
+};
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -166,6 +214,11 @@ export type Database = Dexie & {
   wordAudio: EntityTable<StoredWordAudio, "id">;
   audioBands: EntityTable<StoredAudioBand, "id">;
   recordings: EntityTable<StoredRecording, "id">;
+  aiNotice: EntityTable<StoredAiNotice, "id">;
+  aiSettings: EntityTable<StoredAiSettings, "id">;
+  challenges: EntityTable<StoredChallenge, "day">;
+  aiGlosses: EntityTable<StoredAiGloss, "id">;
+  journal: EntityTable<StoredJournalEntry, "day">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -227,6 +280,41 @@ export const openDatabase = (name: string): Database => {
       }),
   );
   db.version(14).stores({ recordings: "id" });
+  // Notes stored before M5 were written by the learner or imported from Anki.
+  db.version(15)
+    .stores({ aiNotices: "feature" })
+    .upgrade((tx) =>
+      tx
+        .table<Omit<StoredNote, "provenance">, string>("notes")
+        .toCollection()
+        .modify((note) => {
+          Object.assign(note, { provenance: null });
+        }),
+    );
+  db.version(16).stores({ aiSettings: "id" });
+  db.version(17).stores({ challenges: "day" });
+  db.version(18).stores({ aiGlosses: "id" });
+  // Challenges saved before corrections have none.
+  db.version(19).upgrade((tx) =>
+    tx
+      .table<Omit<StoredChallenge, "corrections">, string>("challenges")
+      .toCollection()
+      .modify((challenge) => {
+        Object.assign(challenge, { corrections: challenge.sentences.map(() => null) });
+      }),
+  );
+  db.version(20).stores({ journal: "day" });
+  // One notice for every AI feature replaces the per-feature ones.
+  db.version(21).stores({ aiNotices: null, aiNotice: "id" });
+  // Reviews logged before words were counted count one each (ADR 0013).
+  db.version(22).upgrade((tx) =>
+    tx
+      .table<Omit<Review, "wordDone">, string>("reviews")
+      .toCollection()
+      .modify((review) => {
+        Object.assign(review, { wordDone: null });
+      }),
+  );
   return db;
 };
 

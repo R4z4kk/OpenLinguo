@@ -48,6 +48,8 @@ export type SessionInput = {
   readonly newLimit: number;
   readonly at: number;
   readonly utcOffsetMinutes: number;
+  /** Tomorrow's session now: cards due by the end of tomorrow, and tomorrow's new cards too. */
+  readonly ahead: boolean;
 };
 
 const byId = (a: { readonly id: string }, b: { readonly id: string }): number =>
@@ -93,12 +95,15 @@ export const composeSession = (input: SessionInput): readonly SessionItem[] => {
 
   const started = cards.filter((card) => card.phase !== "new");
   for (const card of started
-    .filter((card) => dueToday(card.due, input.at, input.utcOffsetMinutes))
+    .filter((card) => dueToday(card.due, input.at, input.utcOffsetMinutes, input.ahead))
     .sort((a, b) => (a.due ?? 0) - (b.due ?? 0) || byId(a, b))) {
     take(card, false);
   }
 
-  let budget = input.newLimit - cards.filter((card) => card.firstReviewDay === today).length;
+  // Started today, tomorrow's cards still count against tomorrow: it keeps its own quota.
+  let budget =
+    input.newLimit * (input.ahead ? 2 : 1) -
+    cards.filter((card) => card.firstReviewDay === today).length;
   const startedOn = new Map<string, string>();
   for (const card of started) {
     const day = startedOn.get(subjectId(card));

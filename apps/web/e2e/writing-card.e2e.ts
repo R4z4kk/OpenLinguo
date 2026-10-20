@@ -91,10 +91,12 @@ test("draws a writing card with the mouse: a stroke along its median is accepted
   await expect(main.getByRole("button", { name: en.review.toneContinue })).toBeFocused();
   expect(await accessibilityViolations(page)).toEqual([]);
 
+  // Again: the card comes back, its word not done yet.
   await page.keyboard.press("Enter");
+  await expect(main.getByRole("status")).toHaveCount(0);
   await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
     "value",
-    "1",
+    "0",
   );
 });
 
@@ -148,7 +150,7 @@ test("reviews a writing card on paper with the keyboard only, the choice kept", 
   await expect(strokeOrder).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
 
-  await page.keyboard.press("3");
+  await page.keyboard.press("4");
   await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
     "value",
     "1",

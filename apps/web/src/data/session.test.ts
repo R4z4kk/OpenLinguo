@@ -49,8 +49,8 @@ const idOf = (subject: Subject, type: CardType): string =>
 
 const NO_PRACTICE: Practice = { writing: false, typing: false };
 
-const session = async (now: LocalTime, practice = NO_PRACTICE) => {
-  const loaded = await loadSession(db, "hsk-2025", now, 20, practice);
+const session = async (now: LocalTime, practice = NO_PRACTICE, ahead = false) => {
+  const loaded = await loadSession(db, "hsk-2025", now, 20, practice, ahead);
   if (!loaded.ok) throw new Error(loaded.error.kind);
   return loaded.value;
 };
@@ -84,6 +84,31 @@ describe("loadSession", () => {
     expect(items[1]?.state.phase).toBe("new");
     expect(skipped).toBe(0);
     expect(await db.cards.count()).toBe(2);
+  });
+
+  it("adds a word's AI French glosses, marked by their source", async () => {
+    await db.aiGlosses.add({
+      id: "你\tni3",
+      ...NI,
+      senses: [{ english: "你 gloss", french: "toi" }],
+      provenance: {
+        origin: "ai",
+        provider: "local",
+        model: "qwen3:30b-a3b",
+        promptVersion: "zh-gloss-fr-v1",
+        createdAt: "2026-10-19T15:20:00.000Z",
+      },
+    });
+    const { items } = await session(NOON);
+    expect(items[0]).toMatchObject({
+      headword: "你",
+      entry: {
+        glosses: [
+          { lang: "en", text: "你 gloss", source: "cc-cedict" },
+          { lang: "fr", text: "toi", source: "ai" },
+        ],
+      },
+    });
   });
 
   it("gives the audio a deck holds for the reading", async () => {
@@ -125,7 +150,7 @@ describe("loadSession", () => {
       await db.deckWords.add({ ...subject, id: deckWordId(MY_WORDS, subject), deckId: MY_WORDS });
     await putCards(db, [note, lost]);
     const content = { characters: "不存在", pinyin: "bù cún zài", meaning: "made up" };
-    await db.notes.add({ ...content, id: note.note, updatedAt: 0 });
+    await db.notes.add({ ...content, id: note.note, updatedAt: 0, provenance: null });
     const audio = deckWordId(MY_WORDS, note);
     await db.audio.add({ id: audio, type: "audio/mpeg", data: new ArrayBuffer(4) });
 
@@ -321,14 +346,18 @@ describe("gradeItem", () => {
     expect(await stampedGoals()).toEqual([50, 20]);
   });
 
-  it("caps the stamped goal at the day's count once the grade empties the session", async () => {
+  it("counts the word once done, and caps the goal at the day's words once the session is empty", async () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
     const again = await gradeItem(db, first, "good", NOON, 20, true);
     if (!again.ok || again.value === null) throw new Error("not requeued");
     expect(await gradeItem(db, again.value, "good", later(10), 20, true)).toEqual(ok(null));
-    expect(await stampedGoals()).toEqual([20, 2]);
-    expect(await todayActivity(db, later(10))).toEqual(ok({ reviews: 2, goalMet: true }));
+    expect(await stampedGoals()).toEqual([20, 1]);
+    expect((await db.reviews.toArray()).map(({ wordDone }) => wordDone).sort()).toEqual([
+      false,
+      true,
+    ]);
+    expect(await todayActivity(db, later(10))).toEqual(ok({ reviews: 2, words: 1, goalMet: true }));
   });
 
   it("keeps the word's other card for another day", async () => {
