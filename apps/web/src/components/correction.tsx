@@ -113,9 +113,13 @@ export const useCorrection = ({
 
   useEffect(() => {
     const target = focusNext.current;
-    focusNext.current = null;
     if (target === null) return;
-    ({ correct: correctButton, cancel: cancelButton, retry: retryButton })[target].current?.focus();
+    const button = { correct: correctButton, cancel: cancelButton, retry: retryButton }[target]
+      .current;
+    // An earlier phase's effect may run late, once the answer is in: its button comes next.
+    if (button === null) return;
+    focusNext.current = null;
+    button.focus();
   }, [phase]);
 
   if (source === null) return { running: false, controls: null, warning: null };

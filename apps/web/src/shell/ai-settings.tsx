@@ -195,9 +195,10 @@ const AiSettingsForm = ({
       reopened.current = false;
       group.current?.querySelector<HTMLInputElement>("input:checked")?.focus();
     }
-    if (focusModel.current) {
+    // The effect of the render before the list may run late: the select is still disabled then.
+    if (focusModel.current && modelSelect.current?.disabled === false) {
       focusModel.current = false;
-      modelSelect.current?.focus();
+      modelSelect.current.focus();
     }
   });
 
