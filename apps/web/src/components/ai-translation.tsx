@@ -88,6 +88,8 @@ export const useAiTranslation = ({
   }, [word]);
 
   useEffect(() => {
+    // An earlier render's effect may run late, before the heading is drawn: it waits for it.
+    if (focus.current === "heading" && headingRef.current === null) return;
     if (focus.current === "heading") headingRef.current?.focus();
     if (focus.current === "button") (buttonRef.current ?? container.current)?.focus();
     focus.current = null;
