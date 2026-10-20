@@ -11,7 +11,7 @@ test("reads a syllable from its final and initial, on a phone, by keyboard", asy
     timeout: 90_000,
   });
   await expect(page.getByRole("heading", { level: 1, name: en.pinyinChart.title })).toBeVisible();
-  const sections = [
+  const sections: readonly string[] = [
     en.pinyinChart.syllables,
     en.pinyinChart.initials,
     en.pinyinChart.finals,
