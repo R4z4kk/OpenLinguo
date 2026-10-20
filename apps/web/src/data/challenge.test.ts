@@ -48,7 +48,14 @@ beforeEach(async () => {
 
 /** Grades the session's first card for `word` Good at `now`. */
 const start = async (word: WordKey, now: LocalTime) => {
-  const session = await loadSession(db, "hsk-2025", now, 20, { writing: false, typing: false });
+  const session = await loadSession(
+    db,
+    "hsk-2025",
+    now,
+    20,
+    { writing: false, typing: false },
+    false,
+  );
   if (!session.ok) throw new Error(session.error.kind);
   const item = session.value.items.find(
     (candidate) => "headword" in candidate && candidate.headword === word.headword,

@@ -78,7 +78,7 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await expect(page.locator(":focus")).toContainText("你好");
   await page.keyboard.press("Space");
   await expect(page.locator(":focus")).toContainText("hello; hi");
-  await page.keyboard.press("3");
+  await page.keyboard.press("4");
   await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
     "value",
     "1",

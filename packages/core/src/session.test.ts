@@ -58,6 +58,7 @@ const compose = (input: Partial<SessionInput>) =>
     newLimit: 20,
     at: NOON,
     utcOffsetMinutes: OFFSET,
+    ahead: false,
     ...input,
   }).map(({ cardId, new: isNew }) => [cardId, isNew] as const);
 
@@ -135,6 +136,27 @@ describe("composeSession", () => {
       }),
     ).toEqual([[idOf(TIAN, "recognition"), true]]);
     expect(compose({ newReadings: [TIAN], newLimit: 0 })).toEqual([]);
+  });
+
+  test("tomorrow's session now: due by the end of tomorrow, one more day of new cards", () => {
+    const cards = [
+      card(HAO, "recognition", review(NOON + 3 * DAY, TODAY)),
+      // Seen today through its other card: it waits for tomorrow all the same.
+      card(HAO, "recall", review(NOON + DAY)),
+      card(NI, "recognition", review(NOON + DAY)),
+      card(SHUI, "recognition", review(NOON + 2 * DAY)),
+    ];
+    const input = { cards, newReadings: [TIAN, HUO], newLimit: 1 };
+    expect(compose(input)).toEqual([]);
+    expect(compose({ ...input, ahead: true })).toEqual([
+      [idOf(NI, "recognition"), false],
+      [idOf(TIAN, "recognition"), true],
+    ]);
+    // Once tomorrow's new card is started today, a second session ahead brings no more.
+    const started = [...cards, card(TIAN, "recognition", review(NOON + 3 * DAY, TODAY))];
+    expect(compose({ ...input, cards: started, ahead: true })).toEqual([
+      [idOf(NI, "recognition"), false],
+    ]);
   });
 
   test("a started word with audio gets its tone card among the waiting cards, before new words", () => {

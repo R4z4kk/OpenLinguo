@@ -5,6 +5,7 @@ import { err, ok, type Result } from "./result.ts";
 
 const MINUTE = 60_000;
 const ROLLOVER = 4 * 60 * MINUTE;
+const DAY = 24 * 60 * MINUTE;
 
 /** Milliseconds since the Unix epoch (UTC), within the `Date` range. */
 const Epoch = z.number().int().min(0).max(8_640_000_000_000_000);
@@ -117,7 +118,8 @@ export const cardKey = (id: string): CardKey | null => {
  * An append-only review log entry. `utcOffsetMinutes` is local time minus UTC (Paris summer: 120).
  * `dailyGoal` is the goal in effect when reviewing, so the streak derives from the log alone; the
  * review that empties the day's session caps it at the day's count, so a day with nothing left
- * to review is met.
+ * to review is met. `wordDone`: the card is next due on a later learning day, so its word counts
+ * toward the goal (ADR 0013); `null` before words were counted, when each review counted.
  */
 export const Review = z.object({
   id: z.uuid(),
@@ -131,6 +133,7 @@ export const Review = z.object({
     .max(14 * 60),
   scheduler: z.enum(SCHEDULER_VERSIONS),
   dailyGoal: z.number().int().min(1),
+  wordDone: z.boolean().nullable(),
 });
 export type Review = z.output<typeof Review>;
 
@@ -170,9 +173,15 @@ const learningClock = (at: number, utcOffsetMinutes: number): number =>
 export const learningDay = (at: number, utcOffsetMinutes: number): string =>
   new Date(learningClock(at, utcOffsetMinutes)).toISOString().slice(0, 10);
 
-/** Whether a started card is due before the next rollover. */
-export const dueToday = (due: number | null, at: number, utcOffsetMinutes: number): boolean =>
-  due !== null && learningDay(due, utcOffsetMinutes) <= learningDay(at, utcOffsetMinutes);
+/** Whether a started card is due before the next rollover, or the one after with `ahead`. */
+export const dueToday = (
+  due: number | null,
+  at: number,
+  utcOffsetMinutes: number,
+  ahead = false,
+): boolean =>
+  due !== null &&
+  learningDay(due, utcOffsetMinutes) <= learningDay(at + (ahead ? DAY : 0), utcOffsetMinutes);
 
 /** What `applyReview` reads of a review, so a grade can be previewed without storing it. */
 export type Grading = Pick<Review, "grade" | "reviewedAt" | "utcOffsetMinutes" | "scheduler">;

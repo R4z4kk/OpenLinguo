@@ -306,6 +306,15 @@ export const openDatabase = (name: string): Database => {
   db.version(20).stores({ journal: "day" });
   // One notice for every AI feature replaces the per-feature ones.
   db.version(21).stores({ aiNotices: null, aiNotice: "id" });
+  // Reviews logged before words were counted count one each (ADR 0013).
+  db.version(22).upgrade((tx) =>
+    tx
+      .table<Omit<Review, "wordDone">, string>("reviews")
+      .toCollection()
+      .modify((review) => {
+        Object.assign(review, { wordDone: null });
+      }),
+  );
   return db;
 };
 

@@ -29,7 +29,7 @@ const Goal = ({
         {t("today.failed", { reason: describeFailure(result.error) })}
       </p>
     );
-  const { reviews: done, goalMet } = result.value;
+  const { words: done, goalMet } = result.value;
   return (
     <div className="mt-6">
       <div className="flex items-center gap-3">

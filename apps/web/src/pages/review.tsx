@@ -194,15 +194,20 @@ const Runner = ({
   pack,
   language,
   referential,
+  onAhead,
 }: {
   readonly initial: Session;
   readonly pack: LanguagePack;
   readonly language: Language;
   readonly referential: ZhProficiency;
+  /** Starts tomorrow's session; `null` in that session. */
+  readonly onAhead: (() => void) | null;
 }) => {
   const { t, i18n } = useTranslation();
   const [queue, setQueue] = useState(initial.items);
   const [done, setDone] = useState(0);
+  /** Words whose card left the queue: next due on a later learning day (ADR 0013). */
+  const [words, setWords] = useState(0);
   const [revealedAt, setRevealedAt] = useState<LocalTime | null>(null);
   const [failure, setFailure] = useState<string | null>(null);
   /** A self-graded card's stored grade, while its answer is shown: what the queue takes at Continue. */
@@ -262,6 +267,7 @@ const Runner = ({
   const advance = ({ again }: { readonly again: ReviewItem | null }): void => {
     setQueue(([, ...rest]) => (again === null ? rest : [...rest, again]));
     setDone((count) => count + 1);
+    if (again === null) setWords((count) => count + 1);
     setRevealedAt(null);
     setLanded(null);
   };
@@ -318,6 +324,14 @@ const Runner = ({
   );
 
   if (current === null) {
+    const ahead = onAhead !== null && (
+      <>
+        <p className="text-muted">{t("review.aheadHint")}</p>
+        <Button variant="outline" onClick={onAhead}>
+          {t("review.ahead")}
+        </Button>
+      </>
+    );
     const ending = (
       <>
         {skipped}
@@ -333,13 +347,15 @@ const Runner = ({
               >
                 {t("dictionary.title")}
               </Link>
+              {ahead}
             </>
           ) : (
             <>
-              <p>{t("review.finished", { count: done })}</p>
+              <p>{t("review.finished", { count: words })}</p>
               <Link to="/" className={buttonVariants({ variant: "outline" })}>
                 {t("review.back")}
               </Link>
+              {ahead}
             </>
           )}
         </Ending>
@@ -363,14 +379,14 @@ const Runner = ({
     );
   }
 
-  const total = done + queue.length;
+  const total = initial.items.length;
   return (
     // eslint-disable-next-line jsx-a11y-x/no-static-element-interactions -- Shortcuts bubble from the focusable card and buttons, so they only work in the session (WCAG 2.1.4).
     <div className="mt-6" onKeyDown={onKeyDown}>
       <div className="flex items-center gap-3">
-        <Progress aria-label={t("review.progress")} value={done} max={total} />
+        <Progress aria-label={t("review.progress")} value={words} max={total} />
         <span className="shrink-0 text-small text-muted tabular-nums">
-          {t("review.progressCount", { done, total })}
+          {t("review.progressCount", { done: words, count: total })}
         </span>
       </div>
       {skipped}
@@ -492,11 +508,13 @@ const Loaded = ({
   pack,
   language,
   referential,
+  onAhead,
 }: {
   readonly session: Promise<Result<Session, ReviewLogFailure>>;
   readonly pack: LanguagePack;
   readonly language: Language;
   readonly referential: ZhProficiency;
+  readonly onAhead: (() => void) | null;
 }) => {
   const { t } = useTranslation();
   const result = use(session);
@@ -507,7 +525,13 @@ const Loaded = ({
       </p>
     );
   return (
-    <Runner initial={result.value} pack={pack} language={language} referential={referential} />
+    <Runner
+      initial={result.value}
+      pack={pack}
+      language={language}
+      referential={referential}
+      onAhead={onAhead}
+    />
   );
 };
 
@@ -516,6 +540,7 @@ export const ReviewPage = () => {
   const { t, i18n } = useTranslation();
   const { state, referential } = useData();
   const pack = state.status === "ready" ? state.pack : null;
+  const [ahead, setAhead] = useState(false);
   const session = useMemo(
     () =>
       pack === null
@@ -529,8 +554,9 @@ export const ReviewPage = () => {
               writing: currentSetting(storage, PRACTICE_WRITING),
               typing: currentSetting(storage, PRACTICE_TYPING) && hasFeatures(pack, ["ime"]),
             },
+            ahead,
           ),
-    [referential, pack],
+    [referential, pack, ahead],
   );
   const language = languages.find((lang) => lang === i18n.language) ?? "en";
   if (pack === null || session === null) return null;
@@ -540,7 +566,20 @@ export const ReviewPage = () => {
         {t("review.title")}
       </h1>
       <Suspense fallback={null}>
-        <Loaded session={session} pack={pack} language={language} referential={referential} />
+        <Loaded
+          key={String(ahead)}
+          session={session}
+          pack={pack}
+          language={language}
+          referential={referential}
+          onAhead={
+            ahead
+              ? null
+              : () => {
+                  setAhead(true);
+                }
+          }
+        />
       </Suspense>
     </section>
   );

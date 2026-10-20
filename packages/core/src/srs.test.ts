@@ -31,6 +31,7 @@ const review = (n: number, reviewedAt: number, grade: Grade, utcOffsetMinutes = 
   utcOffsetMinutes,
   scheduler: CURRENT_SCHEDULER,
   dailyGoal: 20,
+  wordDone: null,
 });
 
 const start = Date.UTC(2026, 9, 21, 6);
