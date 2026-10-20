@@ -115,7 +115,12 @@ test("exports, clears and imports back the same cards, counts and settings", asy
   await expect(counts.first()).toHaveText("0");
 
   await page.getByRole("link", { name: en.nav.profile }).click();
-  const [chooser] = await Promise.all([page.waitForEvent("filechooser"), importButton.click()]);
+  // Keyboard: the Profile sections still loading above it would move a pointer click.
+  await importButton.focus();
+  const [chooser] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    page.keyboard.press("Enter"),
+  ]);
   await chooser.setFiles(file);
   await expect(status).toHaveText(
     imported({ reviews: 1, cards: 2, decks: 0, words: 1, notes: 0, glosses: 0 }),
@@ -144,9 +149,10 @@ test("exports, clears and imports back the same cards, counts and settings", asy
 test("lists the failing paths of an invalid backup", async ({ page }) => {
   const main = page.getByRole("main");
   await page.goto("/profile");
+  await main.getByRole("button", { name: en.backup.import }).focus();
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
-    main.getByRole("button", { name: en.backup.import }).click(),
+    page.keyboard.press("Enter"),
   ]);
   await chooser.setFiles({
     name: "backup.json",
