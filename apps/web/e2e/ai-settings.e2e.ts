@@ -145,3 +145,29 @@ test("connects to a local server: the how-to, a refused origin, then the test se
   await expect(section.getByText(en.ai.howTo)).toBeVisible();
   await expect(section.getByText(en.ai.howToStart)).toBeHidden();
 });
+
+test("changes the provider with the mouse", async ({ page }) => {
+  const main = page.getByRole("main");
+  const section = page.getByRole("region", { name: en.ai.title });
+  const groq = en.ai.providers.groq;
+  const openrouter = en.ai.providers.openrouter;
+  await page.goto("/profile");
+  await expect(section.getByRole("radio")).toHaveCount(4, { timeout: 90_000 });
+  // The sections above stop moving the page once filled.
+  await expect(main.getByText(en.progress.longestStreak)).toBeVisible();
+  await expect(main.getByText(en.stats.words)).toBeVisible();
+
+  await section.getByText(groq.name, { exact: true }).click();
+  await section.getByLabel(en.ai.key).fill(KEY);
+  await section.getByRole("button", { name: en.ai.changeLabel }).click();
+  await expect(section.getByRole("radio", { name: groq.name })).toBeFocused();
+  await section.getByText(openrouter.name, { exact: true }).click();
+  await expect(section.getByRole("note", { name: openrouter.about })).toBeVisible();
+  await expect(section.getByRole("radio")).toHaveCount(0);
+  await expect(section.getByLabel(en.ai.key)).toHaveValue("");
+
+  await section.getByRole("button", { name: en.ai.changeLabel }).click();
+  await section.getByText(groq.name, { exact: true }).click();
+  await expect(section.getByRole("note", { name: groq.about })).toBeVisible();
+  await expect(section.getByLabel(en.ai.key)).toHaveValue(KEY);
+});
