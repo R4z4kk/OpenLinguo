@@ -66,7 +66,10 @@ export const Backup = z
     settings: Settings,
     cards: z.array(Card),
     reviews: z.array(
-      Review.extend({ dailyGoal: Review.shape.dailyGoal.default(DAILY_GOAL.fallback) }),
+      Review.extend({
+        dailyGoal: Review.shape.dailyGoal.default(DAILY_GOAL.fallback),
+        wordDone: Review.shape.wordDone.default(null),
+      }),
     ),
     decks: z.array(z.object({ id: z.uuid(), name: z.string().trim().min(1).max(DECK_NAME_MAX) })),
     deckWords: z.array(

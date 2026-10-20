@@ -82,7 +82,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 
 ## Screen patterns
 
-- **Review**: progress bar, one card, grading buttons À revoir / Difficile / Bien / Facile with next intervals; "Bien" is the single filled button.
+- **Review**: progress bar in words, « X sur N mots », N fixed when a card comes back (ADR 0013), one card, grading buttons À revoir / Difficile / Bien / Facile with next intervals; "Bien" is the single filled button.
 - **Card types**: recognition, recall (French → Chinese), listening, tone choice (four buttons with diacritic, color and tone number), writing (draw the strokes on the 米 grid, or write on paper, reveal the stroke order and self-grade), typing (in-app pinyin IME with a candidate list).
 - **Word page**: pinyin, audio, FR and EN glosses, decomposition as a nested list (word → characters → components), stroke count and stroke order.
 - **Pronunciation studio**: reference (dashed) and user (solid) pitch curves, per-syllable text result, sandhi hint, on-device processing notice, "Je ne peux pas parler maintenant".

@@ -86,7 +86,9 @@ export const stats = (
       start,
       days: Array.from({ length: 7 }, (_, weekday) => {
         const day = addDays(start, weekday);
-        return day > today ? null : { day, ...(days.get(day) ?? { reviews: 0, goalMet: false }) };
+        return day > today
+          ? null
+          : { day, ...(days.get(day) ?? { reviews: 0, words: 0, goalMet: false }) };
       }),
     };
   });

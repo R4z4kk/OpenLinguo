@@ -44,12 +44,13 @@ test("answers a tone card from the keyboard, accepting the tone spoken after san
   await expect(main.getByRole("button", { name: en.review.toneContinue })).toBeFocused();
   expect(await accessibilityViolations(page)).toEqual([]);
 
+  // Good leaves the new card learning: it comes back, its word not done yet.
   await page.keyboard.press("Enter");
+  await expect(main.getByRole("status")).toHaveCount(0);
   await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
     "value",
-    "1",
+    "0",
   );
-  await expect(main.getByRole("status")).toHaveCount(0);
 });
 
 test("grades a wrong tone again and shows the answer as text", async ({ page }) => {

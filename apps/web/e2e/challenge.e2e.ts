@@ -86,7 +86,7 @@ test("writes the challenge with the app's pinyin and the device keyboard, then f
   await expect(main.getByRole("button", { name: en.challenge.save })).toBeFocused();
   expect(await accessibilityViolations(page)).toEqual([]);
   await page.keyboard.press("Enter");
-  await expect(focused).toContainText("Session finished: 5 reviews.");
+  await expect(focused).toContainText("Session finished: 5 words.");
 
   const [stored] = z.array(z.unknown()).parse(await storedChallenges(page));
   expect(stored).toMatchObject({ sentences: ["电话？", "我没有电话。", "", "", ""] });

@@ -50,14 +50,16 @@ describe("openDatabase", () => {
     db.close();
   });
 
-  it("stamps reviews made before the daily goal with its fallback", async () => {
+  it("stamps reviews made before the daily goal with its fallback, before words with null", async () => {
     const legacy = new Dexie("goal-test");
     legacy.version(6).stores({ reviews: "id, cardId" });
     await legacy.table("reviews").add({ id: "r1", cardId: "c1" });
     legacy.close();
 
     const db = openDatabase("goal-test");
-    expect(await db.reviews.toArray()).toEqual([{ id: "r1", cardId: "c1", dailyGoal: 20 }]);
+    expect(await db.reviews.toArray()).toEqual([
+      { id: "r1", cardId: "c1", dailyGoal: 20, wordDone: null },
+    ]);
     db.close();
   });
 

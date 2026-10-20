@@ -117,6 +117,7 @@ const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Re
   utcOffsetMinutes: 120,
   scheduler: CURRENT_SCHEDULER,
   dailyGoal: 20,
+  wordDone: null,
 });
 
 const replayed = (id: string, log: readonly Review[]): CardState => {
@@ -316,6 +317,7 @@ describe("parseBackup", () => {
     const older = { language: "fr", theme: "dark", referential: "gf0025-2021" };
     const unstamped = { ...review(1, RECALL.id, start, "good") };
     Reflect.deleteProperty(unstamped, "dailyGoal");
+    Reflect.deleteProperty(unstamped, "wordDone");
     const withoutNotes = { ...backup({}), settings: older, reviews: [unstamped] };
     Reflect.deleteProperty(withoutNotes, "notes");
     Reflect.deleteProperty(withoutNotes, "challenges");

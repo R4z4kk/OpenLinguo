@@ -46,7 +46,8 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(main.getByRole("button", { name: `${en.review.grades.good} 10 min` })).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
 
-  await page.keyboard.press("3");
+  // Easy ends the new card's learning: its word is done for the day.
+  await page.keyboard.press("4");
   await expect(progress).toHaveAttribute("value", "1");
   await expect(focused).toContainText(en.review.recognition);
   await expect(focused).not.toContainText("你好");
@@ -106,9 +107,7 @@ test("reviews my word first from the keyboard, then a band word", async ({ page 
   await expect(main).not.toContainText(en.today.goalMet);
 });
 
-test("hides streak, XP and achievements, and counts the reviews made meanwhile", async ({
-  page,
-}) => {
+test("hides streak, XP and achievements, and counts the words done meanwhile", async ({ page }) => {
   const main = page.getByRole("main");
   const show = main.getByRole("checkbox", { name: en.progress.show });
   const progressTitle = main.getByRole("heading", { level: 2, name: en.progress.title });
@@ -134,7 +133,7 @@ test("hides streak, XP and achievements, and counts the reviews made meanwhile",
   await expect(page.locator(":focus")).toContainText("你好");
   await page.keyboard.press("Space");
   await expect(page.locator(":focus")).toContainText("hello; hi");
-  await page.keyboard.press("3");
+  await page.keyboard.press("4");
   await expect(main.getByRole("progressbar", { name: en.review.progress })).toHaveAttribute(
     "value",
     "1",
@@ -151,4 +150,60 @@ test("hides streak, XP and achievements, and counts the reviews made meanwhile",
   );
   await page.getByRole("link", { name: en.nav.today }).click();
   await expect(xp).toBeVisible();
+});
+
+test("counts words: a card that comes back keeps the total, then tomorrow's session starts now", async ({
+  page,
+}) => {
+  const main = page.getByRole("main");
+  const focused = page.locator(":focus");
+  const progress = main.getByRole("progressbar", { name: en.review.progress });
+  const words = (done: number) => fill(en.review.progressCount_other, { done, count: 5 });
+  const grade = async (key: string) => {
+    await expect(main.getByRole("button", { name: en.review.showAnswer })).toBeVisible();
+    await page.keyboard.press("Space");
+    await expect(main.getByRole("button", { name: /^Good/u })).toBeVisible();
+    await page.keyboard.press(key);
+  };
+  // Far from the 4:00 rollover, a new card graded Good is due again the same day.
+  const noon = new Date();
+  noon.setHours(12, 0, 0, 0);
+  await page.clock.setFixedTime(noon);
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem("openlinguo.newCardsPerDay", "5");
+  });
+
+  await page.goto("/review");
+  await expect(focused).toContainText(en.review.recognition, { timeout: 90_000 });
+  await expect(main).toContainText(words(0));
+  for (let pass = 0; pass < 5; pass += 1) await grade("3");
+  // Each card comes back once: no word is done yet, and the total stays.
+  await expect(main.getByRole("button", { name: en.review.showAnswer })).toBeVisible();
+  await expect(main).toContainText(words(0));
+  await expect(progress).toHaveAttribute("value", "0");
+  for (let pass = 1; pass <= 4; pass += 1) {
+    await grade("3");
+    await expect(progress).toHaveAttribute("value", String(pass));
+  }
+  await grade("3");
+  await expect(focused).toContainText(en.challenge.title);
+  await main.getByRole("button", { name: en.challenge.skip }).focus();
+  await page.keyboard.press("Enter");
+  await expect(focused).toContainText("Session finished: 5 words.");
+  await expect(main).toContainText(en.review.aheadHint);
+  expect(await accessibilityViolations(page)).toEqual([]);
+
+  // Tomorrow's 5 new words now; today's words wait for tomorrow.
+  await main.getByRole("button", { name: en.review.ahead }).click();
+  await expect(focused).toContainText(en.review.recognition);
+  await expect(main).toContainText(words(0));
+  await grade("4");
+  await expect(progress).toHaveAttribute("value", "1");
+
+  await page.getByRole("link", { name: en.nav.today }).click();
+  await expect(main).toContainText(goalCount(6, 20));
+  await expect(
+    main.getByText(fill(en.progress.xpCount, { xp: 110 }), { exact: true }),
+  ).toBeVisible();
 });

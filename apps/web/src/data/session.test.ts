@@ -49,8 +49,8 @@ const idOf = (subject: Subject, type: CardType): string =>
 
 const NO_PRACTICE: Practice = { writing: false, typing: false };
 
-const session = async (now: LocalTime, practice = NO_PRACTICE) => {
-  const loaded = await loadSession(db, "hsk-2025", now, 20, practice);
+const session = async (now: LocalTime, practice = NO_PRACTICE, ahead = false) => {
+  const loaded = await loadSession(db, "hsk-2025", now, 20, practice, ahead);
   if (!loaded.ok) throw new Error(loaded.error.kind);
   return loaded.value;
 };
@@ -346,14 +346,18 @@ describe("gradeItem", () => {
     expect(await stampedGoals()).toEqual([50, 20]);
   });
 
-  it("caps the stamped goal at the day's count once the grade empties the session", async () => {
+  it("counts the word once done, and caps the goal at the day's words once the session is empty", async () => {
     const [first] = (await session(NOON)).items;
     if (first == null) throw new Error("empty session");
     const again = await gradeItem(db, first, "good", NOON, 20, true);
     if (!again.ok || again.value === null) throw new Error("not requeued");
     expect(await gradeItem(db, again.value, "good", later(10), 20, true)).toEqual(ok(null));
-    expect(await stampedGoals()).toEqual([20, 2]);
-    expect(await todayActivity(db, later(10))).toEqual(ok({ reviews: 2, goalMet: true }));
+    expect(await stampedGoals()).toEqual([20, 1]);
+    expect((await db.reviews.toArray()).map(({ wordDone }) => wordDone).sort()).toEqual([
+      false,
+      true,
+    ]);
+    expect(await todayActivity(db, later(10))).toEqual(ok({ reviews: 2, words: 1, goalMet: true }));
   });
 
   it("keeps the word's other card for another day", async () => {
