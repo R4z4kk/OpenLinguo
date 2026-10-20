@@ -11,6 +11,14 @@ test("reads a syllable from its final and initial, on a phone, by keyboard", asy
     timeout: 90_000,
   });
   await expect(page.getByRole("heading", { level: 1, name: en.pinyinChart.title })).toBeVisible();
+  const sections = [
+    en.pinyinChart.syllables,
+    en.pinyinChart.initials,
+    en.pinyinChart.finals,
+    en.pinyinChart.rules,
+  ];
+  const headings = await page.getByRole("heading", { level: 2 }).allInnerTexts();
+  expect(headings.filter((heading) => sections.includes(heading))).toEqual(sections);
 
   const grid = page.getByRole("region", { name: en.pinyinChart.syllables });
   const initials = (await grid.getByRole("columnheader").allInnerTexts()).map(
@@ -42,7 +50,7 @@ test("reads a syllable from its final and initial, on a phone, by keyboard", asy
   expect(await accessibilityViolations(page)).toEqual([]);
 });
 
-test("plays the chart's syllables in a chosen tone, and each initial said alone", async ({
+test("plays the chart's syllables in a chosen tone, and each initial and final said alone", async ({
   page,
   browserName,
 }) => {
@@ -90,7 +98,7 @@ test("plays the chart's syllables in a chosen tone, and each initial said alone"
   await expect(page.getByText("No recording of ēi.", { exact: true })).toBeVisible();
   await expect(root).toHaveAttribute("data-played", "6");
 
-  const initials = page.getByRole("table").first();
+  const initials = page.getByRole("region", { name: en.pinyinChart.initials });
   await initials.getByRole("button", { name: "bō", exact: true }).click();
   await expect(page.getByText("Playing bō", { exact: true })).toBeVisible();
   await expect(initials.getByRole("button", { name: "tè", exact: true })).toBeVisible();
@@ -100,6 +108,17 @@ test("plays the chart's syllables in a chosen tone, and each initial said alone"
       .filter({ has: page.getByRole("rowheader", { name: "f" }) })
       .getByRole("button"),
   ).toHaveCount(0);
+
+  // A final said alone plays its zero-initial spelling; -i and ong never stand alone.
+  const finals = page.getByRole("region", { name: en.pinyinChart.finals });
+  const finalRow = (name: string) =>
+    finals.getByRole("row").filter({ has: page.getByRole("rowheader", { name, exact: true }) });
+  await finalRow("i").getByRole("button", { name: "yī", exact: true }).click();
+  await expect(page.getByText("Playing yī", { exact: true })).toBeVisible();
+  await expect(finalRow("uo").getByRole("button")).toHaveText("wō");
+  for (const name of ["-i", "ong", "ei"]) {
+    await expect(finalRow(name).getByRole("button")).toHaveCount(0);
+  }
   expect(await accessibilityViolations(page)).toEqual([]);
 
   await sound.getByRole("button", { name: en.audio.delete }).click();

@@ -318,7 +318,8 @@ export const en = {
       approximant: "approximant",
     },
     finals: "Finals",
-    finalsIntro: "The rest of the syllable, after the initial.",
+    finalsIntro:
+      "The rest of the syllable, after the initial. Alone, a final is written with y or w: yi, wu, yu, ya.",
     group: "Group {{letter}}",
     final: "Final",
     kind: "Kind",
