@@ -196,7 +196,8 @@ export const useAiTranslation = ({
             aria-describedby={sentId}
             aria-disabled={busy}
             onClick={() => {
-              if (!busy) notice.ask(call, () => void translate(current, word, input, task));
+              if (!busy)
+                notice.ask(call.provider, () => void translate(current, word, input, task));
             }}
           >
             {busy && (

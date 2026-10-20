@@ -65,6 +65,11 @@ test("suggests dictionary words from the interests and files the ticked ones fir
   await page.keyboard.press("Tab");
   await ai.getByLabel(en.ai.key).fill(KEY);
   await ai.getByRole("button", { name: en.ai.test }).click();
+  // The one AI notice shows before this first call, and warns about the interests field too.
+  const notice = page.getByRole("dialog", { name: en.aiNotice.title });
+  await expect(notice).toContainText(en.aiNotice.sensitive);
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await notice.getByRole("button", { name: en.aiNotice.confirm }).click();
   await ai.getByLabel(en.ai.model).selectOption(MODEL);
   const suggest = interests.getByRole("button", { name: en.interests.suggest });
   await expect(suggest).toBeVisible();
@@ -83,10 +88,6 @@ test("suggests dictionary words from the interests and files the ticked ones fir
   expect(await accessibilityViolations(page)).toEqual([]);
 
   await suggest.click();
-  const notice = page.getByRole("dialog", { name: en.aiNotice.features.interests.title });
-  await expect(notice).toContainText(en.aiNotice.sensitive);
-  expect(await accessibilityViolations(page)).toEqual([]);
-  await notice.getByRole("button", { name: en.aiNotice.features.interests.confirm }).click();
 
   const words = interests.getByRole("group", { name: en.interests.words }).getByRole("checkbox");
   await expect(words).toHaveCount(KEPT.length);

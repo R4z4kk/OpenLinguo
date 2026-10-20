@@ -23,22 +23,21 @@ beforeEach(() => {
   db = openDatabase(`ai-notice-test-${String(counter)}`);
 });
 
-describe("first-use notices", () => {
-  it("remembers each feature on its own", async () => {
-    expect(await noticeSeen(db, "journal")).toEqual({ ok: true, value: false });
-    expect(await markNoticeSeen(db, "journal")).toEqual({ ok: true, value: null });
-    expect(await noticeSeen(db, "journal")).toEqual({ ok: true, value: true });
-    expect(await noticeSeen(db, "challenge")).toEqual({ ok: true, value: false });
+describe("the AI notice", () => {
+  it("is remembered once for every feature", async () => {
+    expect(await noticeSeen(db)).toEqual({ ok: true, value: false });
+    expect(await markNoticeSeen(db)).toEqual({ ok: true, value: null });
+    expect(await noticeSeen(db)).toEqual({ ok: true, value: true });
   });
 
   it("reports a storage failure instead of throwing", async () => {
-    vi.spyOn(db.aiNotices, "put").mockRejectedValueOnce(new Error("QuotaExceededError"));
-    expect(await markNoticeSeen(db, "interests")).toEqual({
+    vi.spyOn(db.aiNotice, "put").mockRejectedValueOnce(new Error("QuotaExceededError"));
+    expect(await markNoticeSeen(db)).toEqual({
       ok: false,
       error: { kind: "storage", message: "Error: QuotaExceededError" },
     });
     db.close();
-    expect(await noticeSeen(db, "interests")).toMatchObject({
+    expect(await noticeSeen(db)).toMatchObject({
       ok: false,
       error: { kind: "storage" },
     });

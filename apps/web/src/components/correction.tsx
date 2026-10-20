@@ -73,7 +73,7 @@ type Options = {
 };
 
 /**
- * « Correct » and its states: the first-use notice, the call that « Cancel » aborts, an error in
+ * « Correct » and its states: the AI notice, the call that « Cancel » aborts, an error in
  * words with « Retry » and « Later ». `running`: the fields are read-only. `warning`: a mode the
  * settings could not keep, shown wherever the caller wants.
  */
@@ -166,11 +166,11 @@ export const useCorrection = ({
     onCorrected(reply.value.corrections);
   };
 
-  const start = (action: string): void => {
+  const start = (): void => {
     const nothing = input.sentences.length === 0;
     setEmpty(nothing);
     if (!nothing) {
-      notice.ask(call(action), () => {
+      notice.ask(provider, () => {
         void run();
       });
     }
@@ -252,7 +252,7 @@ export const useCorrection = ({
                   ref={retryButton}
                   aria-describedby={sentId}
                   onClick={() => {
-                    start(retry);
+                    start();
                   }}
                 >
                   {retry}
@@ -282,7 +282,7 @@ export const useCorrection = ({
             ref={correctButton}
             aria-describedby={sentId}
             onClick={() => {
-              start(correct);
+              start();
             }}
           >
             {correct}

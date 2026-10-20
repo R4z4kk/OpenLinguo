@@ -4,6 +4,7 @@ import { createZhPack } from "@openlinguo/lang-zh";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import groqUnauthorized from "../../../../packages/core/src/testing/ai-responses/groq/unauthorized.json?raw";
+import groqVocabulary from "../../e2e/fixtures/ai/groq-vocabulary.json?raw";
 import localTest from "../../e2e/fixtures/ai/local-connection-test.json?raw";
 import {
   aiConnection,
@@ -13,6 +14,8 @@ import {
   localBaseUrl,
   rememberMode,
   PROVIDER_FACTS_CHECKED_ON,
+  RECOMMENDED_MODEL,
+  recommendedModel,
   saveAiSettings,
   testConnection,
   type AiSettings,
@@ -133,6 +136,35 @@ describe("AI settings", () => {
 
   it("have provider facts checked in the last six months: check the links and catalog lines again", () => {
     expect(Date.now() - Date.parse(PROVIDER_FACTS_CHECKED_ON)).toBeLessThan(183 * DAY);
+  });
+});
+
+describe("recommendedModel", () => {
+  const listed = ["openai/gpt-oss-120b", RECOMMENDED_MODEL.id];
+  const before = Date.parse(RECOMMENDED_MODEL.reviewBy) - DAY;
+
+  it("is the recorded Groq model, while Groq lists it", () => {
+    const recording = z
+      .object({ provider: z.string(), model: z.string() })
+      .parse(JSON.parse(groqVocabulary));
+    expect(recording).toEqual({
+      provider: RECOMMENDED_MODEL.provider,
+      model: RECOMMENDED_MODEL.id,
+    });
+    expect(recommendedModel("groq", listed, before)).toBe(RECOMMENDED_MODEL.id);
+    expect(recommendedModel("groq", ["openai/gpt-oss-120b"], before)).toBeNull();
+    expect(recommendedModel("openrouter", listed, before)).toBeNull();
+  });
+
+  it("is withdrawn on its review date rather than kept stale", () => {
+    expect(recommendedModel("groq", listed, Date.parse(RECOMMENDED_MODEL.reviewBy))).toBeNull();
+  });
+
+  it("was tested less than three months ago: test it again, then move checkedOn and reviewBy", () => {
+    expect(Date.now()).toBeLessThan(Date.parse(RECOMMENDED_MODEL.reviewBy));
+    expect(Date.parse(RECOMMENDED_MODEL.reviewBy) - Date.parse(RECOMMENDED_MODEL.checkedOn)).toBe(
+      92 * DAY,
+    );
   });
 });
 

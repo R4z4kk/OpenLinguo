@@ -441,6 +441,7 @@ export const en = {
       "Get your sentences and your journal corrected, words suggested from your interests, and French translations of words that only have an English one. With your own provider and key: your texts go from this device straight to it, nothing goes through OpenLinguo.",
     provider: "Provider",
     noDefault: "None is chosen by default.",
+    recommended: "Recommended",
     withoutProvider:
       "Without a provider, the 5-sentence challenge and the journal stay available, without corrections.",
     chosen: "Provider:",
@@ -464,6 +465,7 @@ export const en = {
     model: "Model",
     modelUntested: "Test the connection to choose a model",
     modelChoose: "Choose a model",
+    recommendedModel: "{{model}} (recommended)",
     test: "Test the connection",
     testing: "Testing…",
     testHelp:
@@ -976,41 +978,27 @@ export const en = {
       senses_one: "its English sense",
       senses_other: "its {{count}} English senses",
     },
+    title: "Before you use AI",
+    intro: "Corrections, suggested words and French translations are written by an AI.",
     machine:
       "It is a machine: it can be wrong, even when it sounds sure of itself. Keep your own judgement.",
     whatIsSent: "What is sent",
     sentTo:
-      "To {{provider}}, when you press “{{action}}”: {{items}}. Nothing else, and never in the background.",
+      "To {{provider}}, only when you press one of these buttons. Nothing else, and never in the background.",
+    uses: {
+      test: "“{{action}}”: your key and a test sentence.",
+      testNoKey: "“{{action}}”: a test sentence.",
+      challenge: "“{{action}}” ({{place}}): the word, your sentences and the interface language.",
+      journal: "“{{action}}” ({{place}}): the text of the entry and the interface language.",
+      interests: "“{{action}}”: the themes you ticked, your sentence and your level.",
+      translation: "“{{action}}”: the word, its pinyin and its English senses.",
+    },
     sensitive:
       "Don't write anything you wouldn't tell a stranger: health, religion, political opinions, sex life.",
+    confirm: "Got it, continue",
     cancel: "Cancel",
+    once: "This notice shows only once.",
     notRemembered: "This notice could not be remembered and will show again: {{reason}}",
-    features: {
-      challenge: {
-        title: "Before your first correction",
-        intro: "An AI will read your sentences and suggest corrections.",
-        confirm: "Got it, correct",
-        once: "This notice shows only once for the challenge.",
-      },
-      journal: {
-        title: "Before your first correction",
-        intro: "An AI will read your text and suggest corrections.",
-        confirm: "Got it, correct",
-        once: "This notice shows only once for the journal.",
-      },
-      interests: {
-        title: "Before your first suggestions",
-        intro: "An AI will pick words from your interests.",
-        confirm: "Got it, suggest words",
-        once: "This notice shows only once for your interests.",
-      },
-      translation: {
-        title: "Before your first translation",
-        intro: "An AI will translate this word into French.",
-        confirm: "Got it, translate",
-        once: "This notice shows only once for translations.",
-      },
-    },
   },
   moduleError: { title: "This section failed to load", retry: "Try again" },
   notFound: { title: "Page not found", back: "Back to Today" },

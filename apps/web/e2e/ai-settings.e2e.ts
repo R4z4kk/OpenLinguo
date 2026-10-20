@@ -2,11 +2,14 @@ import { AI_BASE_URLS } from "@openlinguo/core";
 import { expect, type Page } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
-import { recorded, replay } from "./ai-replay.ts";
+import { recorded, replay, type Exchange } from "./ai-replay.ts";
 import { test } from "./app.ts";
 
-/** Real answers: Ollama 0.35.1 with qwen3:30b-a3b, and Groq refusing a wrong key. */
+/** Real answers: Ollama 0.35.1 with qwen3:30b-a3b, Groq's models and Groq refusing a wrong key. */
 const LOCAL = recorded(new URL("fixtures/ai/local-connection-test.json", import.meta.url));
+const GROQ_MODELS = recorded(new URL("fixtures/ai/groq-vocabulary.json", import.meta.url)).filter(
+  ({ request }) => request.method === "GET",
+);
 const GROQ_REFUSED =
   recorded(
     new URL(
@@ -44,19 +47,23 @@ const storedRows = (page: Page): Promise<unknown> =>
 // Requests from a page a service worker controls escape `page.route` in WebKit.
 test.use({ serviceWorkers: "block" });
 
-test("sets up Groq: its notice, a key kept in memory only, a refused key named", async ({
+test("sets up Groq: the AI notice first, a key kept in memory only, a refused key named", async ({
   page,
 }) => {
   if (GROQ_REFUSED === null) throw new Error("empty Groq recording");
   // Groq refuses a wrong key with the same 401 on every path (ADR 0012).
-  const sent = await replay(page, AI_BASE_URLS.groq, () => [
-    { request: { method: "GET", path: "/models" }, response: GROQ_REFUSED.response },
-  ]);
+  let answers: readonly Exchange[] = [
+    { request: { method: "GET", path: "/models", body: null }, response: GROQ_REFUSED.response },
+  ];
+  const sent = await replay(page, AI_BASE_URLS.groq, () => answers);
   const groq = en.ai.providers.groq;
   await page.goto("/profile");
   const section = page.getByRole("region", { name: en.ai.title });
   await expect(section.getByRole("radio")).toHaveCount(4, { timeout: 90_000 });
   await expect(section.getByRole("radio", { checked: true })).toHaveCount(0);
+  await expect(section.getByRole("radio", { name: en.ai.recommended })).toHaveAccessibleName(
+    `${groq.name} ${en.ai.recommended}`,
+  );
 
   await section.getByRole("radio", { name: groq.name }).focus();
   await page.keyboard.press("Space");
@@ -75,6 +82,26 @@ test("sets up Groq: its notice, a key kept in memory only, a refused key named",
   await section.getByLabel(en.ai.key).fill(KEY);
   const testButton = section.getByRole("button", { name: en.ai.test });
   await testButton.click();
+  // The AI notice comes before the first call of any kind; cancelling sends nothing.
+  const dialog = page.getByRole("dialog", { name: en.aiNotice.title });
+  await expect(dialog).toHaveAccessibleDescription(`${en.aiNotice.intro} ${en.aiNotice.machine}`);
+  await expect(dialog).toContainText(fill(en.aiNotice.sentTo, { provider: "Groq" }));
+  await expect(dialog.getByRole("listitem")).toHaveText([
+    fill(en.aiNotice.uses.test, { action: en.ai.test }),
+    fill(en.aiNotice.uses.challenge, { action: en.correction.correct, place: en.challenge.title }),
+    fill(en.aiNotice.uses.journal, { action: en.correction.correct, place: en.journal.title }),
+    fill(en.aiNotice.uses.interests, { action: en.interests.suggest }),
+    fill(en.aiNotice.uses.translation, { action: en.translate.action }),
+  ]);
+  await expect(dialog).toContainText(en.aiNotice.sensitive);
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await dialog.getByRole("button", { name: en.aiNotice.cancel }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(testButton).toBeFocused();
+  expect(sent).toEqual([]);
+
+  await testButton.click();
+  await dialog.getByRole("button", { name: en.aiNotice.confirm }).click();
   await expect(section.getByRole("alert")).toContainText(
     fill(en.ai.errors.auth, { provider: en.aiNotice.providers.groq }),
   );
@@ -85,6 +112,18 @@ test("sets up Groq: its notice, a key kept in memory only, a refused key named",
   ]);
   expect(await accessibilityViolations(page)).toEqual([]);
   expect(JSON.stringify(await storedRows(page))).not.toContain(KEY);
+
+  // Seen once, the notice never shows again; the tested model is recommended in Groq's list.
+  answers = GROQ_MODELS;
+  await testButton.click();
+  await expect(section.getByRole("status")).toHaveText(
+    fill(en.ai.listed_other, { count: 11, provider: en.aiNotice.providers.groq }),
+  );
+  await expect(dialog).toHaveCount(0);
+  const options = section.getByRole("combobox", { name: en.ai.model }).locator("option");
+  await expect(options.filter({ hasText: en.ai.recommended.toLowerCase() })).toHaveText([
+    fill(en.ai.recommendedModel, { model: "openai/gpt-oss-20b" }),
+  ]);
 
   await page.reload();
   await expect(section.getByRole("button", { name: en.ai.changeLabel })).toBeVisible({
@@ -111,6 +150,11 @@ test("connects to a local server: the how-to, a refused origin, then the test se
 
   const testButton = section.getByRole("button", { name: en.ai.test });
   await testButton.click();
+  const dialog = page.getByRole("dialog", { name: en.aiNotice.title });
+  await expect(dialog.getByRole("listitem").first()).toHaveText(
+    fill(en.aiNotice.uses.testNoKey, { action: en.ai.test }),
+  );
+  await dialog.getByRole("button", { name: en.aiNotice.confirm }).click();
   const alert = section.getByRole("alert");
   await expect(alert).toContainText(en.ai.errors.localNetwork);
   await expect(alert).toContainText(fill(en.ai.errors.localNetworkHelp, { origin }));

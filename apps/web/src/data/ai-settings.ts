@@ -43,6 +43,32 @@ export const PROVIDER_LINKS: Readonly<Record<CloudProvider, ProviderLinks>> = {
   },
 };
 
+/** The most free requests a day: Groq 1,000 per model, OpenRouter 50 for `:free` (ADR 0012). */
+export const RECOMMENDED_PROVIDER: CloudProvider = "groq";
+
+/**
+ * The only model id in code: tested by the maintainer (e2e/fixtures/ai/groq-*.json).
+ * Not recommended after `reviewBy`, and CI fails from then until it is tested again (ADR 0012).
+ */
+export const RECOMMENDED_MODEL = {
+  provider: "groq",
+  id: "openai/gpt-oss-20b",
+  checkedOn: "2026-10-20",
+  reviewBy: "2027-01-20",
+} as const;
+
+/** The recommended model, when `provider` lists it and its review date has not passed. */
+export const recommendedModel = (
+  provider: AiProvider,
+  models: readonly string[],
+  now: number,
+): string | null =>
+  provider === RECOMMENDED_MODEL.provider &&
+  models.includes(RECOMMENDED_MODEL.id) &&
+  now < Date.parse(RECOMMENDED_MODEL.reviewBy)
+    ? RECOMMENDED_MODEL.id
+    : null;
+
 /** How to refuse training on prompts, where the provider may train on them. */
 export const TRAINING_OPT_OUT: Readonly<Record<"openrouter" | "mistral", string>> = {
   openrouter: "https://openrouter.ai/docs/guides/privacy/data-collection",

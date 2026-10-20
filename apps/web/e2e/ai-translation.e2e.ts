@@ -121,8 +121,8 @@ test("translates an entry once, after a refused key, shows it on its card and de
 
   // The first use asks first; a refused key is said in words, with a retry, and stores nothing.
   await translate.click();
-  const notice = page.getByRole("dialog", { name: fr.aiNotice.features.translation.title });
-  await notice.getByRole("button", { name: fr.aiNotice.features.translation.confirm }).click();
+  const notice = page.getByRole("dialog", { name: fr.aiNotice.title });
+  await notice.getByRole("button", { name: fr.aiNotice.confirm }).click();
   await expect(main.getByRole("alert")).toContainText(
     fill(fr.ai.errors.auth, { provider: fr.aiNotice.providers.groq }),
   );

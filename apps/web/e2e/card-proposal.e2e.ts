@@ -44,10 +44,7 @@ test("makes a card from an accepted correction: pinyin checked, confirmed, once 
   await page.goto(`/learn/challenges/${day}`);
   const correct = main.getByRole("button", { name: en.correction.correct, exact: true });
   await correct.click({ timeout: 90_000 });
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: en.aiNotice.features.challenge.confirm })
-    .click();
+  await page.getByRole("dialog").getByRole("button", { name: en.aiNotice.confirm }).click();
   const third = main.getByRole("region", { name: "Sentence 3" });
   const accept = third.getByRole("button", { name: en.correction.accept });
   await expect(accept).toBeFocused();

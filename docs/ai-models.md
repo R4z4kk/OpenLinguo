@@ -1,6 +1,6 @@
 # AI models tested
 
-OpenLinguo writes no model id in its code: the learner picks one from their provider's list ([ADR 0012](adr/0012-ai-mobilization-byok.md)). This page lists the models it was tested with, how and when. Free models come and go: a model below may have left its provider's list since.
+The learner picks a model from their provider's list ([ADR 0012](adr/0012-ai-mobilization-byok.md)). The only id in the code is `openai/gpt-oss-20b`, recommended in Groq's list until its review date (`RECOMMENDED_MODEL`, checked 2026-10-20, review by 2027-01-20). This page lists the models it was tested with, how and when. Free models come and go: a model below may have left its provider's list since.
 
 ## Recorded responses
 
