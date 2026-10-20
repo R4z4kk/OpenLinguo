@@ -63,8 +63,8 @@ test("makes a card from an accepted correction: pinyin checked, confirmed, once 
   const sentence = proposal.getByRole("textbox", { name: en.cardProposal.sentence });
   const pinyin = proposal.getByRole("textbox", { name: en.cardProposal.pinyin });
   const meaning = proposal.getByRole("textbox", { name: en.cardProposal.meaning });
-  await expect(sentence).toHaveValue("我的电话很新。");
-  await expect(pinyin).toHaveValue("wǒ de diàn huà hěn xīn .");
+  await expect(sentence).toHaveValue("我手机很新。");
+  await expect(pinyin).toHaveValue("wǒ shǒu jī hěn xīn");
   await expect(meaning).toHaveValue("My phone is new.");
   await expect(proposal.getByRole("combobox", { name: en.cardProposal.deck })).toHaveValue(
     "my-words",
@@ -72,12 +72,12 @@ test("makes a card from an accepted correction: pinyin checked, confirmed, once 
   await expect(pinyin).toHaveAttribute("aria-invalid", "false");
 
   // A syllable the dictionary does not give is a field error, and the card is refused.
-  await pinyin.fill("wǒ de diàn huà hěn xìn .");
+  await pinyin.fill("wǒ shǒu jī hěn xìn");
   await expect(pinyin).toHaveAttribute("aria-invalid", "true");
   await expect(pinyin).toHaveAccessibleDescription(
     fill(en.cardProposal.readingFlag, { written: "xìn", character: "新", readings: "xīn" }),
   );
-  await expect(pinyin).toHaveValue("wǒ de diàn huà hěn xìn .");
+  await expect(pinyin).toHaveValue("wǒ shǒu jī hěn xìn");
   expect(await accessibilityViolations(page)).toEqual([]);
   const confirm = proposal.getByRole("button", { name: en.cardProposal.confirm });
   await expect(confirm).toHaveAccessibleDescription(en.cardProposal.cards);
@@ -86,7 +86,7 @@ test("makes a card from an accepted correction: pinyin checked, confirmed, once 
   await expect(pinyin).toBeFocused();
   expect(await storedRows(page, "notes")).toEqual([]);
 
-  await pinyin.fill("wǒ de diàn huà hěn xīn .");
+  await pinyin.fill("wǒ shǒu jī hěn xīn");
   await meaning.fill("My phone is brand new.");
   await expect(pinyin).toHaveAttribute("aria-invalid", "false");
   await confirm.focus();
@@ -100,8 +100,8 @@ test("makes a card from an accepted correction: pinyin checked, confirmed, once 
   const notes = z.array(Note).parse(await storedRows(page, "notes"));
   expect(notes).toHaveLength(1);
   expect(notes[0]).toMatchObject({
-    characters: "我的电话很新。",
-    pinyin: "wǒ de diàn huà hěn xīn .",
+    characters: "我手机很新。",
+    pinyin: "wǒ shǒu jī hěn xīn",
     meaning: "My phone is brand new.",
     provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v2" },
   });

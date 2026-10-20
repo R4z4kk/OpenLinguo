@@ -6,7 +6,7 @@ import { recorded, replay, type Exchange } from "./ai-replay.ts";
 import { test } from "./app.ts";
 
 /** Real answers: Ollama 0.35.1 with qwen3:30b-a3b, Groq's models and Groq refusing a wrong key. */
-const LOCAL = recorded(new URL("fixtures/ai/local-connection-test.json", import.meta.url));
+const LOCAL = recorded(new URL("fixtures/ai/local-connection.json", import.meta.url));
 const GROQ_MODELS = recorded(new URL("fixtures/ai/groq-vocabulary.json", import.meta.url)).filter(
   ({ request }) => request.method === "GET",
 );

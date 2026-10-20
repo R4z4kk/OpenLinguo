@@ -132,7 +132,7 @@ describe("requestCorrection", () => {
       SENTENCES[4],
     ]);
     expect(corrections[3]).toMatchObject({
-      corrected: "我的电话很新。",
+      corrected: "我手机很新。",
       choice: null,
       provenance: {
         origin: "ai",

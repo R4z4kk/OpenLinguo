@@ -18,9 +18,39 @@ import { fill, SENTENCES, storedRows } from "./challenge-seed.ts";
 
 /** M5 exit (#190): the providers the other AI tests leave out, and answers that must be refused. */
 
+const V1Completion = z.looseObject({
+  choices: z.tuple([z.looseObject({ message: z.looseObject({ content: z.string() }) })]),
+});
+const V1Answer = z.object({ sentences: z.array(z.looseObject({})) });
+
+/**
+ * OpenRouter's answers were recorded with zh-correct-v1 on 2026-10-20 and not again with v2 (#206):
+ * each answer item gets here the index of the sentence it answers.
+ */
+const withIndices = (exchanges: readonly Exchange[], indices: readonly number[]): Exchange[] =>
+  exchanges.map((exchange) => {
+    if (exchange.request.path !== "/chat/completions") return exchange;
+    const body = V1Completion.parse(exchange.response.body);
+    const [choice] = body.choices;
+    const { sentences } = V1Answer.parse(JSON.parse(choice.message.content));
+    const content = JSON.stringify({
+      sentences: sentences.map((item, at) => ({ index: indices[at] ?? 0, ...item })),
+    });
+    const message = { ...choice.message, content };
+    return {
+      ...exchange,
+      response: { ...exchange.response, body: { ...body, choices: [{ ...choice, message }] } },
+    };
+  });
+
 /** OpenRouter: the model list and the connection test, then the challenge corrected. */
 const CONNECTION = recording(new URL("fixtures/ai/openrouter-connection.json", import.meta.url));
-const CORRECTION = recorded(new URL("fixtures/ai/openrouter-correction.json", import.meta.url));
+const CONNECTED = withIndices(CONNECTION.exchanges, [1]);
+// The five sentences came back as 3, 1, 2, 4, 5.
+const CORRECTION = withIndices(
+  recorded(new URL("fixtures/ai/openrouter-correction.json", import.meta.url)),
+  [3, 1, 2, 4, 5],
+);
 const OPENROUTER_MODEL = CONNECTION.model ?? "";
 /** Mistral refuses a wrong key with the same 401 on /models and /chat/completions (checked 2026-10-20). */
 const MISTRAL_REFUSED =
@@ -122,7 +152,7 @@ test("sets up OpenRouter, then refuses a correction whose index names another se
   const noon = new Date();
   noon.setHours(12, 0, 0, 0);
   await page.clock.setFixedTime(noon);
-  let answers: readonly Exchange[] = CONNECTION.exchanges;
+  let answers: readonly Exchange[] = CONNECTED;
   const sent = await replay(page, AI_BASE_URLS.openrouter, () => answers);
   const openrouter = en.ai.providers.openrouter;
   const provider = en.aiNotice.providers.openrouter;

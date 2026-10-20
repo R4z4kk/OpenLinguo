@@ -113,9 +113,9 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
   ).toBeVisible();
   const third = main.getByRole("region", { name: "Sentence 3" });
   await expect(third.getByRole("button", { name: en.correction.accept })).toBeFocused();
-  await expect(third.locator("p ins")).toHaveText("[added: 的]");
+  await expect(third.locator("p ins")).toHaveText("[added: 手机]");
   const fifth = main.getByRole("region", { name: "Sentence 5" });
-  await expect(fifth.locator("p ins")).toHaveText(["[added: 打]", "[added: 给]"]);
+  await expect(fifth.locator("p ins")).toHaveText("[added: 给我打]");
   expect(await accessibilityViolations(page)).toEqual([]);
   expect(sent).toHaveLength(3);
   expect(sent[2]?.body).toMatchObject({
@@ -143,11 +143,11 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
   const corrections = await storedCorrections(page);
   expect(corrections[2]).toMatchObject({
     original: "我电话很新。",
-    corrected: "我的电话很新。",
+    corrected: "我手机很新。",
     choice: "accepted",
     provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v2" },
   });
-  expect(corrections[4]).toMatchObject({ corrected: "请你打电话给我。", choice: "kept" });
+  expect(corrections[4]).toMatchObject({ corrected: "请你给我打电话。", choice: "kept" });
   expect(corrections[0]).toMatchObject({ corrected: SENTENCES[0], choice: null });
 
   // Opened again, in the dark theme: the correction and the choices, then the end of the session.
@@ -231,7 +231,7 @@ test("still shows a challenge corrected by the first prompt version", async ({ p
   );
 
   await page.goto(`/learn/challenges/${day}`);
-  await expect(main.getByRole("heading", { level: 2, name: en.correction.title })).toBeVisible({
+  await expect(main.getByRole("heading", { level: 1, name: en.correction.title })).toBeVisible({
     timeout: 90_000,
   });
   await expect(main).toContainText(fill(en.aiNotice.badge, { model: MODEL }));
