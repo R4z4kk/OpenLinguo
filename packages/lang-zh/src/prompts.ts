@@ -60,7 +60,7 @@ export const createPrompts = ({ lookup, tokenize, proficiency }: ZhPromptSources
           `For each change, "from" is the text replaced (empty for an insertion), "to" the new text (empty for a removal), and "explanation" says why in ${LANGUAGE_NAMES[language]}, in one short sentence a learner understands.`,
           `"reading" is the Hanyu Pinyin of the corrected sentence with tone marks: one syllable per Chinese character, separated by spaces, each with its dictionary tone, without tone sandhi.`,
           `"meaning" translates the corrected sentence into ${LANGUAGE_NAMES[language]}.`,
-          "Each sentence comes with its index: answer one item per sentence, with the index of the sentence it corrects; never merge or split sentences.",
+          `The sentences are numbered from 1 to ${String(sentences.length)}. Answer exactly ${String(sentences.length)} items, one per sentence in that order, each with its sentence's index: a correct sentence too, unchanged. Never merge or split sentences.`,
           DATA_ONLY,
           JSON_ONLY,
         ),
@@ -76,10 +76,11 @@ export const createPrompts = ({ lookup, tokenize, proficiency }: ZhPromptSources
     schema: ({ sentences }) =>
       z.object({
         sentences: indexed(
+          // The changes before the sentence they make: qwen3 then writes it with them applied.
           z.object({
             index: z.number(),
-            corrected: filled,
             changes: z.array(z.object({ from: z.string(), to: z.string(), explanation: filled })),
+            corrected: filled,
             reading: filled,
             meaning: filled,
           }),

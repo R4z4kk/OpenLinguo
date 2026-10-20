@@ -54,6 +54,27 @@ describe("correction prompt", () => {
     );
   });
 
+  it("asks for every sentence by its index, the correct ones too", () => {
+    const system = contentOf(prompts.correction.messages(correction), 0);
+    expect(system).toContain("numbered from 1 to 2");
+    expect(system).toContain("Answer exactly 2 items");
+    expect(system).toContain("a correct sentence too");
+  });
+
+  it("asks for the changes before the corrected sentence", () => {
+    const schema = z.toJSONSchema(prompts.correction.schema(correction));
+    const item = z
+      .object({
+        properties: z.object({
+          sentences: z.object({
+            items: z.object({ properties: z.record(z.string(), z.unknown()) }),
+          }),
+        }),
+      })
+      .parse(schema).properties.sentences.items.properties;
+    expect(Object.keys(item)).toEqual(["index", "changes", "corrected", "reading", "meaning"]);
+  });
+
   it("sends the word and the numbered sentences as data", () => {
     const numbered = [
       { index: 1, text: "我打电话你。" },
