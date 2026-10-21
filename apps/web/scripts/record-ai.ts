@@ -1,7 +1,8 @@
 // Records a real model list and answer to a zh prompt, replayed by an E2E: the vocabulary prompt
 // for interests (#187), the gloss prompt for the word page (#188), the correction prompt for the
-// 5-sentence challenge (#183), the one-sentence correction of the AI settings' connection test (#181).
-// Usage: pnpm --filter @openlinguo/web record:ai <provider>=<model> [vocabulary|gloss|correction|connection]
+// 5-sentence challenge (#183), the one-sentence correction of the AI settings' connection test (#181),
+// the explanation of unknown sequences (#231) and the story (#232).
+// Usage: pnpm --filter @openlinguo/web record:ai <provider>=<model> [vocabulary|gloss|correction|connection|explain|story]
 // The key comes from GROQ_API_KEY, OPENROUTER_API_KEY, MISTRAL_API_KEY or a hidden prompt, and is
 // never written. LOCAL_BASE_URL replaces the local server's address.
 import { writeFile } from "node:fs/promises";
@@ -61,6 +62,25 @@ const CORRECTION_INPUT = {
 /** What « Tester la connexion » sends once the model list is read. */
 const CONNECTION_INPUT = { word: null, sentences: [TEST_SENTENCE], language: "en" } as const;
 
+/** The unknown-words mockup (#223): two names, a word, and a run whose edge 拍 (HSK 4) remains. */
+const EXPLAIN_INPUT = {
+  sequences: [
+    { sequence: "王芳", sentence: "我的同学王芳和老师冯文敏去张家界玩了。" },
+    { sequence: "张家界", sentence: "我的同学王芳和老师冯文敏去张家界玩了。" },
+    { sequence: "袁家界拍", sentence: "她们在袁家界拍了很多照片，也给我买了一件礼物。" },
+    { sequence: "红白机", sentence: "我们要一起看照片，还要玩红白机。" },
+  ],
+  language: "en",
+} as const;
+
+/** The story form mockup: the HSK 2 band, a theme, the medium length, words being learned. */
+const STORY_INPUT = {
+  band: 2,
+  theme: en.interests.theme.travel,
+  length: "medium",
+  words: ["旅游", "照片", "礼物", "公园", "天气", "朋友"],
+} as const;
+
 const fail = (message: string): never => {
   console.error(message);
   exit(1);
@@ -75,11 +95,13 @@ const parseBody = (text: string): unknown => {
   }
 };
 
-const USAGE = "Usage: record:ai <provider>=<model> [vocabulary|gloss|correction|connection]";
+const USAGE =
+  "Usage: record:ai <provider>=<model> [vocabulary|gloss|correction|connection|explain|story]";
 const [target = "", taskName = "vocabulary"] = argv.slice(2);
 const task =
-  z.enum(["vocabulary", "gloss", "correction", "connection"]).safeParse(taskName).data ??
-  fail(USAGE);
+  z
+    .enum(["vocabulary", "gloss", "correction", "connection", "explain", "story"])
+    .safeParse(taskName).data ?? fail(USAGE);
 const [name = "", model = ""] = target.split(/=(.*)/su);
 const chosen = z.enum(AI_PROVIDERS).safeParse(name).data ?? fail(USAGE);
 if (model === "") fail(USAGE);
@@ -118,7 +140,7 @@ if (!models.ok) failed(models.error);
 else if (!models.value.includes(model))
   fail(`${model} is not in ${chosen}'s list: nothing written`);
 
-const { vocabulary, glossTranslation, correction } = createPrompts({
+const { vocabulary, glossTranslation, correction, explanation, story } = createPrompts({
   lookup: () => Promise.resolve(ok([])),
   tokenize: () => [],
   proficiency: "hsk-2025",
@@ -132,14 +154,15 @@ const ask = <I, A>(prompt: PromptTask<I, A>, input: I) =>
     mode: "json_schema",
     signal: new AbortController().signal,
   });
-const answer =
-  task === "gloss"
-    ? await ask(glossTranslation, GLOSS_INPUT)
-    : task === "correction"
-      ? await ask(correction, CORRECTION_INPUT)
-      : task === "connection"
-        ? await ask(correction, CONNECTION_INPUT)
-        : await ask(vocabulary, INPUT);
+const asks = {
+  vocabulary: () => ask(vocabulary, INPUT),
+  gloss: () => ask(glossTranslation, GLOSS_INPUT),
+  correction: () => ask(correction, CORRECTION_INPUT),
+  connection: () => ask(correction, CONNECTION_INPUT),
+  explain: () => ask(explanation, EXPLAIN_INPUT),
+  story: () => ask(story, STORY_INPUT),
+} as const;
+const answer = await asks[task]();
 if (!answer.ok) {
   failed(answer.error);
 } else {

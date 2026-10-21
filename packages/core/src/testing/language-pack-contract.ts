@@ -145,7 +145,13 @@ export const describeLanguagePackContract = (
     it("gives each prompt its own versioned id, when the pack has prompts", () => {
       const { prompts } = pack;
       if (prompts === null) return;
-      const ids = [prompts.correction.id, prompts.vocabulary.id, prompts.glossTranslation.id];
+      const ids = [
+        prompts.correction.id,
+        prompts.vocabulary.id,
+        prompts.glossTranslation.id,
+        prompts.explanation.id,
+        prompts.story.id,
+      ];
       expect(new Set(ids).size).toBe(ids.length);
       for (const id of ids) {
         expect(id.startsWith(`${pack.id}-`)).toBe(true);
@@ -167,6 +173,16 @@ export const describeLanguagePackContract = (
           headword: fixture.knownTerm,
           reading: fixture.readTerm ?? "",
           glosses: ["a sense"],
+        }),
+        prompts.explanation.messages({
+          sequences: [{ sequence: fixture.unknownTerm, sentence: fixture.sampleText }],
+          language: "en",
+        }),
+        prompts.story.messages({
+          band: 1,
+          theme: "food",
+          length: "short",
+          words: [fixture.knownTerm],
         }),
       ];
       for (const messages of all) {
