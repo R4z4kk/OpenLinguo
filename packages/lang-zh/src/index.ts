@@ -4,6 +4,7 @@ import { createIme, type ImeWordsOf } from "./ime.ts";
 import { toDiacritic, tonesOf } from "./pinyin.ts";
 import { createPrompts, type ZhProficiency } from "./prompts.ts";
 import { createSegmenter } from "./segment.ts";
+import { createTextReading } from "./text-reading.ts";
 
 export {
   formatNumbered,
@@ -79,6 +80,7 @@ export const createZhPack = ({
       romanization: { system: "pinyin", toDisplay: toDiacritic },
       decomposition: createDecomposition(lookup, decompositions),
       ime: createIme(wordsOfPinyin),
+      textReading: createTextReading(lookup, tokenize),
     },
     prompts: createPrompts({ lookup, tokenize, proficiency }),
   };

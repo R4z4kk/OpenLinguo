@@ -5,6 +5,13 @@ export const createEnPack = (lookup: DictionaryLookup): LanguagePack => ({
   proficiency: "cefr",
   tokenize: intlTokenizer("en"),
   lookup,
-  features: { tones: null, strokes: null, romanization: null, decomposition: null, ime: null },
+  features: {
+    tones: null,
+    strokes: null,
+    romanization: null,
+    decomposition: null,
+    ime: null,
+    textReading: null,
+  },
   prompts: null,
 });

@@ -35,6 +35,7 @@ export { contour, F0_VERSION, POINTS_PER_SYLLABLE, type Contour, type F0Error } 
 export {
   LANGUAGE_IDS,
   proficiencyFrameworks,
+  type AnnotatedToken,
   type DecompositionFeature,
   type DecompositionNode,
   type DictEntry,
@@ -51,9 +52,12 @@ export {
   type LanguagePack,
   type LookupError,
   type ProficiencyFramework,
+  type ReadingChoices,
   type RomanizationFeature,
   type StrokeData,
   type StrokeFeature,
+  type TextReadingError,
+  type TextReadingFeature,
   type Token,
   type ToneFeature,
 } from "./language-pack.ts";

@@ -35,6 +35,7 @@ const pack = (
     romanization: null,
     decomposition: null,
     ime: null,
+    textReading: null,
     ...features,
   },
   prompts: withPrompts,

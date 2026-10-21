@@ -92,6 +92,34 @@ export const describeLanguagePackContract = (
       expect(await ime.candidates("")).toMatchObject({ ok: false });
     });
 
+    it("annotates the tokens the tokenizer cuts, when the feature exists", async () => {
+      const { textReading } = pack.features;
+      if (textReading === null) return;
+      const cut = ({ text, start, end }: { text: string; start: number; end: number }) => ({
+        text,
+        start,
+        end,
+      });
+      const annotated = await textReading.annotate(fixture.sampleText);
+      expect(annotated.ok && annotated.value.map(cut)).toEqual(
+        pack.tokenize(fixture.sampleText).map(cut),
+      );
+      expect(await textReading.annotate("")).toEqual({ ok: true, value: [] });
+    });
+
+    it("gives the known term its readings and a pinyin per token, when the feature exists", async () => {
+      const { textReading } = pack.features;
+      if (textReading === null) return;
+      const annotated = await textReading.annotate(fixture.sampleText);
+      if (!annotated.ok) throw new Error(`annotate failed: ${annotated.error.kind}`);
+      const term = annotated.value.find(({ text }) => text === fixture.knownTerm);
+      expect(term?.isWord).toBe(true);
+      expect(term?.readings.length).toBeGreaterThan(0);
+      expect(term?.ambiguous).toBe((term?.readings.length ?? 0) > 1);
+      const pinyin = textReading.pinyin(annotated.value);
+      expect(pinyin.ok && pinyin.value).toHaveLength(annotated.value.length);
+    });
+
     it("returns an empty list for an unknown term", async () => {
       expect(await pack.lookup(fixture.unknownTerm)).toEqual({ ok: true, value: [] });
     });
