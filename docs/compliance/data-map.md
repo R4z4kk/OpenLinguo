@@ -41,6 +41,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | Party | What they receive | When |
 |---|---|---|
 | The learner's AI provider (BYOK, [AI features](ai.md)) | What the feature sends (table below), the learner's key, the model id, OpenLinguo's prompt, and the IP address and request metadata of the request | Only when the learner presses an AI button, after the notice naming the provider and the AI notice shown before the first call; nothing in the background |
+| Wikimedia Foundation, U.S. ([Wikidata lookup](wikidata.md)) | The unknown character sequences of a text (names of people, places, organizations) in the web address of the request, the IP address, the browser's user agent and the app's `Api-User-Agent`; no cookie, no referrer. Request logs: deleted, aggregated or de-identified after at most 90 days, backups up to 5 years | Only when the learner presses « Chercher sur Wikidata », after the notice shown before the first call: one request per 50 sequences, one after the other; nothing in the background |
 | Cloudflare (PWA hosting) | IP address and request metadata of every page load | Always, as the CDN serving the app |
 | Google, GitHub (OAuth) | Sign-in exchange | Only if the user chooses that sign-in method |
 | SMTP provider `[TBD in M7]` | Email address, message content | Verification, password reset, inactivity notice |
@@ -54,6 +55,8 @@ What each AI feature sends, shown under its button as « Sent: … » (ADR 0012)
 | « Correct » on a journal entry (#185) | The entry, the interface language |
 | « Suggest words » (#187) | The themes ticked, the short field, the learner's level, the number of words wanted |
 | « Translate to French » (#188) | The headword, its pinyin and English glosses |
+
+« Chercher sur Wikidata » (#230) shows its own « Envoyé : … » line under the button: the sequences, the IP address and the browser go to the Wikimedia Foundation, never the sentence, the text or its title.
 
 No analytics, no ads, no third-party fonts or scripts at runtime.
 

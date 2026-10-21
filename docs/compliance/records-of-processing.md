@@ -4,7 +4,7 @@ The fewer-than-250-employees exemption (art. 30(5)) does not apply: the processi
 
 **Controller (art. 30(1)(a))**: `[MAINTAINER NAME]`, `[POSTAL ADDRESS]`, `[CONTACT EMAIL]`. No joint controller, no EU representative needed. No data protection officer: the conditions of art. 37 (public authority, large-scale systematic monitoring, large-scale special categories) are not met.
 
-Processing that happens only on the user's device (learning data, voice, journal, AI key) is not listed: the controller does not receive that data. Nor are the requests the learner sends from the device to their own AI provider: OpenLinguo is most likely not a controller of them ([AI features](ai.md)).
+Processing that happens only on the user's device (learning data, voice, journal, AI key) is not listed: the controller does not receive that data. Nor are the requests the learner sends from the device to their own AI provider: OpenLinguo is most likely not a controller of them ([AI features](ai.md)). The same goes for the Wikidata lookup the learner starts with a click: the unknown character sequences of their text, their IP address and their browser go to the Wikimedia Foundation (U.S.), which deletes, aggregates or de-identifies its request logs after at most 90 days, and OpenLinguo receives nothing ([Wikidata lookup](wikidata.md)). That analysis is less firm than the AI one, because the app and not the learner picks the destination: if an authority held OpenLinguo joint controller of the transmission, this lookup would become a processing of its own here.
 
 ## P1 — User accounts
 

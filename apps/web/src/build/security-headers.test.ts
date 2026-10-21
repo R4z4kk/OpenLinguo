@@ -1,4 +1,4 @@
-import { AI_BASE_URLS } from "@openlinguo/core";
+import { AI_BASE_URLS, WIKIDATA_ENDPOINT } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import headersFile from "../../public/_headers?raw";
 import { headersFor, parseHeaderRules, parseHeaders } from "./security-headers.ts";
@@ -26,14 +26,15 @@ describe("public/_headers", () => {
     expect(directives.get("frame-ancestors")).toBe("'none'");
   });
 
-  it("connects to the AI presets and local servers only (ADR 0012)", () => {
+  it("connects to the AI presets, the Wikidata endpoint and local servers only (ADR 0012, 0014)", () => {
     const connect = directives.get("connect-src") ?? "";
     expect(connect).toBe(
-      "'self' https://api.groq.com https://openrouter.ai https://api.mistral.ai http://localhost:* http://127.0.0.1:*",
+      "'self' https://api.groq.com https://openrouter.ai https://api.mistral.ai https://query.wikidata.org http://localhost:* http://127.0.0.1:*",
     );
     for (const provider of ["groq", "openrouter", "mistral"] as const) {
       expect(connect.split(" ")).toContain(new URL(AI_BASE_URLS[provider]).origin);
     }
+    expect(connect.split(" ")).toContain(new URL(WIKIDATA_ENDPOINT.value).origin);
   });
 
   it("plays stored audio from Blob URLs, nothing else from outside", () => {
