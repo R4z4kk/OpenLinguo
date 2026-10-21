@@ -416,7 +416,75 @@ export const fr: Messages = {
     notAffiliated:
       "OpenLinguo n’est pas affilié à Chinese Testing International (CTI) ni au Center for Language Education and Cooperation (CLEC), et n’est pas approuvé par eux. Les niveaux HSK sont indiqués à titre de référence.",
   },
-  read: { title: "Lire", intro: "Textes gradués et lecteur." },
+  read: {
+    title: "Lire",
+    intro:
+      "Collez ou importez un texte en chinois : OpenLinguo le découpe en mots, marque ceux que vous ne connaissez pas encore et calcule la part que vous comprenez. Le texte reste sur cet appareil.",
+  },
+  library: {
+    paste: "Coller un texte",
+    import: "Importer un .txt",
+    listTitle: "Mes textes",
+    listSummary_one:
+      "{{count, number}} texte, le plus récent d’abord. La part de mots connus suit vos cartes.",
+    listSummary_other:
+      "{{count, number}} textes, le plus récent d’abord. La part de mots connus suit vos cartes.",
+    loadFailed: "Vos textes n’ont pas pu être chargés : {{reason}}",
+    emptyTitle: "Aucun texte pour l’instant",
+    emptyBody:
+      "Collez un texte ou importez un fichier .txt pour voir quels mots vous connaissez déjà et lesquels apprendre.",
+    source: { paste: "collé", file: "fichier .txt", ai: "écrit par l’IA" },
+    measuring: "Comptage des mots connus…",
+    known: "de mots connus",
+    noWords: "Aucun mot chinois dans ce texte",
+    toLearn_one: "{{count, number}} mot à apprendre",
+    toLearn_other: "{{count, number}} mots à apprendre",
+    measureFailed: "Les mots connus n’ont pas pu être comptés : {{reason}}",
+    deleteLabel: "Supprimer le texte « {{title}} »",
+    deleteTitle: "Supprimer ce texte ?",
+    deleteBody:
+      "« <0>{{title}}</0> » sera supprimé de cet appareil et de vos sauvegardes futures. Vos cartes, vos marques « Je connais » et votre lexique personnel restent.",
+    deleteConfirm: "Supprimer le texte",
+    deleteFailed: "Le texte n’a pas pu être supprimé : {{reason}}",
+    deleted: "Texte supprimé.",
+    imported: "Textes ajoutés +{{count, number}}.",
+    importedMarks: "Marques « Je connais » ajoutées +{{count, number}}.",
+    saved: "Texte enregistré : {{title}}",
+    cancel: "Annuler",
+    fileFailed: {
+      read: "Ce fichier n’a pas pu être lu : {{reason}}",
+      tooLarge:
+        "Ce fichier fait {{size}} et la limite est de {{max}}. Coupez-le d’abord dans un éditeur.",
+      utf32:
+        "Ce fichier est en UTF-32, que l’application ne sait pas lire. Enregistrez-le en UTF-8, puis importez-le de nouveau.",
+      unreadable: "Ce fichier n’est pas du texte lisible.",
+      empty: "Ce fichier est vide.",
+    },
+    back: "Bibliothèque",
+    pasteTitle: "Coller un texte",
+    importTitle: "Importer un .txt",
+    formIntro:
+      "Le texte reste sur cet appareil. Il est découpé en mots avec le dictionnaire, sans rien envoyer.",
+    encodingRead: "Lu en {{encoding}}",
+    gb18030Help:
+      "Ce fichier n’est pas en UTF-8 : il a été lu en GB18030. Si des caractères sont faux, le fichier n’est pas en GB18030 ; ouvrez-le dans un éditeur et enregistrez-le en UTF-8.",
+    titleLabel: "Titre (facultatif)",
+    titleHelp: "Sans titre, les premiers caractères du texte en tiennent lieu.",
+    bodyLabel: "Texte en chinois simplifié",
+    count: "{{count, number}} caractères sur {{max, number}}",
+    tooLong:
+      "Ce texte fait {{count, number}} caractères ; la limite est de {{max, number}}. Supprimez-en {{excess, number}} pour l’enregistrer.",
+    traditionalTitle: "Ce texte semble écrit en caractères traditionnels.",
+    traditionalBody:
+      "Le lecteur ne connaît que les caractères simplifiés : la plupart des mots seront marqués inconnus. Rien n’est converti. Vous pouvez l’enregistrer tel quel.",
+    save: "Enregistrer",
+    saveFailed: {
+      empty: "Ajoutez un texte avant d’enregistrer.",
+      tooLong: "Ce texte dépasse la limite de {{max, number}} caractères.",
+      titleTooLong: "Le titre est limité à {{max, number}} caractères.",
+      storage: "Le texte n’a pas pu être enregistré : {{reason}}",
+    },
+  },
   progress: {
     title: "Progression",
     show: "Afficher la série, l’XP et les succès",

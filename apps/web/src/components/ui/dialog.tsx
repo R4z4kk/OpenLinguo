@@ -11,7 +11,7 @@ export const Dialog = ({
   children,
 }: {
   readonly title: string;
-  readonly description: string | null;
+  readonly description: ReactNode;
   readonly onClose: () => void;
   readonly children: (close: () => void) => ReactNode;
 }) => {

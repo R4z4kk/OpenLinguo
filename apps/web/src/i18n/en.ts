@@ -404,7 +404,74 @@ export const en = {
     notAffiliated:
       "OpenLinguo is not affiliated with, nor endorsed by, Chinese Testing International (CTI) or the Center for Language Education and Cooperation (CLEC). HSK levels are given for reference only.",
   },
-  read: { title: "Read", intro: "Graded texts and the reader." },
+  read: {
+    title: "Read",
+    intro:
+      "Paste or import a text in Chinese: OpenLinguo splits it into words, marks the ones you do not know yet and works out the share you understand. The text stays on this device.",
+  },
+  library: {
+    paste: "Paste a text",
+    import: "Import a .txt",
+    listTitle: "My texts",
+    listSummary_one:
+      "{{count, number}} text, the latest first. The share of known words follows your cards.",
+    listSummary_other:
+      "{{count, number}} texts, the latest first. The share of known words follows your cards.",
+    loadFailed: "Your texts could not be loaded: {{reason}}",
+    emptyTitle: "No text yet",
+    emptyBody:
+      "Paste a text or import a .txt file to see which words you already know and which to learn.",
+    source: { paste: "pasted", file: ".txt file", ai: "written by AI" },
+    measuring: "Counting the known words…",
+    known: "of words known",
+    noWords: "No Chinese word in this text",
+    toLearn_one: "{{count, number}} word to learn",
+    toLearn_other: "{{count, number}} words to learn",
+    measureFailed: "The known words could not be counted: {{reason}}",
+    deleteLabel: "Delete the text “{{title}}”",
+    deleteTitle: "Delete this text?",
+    deleteBody:
+      "“<0>{{title}}</0>” will be removed from this device and from your future backups. Your cards, your “I know it” marks and your personal lexicon stay.",
+    deleteConfirm: "Delete the text",
+    deleteFailed: "The text could not be deleted: {{reason}}",
+    deleted: "Text deleted.",
+    imported: "Texts added +{{count, number}}.",
+    importedMarks: "“I know it” marks added +{{count, number}}.",
+    saved: "Text saved: {{title}}",
+    cancel: "Cancel",
+    fileFailed: {
+      read: "This file could not be read: {{reason}}",
+      tooLarge: "This file is {{size}} and the limit is {{max}}. Cut it in an editor first.",
+      utf32:
+        "This file is in UTF-32, which cannot be read. Save it as UTF-8, then import it again.",
+      unreadable: "This file is not readable text.",
+      empty: "This file is empty.",
+    },
+    back: "Library",
+    pasteTitle: "Paste a text",
+    importTitle: "Import a .txt",
+    formIntro:
+      "The text stays on this device. It is split into words with the dictionary, nothing is sent.",
+    encodingRead: "Read as {{encoding}}",
+    gb18030Help:
+      "This file is not in UTF-8: it was read as GB18030. If characters are wrong, the file is not in GB18030; open it in an editor and save it as UTF-8.",
+    titleLabel: "Title (optional)",
+    titleHelp: "Without a title, the first characters of the text stand in.",
+    bodyLabel: "Text in simplified Chinese",
+    count: "{{count, number}} characters of {{max, number}}",
+    tooLong:
+      "This text is {{count, number}} characters long; the limit is {{max, number}}. Remove {{excess, number}} to save it.",
+    traditionalTitle: "This text seems to be written in traditional characters.",
+    traditionalBody:
+      "The reader only knows simplified characters: most words will be marked unknown. Nothing is converted. You can save it as it is.",
+    save: "Save",
+    saveFailed: {
+      empty: "Add a text before saving.",
+      tooLong: "This text is above the limit of {{max, number}} characters.",
+      titleTooLong: "The title is limited to {{max, number}} characters.",
+      storage: "The text could not be saved: {{reason}}",
+    },
+  },
   progress: {
     title: "Progress",
     show: "Show streak, XP and achievements",
