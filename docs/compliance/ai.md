@@ -44,7 +44,7 @@ When both hold, "l'acteur ne fait que fournir un logiciel", and the GDPR does no
 
 1. Every call starts with a click by the learner. Nothing is sent in the background.
 2. The learner picks the provider and pastes their own key. No provider is preselected, and no key is shared or bundled with the app.
-3. There is no relay, proxy, analytics or log. Requests go straight from the browser to the provider, and the CSP `connect-src` only lists the presets and local servers.
+3. There is no relay, proxy, analytics or log. Requests go straight from the browser to the provider, and the CSP `connect-src` only lists the presets, local servers and the Wikidata endpoint, to which no AI payload goes ([Wikidata lookup](wikidata.md)).
 4. Each feature sends only what it needs. The « Sent: … » line shows this before the click.
 5. OpenLinguo receives nothing from providers: no affiliate link, no paid placement.
 

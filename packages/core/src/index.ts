@@ -196,3 +196,15 @@ export {
   type WritingQuizError,
   type WritingStep,
 } from "./writing-quiz.ts";
+export {
+  isWikidataSequence,
+  lookupWikidata,
+  WIKIDATA_ENDPOINT,
+  type WikidataCandidate,
+  type WikidataError,
+  type WikidataErrorKind,
+  type WikidataKind,
+  type WikidataLookup,
+  type WikidataRequest,
+  type WikidataResult,
+} from "./wikidata.ts";

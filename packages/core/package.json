@@ -9,7 +9,8 @@
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "record:ai": "node src/testing/record-ai-responses.ts"
+    "record:ai": "node src/testing/record-ai-responses.ts",
+    "record:wikidata": "node src/testing/record-wikidata-responses.ts"
   },
   "dependencies": {
     "pitchy": "4.1.0",
