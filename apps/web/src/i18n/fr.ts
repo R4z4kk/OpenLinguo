@@ -248,6 +248,20 @@ export const fr: Messages = {
     more: "Afficher plus de résultats",
     level: "HSK {{level}}",
     glossesIn: { en: "anglais", fr: "français" },
+    sentence: {
+      title: "Mots de la phrase",
+      intro:
+        "Aucune entrée pour la phrase entière\u00a0: voici ses mots, dans l’ordre, découpés d’après le dictionnaire.",
+      words_one: "{{count}} mot du dictionnaire",
+      words_other: "{{count}} mots du dictionnaire",
+      unknownCount_one: "{{count}} morceau inconnu",
+      unknownCount_other: "{{count}} morceaux inconnus",
+      unknown: "Inconnu",
+      unknownNote: "Pas dans le dictionnaire.",
+      otherReadings_one: "{{count}} autre lecture de <0>{{word}}</0>",
+      otherReadings_other: "{{count}} autres lectures de <0>{{word}}</0>",
+      startingWith: "Entrées commençant par ces caractères",
+    },
   },
   word: {
     notFound: "Cette forme n’a pas d’entrée dans le dictionnaire.",

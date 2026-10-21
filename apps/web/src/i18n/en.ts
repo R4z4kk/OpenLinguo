@@ -238,6 +238,20 @@ export const en = {
     more: "Show more results",
     level: "HSK {{level}}",
     glossesIn: { en: "English", fr: "French" },
+    sentence: {
+      title: "Words of the sentence",
+      intro:
+        "No entry for the whole sentence: here are its words, in order, split using the dictionary.",
+      words_one: "{{count}} dictionary word",
+      words_other: "{{count}} dictionary words",
+      unknownCount_one: "{{count}} unknown chunk",
+      unknownCount_other: "{{count}} unknown chunks",
+      unknown: "Unknown",
+      unknownNote: "Not in the dictionary.",
+      otherReadings_one: "{{count}} other reading of <0>{{word}}</0>",
+      otherReadings_other: "{{count}} other readings of <0>{{word}}</0>",
+      startingWith: "Entries starting with these characters",
+    },
   },
   word: {
     notFound: "This form has no dictionary entry.",
