@@ -12,6 +12,17 @@ export {
   type StructuredMode,
 } from "./ai-client.ts";
 export { AiProvenance } from "./ai-provenance.ts";
+export {
+  coverage,
+  knowledgeOf,
+  knownWords,
+  type Coverage,
+  type Knowledge,
+  type KnownWords,
+  type KnownWordsCard,
+  type KnownWordsInput,
+  type Occurrence,
+} from "./coverage.ts";
 export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {
