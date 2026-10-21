@@ -1,12 +1,14 @@
 import type { Token } from "@openlinguo/core";
 
 type Segment = { readonly chars: readonly string[]; readonly known: boolean };
+type Lexicon = { readonly has: (word: string) => boolean };
 
 const WORD_CHAR = /[\p{L}\p{N}]/u;
 const HAN = /\p{Script=Han}/u;
+const NO_HEADWORDS: ReadonlySet<string> = new Set();
 
 const longestWord = (
-  lexicon: ReadonlySet<string>,
+  lexicon: Lexicon,
   chars: readonly string[],
   start: number,
   end: number,
@@ -18,7 +20,7 @@ const longestWord = (
   return null;
 };
 
-const forward = (lexicon: ReadonlySet<string>, chars: readonly string[], maxLength: number) => {
+const forward = (lexicon: Lexicon, chars: readonly string[], maxLength: number) => {
   const segments: Segment[] = [];
   for (let index = 0; index < chars.length;) {
     const word = longestWord(lexicon, chars, index, Math.min(chars.length, index + maxLength));
@@ -30,7 +32,7 @@ const forward = (lexicon: ReadonlySet<string>, chars: readonly string[], maxLeng
   return segments;
 };
 
-const backward = (lexicon: ReadonlySet<string>, chars: readonly string[], maxLength: number) => {
+const backward = (lexicon: Lexicon, chars: readonly string[], maxLength: number) => {
   const segments: Segment[] = [];
   for (let end = chars.length; end > 0;) {
     let word: readonly string[] | null = null;
@@ -79,17 +81,25 @@ const mergeLooseWords = (segments: readonly Segment[]): readonly Segment[] => {
   return merged;
 };
 
-/** Bidirectional maximum matching over the lexicon; unknown characters stay single. */
+const wordLength = (word: string): number => Array.from(word).length;
+
+/**
+ * Bidirectional maximum matching over the lexicon; unknown characters stay single. `extra`
+ * headwords count for that call only, and the lexicon is not walked again for them.
+ */
 export const createSegmenter = (
   lexicon: ReadonlySet<string>,
-): ((text: string) => readonly Token[]) => {
-  let maxLength = 1;
-  for (const word of lexicon) maxLength = Math.max(maxLength, Array.from(word).length);
+): ((text: string, extra?: ReadonlySet<string>) => readonly Token[]) => {
+  let lexiconMaxLength = 1;
+  for (const word of lexicon) lexiconMaxLength = Math.max(lexiconMaxLength, wordLength(word));
 
-  return (text) => {
+  return (text, extra = NO_HEADWORDS) => {
     const chars = Array.from(text);
+    const words: Lexicon =
+      extra.size === 0 ? lexicon : { has: (word) => lexicon.has(word) || extra.has(word) };
+    const maxLength = Math.max(lexiconMaxLength, ...Array.from(extra, wordLength));
     const segments = mergeLooseWords(
-      pickSegmentation(forward(lexicon, chars, maxLength), backward(lexicon, chars, maxLength)),
+      pickSegmentation(forward(words, chars, maxLength), backward(words, chars, maxLength)),
     );
     let offset = 0;
     return segments.map(({ chars: segmentChars }) => {

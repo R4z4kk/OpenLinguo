@@ -97,12 +97,50 @@ export type ImeFeature = {
   ) => Promise<Result<readonly [ImeCandidate, ...ImeCandidate[]], ImeError>>;
 };
 
+/** A token of a text with the readings of its word. */
+export type AnnotatedToken = {
+  readonly text: string;
+  /** UTF-16 offsets in the text, as `Token`. */
+  readonly start: number;
+  readonly end: number;
+  /** A word of the language: punctuation, Latin letters and digits are not. */
+  readonly isWord: boolean;
+  /** Dictionary readings, best first; empty for a non-word and for a word the dictionary lacks. */
+  readonly readings: readonly string[];
+  /** The word has several readings. */
+  readonly ambiguous: boolean;
+};
+
+/** The reading chosen for an occurrence, keyed by the `start` of its token. */
+export type ReadingChoices = Readonly<Record<number, string>>;
+
+export type TextReadingError =
+  | InvalidReading
+  | { readonly kind: "unaligned-reading"; readonly text: string; readonly reading: string };
+
+export type TextReadingFeature = {
+  /** `extraHeadwords` are words to segment as one, besides the pack's own lexicon. */
+  readonly annotate: (
+    text: string,
+    extraHeadwords?: ReadonlySet<string>,
+  ) => Promise<Result<readonly AnnotatedToken[], LookupError>>;
+  /**
+   * The spoken reading of each token after tone sandhi, `null` where it has none. A token reads as
+   * its chosen reading when it is one of its readings, else as its first.
+   */
+  readonly pinyin: (
+    tokens: readonly AnnotatedToken[],
+    chosen?: ReadingChoices,
+  ) => Result<readonly (string | null)[], TextReadingError>;
+};
+
 export type LanguageFeatures = {
   readonly tones: ToneFeature | null;
   readonly strokes: StrokeFeature | null;
   readonly romanization: RomanizationFeature | null;
   readonly decomposition: DecompositionFeature | null;
   readonly ime: ImeFeature | null;
+  readonly textReading: TextReadingFeature | null;
 };
 
 export type FeatureName = keyof LanguageFeatures;
