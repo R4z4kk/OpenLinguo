@@ -20,3 +20,15 @@ pnpm --filter @openlinguo/core record:ai groq=<model>,<model without strict json
 ```
 
 Keys come from `GROQ_API_KEY`, `OPENROUTER_API_KEY` and `MISTRAL_API_KEY`, or from a hidden prompt; they are never written. The rate-limit scenario sends up to 60 quick calls. Lines starting with `!` got another outcome than expected: read the file before committing it.
+
+## Wikidata client
+
+`lookupWikidata` (`src/wikidata.ts`) checks unknown character sequences on Wikidata with one SPARQL `GET` per 50 sequences, as ADR 0014 decides. It returns the answers of the requests that succeeded and the first error, retries nothing and caches nothing. Its tests replay real answers from `src/testing/wikidata-responses/<scenario>.json`; the 429 is tested on the user manual's shape, as it cannot be triggered on demand.
+
+To record them again, run from the repository root:
+
+```sh
+pnpm --filter @openlinguo/core record:wikidata
+```
+
+It sends three requests, two seconds apart, with the User-Agent `OpenLinguo-recorder/1.0 (https://github.com/R4z4kk/OpenLinguo)`, as the Wikimedia User-Agent policy asks of scripts, and only for the public names of `src/testing/wikidata-recordings.ts`. Lines starting with `!` got another outcome than expected: nothing was written for them.

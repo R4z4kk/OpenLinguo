@@ -1,0 +1,952 @@
+{
+  "recordedAt": "2026-10-21",
+  "scenario": "homonyms",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/sparql",
+        "body": {
+          "query": "SELECT ?s ?item ?class ?coord ?fr ?en WHERE {\n  VALUES ?s { \"王芳\"@zh \"王芳\"@zh-hans }\n  { ?item rdfs:label ?s } UNION { ?item skos:altLabel ?s }\n  OPTIONAL { ?item wdt:P31 ?class }\n  OPTIONAL { ?item wdt:P625 ?coord }\n  OPTIONAL { ?item schema:description ?fr FILTER(LANG(?fr) = \"fr\") }\n  OPTIONAL { ?item schema:description ?en FILTER(LANG(?en) = \"en\") }\n}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "head": {
+            "vars": ["s", "item", "class", "coord", "fr", "en"]
+          },
+          "results": {
+            "bindings": [
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q56523680"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID: 0000-0003-3505-524X"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q60318086"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID ID = 0000-0002-3327-4177"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q61106638"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID ID = 0000-0003-0871-3454"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q61161710"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID ID = 0000-0001-9986-0948"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q65057031"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Kunqu actress (1963-)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q88403041"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0001-7676-091X)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q89345874"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0002-5280-2967)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q89647024"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0001-8788-589X)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q90568289"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0003-3470-9504)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q90595930"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0002-5787-1603)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q90997402"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0003-4888-1858)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q91444286"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0003-2972-6844)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q91773210"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher (ORCID 0000-0002-4781-8673)"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q101576903"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID 0000-0002-6674-5537"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "chercheur"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q16904076"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Chinese female singer"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "chanteuse chinoise"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q18654637"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "politician"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q18654637"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "politician"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45456714"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Qing dynasty person CBDB = 71069"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45456714"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Qing dynasty person CBDB = 71069"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45519563"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 279352"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45519563"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 279352"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567005"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 343102"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567005"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 343102"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567070"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 343103"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567070"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 343103"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567131"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Qing dynasty person CBDB = 343104"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567131"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Qing dynasty person CBDB = 343104"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567195"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Qing dynasty person CBDB = 343105"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45567195"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Qing dynasty person CBDB = 343105"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45581786"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 126572"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45581786"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 126572"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45599940"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 307682"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45599940"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Ming dynasty person CBDB = 307682"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45650543"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Yuan dynasty person CBDB = 100703"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q45650543"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Yuan dynasty person CBDB = 100703"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q3376697"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Chinese politician (1920-2009)"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "homme politique chinois"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q3376697"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Chinese politician (1920-2009)"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "homme politique chinois"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q4990185"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Olympic medalist in basketball"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "joueuse de basket-ball chinoise"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q4990185"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Olympic medalist in basketball"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "joueuse de basket-ball chinoise"
+                },
+                "s": {
+                  "xml:lang": "zh-hans",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q15884760"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Wikimedia disambiguation page"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "page d'homonymie de Wikimédia"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q4167410"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q103033666"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID 0000-0002-8034-6217"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "chercheur"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q103812083"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "researcher ORCID 0000-0001-6633-1978"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "chercheur"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q121288689"
+                },
+                "en": {
+                  "xml:lang": "en",
+                  "type": "literal",
+                  "value": "Chinese athlete"
+                },
+                "fr": {
+                  "xml:lang": "fr",
+                  "type": "literal",
+                  "value": "athlète chinoise"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              },
+              {
+                "item": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q24836212"
+                },
+                "s": {
+                  "xml:lang": "zh",
+                  "type": "literal",
+                  "value": "王芳"
+                },
+                "class": {
+                  "type": "uri",
+                  "value": "http://www.wikidata.org/entity/Q5"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

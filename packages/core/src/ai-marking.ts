@@ -1,7 +1,7 @@
 import type { AiProvider } from "./ai-client.ts";
 
 /** A fact read on `source` on `checkedOn`; CI fails from `reviewBy` until it is read again. */
-type DatedFact = {
+export type DatedFact = {
   readonly value: number | string;
   readonly source: string;
   readonly checkedOn: string;
