@@ -3,19 +3,20 @@ import {
   type DictEntry,
   type LanguageFeatures,
   type LookupError,
+  type Token,
 } from "@openlinguo/core";
 import type { ZhProficiency } from "@openlinguo/lang-zh";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
 import { useEffect, useId, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import { Credits } from "@/components/credits";
 import { GlossSummary } from "@/components/gloss-summary";
 import { Pinyin } from "@/components/pinyin";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
-import { searchDictionary, type SearchResults } from "@/data/search";
+import { searchDictionary, type SearchResults, type SentenceWord } from "@/data/search";
 import { languages, type Language } from "@/i18n/language";
 
 /** Results shown at once, and added by "Show more". */
@@ -47,17 +48,26 @@ type SearchState =
   | { readonly status: "done"; readonly query: string; readonly results: SearchResults }
   | { readonly status: "failed"; readonly failure: LookupError };
 
-const NO_RESULTS: SearchState = { status: "done", query: "", results: { total: 0, entries: [] } };
+const NO_RESULTS: SearchState = {
+  status: "done",
+  query: "",
+  results: { total: 0, entries: [], sentence: null },
+};
+
+const NO_TOKENS = (): readonly Token[] => [];
+
+const HAN = /\p{Script=Han}/u;
 
 const useDictionarySearch = (
   query: string,
   limit: number,
   referential: ZhProficiency,
+  tokenize: (text: string) => readonly Token[],
 ): SearchState => {
   const [state, setState] = useState<SearchState>(NO_RESULTS);
   useEffect(() => {
     let active = true;
-    void searchDictionary(database, referential, query, limit).then((result) => {
+    void searchDictionary(database, referential, query, limit, tokenize).then((result) => {
       if (!active) return;
       setState(
         result.ok
@@ -68,7 +78,7 @@ const useDictionarySearch = (
     return () => {
       active = false;
     };
-  }, [query, limit, referential]);
+  }, [query, limit, referential, tokenize]);
   return state;
 };
 
@@ -79,11 +89,13 @@ const failureMessage = (t: TFunction, failure: LookupError): string =>
 
 const ResultItem = ({
   entry,
+  otherReadings,
   features,
   referential,
   language,
 }: {
   readonly entry: DictEntry;
+  readonly otherReadings: number;
   readonly features: LanguageFeatures;
   readonly referential: ZhProficiency;
   readonly language: Language;
@@ -117,7 +129,90 @@ const ResultItem = ({
         )}
       </p>
       <GlossSummary glosses={entry.glosses} language={language} className="mt-1" />
+      {otherReadings > 0 && (
+        <Link
+          to="/learn/dictionary/$word"
+          params={{ word: entry.headword }}
+          className="relative mt-1 block min-h-6 w-fit text-small underline"
+        >
+          <Trans
+            i18nKey="dictionary.sentence.otherReadings"
+            count={otherReadings}
+            values={{ word: entry.headword }}
+            components={[<span key="word" lang="zh-Hans" />]}
+          />
+        </Link>
+      )}
     </li>
+  );
+};
+
+const UnknownItem = ({ text }: { readonly text: string }) => {
+  const { t } = useTranslation();
+  return (
+    <li className="py-4">
+      <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <span {...(HAN.test(text) ? { lang: "zh-Hans" } : {})} className="font-zh text-subtitle">
+          {text}
+        </span>
+        <span className="rounded-full border border-dashed border-muted px-2 text-caption text-muted">
+          {t("dictionary.sentence.unknown")}
+        </span>
+      </p>
+      <p className="mt-1 text-muted">{t("dictionary.sentence.unknownNote")}</p>
+    </li>
+  );
+};
+
+const summarize = (t: TFunction, results: SearchResults): string => {
+  const parts: string[] = [];
+  if (results.sentence !== null) {
+    const words = results.sentence.filter(({ kind }) => kind === "word").length;
+    const unknown = results.sentence.length - words;
+    const counts: string[] = [t("dictionary.sentence.words", { count: words })];
+    if (unknown > 0) counts.push(t("dictionary.sentence.unknownCount", { count: unknown }));
+    parts.push(counts.join(", "));
+  }
+  if (results.total > 0) parts.push(t("dictionary.results", { count: results.total }));
+  return parts.length === 0 ? t("dictionary.noResults") : parts.join(". ");
+};
+
+const SentenceSection = ({
+  words,
+  features,
+  referential,
+  language,
+}: {
+  readonly words: readonly SentenceWord[];
+  readonly features: LanguageFeatures;
+  readonly referential: ZhProficiency;
+  readonly language: Language;
+}) => {
+  const { t } = useTranslation();
+  const titleId = useId();
+  return (
+    <section aria-labelledby={titleId} className="mt-4">
+      <h2 id={titleId} className="text-subtitle">
+        {t("dictionary.sentence.title")}
+      </h2>
+      <p className="mt-2 text-muted">{t("dictionary.sentence.intro")}</p>
+      <ol className="mt-2 divide-y divide-hairline">
+        {words.map((word) =>
+          word.kind === "word" ? (
+            <ResultItem
+              key={word.entry.headword}
+              entry={word.entry}
+              otherReadings={word.otherReadings}
+              features={features}
+              referential={referential}
+              language={language}
+            />
+          ) : (
+            <UnknownItem key={word.text} text={word.text} />
+          ),
+        )}
+      </ol>
+    </section>
   );
 };
 
@@ -132,7 +227,8 @@ export const DictionaryPage = () => {
   const query = useDebounced(text.trim(), DEBOUNCE_MS);
   const [extended, setExtended] = useState({ query, limit: PAGE });
   const limit = extended.query === query ? extended.limit : PAGE;
-  const search = useDictionarySearch(query, limit, referential);
+  const tokenize = state.status === "ready" ? state.pack.tokenize : NO_TOKENS;
+  const search = useDictionarySearch(query, limit, referential, tokenize);
   const inputId = useId();
   const hintId = useId();
   const language = languages.find((lang) => lang === i18n.language) ?? "en";
@@ -180,23 +276,32 @@ export const DictionaryPage = () => {
         />
       </form>
       <p role="status" className="mt-4 text-small text-muted">
-        {answered &&
-          (search.results.total === 0
-            ? t("dictionary.noResults")
-            : t("dictionary.results", { count: search.results.total }))}
+        {answered && summarize(t, search.results)}
       </p>
       {search.status === "failed" && (
         <p role="alert" className="mt-4 text-danger">
           {failureMessage(t, search.failure)}
         </p>
       )}
+      {results?.sentence != null && (
+        <SentenceSection
+          words={results.sentence}
+          features={state.pack.features}
+          referential={referential}
+          language={language}
+        />
+      )}
       {results !== null && results.entries.length > 0 && (
         <>
+          {results.sentence !== null && (
+            <h2 className="mt-8 text-subtitle">{t("dictionary.sentence.startingWith")}</h2>
+          )}
           <ol className="divide-y divide-hairline">
             {results.entries.map((entry) => (
               <ResultItem
                 key={`${entry.headword}\t${entry.reading ?? ""}`}
                 entry={entry}
+                otherReadings={0}
                 features={state.pack.features}
                 referential={referential}
                 language={language}

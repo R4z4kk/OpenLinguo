@@ -1,5 +1,5 @@
 import "fake-indexeddb/auto";
-import { readingKey } from "@openlinguo/lang-zh";
+import { createSegmenter, readingKey } from "@openlinguo/lang-zh";
 import { beforeAll, describe, expect, it } from "vitest";
 import { openDatabase, type Database, type StoredEntry } from "./database.ts";
 import { indexRecord } from "./search-index.ts";
@@ -69,7 +69,25 @@ const rows: StoredEntry[] = [
   entry("北晶", "bei3 jing1", { fr: ["cristal du nord"], lexicon: false }),
   entry("先", "xian1", { en: ["first"], levels: [3, 1], frequency: 6.1 }),
   entry("西安", "Xi1 an1", { en: ["Xi'an"], frequency: 4.9 }),
+  entry("明天", "ming2 tian1", {
+    en: ["tomorrow"],
+    fr: ["demain"],
+    levels: [1, 1],
+    frequency: 5.3,
+  }),
+  entry("我", "wo3", { en: ["I", "me"], levels: [1, 1], frequency: 6.5 }),
+  entry("我们", "wo3 men5", { en: ["we"], levels: [1, 1], frequency: 6.1, variants: ["我們"] }),
+  entry("去", "qu4", { en: ["to go"], levels: [1, 1], frequency: 6.2 }),
+  entry("长城", "Chang2 cheng2", { en: ["Great Wall"], frequency: 4.4 }),
+  entry("看看", "kan4 kan5", { en: ["to have a look"], frequency: 4.6 }),
+  entry("吧", "ba5", { en: ["(particle)"], levels: [1, 1], frequency: 6 }),
+  entry("吧", "ba1", { en: ["bar"], frequency: 3 }),
+  entry("吧", "bia1", { en: ["(onomatopoeia)"] }),
 ];
+
+const tokenize = createSegmenter(
+  new Set(rows.filter(({ lexicon }) => lexicon).map(({ simplified }) => simplified)),
+);
 
 let db: Database;
 
@@ -95,7 +113,7 @@ const headwordsIn = async (
   query: string,
   referential: "hsk-2025" | "gf0025-2021" = "hsk-2025",
 ): Promise<string[]> => {
-  const result = await searchDictionary(searched, referential, query, 50);
+  const result = await searchDictionary(searched, referential, query, 50, tokenize);
   if (!result.ok) throw new Error(result.error.kind);
   return result.value.entries.map((found) => `${found.headword} ${found.reading ?? ""}`);
 };
@@ -215,15 +233,15 @@ describe("searchDictionary", () => {
   });
 
   it("returns the best entries and the number of matches", async () => {
-    const result = await searchDictionary(db, "hsk-2025", "dian", 2);
+    const result = await searchDictionary(db, "hsk-2025", "dian", 2, tokenize);
     expect(result.ok && result.value.total).toBe(8);
     expect(result.ok && result.value.entries.map((found) => found.headword)).toEqual(["点", "电"]);
   });
 
   it("finds nothing for a blank query or one that is neither Chinese nor a gloss", async () => {
-    expect(await searchDictionary(db, "hsk-2025", "  ", 50)).toEqual({
+    expect(await searchDictionary(db, "hsk-2025", "  ", 50, tokenize)).toEqual({
       ok: true,
-      value: { total: 0, entries: [] },
+      value: { total: 0, entries: [], sentence: null },
     });
     expect(await headwords("the")).toEqual([]);
     expect(await headwords("!?")).toEqual([]);
@@ -232,14 +250,14 @@ describe("searchDictionary", () => {
   it("reports a storage failure", async () => {
     const closed = openDatabase("search-closed-test");
     closed.close();
-    const result = await searchDictionary(closed, "hsk-2025", "dian", 50);
+    const result = await searchDictionary(closed, "hsk-2025", "dian", 50, tokenize);
     expect(result.ok || result.error.kind).toBe("storage-failure");
   });
 
   it("reports entries missing from an index", async () => {
     const broken = await store("search-broken-test", rows);
     await broken.entries.delete("电\tdian4");
-    expect(await searchDictionary(broken, "hsk-2025", "dian", 50)).toEqual({
+    expect(await searchDictionary(broken, "hsk-2025", "dian", 50, tokenize)).toEqual({
       ok: false,
       error: { kind: "dataset-missing", dataset: "entries" },
     });
@@ -253,5 +271,61 @@ describe("searchDictionary", () => {
     expect(await headwordsIn(updated, "ordinateur")).toEqual(["电脑 dian4 nao3"]);
     await updated.meta.put({ key: "dataVersion", value: "v2" });
     expect(await headwordsIn(updated, "ordinateur")).toEqual([]);
+  });
+});
+
+const sentenceOf = async (query: string): Promise<string[] | null> => {
+  const result = await searchDictionary(db, "hsk-2025", query, 50, tokenize);
+  if (!result.ok) throw new Error(result.error.kind);
+  return (
+    result.value.sentence?.map((word) =>
+      word.kind === "unknown"
+        ? `? ${word.text}`
+        : `${word.entry.headword} ${word.entry.reading ?? ""}${word.otherReadings > 0 ? ` +${String(word.otherReadings)}` : ""}`,
+    ) ?? null
+  );
+};
+
+describe("searchDictionary on a sentence", () => {
+  it("lists its words in reading order, punctuation left out", async () => {
+    expect(await sentenceOf("明天我们去长城看看吧！")).toEqual([
+      "明天 ming2 tian1",
+      "我们 wo3 men5",
+      "去 qu4",
+      "长城 Chang2 cheng2",
+      "看看 kan4 kan5",
+      "吧 ba5 +2",
+    ]);
+  });
+
+  it("shows the reading the results put first and counts the others", async () => {
+    expect(await sentenceOf("吧我")).toEqual(["吧 ba5 +2", "我 wo3"]);
+  });
+
+  it("marks what the dictionary has no entry for, and never glosses it", async () => {
+    expect(await sentenceOf("我OpenLinguo去。")).toEqual(["我 wo3", "? OpenLinguo", "去 qu4"]);
+    expect(await sentenceOf("我𫠒去")).toEqual(["我 wo3", "? 𫠒", "去 qu4"]);
+  });
+
+  it("lists a word that comes back once", async () => {
+    expect(await sentenceOf("我去我去")).toEqual(["我 wo3", "去 qu4"]);
+  });
+
+  it("is left out when the query has an entry, in simplified or traditional characters", async () => {
+    expect(await sentenceOf("电话")).toBeNull();
+    expect(await sentenceOf("我們")).toBeNull();
+    expect(await sentenceOf("北晶")).toBeNull();
+  });
+
+  it("is left out with no word of the dictionary, or when the query is not Chinese", async () => {
+    expect(await sentenceOf("𫠒")).toBeNull();
+    expect(await sentenceOf("dian")).toBeNull();
+    expect(await sentenceOf("  ")).toBeNull();
+  });
+
+  it("comes with the entries that start with the query", async () => {
+    const result = await searchDictionary(db, "hsk-2025", "打电", 50, tokenize);
+    expect(result.ok && result.value.entries.map((found) => found.headword)).toEqual(["打电话"]);
+    expect(await sentenceOf("打电")).toEqual(["? 打", "电 dian4"]);
   });
 });

@@ -1,4 +1,11 @@
-import { err, ok, type DictEntry, type LookupError, type Result } from "@openlinguo/core";
+import {
+  err,
+  ok,
+  type DictEntry,
+  type LookupError,
+  type Result,
+  type Token,
+} from "@openlinguo/core";
 import {
   matchesPinyin,
   parsePinyinQuery,
@@ -15,10 +22,20 @@ const MIN_WORD_PREFIX = 3;
 
 const HAN = /\p{Script=Han}/u;
 
+/** A word of a sentence: its first reading and how many others the headword has, or a chunk with no entry. */
+export type SentenceWord =
+  | { readonly kind: "word"; readonly entry: DictEntry; readonly otherReadings: number }
+  | { readonly kind: "unknown"; readonly text: string };
+
 export type SearchResults = {
   /** Number of matching entries; `entries` holds the first ones. */
   readonly total: number;
   readonly entries: readonly DictEntry[];
+  /**
+   * The words of a Chinese query with no exact entry, in reading order, each once; `null` when
+   * the query has an entry or the dictionary knows none of its words.
+   */
+  readonly sentence: readonly SentenceWord[] | null;
 };
 
 type Match = { readonly entry: StoredEntry; readonly exact: boolean };
@@ -112,18 +129,51 @@ export const compareMatches =
     );
   };
 
+const sentenceWords = async (
+  db: Database,
+  referential: ZhProficiency,
+  tokenize: (text: string) => readonly Token[],
+  query: string,
+): Promise<readonly SentenceWord[] | null> => {
+  const texts = [
+    ...new Set(
+      tokenize(query)
+        .filter(({ isWord }) => isWord)
+        .map(({ text }) => text),
+    ),
+  ];
+  const rows = await db.entries.where("simplified").anyOf(texts).toArray();
+  const words = texts.map((text): SentenceWord => {
+    const ranked = rows
+      .filter(({ simplified }) => simplified === text)
+      .map((entry): Match => ({ entry, exact: true }))
+      .sort(compareMatches(referential));
+    const first = ranked[0] ?? null;
+    return first === null
+      ? { kind: "unknown", text }
+      : {
+          kind: "word",
+          entry: toDictEntry(first.entry, referential),
+          otherReadings: ranked.length - 1,
+        };
+  });
+  return words.some(({ kind }) => kind === "word") ? words : null;
+};
+
 /**
  * Searches the offline dictionary by Chinese characters (simplified or traditional), pinyin
- * with or without tones, or English and French glosses; returns the `limit` best entries.
+ * with or without tones, or English and French glosses; returns the `limit` best entries. A
+ * Chinese query with no entry of its own is also split into words with `tokenize`.
  */
 export const searchDictionary = async (
   db: Database,
   referential: ZhProficiency,
   text: string,
   limit: number,
+  tokenize: (text: string) => readonly Token[],
 ): Promise<Result<SearchResults, LookupError>> => {
   const query = text.trim();
-  if (query === "") return ok({ total: 0, entries: [] });
+  if (query === "") return ok({ total: 0, entries: [], sentence: null });
   try {
     let found: Match[];
     if (HAN.test(query)) {
@@ -137,9 +187,14 @@ export const searchDictionary = async (
       if (matches.get(match.entry.id)?.exact !== true) matches.set(match.entry.id, match);
     }
     const ranked = [...matches.values()].sort(compareMatches(referential));
+    const sentence =
+      HAN.test(query) && !ranked.some(({ exact }) => exact)
+        ? await sentenceWords(db, referential, tokenize, query)
+        : null;
     return ok({
       total: ranked.length,
       entries: ranked.slice(0, limit).map(({ entry }) => toDictEntry(entry, referential)),
+      sentence,
     });
   } catch (error) {
     if (error instanceof MissingEntries)
