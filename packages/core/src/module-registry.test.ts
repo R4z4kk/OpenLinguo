@@ -18,6 +18,8 @@ const prompts: PromptPack = {
   correction: task,
   vocabulary: task,
   glossTranslation: task,
+  explanation: task,
+  story: task,
   checkReading: () => Promise.resolve(ok([])),
 };
 
