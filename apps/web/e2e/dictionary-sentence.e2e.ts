@@ -3,6 +3,9 @@ import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
 
+/** The first search of a test reads the dictionary cold, and WebKit's IndexedDB is slow on CI. */
+const FIRST_SEARCH = { timeout: 30_000 };
+
 test("splits a sentence with no entry into its words", async ({ page }) => {
   await page.goto("/learn/dictionary");
   const search = page.getByRole("searchbox", { name: en.dictionary.label });
@@ -10,7 +13,7 @@ test("splits a sentence with no entry into its words", async ({ page }) => {
 
   await search.fill("明天我们去长城看看吧！");
   const words = page.getByRole("region", { name: en.dictionary.sentence.title });
-  await expect(words).toBeVisible();
+  await expect(words).toBeVisible(FIRST_SEARCH);
   await expect(page.getByRole("status")).toHaveText("6 dictionary words");
   await expect(words.getByRole("listitem")).toHaveCount(6);
   for (const word of ["明天", "我们", "去", "长城", "看看", "吧"]) {
@@ -35,7 +38,7 @@ test("marks what the dictionary does not know, and gives no gloss", async ({ pag
     .getByRole("listitem")
     .filter({ hasText: "OpenLinguo" })
     .filter({ hasText: en.dictionary.sentence.unknown });
-  await expect(unknown).toBeVisible();
+  await expect(unknown).toBeVisible(FIRST_SEARCH);
   await expect(unknown).toContainText(en.dictionary.sentence.unknownNote);
   await expect(unknown.getByRole("link")).toHaveCount(0);
   await expect(page.getByRole("status")).toHaveText("4 dictionary words, 1 unknown chunk");
@@ -53,7 +56,7 @@ test("lists the words above the entries that start with the query", async ({ pag
     level: 2,
     name: en.dictionary.sentence.startingWith,
   });
-  await expect(words).toBeVisible();
+  await expect(words).toBeVisible(FIRST_SEARCH);
   await expect(matches).toBeVisible();
   await expect(page.getByRole("link", { name: "打电话", exact: true })).toBeVisible();
   const [wordsBox, matchesBox] = [await words.boundingBox(), await matches.boundingBox()];

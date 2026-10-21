@@ -91,7 +91,7 @@ test("offers speech recognition, downloads it on request, checks a sentence and 
   });
   await main.getByLabel(en.readAloud.sentence).fill(SENTENCE);
   await main.getByRole("button", { name: en.speak.record }).click();
-  const status = main.getByRole("status");
+  const status = main.getByRole("region", { name: en.readAloud.title }).getByRole("status");
   await expect(status).toContainText(en.hear.allRight, { timeout: 90_000 });
   await expect(status).toContainText(`${en.hear.heard} ${SENTENCE}`);
   expect(await accessibilityViolations(page)).toEqual([]);
@@ -120,7 +120,9 @@ test("offers speech recognition, downloads it on request, checks a sentence and 
   });
   await main.getByLabel(en.readAloud.sentence).fill(SENTENCE);
   await main.getByRole("button", { name: en.speak.record }).click();
-  await expect(main.getByRole("status")).toContainText(en.hear.allRight, { timeout: 90_000 });
+  await expect(
+    main.getByRole("region", { name: en.readAloud.title }).getByRole("status"),
+  ).toContainText(en.hear.allRight, { timeout: 90_000 });
 
   // Deleted while offline: nothing is left to load and nothing can be downloaded, which the page says.
   await main.getByRole("button", { name: en.speech.delete }).click();

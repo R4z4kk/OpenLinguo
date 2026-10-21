@@ -26,7 +26,9 @@ import {
   type StoredDeck,
   type StoredDeckWord,
   type StoredJournalEntry,
+  type StoredKnownMark,
   type StoredNote,
+  type StoredText,
 } from "./database.ts";
 import { DECK_NAME_MAX, entryId, sameDeckName, type DeckFailure } from "./decks.ts";
 import { Interests } from "./interests.ts";
@@ -54,6 +56,20 @@ export const Settings = z.object({
 export type Settings = z.output<typeof Settings>;
 
 const Header = z.object({ format: z.literal(BACKUP_FORMAT), version: z.number().int().min(1) });
+
+const TextFields = z.object({
+  id: z.uuid(),
+  title: z.string().min(1),
+  body: z.string().min(1),
+  createdAt: z.number().int().nonnegative(),
+  readingChoices: z.record(z.string().regex(/^\d+$/u), z.string().min(1)),
+});
+
+/** A story has its provenance, any other text none. The size limit is not checked: it may be lowered. */
+const Text = z.discriminatedUnion("source", [
+  TextFields.extend({ source: z.enum(["paste", "file"]), provenance: z.null() }),
+  TextFields.extend({ source: z.literal("ai"), provenance: AiProvenance }),
+]);
 
 const DeckId = z.union([z.literal(MY_WORDS), z.uuid()]);
 
@@ -133,8 +149,21 @@ export const Backup = z
         }),
       )
       .default([]),
+    // Backups made before the library have no texts and no known marks.
+    texts: z.array(Text).default([]),
+    knownMarks: z
+      .array(
+        z.object({
+          headword: z.string().min(1),
+          readingKey: z.string().min(1),
+          markedAt: z.number().int().nonnegative(),
+        }),
+      )
+      .default([]),
   })
-  .superRefine(({ reviews, decks, deckWords, notes, challenges, aiGlosses, journal }, context) => {
+  .superRefine((backup, context) => {
+    const { reviews, decks, deckWords, notes, challenges, aiGlosses, journal, texts, knownMarks } =
+      backup;
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -164,6 +193,17 @@ export const Backup = z
     journal.forEach(({ day }, index) => {
       if (entryDays.has(day)) issue(["journal", index, "day"], "Duplicate journal day");
       entryDays.add(day);
+    });
+    const textIds = new Set<string>();
+    texts.forEach(({ id }, index) => {
+      if (textIds.has(id)) issue(["texts", index, "id"], "Duplicate text id");
+      textIds.add(id);
+    });
+    const markIds = new Set<string>();
+    knownMarks.forEach((mark, index) => {
+      const id = entryId(mark);
+      if (markIds.has(id)) issue(["knownMarks", index], "Duplicate mark for this reading");
+      markIds.add(id);
     });
     const glossIds = new Set<string>();
     aiGlosses.forEach((gloss, index) => {
@@ -218,6 +258,8 @@ const learningTables = (db: Database) => [
   db.challenges,
   db.aiGlosses,
   db.journal,
+  db.texts,
+  db.knownMarks,
 ];
 
 export const exportBackup = (
@@ -255,6 +297,8 @@ export const exportBackup = (
           }),
         ),
         journal: await db.journal.toArray(),
+        texts: await db.texts.orderBy("createdAt").toArray(),
+        knownMarks: await db.knownMarks.toArray(),
       }),
     ),
   );
@@ -269,6 +313,8 @@ export type ImportSummary = {
   readonly challenges: number;
   readonly glosses: number;
   readonly journal: number;
+  readonly texts: number;
+  readonly marks: number;
 };
 
 const replayCards = (
@@ -358,6 +404,15 @@ export const importBackup = (
           (entry, index) => entry.updatedAt > (localEntries[index]?.updatedAt ?? -1),
         );
 
+        const localTexts = await db.texts.bulkGet(backup.texts.map(({ id }) => id));
+        const newTexts: StoredText[] = backup.texts.filter((_, index) => localTexts[index] == null);
+        const localMarks = await db.knownMarks.bulkGet(
+          backup.knownMarks.map(({ headword, readingKey }) => [headword, readingKey]),
+        );
+        const newMarks: StoredKnownMark[] = backup.knownMarks.filter(
+          (_, index) => localMarks[index] == null,
+        );
+
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
         await db.decks.bulkAdd(newDecks);
@@ -366,6 +421,8 @@ export const importBackup = (
         await db.aiGlosses.bulkPut(newerGlosses);
         await db.challenges.bulkPut(newerChallenges);
         await db.journal.bulkPut(newerEntries);
+        await db.texts.bulkAdd(newTexts);
+        await db.knownMarks.bulkAdd(newMarks);
         return ok({
           reviews: newReviews.length,
           cards: cards.size - localCards,
@@ -375,6 +432,8 @@ export const importBackup = (
           challenges: newerChallenges.length,
           glosses: newerGlosses.length,
           journal: newerEntries.length,
+          texts: newTexts.length,
+          marks: newMarks.length,
         });
       },
     ),
