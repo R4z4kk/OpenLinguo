@@ -11,6 +11,7 @@ import { database, type StoredText } from "@/data/database";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import {
   describeCoverageFailure,
+  knownPercent,
   loadKnownWords,
   measureText,
   wordsToLearn,
@@ -85,10 +86,9 @@ const CoverageLine = ({ stats }: { readonly stats: Stats | null }) => {
         {t("library.measureFailed", { reason: stats.reason })}
       </p>
     );
-  const { known, total } = stats.measure;
-  if (total === 0) return <p className="text-muted">{t("library.noWords")}</p>;
+  if (stats.measure.total === 0) return <p className="text-muted">{t("library.noWords")}</p>;
   const percent = new Intl.NumberFormat(i18n.language, { style: "percent" }).format(
-    Math.floor((100 * known) / total) / 100,
+    knownPercent(stats.measure) / 100,
   );
   return (
     <p>
@@ -115,7 +115,13 @@ const TextRow = ({
     <li className="flex items-start gap-3 rounded-card border border-hairline bg-surface py-3 pr-3 pl-4">
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <h3 lang="zh-Hans" className="font-zh text-pinyin font-semibold wrap-anywhere">
-          {text.title}
+          <Link
+            to="/read/$id"
+            params={{ id: text.id }}
+            className="inline-flex min-h-11 items-center underline"
+          >
+            {text.title}
+          </Link>
         </h3>
         <p className="text-small text-muted">
           {date} · {t(`library.source.${text.source}`)}

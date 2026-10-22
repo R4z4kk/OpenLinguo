@@ -16,6 +16,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { openDatabase, type Database } from "./database.ts";
 import {
   describeCoverageFailure,
+  knownPercent,
   loadKnownWords,
   measureText,
   wordsToLearn,
@@ -138,6 +139,15 @@ describe("measureText", () => {
     expect(
       await measureText(reading, known.value, { body: "Hello, 2026!", readingChoices: {} }),
     ).toEqual(ok({ known: 0, total: 0, unknownWords: 0, unresolved: 0 }));
+  });
+});
+
+describe("knownPercent", () => {
+  it("floors the share so that 97.6 % never reads 98 %", () => {
+    expect(knownPercent({ known: 244, total: 250 })).toBe(97);
+    expect(knownPercent({ known: 49, total: 50 })).toBe(98);
+    expect(knownPercent({ known: 0, total: 3 })).toBe(0);
+    expect(knownPercent({ known: 3, total: 3 })).toBe(100);
   });
 });
 

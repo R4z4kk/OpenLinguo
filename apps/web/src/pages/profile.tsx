@@ -43,6 +43,7 @@ export const ProfilePage = () => {
         <ReferentialSwitcher />
         <GoalSwitcher name="dailyGoal" />
         <GoalSwitcher name="newCardsPerDay" />
+        <GoalSwitcher name="coverageTarget" />
         <PracticeSwitches />
       </div>
       <h2 className="mt-8 text-subtitle">{t("profile.display")}</h2>

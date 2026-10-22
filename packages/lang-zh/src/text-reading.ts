@@ -40,6 +40,9 @@ const readingOf = (token: AnnotatedToken, chosen: ReadingChoices): string | null
 
 type Reading = { readonly index: number; readonly word: ReadingWord };
 
+/** Lookups in flight at once: thousands queued together make IndexedDB slower per lookup (WebKit). */
+const LOOKUPS_IN_FLIGHT = 100;
+
 export const createTextReading = (
   lookup: DictionaryLookup,
   tokenize: (text: string, extra?: ReadonlySet<string>) => readonly Token[],
@@ -49,11 +52,17 @@ export const createTextReading = (
     const forms = Array.from(new Set(tokens.map((token) => token.text))).filter((form) =>
       HAN.test(form),
     );
-    const found = await Promise.all(forms.map(async (form) => [form, await lookup(form)] as const));
     const readings = new Map<string, readonly string[]>();
-    for (const [form, entries] of found) {
-      if (!entries.ok) return entries;
-      readings.set(form, readingsOf(entries.value));
+    for (let index = 0; index < forms.length; index += LOOKUPS_IN_FLIGHT) {
+      const wave = await Promise.all(
+        forms
+          .slice(index, index + LOOKUPS_IN_FLIGHT)
+          .map(async (form) => [form, await lookup(form)] as const),
+      );
+      for (const [form, entries] of wave) {
+        if (!entries.ok) return entries;
+        readings.set(form, readingsOf(entries.value));
+      }
     }
     return ok(
       tokens.map(({ text: word, start, end }) => {

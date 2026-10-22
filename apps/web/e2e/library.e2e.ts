@@ -1,8 +1,9 @@
-import { expect, type Page } from "@playwright/test";
+import { expect } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { fr } from "../src/i18n/fr.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
+import { put } from "./seed.ts";
 
 const SENTENCE = "我们去学校。";
 const MARKED_WORD = { headword: "我们", readingKey: "wo3 men5", markedAt: 1 };
@@ -11,32 +12,6 @@ const TRADITIONAL_GB18030 = Buffer.from(
   "ced28283d566c4c7d165b5c4ef4cbeb0badcc3c0a1a3cbfd8283d949c1cbb659ceefa1a3",
   "hex",
 );
-
-type Store = "texts" | "knownMarks";
-
-/** Writes a row as the app stores it: the page must have opened the database once. */
-const put = (page: Page, store: Store, row: object): Promise<void> =>
-  page.evaluate(
-    ({ name, value }) =>
-      new Promise<void>((resolve, reject) => {
-        const open = indexedDB.open("openlinguo");
-        open.onerror = () => {
-          reject(new Error(String(open.error)));
-        };
-        open.onsuccess = () => {
-          const transaction = open.result.transaction(name, "readwrite");
-          transaction.objectStore(name).put(value);
-          transaction.onerror = () => {
-            reject(new Error(String(transaction.error)));
-          };
-          transaction.oncomplete = () => {
-            open.result.close();
-            resolve();
-          };
-        };
-      }),
-    { name: store, value: row },
-  );
 
 test("pastes a text, shows its share of known words and deletes it with the keyboard", async ({
   page,

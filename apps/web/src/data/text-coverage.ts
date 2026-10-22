@@ -1,6 +1,5 @@
 import {
   coverage,
-  err,
   knownWords,
   ok,
   type AnnotatedToken,
@@ -58,6 +57,45 @@ export type Measure = Coverage & { readonly unresolved: number };
 export const wordsToLearn = ({ unknownWords, unresolved }: Measure): number =>
   unknownWords - unresolved;
 
+/** The share of known word tokens, floored so that 97.6 % never reads 98 %; `total` is not 0. */
+export const knownPercent = ({ known, total }: Pick<Measure, "known" | "total">): number =>
+  Math.floor((100 * known) / total);
+
+export const occurrencesOf = (
+  tokens: readonly AnnotatedToken[],
+  chosen: ReadingChoices,
+): Result<readonly Occurrence[], InvalidReading> => {
+  const occurrences: Occurrence[] = [];
+  for (const token of tokens) {
+    const occurrence = occurrenceOf(token, chosen);
+    if (!occurrence.ok) return occurrence;
+    occurrences.push(occurrence.value);
+  }
+  return ok(occurrences);
+};
+
+/** The distinct words with no dictionary entry, validated names apart. */
+export const unresolvedWords = (
+  occurrences: readonly Occurrence[],
+  known: KnownWords,
+): readonly string[] => [
+  ...new Set(
+    occurrences
+      .filter(
+        ({ text, isWord, readingKey: key }) => isWord && key === null && !known.names.has(text),
+      )
+      .map(({ text }) => text),
+  ),
+];
+
+export const measureOccurrences = (
+  occurrences: readonly Occurrence[],
+  known: KnownWords,
+): Measure => ({
+  ...coverage(occurrences, known),
+  unresolved: unresolvedWords(occurrences, known).length,
+});
+
 /** Known word tokens over word tokens of one text, with the readings the learner chose. */
 export const measureText = async (
   feature: TextReadingFeature,
@@ -66,20 +104,8 @@ export const measureText = async (
 ): Promise<Result<Measure, CoverageFailure>> => {
   const tokens = await feature.annotate(body);
   if (!tokens.ok) return tokens;
-  const occurrences: Occurrence[] = [];
-  for (const token of tokens.value) {
-    const occurrence = occurrenceOf(token, readingChoices);
-    if (!occurrence.ok) return err(occurrence.error);
-    occurrences.push(occurrence.value);
-  }
-  const unresolved = new Set(
-    occurrences
-      .filter(
-        ({ text, isWord, readingKey: key }) => isWord && key === null && !known.names.has(text),
-      )
-      .map(({ text }) => text),
-  );
-  return ok({ ...coverage(occurrences, known), unresolved: unresolved.size });
+  const occurrences = occurrencesOf(tokens.value, readingChoices);
+  return occurrences.ok ? ok(measureOccurrences(occurrences.value, known)) : occurrences;
 };
 
 /** The detail shown in an error message. */

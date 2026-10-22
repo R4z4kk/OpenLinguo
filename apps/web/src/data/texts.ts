@@ -2,7 +2,7 @@ import { err, ok, type Result } from "@openlinguo/core";
 import type { Database, StoredText } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
-/** Provisional: the reader's benchmark confirms or changes it (ADR 0014). */
+/** Confirmed by the reader benchmark on 2026-10-22 (ADR 0014, update). */
 export const MAX_TEXT_CHARACTERS = 20_000;
 export const TITLE_MAX = 100;
 const DEFAULT_TITLE_CHARACTERS = 12;
@@ -62,6 +62,13 @@ export const saveText = (
     await db.texts.add(text);
     return ok(text);
   });
+
+/** The text, `null` when the id is unknown (deleted, or a stale link). */
+export const loadText = (
+  db: Database,
+  id: string,
+): Promise<Result<StoredText | null, ReviewLogFailure>> =>
+  guarded(async () => ok((await db.texts.get(id)) ?? null));
 
 /** Every text, the latest first. */
 export const listTexts = (db: Database): Promise<Result<readonly StoredText[], ReviewLogFailure>> =>
