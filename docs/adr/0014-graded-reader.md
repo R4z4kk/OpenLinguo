@@ -81,13 +81,13 @@ All choices below are the maintainer's, 2026-10-20.
 
 The reader's benchmark (`apps/web/e2e/reader-benchmark.e2e.ts`, Chromium and WebKit) opens texts of 9,770 words. The median of three runs, from the start of the page to the last word on screen, with the pinyin on unknown words (the default):
 
-| Characters | Chromium (Windows) | WebKit (Linux, headless) | WebKit, every word distinct |
-|---|---|---|---|
-| 20,000 | 0.9 s | 6.0 s | 18.9 s |
-| 10,000 | | 3.4 s | 6.7 s |
-| 5,000 | | 1.1 s | 2.1 s |
+| Characters | Chromium (Windows) | WebKit (Linux, Docker, headless) | WebKit, every word distinct | WebKit on the GitHub runner (CI) |
+|---|---|---|---|---|
+| 20,000 | 0.9 s | 6.0 s | 18.9 s | 16.9 s (every word distinct: 30.3 s) |
+| 10,000 | | 3.4 s | 6.7 s | |
+| 5,000 | | 1.1 s | 2.1 s | |
 
 (5,000 characters: one run, before the lookups were bounded.) A typical text repeats each word about three times; the last column is the most lookups a text of that size can cause. Where the time goes at 20,000 characters in WebKit: 1.8 s of dictionary lookups, 4 s of rendering with the pinyin (0.2 s without it), 30 ms for the known words and the pinyin. Segmenting 20,000 characters takes about 0.13 s (V8).
 
 - **No Web Worker**: the CPU work that could move is under 0.2 s. The time is spent in IndexedDB, which is as slow in a worker, and in rendering, which cannot leave the main thread. What helped instead: one read transaction for all the lookups of a text, at most 100 lookups in flight (thousands queued together made each lookup slower in WebKit), `content-visibility: auto` on paragraphs, and fewer elements per word.
-- **Import limit**: 20,000 characters confirmed (maintainer, 2026-10-22). The reader shows a status line while it splits the text, and arrow keys take 16 ms once it is drawn.
+- **Import limit**: 20,000 characters confirmed (maintainer, 2026-10-22), after the CI runner (two vCPUs, software rendering, about 2.8 times slower than the Docker run) took 16.9 s for a typical text. The reader shows a status line while it splits the text, and arrow keys take 16 ms once it is drawn.

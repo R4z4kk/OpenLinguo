@@ -4,8 +4,8 @@ import { test } from "./app.ts";
 import { put } from "./seed.ts";
 
 const CHARACTERS = 20_000;
-/** The median open of a typical text takes this long at most, from the start of the page to its last word. */
-const BUDGET_MS = 15_000;
+/** The median open of a typical text takes this long at most: GitHub's WebKit runner took 17 s. */
+const BUDGET_MS = 30_000;
 /** Every word distinct: far more lookups than any real text of this size causes. */
 const WORST_CASE_BUDGET_MS = 90_000;
 
