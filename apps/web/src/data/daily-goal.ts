@@ -12,7 +12,7 @@ import type { LocalTime } from "./decks.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
 /** A value chosen among presets, stored as text. */
-export type PresetSetting<Value extends number | boolean> = {
+export type PresetSetting<Value extends number | boolean | string> = {
   readonly key: string;
   readonly values: readonly Value[];
   readonly fallback: Value;
@@ -33,7 +33,7 @@ export const NEW_CARDS_PER_DAY = {
 } as const;
 
 /** The stored preset, the fallback when absent or unknown; fails when storage is unavailable. */
-export const loadSetting = <Value extends number | boolean>(
+export const loadSetting = <Value extends number | boolean | string>(
   storage: () => Pick<Storage, "getItem">,
   setting: PresetSetting<Value>,
 ): Result<Value, string> => {
@@ -42,14 +42,14 @@ export const loadSetting = <Value extends number | boolean>(
   return ok(setting.values.find((value) => String(value) === stored.value) ?? setting.fallback);
 };
 
-export const saveSetting = <Value extends number | boolean>(
+export const saveSetting = <Value extends number | boolean | string>(
   storage: () => Pick<Storage, "setItem">,
   setting: PresetSetting<Value>,
   value: Value,
 ): Result<null, string> => writeStored(storage, setting.key, String(value));
 
 /** The value in use: the fallback when storage is unavailable, which Profile reports. */
-export const currentSetting = <Value extends number | boolean>(
+export const currentSetting = <Value extends number | boolean | string>(
   storage: () => Pick<Storage, "getItem">,
   setting: PresetSetting<Value>,
 ): Value => {

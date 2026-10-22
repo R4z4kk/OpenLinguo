@@ -129,6 +129,25 @@ describe("annotate", () => {
     expect(asked.toSorted()).toEqual(["了", "好"]);
   });
 
+  it("keeps the lookups in flight to a few, whatever the number of words", async () => {
+    const characters = Array.from({ length: 250 }, (_, index) =>
+      String.fromCodePoint(0x4e00 + index),
+    );
+    let inFlight = 0;
+    let most = 0;
+    const lookup: DictionaryLookup = async () => {
+      inFlight += 1;
+      most = Math.max(most, inFlight);
+      await Promise.resolve();
+      inFlight -= 1;
+      return ok([]);
+    };
+    const annotated = await textReading(lookup).annotate(characters.join(""));
+    expect(annotated.ok && annotated.value).toHaveLength(250);
+    expect(most).toBeGreaterThan(1);
+    expect(most).toBeLessThanOrEqual(100);
+  });
+
   it("returns the lookup's failure", async () => {
     const lookup: DictionaryLookup = () =>
       Promise.resolve(err({ kind: "storage-failure", message: "closed" }));
