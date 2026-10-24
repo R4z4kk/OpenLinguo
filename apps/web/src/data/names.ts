@@ -5,6 +5,7 @@ import type { FetchFile, ImportFailure, ImportProgress } from "./import.ts";
 import { importOnDemand } from "./on-demand.ts";
 
 const DIR = "jieba-names/";
+export const NAMES_INDEX = `${DIR}index.json`;
 
 const toStored = (file: string, [word, kind]: NameRow): StoredName => ({
   id: `${word}\t${kind}`,

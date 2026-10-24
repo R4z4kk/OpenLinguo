@@ -97,6 +97,65 @@ describe("loadKnownWords", () => {
   });
 });
 
+describe("the personal lexicon", () => {
+  it("counts its proper names as known, not its other words", async () => {
+    await db.lexicon.bulkAdd([
+      {
+        headword: "王小红",
+        kind: "person",
+        reading: null,
+        gloss: null,
+        source: "learner",
+        provenance: null,
+        validatedAt: 1,
+      },
+      {
+        headword: "热可可",
+        kind: "word",
+        reading: null,
+        gloss: null,
+        source: "learner",
+        provenance: null,
+        validatedAt: 1,
+      },
+    ]);
+    const known = await loadKnownWords(db, "zh");
+    expect(known.ok && [...known.value.names]).toEqual(["王小红"]);
+  });
+
+  it("is segmented as words when the text is measured: a name is known, a word stays unresolved", async () => {
+    await db.lexicon.bulkAdd([
+      {
+        headword: "王小红",
+        kind: "person",
+        reading: null,
+        gloss: null,
+        source: "learner",
+        provenance: null,
+        validatedAt: 1,
+      },
+      {
+        headword: "热可可",
+        kind: "word",
+        reading: null,
+        gloss: null,
+        source: "learner",
+        provenance: null,
+        validatedAt: 1,
+      },
+    ]);
+    const known = await loadKnownWords(db, "zh");
+    if (!known.ok) throw new Error(known.error.kind);
+    const text = { body: "王小红去学校，热可可。", readingChoices: {} };
+    expect(await measureText(reading, known.value, text)).toEqual(
+      ok({ known: 0, total: 8, unknownWords: 7, unresolved: 5 }),
+    );
+    expect(await measureText(reading, known.value, text, new Set(["王小红", "热可可"]))).toEqual(
+      ok({ known: 1, total: 4, unknownWords: 3, unresolved: 1 }),
+    );
+  });
+});
+
 describe("measureText", () => {
   it("counts known words over the words of the text, and the words still to learn", async () => {
     await db.cards.add(card("去", "qu4", after(["good", "good"])));

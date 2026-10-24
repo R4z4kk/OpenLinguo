@@ -45,6 +45,7 @@ export { createPrompts, type ZhProficiency } from "./prompts.ts";
 export { applySandhi, type ReadingWord, type SandhiError } from "./sandhi.ts";
 export { createSegmenter } from "./segment.ts";
 export { alignChars, readingChars, type CharMatch, type SpokenChar } from "./transcript.ts";
+export { findUnknownSequences, sentenceAround, type UnknownSequence } from "./unknown-sequences.ts";
 
 export type ZhPackSources = {
   readonly lookup: DictionaryLookup;

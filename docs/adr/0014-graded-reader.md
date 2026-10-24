@@ -91,3 +91,16 @@ The reader's benchmark (`apps/web/e2e/reader-benchmark.e2e.ts`, Chromium and Web
 
 - **No Web Worker**: the CPU work that could move is under 0.2 s. The time is spent in IndexedDB, which is as slow in a worker, and in rendering, which cannot leave the main thread. What helped instead: one read transaction for all the lookups of a text, at most 100 lookups in flight (thousands queued together made each lookup slower in WebKit), `content-visibility: auto` on paragraphs, and fewer elements per word.
 - **Import limit**: 20,000 characters confirmed (maintainer, 2026-10-22), after the CI runner (two vCPUs, software rendering, about 2.8 times slower than the Docker run) took 16.9 s for a typical text. The reader shows a status line while it splits the text, and arrow keys take 16 ms once it is drawn.
+
+## Update (2026-10-24, #229)
+
+Measured on the real segmenter (CC-CEDICT, HSK 2025 levels, seven lines of HSK 1–3 prose with three names): 28 runs of one-character segments, 24 of them made only of HSK 1–3 words (去了, 我很好, 他也是). Maintainer decisions:
+
+- **Common runs**: they are not cards of the main list. The panel puts them last in a group that is closed by default, flagged « Pas pour Wikidata », never sent to Wikidata. A run the extended lexicon has leaves the group and joins the main list. HSK 1–3 means levels 1 to 3 of HSK 2025 (988 words), whatever the referential the learner follows.
+- **Cache**: `resolutions.found` is the list of what the source found, empty when it found nothing, so a cached answer gives its proposals back without a new request.
+- **Reject**: rejecting a proposal lasts for the visit; nothing is hidden for good.
+- **Kinds**: `lexicon.kind` is person, place, organization, name or word. The first four count as known in coverage; a `word` is segmented as one token and stays « absent du dictionnaire » (a card needs a dictionary entry).
+- **Lists**: one download for the extended lexicon (6.4 MB) and the name list (2.2 MB), 8.6 MB in all, the size read from the `bytes` of each index.
+- **Storage**: Dexie version 24 adds `lexicon` and `resolutions`, both in the backup (older backups import with them empty).
+
+Known limit: the edges are cut before the extended lexicon is asked, so a word of that list that starts or ends with a common character (一串红, 一丝丝) is not proposed; the learner corrects the sequence by hand. Asking for every part of the raw run is a possible follow-up.
