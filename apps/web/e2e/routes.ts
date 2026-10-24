@@ -61,6 +61,10 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
     url: "/read/00000000-0000-4000-8000-000000000000",
     ready: (page) => page.getByText(en.reader.notFound),
   },
+  "/read/$id/unknown": {
+    url: "/read/00000000-0000-4000-8000-000000000000/unknown",
+    ready: (page) => page.getByText(en.reader.notFound),
+  },
   "/profile": {
     url: "/profile",
     ready: (page) =>

@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
 import { Passage } from "@/components/reader-passage";
 import { SegmentedControl } from "@/components/segmented-control";
+import { UnknownWordsLink } from "@/components/unknown-words-link";
 import { WordSheet, type SheetChange } from "@/components/word-sheet";
 import { currentSetting, loadSetting, saveSetting } from "@/data/daily-goal";
 import { database, type StoredText } from "@/data/database";
@@ -277,7 +278,11 @@ const Reader = ({
       )}
       {view?.ok === true && ready !== null && (
         <>
-          <CoverageBlock view={view.value} target={target} action={null} />
+          <CoverageBlock
+            view={view.value}
+            target={target}
+            action={<UnknownWordsLink id={text.id} body={text.body} tokens={ready.tokens} />}
+          />
           {pinyinFailure === null ? (
             <PinyinControl
               mode={mode}

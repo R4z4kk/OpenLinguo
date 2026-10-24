@@ -45,10 +45,16 @@ const pack = (
   rows: readonly unknown[],
 ): OnDemandFile & { readonly content: string } => {
   const content = `[\n${rows.map((row) => JSON.stringify(row)).join(",\n")}\n]\n`;
-  return { name, sha256: sha256(content), rows: rows.length, content };
+  return {
+    name,
+    sha256: sha256(content),
+    rows: rows.length,
+    bytes: Buffer.byteLength(content),
+    content,
+  };
 };
 
-const versionOf = (files: readonly OnDemandFile[]): string =>
+const versionOf = (files: readonly Pick<OnDemandFile, "name" | "sha256">[]): string =>
   sha256(files.map((file) => `${file.name}:${file.sha256}`).join("\n"));
 
 const megabytes = (bytes: number): string => `${(bytes / 1_000_000).toFixed(1)} MB`;
@@ -70,10 +76,11 @@ const packOnDemand = async (dataset: string, prefix: string, row: z.ZodType): Pr
   }
   const index: OnDemandIndex = {
     version: versionOf(files),
-    files: files.map(({ name, sha256: hash, rows: count }) => ({
+    files: files.map(({ name, sha256: hash, rows: count, bytes }) => ({
       name,
       sha256: hash,
       rows: count,
+      bytes,
     })),
   };
   return { dir: `${dataset}/`, rows: rows.length, files, index };

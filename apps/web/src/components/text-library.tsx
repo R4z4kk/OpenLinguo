@@ -8,6 +8,7 @@ import { AiBadge } from "@/components/ai-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { database, type StoredText } from "@/data/database";
+import { loadLexicon } from "@/data/lexicon";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import {
   describeCoverageFailure,
@@ -59,8 +60,14 @@ const useStats = (
       const todo = texts.filter(({ id }) => !measured.current.has(id));
       if (todo.length === 0) return;
       const known = await loadKnownWords(database, pack.id);
+      const lexicon = await loadLexicon(database);
+      const measureOf = async (text: StoredText) => {
+        if (!known.ok) return known;
+        if (!lexicon.ok) return lexicon;
+        return measureText(feature, known.value, text, lexicon.value.headwords);
+      };
       for (const text of todo) {
-        const measure = known.ok ? await measureText(feature, known.value, text) : known;
+        const measure = await measureOf(text);
         if (!active) return;
         measured.current.add(text.id);
         const next: Stats = measure.ok

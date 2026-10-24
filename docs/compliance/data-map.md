@@ -22,7 +22,7 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | AI settings: provider, local server address, model, the structured-output mode that worked per model, whether the AI notice was seen (#181, #207) | No | Consent-exempt storage (Loi Informatique et Libertés art. 82, see [AI features](ai.md#13-storing-the-key)) |
 | AI key (#181) | Secret | In IndexedDB, or in memory only with « Don't remember the key »; sent only to its provider, in the `Authorization` header; never in the backup file, sync or any other request; « Forget the key » deletes it. Consent-exempt like the settings |
 | Preferences (language, theme, tone colors, Anki field and card template choices per note type) | No | Consent-exempt UI personalization |
-| Backup file (JSON, exported from Profile) | Yes (learning data) | Cards, review log, personal decks, settings, interests, challenges, journal entries, texts and « Je connais » marks, AI corrections and AI glosses with their provenance; no dictionary data, never the AI key. Saved wherever the user chooses; OpenLinguo never receives it. Import merges by ids |
+| Backup file (JSON, exported from Profile) | Yes (learning data) | Cards, review log, personal decks, settings, interests, challenges, journal entries, texts, « Je connais » marks, the personal lexicon and the answers kept from Wikidata and AI checks, AI corrections and AI glosses with their provenance; no dictionary data, never the AI key. Saved wherever the user chooses; OpenLinguo never receives it. Import merges by ids |
 
 ## On the OpenLinguo server (from M7)
 

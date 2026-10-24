@@ -31,6 +31,8 @@ import {
   type StoredKnownMark,
   type StoredText,
 } from "./database.ts";
+import type { LexiconEntry } from "./lexicon.ts";
+import type { Resolution } from "./resolutions.ts";
 
 const DAY = 24 * 60 * 60_000;
 const start = Date.UTC(2026, 9, 21, 6);
@@ -139,6 +141,24 @@ const MARKS: StoredKnownMark[] = [
   { headword: "行", readingKey: "hang2", markedAt: start + 1 },
 ];
 
+const NAME: LexiconEntry = {
+  headword: "王小红",
+  kind: "person",
+  reading: "wang2 xiao3 hong2",
+  gloss: null,
+  source: "name-signal",
+  provenance: null,
+  validatedAt: start,
+};
+const ANSWER: Resolution = {
+  sequence: "王小红",
+  source: "wikidata",
+  found: [{ kind: "person", reading: null, gloss: "chanteuse", provenance: null }],
+  checkedAt: start,
+};
+const NOTHING: Resolution = { sequence: "袁家界拍", source: "ai", found: [], checkedAt: start };
+const byHeadword = (a: LexiconEntry, b: LexiconEntry): number => (a.headword < b.headword ? -1 : 1);
+
 const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Review => ({
   id: uuid(n),
   cardId,
@@ -185,6 +205,8 @@ const backup = (data: Partial<Backup>): Backup => ({
   journal: [],
   texts: [],
   knownMarks: [],
+  lexicon: [],
+  resolutions: [],
   ...data,
 });
 
@@ -293,6 +315,36 @@ describe("round trip", () => {
     expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ texts: 0, marks: 0 }));
   });
 
+  it("brings the personal lexicon and the kept answers back, the latest of each", async () => {
+    const AI_ENTRY = {
+      ...NAME,
+      headword: "李明",
+      source: "ai" as const,
+      provenance: AI_NOTE.provenance,
+    };
+    await db.lexicon.bulkAdd([NAME, AI_ENTRY]);
+    await db.resolutions.bulkAdd([ANSWER, NOTHING]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    expect(exported.value.lexicon).toEqual([AI_ENTRY, NAME].toSorted(byHeadword));
+    expect(exported.value.resolutions).toHaveLength(2);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    await restored.lexicon.add({ ...NAME, gloss: "newer", validatedAt: NAME.validatedAt + 1 });
+    await restored.resolutions.add({ ...ANSWER, found: [], checkedAt: ANSWER.checkedAt - 1 });
+    expect(await importBackup(restored, parsed.value)).toMatchObject(
+      ok({ lexicon: 1, resolutions: 2 }),
+    );
+    expect(await restored.lexicon.get("王小红")).toMatchObject({ gloss: "newer" });
+    expect(await restored.lexicon.get("李明")).toEqual(AI_ENTRY);
+    expect(await restored.resolutions.get(["王小红", "wikidata"])).toEqual(ANSWER);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(
+      ok({ lexicon: 0, resolutions: 0 }),
+    );
+  });
+
   it("keeps the local text when the same one is in the backup", async () => {
     const chosen = { ...PASTED, readingChoices: { 4: "jia1", 7: "le5" } };
     await db.texts.add(PASTED);
@@ -348,6 +400,8 @@ describe("round trip", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await restored.cards.toArray()).toEqual(
@@ -449,6 +503,24 @@ describe("parseBackup", () => {
     Reflect.deleteProperty(before, "texts");
     Reflect.deleteProperty(before, "knownMarks");
     expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
+  it("reads a backup made before the unknown-words panel as having no lexicon and no answers", () => {
+    const before = backup({});
+    Reflect.deleteProperty(before, "lexicon");
+    Reflect.deleteProperty(before, "resolutions");
+    expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
+  it("refuses a headword twice, and a source's answer twice", () => {
+    expect(parseBackup(JSON.stringify(backup({ lexicon: [NAME, NAME] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "lexicon.1.headword" }] },
+    });
+    expect(parseBackup(JSON.stringify(backup({ resolutions: [ANSWER, ANSWER] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "resolutions.1" }] },
+    });
   });
 
   it("refuses two texts with one id, and two marks of one reading", () => {
@@ -558,6 +630,8 @@ describe("importBackup", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await db.cards.get(RECOGNITION.id)).toEqual({
@@ -590,6 +664,8 @@ describe("importBackup", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await importBackup(db, data)).toEqual(
@@ -604,6 +680,8 @@ describe("importBackup", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await db.decks.toArray()).toEqual([ANIMALS]);
@@ -636,6 +714,8 @@ describe("importBackup", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await db.decks.toArray()).toEqual([
@@ -670,6 +750,8 @@ describe("importBackup", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await importBackup(db, data)).toEqual(
@@ -684,6 +766,8 @@ describe("importBackup", () => {
         journal: 0,
         texts: 0,
         marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect((await db.notes.toArray()).map(({ id, meaning }) => [id, meaning])).toEqual([

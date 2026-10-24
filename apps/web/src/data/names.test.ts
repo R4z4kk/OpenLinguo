@@ -21,7 +21,9 @@ const rows: NameRow[] = [
 ];
 const index: OnDemandIndex = {
   version: hash(rows),
-  files: [{ name: "names-000.json", sha256: hash(rows), rows: rows.length }],
+  files: [
+    { name: "names-000.json", sha256: hash(rows), rows: rows.length, bytes: encode(rows).length },
+  ],
 };
 const served = new Map([
   ["jieba-names/index.json", encode(index)],

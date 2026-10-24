@@ -217,6 +217,9 @@ export const BackupControls = ({ onRestored }: { readonly onRestored: () => void
         {outcome?.kind === "imported" &&
           outcome.summary.marks > 0 &&
           ` ${t("library.importedMarks", { count: outcome.summary.marks })}`}
+        {outcome?.kind === "imported" &&
+          outcome.summary.lexicon > 0 &&
+          ` ${t("unknownWords.imported", { count: outcome.summary.lexicon })}`}
       </p>
       {outcome?.kind === "imported" && outcome.unsaved !== null && (
         <p role="alert" className="mt-2 text-danger">

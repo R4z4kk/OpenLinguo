@@ -12,6 +12,7 @@ import {
   type TextReadingFeature,
 } from "@openlinguo/core";
 import type { Database } from "./database.ts";
+import { readLexicon } from "./lexicon.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 import {
   measureOccurrences,
@@ -20,13 +21,20 @@ import {
   type Measure,
 } from "./text-coverage.ts";
 
-/** Every lookup of the text in one read transaction: one per word is what makes WebKit slow. */
+/**
+ * Every lookup of the text in one read transaction: one per word is what makes WebKit slow. The
+ * personal lexicon is segmented as words.
+ */
 export const annotateText = (
   db: Database,
   feature: TextReadingFeature,
   body: string,
 ): Promise<Result<readonly AnnotatedToken[], LookupError | ReviewLogFailure>> =>
-  guarded(() => db.transaction("r", db.entries, () => feature.annotate(body)));
+  guarded(() =>
+    db.transaction("r", [db.entries, db.lexicon], async () =>
+      feature.annotate(body, (await readLexicon(db)).headwords),
+    ),
+  );
 
 const OPENING = /^[\p{Ps}\p{Pi}]+$/u;
 const CLOSING = /^[\p{Pe}\p{Pf}\p{Po}]+$/u;
