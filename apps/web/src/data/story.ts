@@ -96,7 +96,7 @@ export const saveStory = (
           .map(([sequence, kind]) => ({
             sequence,
             source: "ai" as const,
-            found: [{ kind, reading: null, gloss: null, provenance }],
+            found: [{ kind, reading: null, gloss: null, reference: null, provenance }],
             checkedAt: at,
           })),
       );

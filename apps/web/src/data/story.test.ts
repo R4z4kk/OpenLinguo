@@ -190,7 +190,9 @@ describe("saveStory", () => {
       {
         sequence: "丁丹妮",
         source: "ai",
-        found: [{ kind: "person", reading: null, gloss: null, provenance: PROVENANCE }],
+        found: [
+          { kind: "person", reading: null, gloss: null, reference: null, provenance: PROVENANCE },
+        ],
         checkedAt: AT,
       },
     ]);
@@ -207,6 +209,7 @@ describe("saveStory", () => {
                   kind: "person",
                   reading: null,
                   gloss: null,
+                  reference: null,
                   provenance: PROVENANCE,
                 },
               ],
@@ -222,7 +225,15 @@ describe("saveStory", () => {
     const earlier = {
       sequence: "袁家界",
       source: "ai" as const,
-      found: [{ kind: "place" as const, reading: null, gloss: "a scenic area", provenance: null }],
+      found: [
+        {
+          kind: "place" as const,
+          reading: null,
+          gloss: "a scenic area",
+          reference: null,
+          provenance: null,
+        },
+      ],
       checkedAt: AT - HOUR,
     };
     await db.resolutions.add(earlier);
