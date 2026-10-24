@@ -283,6 +283,7 @@ export const TextLibrary = ({ pack }: { readonly pack: LanguagePack | null }) =>
       {deleting !== null && (
         <Dialog
           title={t("library.deleteTitle")}
+          sheet={null}
           description={
             <Trans
               i18nKey="library.deleteBody"

@@ -1,8 +1,10 @@
-import type {
-  AnnotatedToken,
-  KnownWords,
-  LanguagePack,
-  TextReadingFeature,
+import {
+  ok,
+  type AnnotatedToken,
+  type KnownWords,
+  type LanguagePack,
+  type Result,
+  type TextReadingFeature,
 } from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
@@ -12,6 +14,7 @@ import { AiBadge } from "@/components/ai-badge";
 import { Passage } from "@/components/reader-passage";
 import { SegmentedControl } from "@/components/segmented-control";
 import { UnknownWordsLink } from "@/components/unknown-words-link";
+import { WordSheet, type SheetChange } from "@/components/word-sheet";
 import { currentSetting, loadSetting, saveSetting } from "@/data/daily-goal";
 import { database, type StoredText } from "@/data/database";
 import { annotateText, gapToTarget, readerView, type ReaderView } from "@/data/reader";
@@ -21,7 +24,7 @@ import {
   READER_PINYIN,
   type PinyinMode,
 } from "@/data/reader-settings";
-import { describeFailure } from "@/data/review-log";
+import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import {
   describeCoverageFailure,
   knownPercent,
@@ -185,7 +188,8 @@ const Reader = ({
   const [initial] = useState(() => loadSetting(storage, READER_PINYIN));
   const [mode, setMode] = useState<PinyinMode>(initial.ok ? initial.value : READER_PINYIN.fallback);
   const [modeFailure, setModeFailure] = useState<string | null>(initial.ok ? null : initial.error);
-  /** `start` of the token of the selected word; the word sheet (#228) opens from it. */
+  const [choices, setChoices] = useState(text.readingChoices);
+  /** `start` of the token of the word open in the sheet. */
   const [selected, setSelected] = useState<number | null>(null);
   const [loaded, setLoaded] = useState<Loaded>({ status: "loading" });
 
@@ -210,10 +214,10 @@ const Reader = ({
 
   const view = useMemo(() => {
     if (loaded.status !== "ready") return null;
-    const built = readerView(feature, loaded.tokens, loaded.known, text.readingChoices);
+    const built = readerView(feature, loaded.tokens, loaded.known, choices);
     performance.mark("reader:derived");
     return built;
-  }, [loaded, feature, text.readingChoices]);
+  }, [loaded, feature, choices]);
 
   useEffect(() => {
     if (view?.ok === true) performance.mark("reader:rendered");
@@ -229,9 +233,27 @@ const Reader = ({
         ? describeCoverageFailure(view.error)
         : null;
   const pinyinFailure = view?.ok === true ? view.value.pinyinFailure : null;
-  const tokens = loaded.status === "ready" ? loaded.tokens : null;
+  const ready = loaded.status === "ready" ? loaded : null;
+  const selectedToken = ready?.tokens.find(({ start }) => start === selected) ?? null;
+
+  const apply = async (change: SheetChange): Promise<Result<null, ReviewLogFailure>> => {
+    if (change.kind === "choice") setChoices(change.choices);
+    if (change.kind === "known" || change.kind === "forgotten") {
+      const reloaded = await loadKnownWords(database, pack.id);
+      if (!reloaded.ok) return reloaded;
+      setLoaded((current) =>
+        current.status === "ready" ? { ...current, known: reloaded.value } : current,
+      );
+    }
+    return ok(null);
+  };
+
   return (
-    <section aria-labelledby={`${ids}-title`} className="max-w-2xl">
+    // The sheet covers the lower half of the screen: room to scroll the word above it.
+    <section
+      aria-labelledby={`${ids}-title`}
+      className={cn("max-w-2xl", selected !== null && "pb-[50dvh]")}
+    >
       <BackToLibrary />
       <h1 id={`${ids}-title`} lang="zh-Hans" className="font-zh text-title wrap-anywhere">
         {text.title}
@@ -254,12 +276,12 @@ const Reader = ({
           {t("reader.loadFailed", { reason: failure })}
         </p>
       )}
-      {view?.ok === true && tokens !== null && (
+      {view?.ok === true && ready !== null && (
         <>
           <CoverageBlock
             view={view.value}
             target={target}
-            action={<UnknownWordsLink id={text.id} body={text.body} tokens={tokens} />}
+            action={<UnknownWordsLink id={text.id} body={text.body} tokens={ready.tokens} />}
           />
           {pinyinFailure === null ? (
             <PinyinControl
@@ -283,11 +305,11 @@ const Reader = ({
           )}
           <div className="mt-4">
             <Passage
-              tokens={tokens}
+              tokens={ready.tokens}
               paragraphs={view.value.paragraphs}
               knowledge={view.value.knowledge}
               spoken={view.value.spoken}
-              choices={text.readingChoices}
+              choices={choices}
               mode={pinyinFailure === null ? mode : "none"}
               features={pack.features}
               selected={selected}
@@ -303,6 +325,21 @@ const Reader = ({
             {t("reader.severalReadings")}
           </span>
           <Legend />
+          {selectedToken !== null && (
+            <WordSheet
+              key={selectedToken.start}
+              token={selectedToken}
+              textId={text.id}
+              choices={choices}
+              known={ready.known}
+              measure={view.value.measure}
+              pack={pack}
+              onChange={apply}
+              onClose={() => {
+                setSelected(null);
+              }}
+            />
+          )}
         </>
       )}
     </section>
