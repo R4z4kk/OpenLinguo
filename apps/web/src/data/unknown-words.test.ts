@@ -96,7 +96,9 @@ describe("fromCache", () => {
       {
         sequence: "王小红",
         source: "wikidata",
-        found: [{ kind: "person", reading: null, gloss: "singer", provenance: null }],
+        found: [
+          { kind: "person", reading: null, gloss: "singer", reference: "Q1", provenance: null },
+        ],
         checkedAt: SEEN,
       },
       { sequence: "王小红", source: "ai", found: [], checkedAt: SEEN + 1 },
@@ -114,6 +116,7 @@ describe("fromCache", () => {
                   kind: "person",
                   reading: null,
                   gloss: "singer",
+                  reference: "Q1",
                   provenance: null,
                 },
               ],
@@ -147,6 +150,7 @@ describe("fromExtendedLexicon", () => {
                 kind: "word",
                 reading: "re4 ke3 ke3",
                 gloss: "hot cocoa; chocolate drink",
+                reference: null,
                 provenance: null,
               },
             ],
@@ -159,6 +163,7 @@ describe("fromExtendedLexicon", () => {
                 kind: "name",
                 reading: "Xiao3 ming2",
                 gloss: "John Doe",
+                reference: null,
                 provenance: null,
               },
             ],
@@ -190,6 +195,7 @@ describe("fromNameSignal", () => {
                 kind: "person",
                 reading: null,
                 gloss: null,
+                reference: null,
                 provenance: null,
               },
               {
@@ -197,6 +203,7 @@ describe("fromNameSignal", () => {
                 kind: "place",
                 reading: null,
                 gloss: null,
+                reference: null,
                 provenance: null,
               },
             ],
@@ -212,7 +219,9 @@ describe("resolveUnknownWords", () => {
     await db.resolutions.add({
       sequence: "王小红",
       source: "wikidata",
-      found: [{ kind: "person", reading: null, gloss: "singer", provenance: null }],
+      found: [
+        { kind: "person", reading: null, gloss: "singer", reference: "Q1", provenance: null },
+      ],
       checkedAt: SEEN,
     });
     await db.extendedWords.put(extendedRow("王小红", "wang2 xiao3 hong2", "name", ["a name"]));

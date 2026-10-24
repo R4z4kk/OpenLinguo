@@ -52,4 +52,4 @@ Use a key made only for OpenLinguo, with a spending cap if your provider offers 
 
 **What Wikimedia keeps.** The Foundation records your IP address temporarily. Under its [data retention guidelines](https://foundation.wikimedia.org/wiki/Policy:Data_retention_guidelines), request logs with your IP address and user agent are deleted, aggregated or de-identified after at most 90 days, and its system backups can keep data for up to 5 years. Its [privacy policy](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy) says how to ask it for access to or removal of your personal information. The analysis behind this text is in [wikidata.md](wikidata.md).
 
-**What you get back.** Wikidata's structured data is public domain (CC0). Nothing is applied to your words until you accept it.
+**What you get back.** Wikidata's structured data is public domain (CC0). Nothing is applied to your words until you accept it. The answers, including « nothing found », are kept on your device with their date and in your backup file, so the same sequence is not sent twice. Each result links to its Wikidata page, which opens only when you follow the link.

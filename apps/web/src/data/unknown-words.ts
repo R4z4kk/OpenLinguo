@@ -98,6 +98,7 @@ export const fromExtendedLexicon = async (
           kind: pos === "name" ? "name" : "word",
           reading,
           gloss: glosses.join("; "),
+          reference: null,
           provenance: null,
         })),
       );
@@ -122,6 +123,7 @@ export const fromNameSignal = async (
           kind,
           reading: null,
           gloss: null,
+          reference: null,
           provenance: null,
         })),
       );

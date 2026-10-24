@@ -105,6 +105,16 @@ Measured on the real segmenter (CC-CEDICT, HSK 2025 levels, seven lines of HSK 1
 
 Known limit: the edges are cut before the extended lexicon is asked, so a word of that list that starts or ends with a common character (一串红, 一丝丝) is not proposed; the learner corrects the sequence by hand. Asking for every part of the raw run is a possible follow-up.
 
+## Update (2026-10-24, #230)
+
+Maintainer decisions for « Chercher sur Wikidata »:
+
+- **Kind**: an item that is neither a person, a place nor an organization is proposed as `name` (« Nom propre »), which the learner can change in the form. A proposal keeps the item id (`Found.reference`) and links to it.
+- **One check per sequence**: a sequence Wikidata has answered, with or without a result, is not sent again; a « Revérifier » button is a possible follow-up.
+- **Notice**: shown once, before the first call, and remembered on the device with the AI notice flag (`aiNotice`, id `wikidata`, not in the backup), so no Dexie version is added.
+- **Homonyms**: five first, then « Voir les N autres »; « Aucun de ceux-là » appears when a card has several Wikidata proposals (with one, « Rejeter » does the same). The description kept is the one in the interface language at the time of the check, else the other one.
+- **Errors**: a network error, a timeout, a 429 or another failure is shown with what was kept, and nothing is retried; cancelling a running search keeps the batches already answered.
+
 ## Update (2026-10-24, #232)
 
 Maintainer decisions for the story form (`/read/story`, from « Écrire une histoire » in the Read tab):

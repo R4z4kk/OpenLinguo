@@ -1,52 +1,13 @@
-import { expect, type Locator, type Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
-import { put } from "./seed.ts";
+import { card, openPanel, press, rowsOf, seedText } from "./unknown-words-panel.ts";
 
-const TEXT_ID = "00000000-0000-4000-8000-0000000000b1";
 /** 丁丹妮 is a name of jieba's list, 丁母忧 a word of the extended lexicon, 我很好 only common words. */
 const BODY = "我们和丁丹妮去学校。他丁母忧。我很好。";
 
-const seed = async (page: Page): Promise<void> => {
-  await page.goto("/read");
-  await expect(page.getByRole("main").getByText(en.library.emptyTitle)).toBeVisible({
-    timeout: 90_000,
-  });
-  await put(page, "texts", {
-    id: TEXT_ID,
-    title: "周末",
-    body: BODY,
-    source: "paste",
-    createdAt: Date.UTC(2026, 9, 24, 10),
-    provenance: null,
-    readingChoices: {},
-  });
-};
-
-const press = async (page: Page, target: Locator, key = "Enter"): Promise<void> => {
-  await target.focus();
-  await page.keyboard.press(key);
-};
-
-/** From the library to the unknown-words panel with the keyboard only. */
-const openPanel = async (page: Page): Promise<Locator> => {
-  const main = page.getByRole("main");
-  await page.goto("/read");
-  const text = main.getByRole("link", { name: "周末" });
-  await expect(text).toBeVisible({ timeout: 90_000 });
-  await press(page, text);
-  const link = main.getByRole("link", { name: /^Unknown words in this text/ });
-  await expect(link).toHaveText(/· \d+$/u, { timeout: 60_000 });
-  await press(page, link);
-  await expect(main.getByRole("heading", { level: 1, name: /· \d+$/u })).toBeVisible();
-  return main;
-};
-
-const card = (main: Locator, sequence: string): Locator =>
-  main
-    .getByRole("listitem")
-    .filter({ has: main.page().getByRole("heading", { level: 2, name: sequence }) });
+const seed = (page: Page): Promise<void> => seedText(page, BODY);
 
 test("lists the unknown sequences, proposes from the downloaded lists and applies what is accepted", async ({
   page,
@@ -156,21 +117,6 @@ test("keeps what the learner typed in across a reload", async ({ page }) => {
   );
   await expect(main.getByRole("heading", { level: 2, name: "丁丹妮" })).toHaveCount(0);
 
-  const stored = await page.evaluate(
-    () =>
-      new Promise<unknown>((resolve, reject) => {
-        const open = indexedDB.open("openlinguo");
-        open.onerror = () => {
-          reject(new Error(String(open.error)));
-        };
-        open.onsuccess = () => {
-          const request = open.result.transaction("lexicon").objectStore("lexicon").getAll();
-          request.onsuccess = () => {
-            open.result.close();
-            resolve(request.result);
-          };
-        };
-      }),
-  );
+  const stored = await rowsOf(page, "lexicon");
   expect(stored).toMatchObject([{ headword: "丁丹妮", kind: "name", source: "learner" }]);
 });
