@@ -33,6 +33,7 @@ const NoticeDialog = ({
     <Dialog
       title={t("aiNotice.title")}
       description={`${t("aiNotice.intro")} ${t("aiNotice.machine")}`}
+      sheet={null}
       onClose={() => {
         if (confirmed.current) onConfirm();
         else onCancel();

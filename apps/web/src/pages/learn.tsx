@@ -342,6 +342,7 @@ const PersonalDecks = ({
           title={t(editing.action === "rename" ? "decks.renameTitle" : "decks.deleteTitle", {
             name: editing.deck.name,
           })}
+          sheet={null}
           description={
             editing.action === "delete" ? t("decks.leaving", { count: editing.deck.leaving }) : null
           }

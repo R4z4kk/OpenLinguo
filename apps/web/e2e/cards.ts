@@ -7,9 +7,10 @@ export const startCards = (
   page: Page,
   { headword, readingKey }: SeedCard,
   types: readonly string[],
+  phase: "review" | "learning" = "review",
 ): Promise<void> =>
   page.evaluate(
-    ({ headword, readingKey, types }) =>
+    ({ headword, readingKey, types, phase }) =>
       new Promise<void>((resolve, reject) => {
         const open = indexedDB.open("openlinguo");
         open.onerror = () => {
@@ -24,7 +25,7 @@ export const startCards = (
               headword,
               readingKey,
               type,
-              phase: "review",
+              phase,
               due: Date.now() + 5 * 24 * 60 * 60 * 1000,
               stability: 5,
               difficulty: 5,
@@ -45,7 +46,7 @@ export const startCards = (
           };
         };
       }),
-    { headword, readingKey, types },
+    { headword, readingKey, types, phase },
   );
 
 /** Stores a reading's recognition and recall cards as started, so its tone or writing card comes next. */
