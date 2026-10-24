@@ -157,8 +157,8 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
-/** Present once the learner confirmed the AI notice; never in the backup. */
-export type StoredAiNotice = { readonly id: "seen" };
+/** Present once the learner confirmed the AI notice (`seen`) or the Wikidata one; never in the backup. */
+export type StoredAiNotice = { readonly id: "seen" | "wikidata" };
 
 /** French glosses an AI translated from an entry's English ones, each with its source. */
 export type StoredAiGloss = WordKey & {

@@ -161,7 +161,13 @@ describe("openDatabase", () => {
     const db = openDatabase("lexicon-migration-test");
     expect(await db.knownMarks.toArray()).toEqual([mark]);
     expect(await db.lexicon.count()).toBe(0);
-    const found = { kind: "person", reading: null, gloss: null, provenance: null } as const;
+    const found = {
+      kind: "person",
+      reading: null,
+      gloss: null,
+      reference: null,
+      provenance: null,
+    } as const;
     await db.resolutions.bulkAdd([
       { sequence: "王小红", source: "wikidata", found: [found], checkedAt: 1 },
       { sequence: "王小红", source: "ai", found: [], checkedAt: 2 },

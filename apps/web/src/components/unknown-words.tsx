@@ -5,6 +5,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { UnknownWordCard, type CardEvent } from "@/components/unknown-word-card";
 import { UnknownWordsLists } from "@/components/unknown-words-lists";
+import { WikidataCheck } from "@/components/wikidata-check";
 import { database, type StoredText } from "@/data/database";
 import { annotateText } from "@/data/reader";
 import { describeFailure } from "@/data/review-log";
@@ -152,6 +153,14 @@ const Panel = ({
           </>
         )}
       </p>
+      {listing.status === "ready" && (
+        <WikidataCheck
+          words={words}
+          onChecked={() => {
+            setRound((previous) => previous + 1);
+          }}
+        />
+      )}
       {listing.status === "loading" && (
         <p role="status" className="mt-4 text-muted">
           {t("unknownWords.loading")}

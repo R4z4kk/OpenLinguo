@@ -23,6 +23,8 @@ When the learner presses « Chercher sur Wikidata », after the notice shown bef
 
 The request carries no cookie (`credentials: "omit"`) and no referrer (`referrerPolicy: "no-referrer"`). The « Envoyé : … » line says the same under the button.
 
+**What stays on the device.** Every answer, the results or the fact that there were none, is kept in the browser with its date (`resolutions`) and in the backup file, so a sequence is never sent twice. Nothing is applied to the learner's words until they accept a proposal; an accepted entry keeps `source: "wikidata"`. That the notice was shown is a flag in the browser (the table of the AI notice), not in the backup: a new device shows the notice again. A result links to its Wikidata item (`https://www.wikidata.org/wiki/Q…`) in a new tab, without referrer: following it is an ordinary visit to wikidata.org by the learner, not part of the lookup.
+
 Wikimedia keeps request logs on servers "located in the U.S.", and its privacy policy says that personal information is "in most instances" deleted, aggregated or de-identified after 90 days. The [retention guidelines](https://foundation.wikimedia.org/wiki/Policy:Data_retention_guidelines) are more exact: IP address and user agent "after at most 90 days", and system backups "not to exceed 5 years". The privacy notice says both.
 
 ## 2. Roles: most likely not a controller

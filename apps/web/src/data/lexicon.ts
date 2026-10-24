@@ -20,6 +20,8 @@ export const Found = z.object({
   /** Numbered pinyin, as the dictionary's readings. */
   reading: z.string().min(1).nullable(),
   gloss: z.string().min(1).nullable(),
+  /** The item id at the source, to check the answer there (Wikidata: `Q42`). */
+  reference: z.string().min(1).nullable().default(null),
   /** Set when the answer came from an AI (docs/compliance/ai.md §4). */
   provenance: AiProvenance.nullable(),
 });
