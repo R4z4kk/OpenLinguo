@@ -1214,6 +1214,31 @@ export const fr: Messages = {
     addFailed: "Les mots n’ont pas pu être ajoutés : {{reason}}",
     modeNotSaved: "Le format de réponse qui a marché n’a pas pu être retenu : {{reason}}",
   },
+  story: {
+    write: "Écrire une histoire",
+    title: "Écrire une histoire",
+    intro:
+      "Une IA écrit une courte histoire à votre niveau, avec des mots que vous apprenez. Elle est gardée avec vos textes, marquée comme écrite par l’IA, et vous voyez la part que vous en connaissez.",
+    level: "Votre niveau",
+    levelHelp: "Le niveau que vous apprenez en ce moment.",
+    theme: "Thème",
+    length: "Longueur",
+    short: "Courte (environ 150 caractères)",
+    medium: "Moyenne (environ 400 caractères)",
+    words: "Mots que vous apprenez",
+    wordsHelp:
+      "Jusqu’à 20 mots en cours d’apprentissage, les plus récemment révisés d’abord. L’histoire les emploie là où ils vont.",
+    noWords:
+      "Aucun mot n’est en cours d’apprentissage : l’histoire n’emploie que des mots de votre niveau.",
+    generate: "Écrire l’histoire",
+    writing: "Écriture de l’histoire…",
+    cancel: "Annuler",
+    retry: "Réessayer",
+    noProvider: "Les histoires demandent un fournisseur d’IA.",
+    toSettings: "En choisir un dans Assistant IA",
+    loadFailed: "Votre niveau et vos mots n’ont pas pu être lus : {{reason}}",
+    saveFailed: "L’histoire n’a pas pu être enregistrée : {{reason}}",
+  },
   aiNotice: {
     badge: "Généré par IA · {{model}}",
     sent: "Envoyé à {{provider}} : {{items}}, quand vous appuyez sur « {{action}} ».",
@@ -1235,10 +1260,15 @@ export const fr: Messages = {
       reading: "son pinyin",
       senses_one: "son sens anglais",
       senses_other: "ses {{count}} sens anglais",
+      storyTheme: "le thème « {{theme}} »",
+      storyShort: "une longueur courte",
+      storyMedium: "une longueur moyenne",
+      storyWords_one: "votre mot en cours d’apprentissage ({{words}})",
+      storyWords_other: "vos {{count}} mots en cours d’apprentissage ({{words}})",
     },
     title: "Avant d’utiliser l’IA",
     intro:
-      "Les corrections, les mots proposés et les traductions en français sont écrits par une IA.",
+      "Les corrections, les mots proposés, les traductions en français et les histoires sont écrits par une IA.",
     machine:
       "C’est une machine : elle peut se tromper, même quand elle a l’air sûre d’elle. Gardez votre propre jugement.",
     whatIsSent: "Ce qui est envoyé",
@@ -1253,6 +1283,8 @@ export const fr: Messages = {
         "«\u00a0{{action}}\u00a0» ({{place}})\u00a0: le texte de l’entrée et la langue de l’interface.",
       interests: "«\u00a0{{action}}\u00a0»\u00a0: les thèmes cochés, votre phrase et votre niveau.",
       translation: "«\u00a0{{action}}\u00a0»\u00a0: le mot, son pinyin et ses sens anglais.",
+      story:
+        "«\u00a0{{action}}\u00a0» ({{place}})\u00a0: votre niveau, un thème, une longueur et les mots en cours d’apprentissage.",
     },
     sensitive:
       "N’écrivez rien que vous ne diriez pas à un inconnu : santé, religion, opinions politiques, vie sexuelle.",
