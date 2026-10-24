@@ -143,15 +143,18 @@ export const WordSheet = ({
   const run = async (write: () => Promise<Result<SheetChange, Failure>>): Promise<void> => {
     if (pending.current) return;
     pending.current = true;
-    const written = await write();
-    const applied = written.ok ? await onChange(written.value) : written;
-    pending.current = false;
-    if (!applied.ok) {
-      setFailure(describe(applied.error));
-      return;
+    try {
+      const written = await write();
+      const applied = written.ok ? await onChange(written.value) : written;
+      if (!applied.ok) {
+        setFailure(describe(applied.error));
+        return;
+      }
+      setFailure(null);
+      if (written.ok) setDone(written.value);
+    } finally {
+      pending.current = false;
     }
-    setFailure(null);
-    if (written.ok) setDone(written.value);
   };
 
   const choose = (picked: string): Promise<void> =>
