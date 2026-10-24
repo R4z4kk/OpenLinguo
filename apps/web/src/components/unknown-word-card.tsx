@@ -3,6 +3,7 @@ import type { TFunction } from "i18next";
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
+import { NewTabLink } from "@/components/new-tab-link";
 import { Pinyin } from "@/components/pinyin";
 import { Button } from "@/components/ui/button";
 import { database } from "@/data/database";
@@ -28,8 +29,13 @@ type Mode =
   | { readonly kind: "edit"; readonly draft: EntryDraft }
   | { readonly kind: "accepted"; readonly entry: NewEntry };
 
-const proposalKey = ({ source, kind, reading, gloss }: Proposal): string =>
-  [source, kind, reading, gloss].join("\t");
+const proposalKey = ({ source, kind, reading, gloss, reference }: Proposal): string =>
+  [source, kind, reading, gloss, reference].join("\t");
+
+/** Homonyms beyond this many are behind « N others ». */
+const SHOWN = 5;
+
+const itemLink = (reference: string): string => `https://www.wikidata.org/wiki/${reference}`;
 
 const draftOf = (headword: string, proposal: Proposal | null): EntryDraft => ({
   headword,
@@ -187,7 +193,8 @@ const ProposalItem = ({
 }) => {
   const { t } = useTranslation();
   const id = useId();
-  const described = `${id} ${titleId}`;
+  const glossId = `${id}-gloss`;
+  const described = `${id} ${proposal.gloss === null ? "" : `${glossId} `}${titleId}`;
   return (
     <li className="rounded-control border border-hairline p-3">
       <p id={id} className="font-semibold">
@@ -198,7 +205,18 @@ const ProposalItem = ({
           <Pinyin reading={proposal.reading} features={features} className={null} />
         </p>
       )}
-      {proposal.gloss !== null && <p className="mt-1 wrap-anywhere">{proposal.gloss}</p>}
+      {proposal.gloss !== null && (
+        <p id={glossId} className="mt-1 wrap-anywhere">
+          {proposal.gloss}
+        </p>
+      )}
+      {proposal.source === "wikidata" && proposal.reference !== null && (
+        <p className="mt-1 text-small">
+          <NewTabLink href={itemLink(proposal.reference)}>
+            {t("wikidata.item", { id: proposal.reference })}
+          </NewTabLink>
+        </p>
+      )}
       {proposal.provenance !== null && (
         <div className="mt-2 flex">
           <AiBadge provenance={proposal.provenance} />
@@ -235,6 +253,7 @@ export const UnknownWordCard = ({
   const undo = useRef<HTMLButtonElement>(null);
   const [mode, setMode] = useState<Mode>({ kind: "browse" });
   const [rejected, setRejected] = useState<ReadonlySet<string>>(new Set());
+  const [showAll, setShowAll] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const accepted = mode.kind === "accepted";
 
@@ -306,6 +325,14 @@ export const UnknownWordCard = ({
   }
 
   const visible = word.proposals.filter((proposal) => !rejected.has(proposalKey(proposal)));
+  const homonyms = visible.filter(({ source }) => source === "wikidata");
+  const folded = showAll ? [] : homonyms.slice(SHOWN);
+  const shown = visible.filter((proposal) => !folded.includes(proposal));
+  const reject = (proposals: readonly Proposal[]): void => {
+    setRejected(new Set([...rejected, ...proposals.map(proposalKey)]));
+    onEvent({ kind: "rejected" });
+    heading.current?.focus();
+  };
   const date = new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium" });
   return (
     <li className="rounded-card border border-hairline bg-surface p-4">
@@ -345,7 +372,7 @@ export const UnknownWordCard = ({
             <p className="mt-3 text-muted">{t("unknownWords.noProposal")}</p>
           ) : (
             <ul className="mt-3 grid gap-3">
-              {visible.map((proposal) => (
+              {shown.map((proposal) => (
                 <ProposalItem
                   key={proposalKey(proposal)}
                   proposal={proposal}
@@ -359,13 +386,38 @@ export const UnknownWordCard = ({
                     setMode({ kind: "edit", draft: draftOf(word.text, proposal) });
                   }}
                   onReject={() => {
-                    setRejected(new Set([...rejected, proposalKey(proposal)]));
-                    onEvent({ kind: "rejected" });
-                    heading.current?.focus();
+                    reject([proposal]);
                   }}
                 />
               ))}
             </ul>
+          )}
+          {homonyms.length > 1 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {homonyms.length > SHOWN && (
+                <Button
+                  variant="outline"
+                  aria-expanded={showAll}
+                  aria-describedby={titleId}
+                  onClick={() => {
+                    setShowAll(!showAll);
+                  }}
+                >
+                  {showAll
+                    ? t("wikidata.fewer")
+                    : t("wikidata.others", { count: homonyms.length - SHOWN })}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                aria-describedby={titleId}
+                onClick={() => {
+                  reject(homonyms);
+                }}
+              >
+                {t("wikidata.none")}
+              </Button>
+            </div>
           )}
           {word.checks.map(({ source, checkedAt, found }) => (
             <p key={source} className="mt-2 text-small text-muted">

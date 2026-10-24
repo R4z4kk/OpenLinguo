@@ -153,7 +153,9 @@ const NAME: LexiconEntry = {
 const ANSWER: Resolution = {
   sequence: "王小红",
   source: "wikidata",
-  found: [{ kind: "person", reading: null, gloss: "chanteuse", provenance: null }],
+  found: [
+    { kind: "person", reading: null, gloss: "chanteuse", reference: "Q42", provenance: null },
+  ],
   checkedAt: start,
 };
 const NOTHING: Resolution = { sequence: "袁家界拍", source: "ai", found: [], checkedAt: start };
@@ -510,6 +512,14 @@ describe("parseBackup", () => {
     Reflect.deleteProperty(before, "lexicon");
     Reflect.deleteProperty(before, "resolutions");
     expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
+  it("reads an answer kept before items had a reference as having none", () => {
+    const item = { kind: "person", reading: null, gloss: "chanteuse", provenance: null } as const;
+    const older = { ...backup({}), resolutions: [{ ...ANSWER, found: [item] }] };
+    expect(parseBackup(JSON.stringify(older))).toEqual(
+      ok(backup({ resolutions: [{ ...ANSWER, found: [{ ...item, reference: null }] }] })),
+    );
   });
 
   it("refuses a headword twice, and a source's answer twice", () => {
