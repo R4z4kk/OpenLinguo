@@ -8,7 +8,7 @@ import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
-import { ReadNewPage, ReadPage, ReadTextPage, ReadUnknownPage } from "@/pages/read";
+import { ReadNewPage, ReadPage, ReadStoryPage, ReadTextPage, ReadUnknownPage } from "@/pages/read";
 import { ReviewPage } from "@/pages/review";
 import { TodayPage } from "@/pages/today";
 import { TypingDrillPage } from "@/pages/typing-drill";
@@ -98,6 +98,12 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/read/new",
     component: ReadNewPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/read/story",
+    component: ReadStoryPage,
     errorComponent: ModuleError,
   }),
   createRoute({

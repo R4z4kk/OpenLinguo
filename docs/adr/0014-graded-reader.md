@@ -104,3 +104,12 @@ Measured on the real segmenter (CC-CEDICT, HSK 2025 levels, seven lines of HSK 1
 - **Storage**: Dexie version 24 adds `lexicon` and `resolutions`, both in the backup (older backups import with them empty).
 
 Known limit: the edges are cut before the extended lexicon is asked, so a word of that list that starts or ends with a common character (一串红, 一丝丝) is not proposed; the learner corrects the sequence by hand. Asking for every part of the raw run is a possible follow-up.
+
+## Update (2026-10-24, #232)
+
+Maintainer decisions for the story form (`/read/story`, from « Écrire une histoire » in the Read tab):
+
+- **Names**: each name of a story is kept as a `resolutions` row of source `ai` (kind, no reading, no meaning, the story's provenance), in the same transaction as the text, so the unknown-words panel shows it as a proposal and nothing is applied before the learner accepts it. A name matches a card only when it equals the whole sequence; one that ends in a common character (…红, …明) is cut like any other (the #229 limit). A sequence already answered by the AI keeps its row.
+- **Words**: the words with a card in `learning` and no reading known otherwise, distinct, the most recently reviewed first by the review log (cards keep only the day), at most 20.
+- **One press, one call**: the client still retries a 429 or a 5xx twice and falls back from `json_schema` to `json_object` inside the call (ADR 0012), never after a valid answer and never in the background. An answer the schema or the text check refuses is the « invalid-response » error with « Réessayer », and nothing is stored.
+- **Hand-over to #231**: a cached `ai` row with no meaning is a name from a story, not an answer to « Demander à l'IA ».

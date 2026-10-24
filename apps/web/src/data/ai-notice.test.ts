@@ -78,6 +78,34 @@ describe("sentItems", () => {
     );
   });
 
+  it("lists what a story sends: the band, the theme, the length and the words", () => {
+    const input = {
+      band: 2,
+      theme: "Voyage",
+      length: "medium",
+      words: ["旅游", "照片", "礼物"],
+    } as const;
+    const payload = { feature: "story", input, band: "HSK 2" } as const;
+    expect(sentItems(fr, "fr", payload)).toBe(
+      "votre niveau (HSK 2), le thème « Voyage », une longueur moyenne et vos 3 mots en cours d’apprentissage (旅游、照片、礼物)",
+    );
+    expect(
+      sentItems(en, "en", {
+        ...payload,
+        input: { ...input, theme: "Travel", length: "short", words: ["旅游"] },
+      }),
+    ).toBe(
+      "your level (HSK 2), the theme “Travel”, a short length, and your word in its learning steps (旅游)",
+    );
+  });
+
+  it("sends no words when none is being learned", () => {
+    const input = { band: 1, theme: "Travel", length: "short", words: [] } as const;
+    expect(sentItems(en, "en", { feature: "story", input, band: "HSK 1" })).toBe(
+      "your level (HSK 1), the theme “Travel”, and a short length",
+    );
+  });
+
   it("counts the English senses a translation sends", () => {
     const input = {
       headword: "一路平安",

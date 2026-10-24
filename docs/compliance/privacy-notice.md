@@ -4,7 +4,7 @@ This is the text of the public privacy notice. The page that shows it is publish
 
 ## AI features
 
-**Off until you set them up.** The 5-sentence challenge and the journal work without AI. To get corrections, word suggestions or French translations, choose a provider in Profile › AI and paste your own key. The providers are Groq, OpenRouter, Mistral, or a server running on this device, such as Ollama.
+**Off until you set them up.** The 5-sentence challenge and the journal work without AI. To get corrections, word suggestions, French translations or stories, choose a provider in Profile › AI and paste your own key. The providers are Groq, OpenRouter, Mistral, or a server running on this device, such as Ollama.
 
 **Straight from your device to your provider.** A request leaves only when you press an AI button. It goes from your browser to the provider you chose, and nothing goes through OpenLinguo: we receive nothing, keep no logs and run no analytics. Your provider handles the request under its own terms and privacy policy, which you accepted when you created your key. Like any website, it also sees your IP address.
 
@@ -17,6 +17,7 @@ This is the text of the public privacy notice. The page that shows it is publish
 | « Correct » on a journal entry | The entry |
 | « Suggest words » | The themes you ticked, your short interests field and your level |
 | « Translate to French » | The Chinese word, its pinyin and its English meanings |
+| « Write the story » | Your level, a theme, a length and up to 20 words from your learning steps |
 
 Every request also contains OpenLinguo's instructions to the model and the language of the interface.
 
