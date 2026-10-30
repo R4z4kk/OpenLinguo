@@ -251,6 +251,8 @@ export const UnknownWordCard = ({
   const titleId = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   const undo = useRef<HTMLButtonElement>(null);
+  /** Back on the heading once it is drawn again: a frame may come before React draws it. */
+  const focusHeading = useRef(false);
   const [mode, setMode] = useState<Mode>({ kind: "browse" });
   const [rejected, setRejected] = useState<ReadonlySet<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
@@ -260,6 +262,12 @@ export const UnknownWordCard = ({
   useEffect(() => {
     if (accepted) undo.current?.focus();
   }, [accepted]);
+
+  useEffect(() => {
+    if (!focusHeading.current || heading.current === null) return;
+    focusHeading.current = false;
+    heading.current.focus();
+  });
 
   const save = async (draft: EntryDraft): Promise<void> => {
     const checked = checkEntry(draft);
@@ -285,14 +293,14 @@ export const UnknownWordCard = ({
     }
     setFailure(null);
     setMode({ kind: "browse" });
+    focusHeading.current = true;
     onEvent({ kind: "removed", headword: entry.headword });
-    requestAnimationFrame(() => heading.current?.focus());
   };
 
   const leaveForm = (): void => {
     setFailure(null);
+    focusHeading.current = true;
     setMode({ kind: "browse" });
-    requestAnimationFrame(() => heading.current?.focus());
   };
 
   if (mode.kind === "accepted") {
@@ -421,16 +429,18 @@ export const UnknownWordCard = ({
           )}
           {word.checks.map(({ source, checkedAt, found }) => (
             <p key={source} className="mt-2 text-small text-muted">
-              {found === 0
-                ? t("unknownWords.checkedNone", {
-                    source: t(`unknownWords.source.${source}`),
-                    date: date.format(checkedAt),
-                  })
-                : t("unknownWords.checkedFound", {
-                    source: t(`unknownWords.source.${source}`),
-                    count: found,
-                    date: date.format(checkedAt),
-                  })}
+              {source === "ai" && found === 0
+                ? t("unknownWords.notAWord", { date: date.format(checkedAt) })
+                : found === 0
+                  ? t("unknownWords.checkedNone", {
+                      source: t(`unknownWords.source.${source}`),
+                      date: date.format(checkedAt),
+                    })
+                  : t("unknownWords.checkedFound", {
+                      source: t(`unknownWords.source.${source}`),
+                      count: found,
+                      date: date.format(checkedAt),
+                    })}
             </p>
           ))}
           {failure !== null && (

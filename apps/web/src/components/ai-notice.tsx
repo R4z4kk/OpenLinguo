@@ -29,6 +29,7 @@ const NoticeDialog = ({
     t("aiNotice.uses.interests", { action: t("interests.suggest") }),
     t("aiNotice.uses.translation", { action: t("translate.action") }),
     t("aiNotice.uses.story", { action: t("story.generate"), place: t("read.title") }),
+    t("aiNotice.uses.explanation", { action: t("aiExplain.ask") }),
   ];
   return (
     <Dialog

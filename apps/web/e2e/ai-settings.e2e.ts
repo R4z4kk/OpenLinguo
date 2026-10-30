@@ -93,6 +93,7 @@ test("sets up Groq: the AI notice first, a key kept in memory only, a refused ke
     fill(en.aiNotice.uses.interests, { action: en.interests.suggest }),
     fill(en.aiNotice.uses.translation, { action: en.translate.action }),
     fill(en.aiNotice.uses.story, { action: en.story.generate, place: en.read.title }),
+    fill(en.aiNotice.uses.explanation, { action: en.aiExplain.ask }),
   ]);
   await expect(dialog).toContainText(en.aiNotice.sensitive);
   expect(await accessibilityViolations(page)).toEqual([]);

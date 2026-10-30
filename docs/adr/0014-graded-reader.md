@@ -123,3 +123,11 @@ Maintainer decisions for the story form (`/read/story`, from « Écrire une hist
 - **Words**: the words with a card in `learning` and no reading known otherwise, distinct, the most recently reviewed first by the review log (cards keep only the day), at most 20.
 - **One press, one call**: the client still retries a 429 or a 5xx twice and falls back from `json_schema` to `json_object` inside the call (ADR 0012), never after a valid answer and never in the background. An answer the schema or the text check refuses is the « invalid-response » error with « Réessayer », and nothing is stored.
 - **Hand-over to #231**: a cached `ai` row with no meaning is a name from a story, not an answer to « Demander à l'IA ».
+
+## Update (2026-10-30, #231)
+
+Maintainer decisions for « Demander à l'IA » in the unknown-words panel:
+
+- **Sent**: the sequences with no AI meaning yet, the likely names and new words first, then the runs of common words (« Probablement des mots courants »), at most 50 per press; the next press sends the next ones, and a line under the button says how many are left. A story name (an `ai` row with no meaning) is sent like the others.
+- **One press, one call**: the M5 AI notice (shown once for every AI feature, now listing this button), the « Envoyé à … » line naming the sequences, « Annuler » while it runs. An answer the schema refuses or a failed call is an error with « Réessayer », and nothing is kept.
+- **Kept**: one `resolutions` row of source `ai` per sequence, replacing an earlier one (a story name included), with the kind, the meaning and the provenance (`zh-explain-v1`). « Pas un mot » keeps no proposal: the card says so with its date and points to « Corriger la suite ». Proposals are applied only when the learner accepts them, as for every source.
