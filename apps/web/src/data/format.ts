@@ -86,7 +86,10 @@ export const ExtendedRow = z.tuple([
 ]);
 export type ExtendedRow = z.output<typeof ExtendedRow>;
 
-export const OnDemandFile = DataFile.omit({ kind: true });
+/** `bytes`: the size of the file, shown before it is downloaded. */
+export const OnDemandFile = DataFile.omit({ kind: true }).extend({
+  bytes: z.number().int().nonnegative(),
+});
 export type OnDemandFile = z.output<typeof OnDemandFile>;
 
 /** `index.json` of a dataset downloaded on demand; `version` changes with any file. */

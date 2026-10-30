@@ -9,10 +9,10 @@ Real answers, replayed without a key by the unit tests (`packages/core/src/testi
 | Provider | Model | Recorded | Covers |
 | --- | --- | --- | --- |
 | Groq | `openai/gpt-oss-20b` | 2026-10-19 | model list, structured answer, reasoning off, schema violation, wrong key, rate limit, unknown model; interests vocabulary and French gloss in the app |
-| Groq | `openai/gpt-oss-20b` | 2026-10-21 | `zh-explain-v1` (#231) and `zh-story-v1` (#232), not replayed yet. The story's strict `json_schema` request got a 400 (`json_validate_failed`, empty `failed_generation`) and the answer came through `json_object`; one run, not known to repeat |
+| Groq | `openai/gpt-oss-20b` | 2026-10-21 | `zh-explain-v1` (#231), replayed by the unknown-words AI E2E (王芳, 袁家界拍 and 红白机 kept, renumbered), and `zh-story-v1` (#232), replayed by the story E2E without its 400. The story's strict `json_schema` request got a 400 (`json_validate_failed`, empty `failed_generation`) and the answer came through `json_object`; one run, not known to repeat |
 | Ollama 0.35.1 (local) | `qwen3:30b-a3b` | 2026-10-19 | model list, structured answer, reasoning off, schema violation, unknown model |
 | Ollama 0.35.1 (local) | `qwen3:30b-a3b` | 2026-10-20 | with `zh-correct-v2` (#206): connection test, challenge and journal corrections, card from a sentence in the app |
-| Ollama 0.40.7 (local) | `qwen3:30b-a3b` | 2026-10-21 | `zh-explain-v1` and `zh-story-v1`, not replayed yet. Right kinds, generic meanings ("a person's name"); the medium story came back at 110 characters in 11 one-sentence paragraphs, against about 400 asked |
+| Ollama 0.40.7 (local) | `qwen3:30b-a3b` | 2026-10-21 | `zh-explain-v1`, replayed by the unknown-words AI E2E, and `zh-story-v1`, replayed by the story E2E. Right kinds, generic meanings ("a person's name"); the medium story came back at 110 characters in 11 one-sentence paragraphs, against about 400 asked |
 | OpenRouter | `nvidia/nemotron-3-super-120b-a12b:free` | 2026-10-19 | model list, structured answer, schema violation, wrong key, unknown model (a 400) |
 | OpenRouter | `dots-studio/dots-3-note-preview:free` | 2026-10-20 | model list filtered to structured answers, connection test, challenge correction with the sentences out of order (3, 1, 2, 4, 5); recorded with `zh-correct-v1`, the E2E adds each answer's index (#206) |
 | Mistral | `mistral-small-latest` | 2026-10-19 | wrong key only: the API needs a paid plan |

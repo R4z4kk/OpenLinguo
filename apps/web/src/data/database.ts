@@ -13,6 +13,8 @@ import type { AiSettings } from "./ai-settings.ts";
 import type { Corrections } from "./correction.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
+import type { LexiconEntry } from "./lexicon.ts";
+import type { Resolution } from "./resolutions.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
 
 export type StoredEntry = {
@@ -155,8 +157,8 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
-/** Present once the learner confirmed the AI notice; never in the backup. */
-export type StoredAiNotice = { readonly id: "seen" };
+/** Present once the learner confirmed the AI notice (`seen`) or the Wikidata one; never in the backup. */
+export type StoredAiNotice = { readonly id: "seen" | "wikidata" };
 
 /** French glosses an AI translated from an entry's English ones, each with its source. */
 export type StoredAiGloss = WordKey & {
@@ -243,6 +245,8 @@ export type Database = Dexie & {
   journal: EntityTable<StoredJournalEntry, "day">;
   texts: EntityTable<StoredText, "id">;
   knownMarks: Table<StoredKnownMark, [string, string]>;
+  lexicon: EntityTable<LexiconEntry, "headword">;
+  resolutions: Table<Resolution, [string, string]>;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -340,6 +344,7 @@ export const openDatabase = (name: string): Database => {
       }),
   );
   db.version(23).stores({ texts: "id, createdAt", knownMarks: "[headword+readingKey]" });
+  db.version(24).stores({ lexicon: "headword", resolutions: "[sequence+source], sequence" });
   return db;
 };
 

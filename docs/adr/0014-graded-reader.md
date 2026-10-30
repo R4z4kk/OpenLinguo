@@ -91,3 +91,43 @@ The reader's benchmark (`apps/web/e2e/reader-benchmark.e2e.ts`, Chromium and Web
 
 - **No Web Worker**: the CPU work that could move is under 0.2 s. The time is spent in IndexedDB, which is as slow in a worker, and in rendering, which cannot leave the main thread. What helped instead: one read transaction for all the lookups of a text, at most 100 lookups in flight (thousands queued together made each lookup slower in WebKit), `content-visibility: auto` on paragraphs, and fewer elements per word.
 - **Import limit**: 20,000 characters confirmed (maintainer, 2026-10-22), after the CI runner (two vCPUs, software rendering, about 2.8 times slower than the Docker run) took 16.9 s for a typical text. The reader shows a status line while it splits the text, and arrow keys take 16 ms once it is drawn.
+
+## Update (2026-10-24, #229)
+
+Measured on the real segmenter (CC-CEDICT, HSK 2025 levels, seven lines of HSK 1–3 prose with three names): 28 runs of one-character segments, 24 of them made only of HSK 1–3 words (去了, 我很好, 他也是). Maintainer decisions:
+
+- **Common runs**: they are not cards of the main list. The panel puts them last in a group that is closed by default, flagged « Pas pour Wikidata », never sent to Wikidata. A run the extended lexicon has leaves the group and joins the main list. HSK 1–3 means levels 1 to 3 of HSK 2025 (988 words), whatever the referential the learner follows.
+- **Cache**: `resolutions.found` is the list of what the source found, empty when it found nothing, so a cached answer gives its proposals back without a new request.
+- **Reject**: rejecting a proposal lasts for the visit; nothing is hidden for good.
+- **Kinds**: `lexicon.kind` is person, place, organization, name or word. The first four count as known in coverage; a `word` is segmented as one token and stays « absent du dictionnaire » (a card needs a dictionary entry).
+- **Lists**: one download for the extended lexicon (6.4 MB) and the name list (2.2 MB), 8.6 MB in all, the size read from the `bytes` of each index.
+- **Storage**: Dexie version 24 adds `lexicon` and `resolutions`, both in the backup (older backups import with them empty).
+
+Known limit: the edges are cut before the extended lexicon is asked, so a word of that list that starts or ends with a common character (一串红, 一丝丝) is not proposed; the learner corrects the sequence by hand. Asking for every part of the raw run is a possible follow-up.
+
+## Update (2026-10-24, #230)
+
+Maintainer decisions for « Chercher sur Wikidata »:
+
+- **Kind**: an item that is neither a person, a place nor an organization is proposed as `name` (« Nom propre »), which the learner can change in the form. A proposal keeps the item id (`Found.reference`) and links to it.
+- **One check per sequence**: a sequence Wikidata has answered, with or without a result, is not sent again; a « Revérifier » button is a possible follow-up.
+- **Notice**: shown once, before the first call, and remembered on the device with the AI notice flag (`aiNotice`, id `wikidata`, not in the backup), so no Dexie version is added.
+- **Homonyms**: five first, then « Voir les N autres »; « Aucun de ceux-là » appears when a card has several Wikidata proposals (with one, « Rejeter » does the same). The description kept is the one in the interface language at the time of the check, else the other one.
+- **Errors**: a network error, a timeout, a 429 or another failure is shown with what was kept, and nothing is retried; cancelling a running search keeps the batches already answered.
+
+## Update (2026-10-24, #232)
+
+Maintainer decisions for the story form (`/read/story`, from « Écrire une histoire » in the Read tab):
+
+- **Names**: each name of a story is kept as a `resolutions` row of source `ai` (kind, no reading, no meaning, the story's provenance), in the same transaction as the text, so the unknown-words panel shows it as a proposal and nothing is applied before the learner accepts it. A name matches a card only when it equals the whole sequence; one that ends in a common character (…红, …明) is cut like any other (the #229 limit). A sequence already answered by the AI keeps its row.
+- **Words**: the words with a card in `learning` and no reading known otherwise, distinct, the most recently reviewed first by the review log (cards keep only the day), at most 20.
+- **One press, one call**: the client still retries a 429 or a 5xx twice and falls back from `json_schema` to `json_object` inside the call (ADR 0012), never after a valid answer and never in the background. An answer the schema or the text check refuses is the « invalid-response » error with « Réessayer », and nothing is stored.
+- **Hand-over to #231**: a cached `ai` row with no meaning is a name from a story, not an answer to « Demander à l'IA ».
+
+## Update (2026-10-30, #231)
+
+Maintainer decisions for « Demander à l'IA » in the unknown-words panel:
+
+- **Sent**: the sequences with no AI meaning yet, the likely names and new words first, then the runs of common words (« Probablement des mots courants »), at most 50 per press; the next press sends the next ones, and a line under the button says how many are left. A story name (an `ai` row with no meaning) is sent like the others.
+- **One press, one call**: the M5 AI notice (shown once for every AI feature, now listing this button), the « Envoyé à … » line naming the sequences, « Annuler » while it runs. An answer the schema refuses or a failed call is an error with « Réessayer », and nothing is kept.
+- **Kept**: one `resolutions` row of source `ai` per sequence, replacing an earlier one (a story name included), with the kind, the meaning and the provenance (`zh-explain-v1`). « Pas un mot » keeps no proposal: the card says so with its date and points to « Corriger la suite ». Proposals are applied only when the learner accepts them, as for every source.

@@ -9,10 +9,11 @@ import {
   type PromptTask,
   type Result,
 } from "@openlinguo/core";
-import { Check, CircleAlert, ExternalLink, Info, Send, Trash2 } from "lucide-react";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { Check, CircleAlert, Info, Send, Trash2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAiNotice } from "@/components/ai-notice";
+import { NewTabLink } from "@/components/new-tab-link";
 import { Switch } from "@/components/switch";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,28 +47,6 @@ type Outcome =
 
 export const fieldClass =
   "min-h-12 w-full rounded-control border border-border-strong bg-surface px-3 aria-invalid:border-danger";
-
-const NewTabLink = ({
-  href,
-  children,
-}: {
-  readonly href: string;
-  readonly children: ReactNode;
-}) => {
-  const { t } = useTranslation();
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex min-h-6 items-center gap-1 underline underline-offset-3"
-    >
-      {children}
-      <ExternalLink aria-hidden="true" className="size-3.5 flex-none" />
-      <span className="sr-only"> {t("ai.newTab")}</span>
-    </a>
-  );
-};
 
 /** One sentence per error kind, then the provider's own message. */
 export const AiFailure = ({
