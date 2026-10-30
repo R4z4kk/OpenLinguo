@@ -553,6 +553,8 @@ export const fr: Messages = {
       word: "Mot",
     },
     checkedNone: "{{source}} : aucun résultat, vérifié le {{date}}",
+    notAWord:
+      "IA : pas un mot, ces caractères ne forment pas une unité ici (vérifié le {{date}}). Corrigez la suite pour garder la partie qui en est un.",
     checkedFound_one: "{{source}} : {{count, number}} résultat, vérifié le {{date}}",
     checkedFound_other: "{{source}} : {{count, number}} résultats, vérifié le {{date}}",
     accept: "Accepter",
@@ -583,6 +585,24 @@ export const fr: Messages = {
     coverage: "Mots connus du texte : {{percent}}.",
     coverageFailed: "La couverture n’a pas pu être recalculée : {{reason}}",
     imported: "Entrées du lexique personnel ajoutées +{{count, number}}.",
+  },
+  aiExplain: {
+    intro:
+      "L’IA dit ce qu’est chaque suite, un nom ou un mot, avec un sens court. Elle peut se tromper : vous choisissez ce que vous gardez.",
+    ask: "Demander à l’IA",
+    asking: "Demande à l’IA…",
+    cancel: "Annuler",
+    retry: "Réessayer",
+    nothingToSend: "Rien à envoyer : l’IA a répondu pour chaque suite de ce texte.",
+    more_one: "{{count, number}} suite de plus partira à la prochaine pression.",
+    more_other: "{{count, number}} suites de plus partiront à la prochaine pression.",
+    answered_one: "{{count, number}} suite expliquée par l’IA.",
+    answered_other: "{{count, number}} suites expliquées par l’IA.",
+    cancelled: "Demande annulée. Rien n’est gardé.",
+    noProvider: "Demander à l’IA demande un fournisseur d’IA.",
+    toSettings: "En choisir un dans Assistant IA",
+    loadFailed: "Vos réglages d’IA n’ont pas pu être lus : {{reason}}",
+    saveFailed: "Les réponses n’ont pas pu être gardées : {{reason}}",
   },
   wikidata: {
     intro:
@@ -1265,6 +1285,8 @@ export const fr: Messages = {
       storyMedium: "une longueur moyenne",
       storyWords_one: "votre mot en cours d’apprentissage ({{words}})",
       storyWords_other: "vos {{count}} mots en cours d’apprentissage ({{words}})",
+      sequences_one: "la suite inconnue ({{sequences}}) avec sa phrase",
+      sequences_other: "les {{count}} suites inconnues ({{sequences}}) avec leur phrase",
     },
     title: "Avant d’utiliser l’IA",
     intro:
@@ -1285,6 +1307,8 @@ export const fr: Messages = {
       translation: "«\u00a0{{action}}\u00a0»\u00a0: le mot, son pinyin et ses sens anglais.",
       story:
         "«\u00a0{{action}}\u00a0» ({{place}})\u00a0: votre niveau, un thème, une longueur et les mots en cours d’apprentissage.",
+      explanation:
+        "«\u00a0{{action}}\u00a0» (mots inconnus d’un texte)\u00a0: les suites inconnues, la phrase de chacune et la langue de l’interface.",
     },
     sensitive:
       "N’écrivez rien que vous ne diriez pas à un inconnu : santé, religion, opinions politiques, vie sexuelle.",

@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
+import { AiExplain } from "@/components/ai-explain";
 import { UnknownWordCard, type CardEvent } from "@/components/unknown-word-card";
 import { UnknownWordsLists } from "@/components/unknown-words-lists";
 import { WikidataCheck } from "@/components/wikidata-check";
@@ -157,6 +158,15 @@ const Panel = ({
         <WikidataCheck
           words={words}
           onChecked={() => {
+            setRound((previous) => previous + 1);
+          }}
+        />
+      )}
+      {listing.status === "ready" && pack.prompts !== null && (
+        <AiExplain
+          words={words}
+          explanation={pack.prompts.explanation}
+          onAnswered={() => {
             setRound((previous) => previous + 1);
           }}
         />

@@ -2,6 +2,7 @@ import {
   ok,
   type AiProvider,
   type CorrectionInput,
+  type ExplainInput,
   type GlossInput,
   type Result,
   type StoryInput,
@@ -11,7 +12,8 @@ import type { TFunction } from "i18next";
 import type { Database } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
-export type AiFeature = "challenge" | "journal" | "interests" | "translation" | "story";
+export type AiFeature =
+  "challenge" | "journal" | "interests" | "translation" | "story" | "explanation";
 
 /** The input the feature's PromptTask builds its request from. */
 export type AiPayload =
@@ -23,7 +25,8 @@ export type AiPayload =
       readonly band: string;
     }
   | { readonly feature: "translation"; readonly input: GlossInput }
-  | { readonly feature: "story"; readonly input: StoryInput; readonly band: string };
+  | { readonly feature: "story"; readonly input: StoryInput; readonly band: string }
+  | { readonly feature: "explanation"; readonly input: ExplainInput };
 
 /** One AI button: what its click sends, and where. */
 export type AiCall = {
@@ -43,8 +46,17 @@ export const markNoticeSeen = (db: Database): Promise<Result<null, ReviewLogFail
     return ok(null);
   });
 
-/** The words a story sends, as the sent line writes them. */
-export const storyWords = (words: readonly string[]): string => words.join("、");
+/** The Chinese words a call sends, as the sent line writes them; empty when it sends none. */
+export const sentWords = (payload: AiPayload): string => {
+  switch (payload.feature) {
+    case "story":
+      return payload.input.words.join("、");
+    case "explanation":
+      return payload.input.sequences.map(({ sequence }) => sequence).join("、");
+    default:
+      return "";
+  }
+};
 
 const itemsOf = (t: TFunction, payload: AiPayload): string[] => {
   const { feature, input } = payload;
@@ -80,9 +92,17 @@ const itemsOf = (t: TFunction, payload: AiPayload): string[] => {
           : [
               t("aiNotice.items.storyWords", {
                 count: input.words.length,
-                words: storyWords(input.words),
+                words: sentWords(payload),
               }),
             ]),
+      ];
+    case "explanation":
+      return [
+        t("aiNotice.items.sequences", {
+          count: input.sequences.length,
+          sequences: sentWords(payload),
+        }),
+        t("aiNotice.items.language"),
       ];
   }
 };

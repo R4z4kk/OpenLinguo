@@ -539,6 +539,8 @@ export const en = {
       word: "Word",
     },
     checkedNone: "{{source}}: nothing found, checked on {{date}}",
+    notAWord:
+      "AI: not a word, the characters are not a unit here (checked on {{date}}). Fix the sequence to keep the part that is.",
     checkedFound_one: "{{source}}: {{count, number}} result, checked on {{date}}",
     checkedFound_other: "{{source}}: {{count, number}} results, checked on {{date}}",
     accept: "Accept",
@@ -569,6 +571,24 @@ export const en = {
     coverage: "Known words in the text: {{percent}}.",
     coverageFailed: "The coverage could not be recomputed: {{reason}}",
     imported: "Personal lexicon entries added +{{count, number}}.",
+  },
+  aiExplain: {
+    intro:
+      "The AI says what each sequence is, a name or a word, with a short meaning. It can be wrong: you choose what to keep.",
+    ask: "Ask the AI",
+    asking: "Asking the AI…",
+    cancel: "Cancel",
+    retry: "Try again",
+    nothingToSend: "Nothing to send: the AI has answered every sequence of this text.",
+    more_one: "{{count, number}} more sequence goes with the next press.",
+    more_other: "{{count, number}} more sequences go with the next press.",
+    answered_one: "{{count, number}} sequence explained by the AI.",
+    answered_other: "{{count, number}} sequences explained by the AI.",
+    cancelled: "Request cancelled. Nothing is kept.",
+    noProvider: "Asking the AI needs an AI provider.",
+    toSettings: "Choose one in AI assistant",
+    loadFailed: "Your AI settings could not be read: {{reason}}",
+    saveFailed: "The answers could not be kept: {{reason}}",
   },
   wikidata: {
     intro:
@@ -1234,6 +1254,8 @@ export const en = {
       storyMedium: "a medium length",
       storyWords_one: "your word in its learning steps ({{words}})",
       storyWords_other: "your {{count}} words in their learning steps ({{words}})",
+      sequences_one: "the unknown sequence ({{sequences}}) with its sentence",
+      sequences_other: "the {{count}} unknown sequences ({{sequences}}) with their sentences",
     },
     title: "Before you use AI",
     intro: "Corrections, suggested words, French translations and stories are written by an AI.",
@@ -1251,6 +1273,8 @@ export const en = {
       translation: "“{{action}}”: the word, its pinyin and its English senses.",
       story:
         "“{{action}}” ({{place}}): your level, a theme, a length and the words in your learning steps.",
+      explanation:
+        "“{{action}}” (unknown words of a text): the unknown sequences, the sentence of each and the interface language.",
     },
     sensitive:
       "Don't write anything you wouldn't tell a stranger: health, religion, political opinions, sex life.",

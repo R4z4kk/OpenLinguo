@@ -1,6 +1,6 @@
 import { Send } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { sentItems, storyWords, type AiCall } from "@/data/ai-notice";
+import { sentItems, sentWords, type AiCall } from "@/data/ai-notice";
 
 /** « Sent: … » under an AI button, which names `id` in its `aria-describedby`. */
 export const AiSent = ({ id, call }: { readonly id: string; readonly call: AiCall }) => {
@@ -10,7 +10,7 @@ export const AiSent = ({ id, call }: { readonly id: string; readonly call: AiCal
     items: sentItems(t, i18n.language, call.payload),
     action: call.action,
   });
-  const words = call.payload.feature === "story" ? storyWords(call.payload.input.words) : "";
+  const words = sentWords(call.payload);
   const at = words === "" ? -1 : text.indexOf(words);
   return (
     <p id={id} className="mt-2 flex items-start gap-1.5 text-small text-muted">
