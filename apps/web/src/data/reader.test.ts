@@ -103,6 +103,26 @@ describe("annotateText", () => {
     expect(transactions.size).toBe(1);
   });
 
+  it("segments the headwords of the personal lexicon as words", async () => {
+    const db = openDatabase("reader-annotate-lexicon-test");
+    const feature = packWith(inMemoryDictionary(entries));
+    const words = async () => {
+      const tokens = await annotateText(db, feature, "我们王小红");
+      return tokens.ok ? tokens.value.map(({ text }) => text) : [];
+    };
+    expect(await words()).toEqual(["我们", "王", "小", "红"]);
+    await db.lexicon.put({
+      headword: "王小红",
+      kind: "person",
+      reading: null,
+      gloss: null,
+      source: "learner",
+      provenance: null,
+      validatedAt: 1,
+    });
+    expect(await words()).toEqual(["我们", "王小红"]);
+  });
+
   it("reports a storage failure", async () => {
     const db = openDatabase("reader-annotate-closed-test");
     await db.open();

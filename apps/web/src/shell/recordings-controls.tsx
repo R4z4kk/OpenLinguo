@@ -186,6 +186,7 @@ export const RecordingsControls = () => {
         <Dialog
           title={t("recordings.deleteAllTitle")}
           description={t("recordings.deleteAllDescription", { count: list.length })}
+          sheet={null}
           onClose={() => {
             setConfirming(false);
             if (deletedAll.current) heading.current?.focus();
