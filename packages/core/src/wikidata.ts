@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { eitherSignal } from "./abort.ts";
 import type { DatedFact } from "./ai-marking.ts";
 import { err, ok, type Result } from "./result.ts";
 import { parseWith, type ValidationError } from "./validation.ts";
@@ -225,7 +226,7 @@ const queryBatch = async (
   const timer = setTimeout(() => {
     limit.abort();
   }, CALL_LIMIT_MS);
-  const signal = AbortSignal.any([request.signal, limit.signal]);
+  const { signal, release } = eitherSignal(request.signal, limit.signal);
   let status: number;
   let body: string;
   try {
@@ -244,6 +245,7 @@ const queryBatch = async (
     return failure(limit.signal.aborted ? "timeout" : "network", null, null);
   } finally {
     clearTimeout(timer);
+    release();
   }
   if (status === 429) return failure("rate-limited", status, null);
   if (status < 200 || status > 299) return failure("server", status, null);

@@ -251,6 +251,8 @@ export const UnknownWordCard = ({
   const titleId = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   const undo = useRef<HTMLButtonElement>(null);
+  /** Back on the heading once it is drawn again: a frame may come before React draws it. */
+  const focusHeading = useRef(false);
   const [mode, setMode] = useState<Mode>({ kind: "browse" });
   const [rejected, setRejected] = useState<ReadonlySet<string>>(new Set());
   const [showAll, setShowAll] = useState(false);
@@ -260,6 +262,12 @@ export const UnknownWordCard = ({
   useEffect(() => {
     if (accepted) undo.current?.focus();
   }, [accepted]);
+
+  useEffect(() => {
+    if (!focusHeading.current || heading.current === null) return;
+    focusHeading.current = false;
+    heading.current.focus();
+  });
 
   const save = async (draft: EntryDraft): Promise<void> => {
     const checked = checkEntry(draft);
@@ -285,14 +293,14 @@ export const UnknownWordCard = ({
     }
     setFailure(null);
     setMode({ kind: "browse" });
+    focusHeading.current = true;
     onEvent({ kind: "removed", headword: entry.headword });
-    requestAnimationFrame(() => heading.current?.focus());
   };
 
   const leaveForm = (): void => {
     setFailure(null);
+    focusHeading.current = true;
     setMode({ kind: "browse" });
-    requestAnimationFrame(() => heading.current?.focus());
   };
 
   if (mode.kind === "accepted") {
