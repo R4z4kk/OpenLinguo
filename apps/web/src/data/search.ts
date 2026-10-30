@@ -142,7 +142,12 @@ const sentenceWords = async (
         .map(({ text }) => text),
     ),
   ];
-  const rows = await db.entries.where("simplified").anyOf(texts).toArray();
+  // One `equals` per key: `anyOf` walks the whole index in WebKit.
+  const rows = (
+    await db.transaction("r", db.entries, () =>
+      Promise.all(texts.map((text) => db.entries.where("simplified").equals(text).toArray())),
+    )
+  ).flat();
   const words = texts.map((text): SentenceWord => {
     const ranked = rows
       .filter(({ simplified }) => simplified === text)

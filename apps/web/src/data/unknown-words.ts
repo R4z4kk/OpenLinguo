@@ -50,14 +50,22 @@ export const commonWords = (
   db: Database,
   words: readonly string[],
 ): Promise<Result<ReadonlySet<string>, ReviewLogFailure>> =>
-  guarded(async () => {
-    const entries = await db.entries
-      .where("simplified")
-      .anyOf(words)
-      .filter(({ hsk2025 }) => hsk2025 !== null && hsk2025 <= COMMON_MAX_LEVEL)
-      .toArray();
-    return ok(new Set(entries.map(({ simplified }) => simplified)));
-  });
+  guarded(() =>
+    db.transaction("r", db.entries, async () => {
+      // One `equals` per key: `anyOf` walks the whole index in WebKit.
+      const rows = await Promise.all(
+        words.map((word) => db.entries.where("simplified").equals(word).toArray()),
+      );
+      return ok(
+        new Set(
+          rows
+            .flat()
+            .filter(({ hsk2025 }) => hsk2025 !== null && hsk2025 <= COMMON_MAX_LEVEL)
+            .map(({ simplified }) => simplified),
+        ),
+      );
+    }),
+  );
 
 type Cached = { readonly proposals: readonly Proposal[]; readonly checks: readonly Check[] };
 
