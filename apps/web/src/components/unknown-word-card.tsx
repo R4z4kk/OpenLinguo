@@ -421,16 +421,18 @@ export const UnknownWordCard = ({
           )}
           {word.checks.map(({ source, checkedAt, found }) => (
             <p key={source} className="mt-2 text-small text-muted">
-              {found === 0
-                ? t("unknownWords.checkedNone", {
-                    source: t(`unknownWords.source.${source}`),
-                    date: date.format(checkedAt),
-                  })
-                : t("unknownWords.checkedFound", {
-                    source: t(`unknownWords.source.${source}`),
-                    count: found,
-                    date: date.format(checkedAt),
-                  })}
+              {source === "ai" && found === 0
+                ? t("unknownWords.notAWord", { date: date.format(checkedAt) })
+                : found === 0
+                  ? t("unknownWords.checkedNone", {
+                      source: t(`unknownWords.source.${source}`),
+                      date: date.format(checkedAt),
+                    })
+                  : t("unknownWords.checkedFound", {
+                      source: t(`unknownWords.source.${source}`),
+                      count: found,
+                      date: date.format(checkedAt),
+                    })}
             </p>
           ))}
           {failure !== null && (

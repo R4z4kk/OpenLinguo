@@ -119,4 +119,20 @@ describe("sentItems", () => {
       sentItems(en, "en", { feature: "translation", input: { ...input, glosses: ["bon voyage"] } }),
     ).toBe("the word, its pinyin, and its English sense");
   });
+
+  it("lists the unknown sequences an explanation sends, with their sentences", () => {
+    const sequences = [
+      { sequence: "王芳", sentence: "我的同学王芳和老师去玩了。" },
+      { sequence: "红白机", sentence: "我们要一起玩红白机。" },
+    ];
+    expect(
+      sentItems(fr, "fr", { feature: "explanation", input: { sequences, language: "fr" } }),
+    ).toBe("les 2 suites inconnues (王芳、红白机) avec leur phrase et la langue de l’interface");
+    expect(
+      sentItems(en, "en", {
+        feature: "explanation",
+        input: { sequences: sequences.slice(0, 1), language: "en" },
+      }),
+    ).toBe("the unknown sequence (王芳) with its sentence and the interface language");
+  });
 });
