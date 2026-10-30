@@ -171,6 +171,15 @@ test("keeps closing punctuation on the line of its word, with the spacing of 1.4
     );
     document.adoptedStyleSheets = [...document.adoptedStyleSheets, sheet];
   });
+  // `content-visibility: auto` may skip a paragraph below the screen and keep its old height.
+  await page.evaluate(async () => {
+    const frame = (): Promise<number> => new Promise((resolve) => requestAnimationFrame(resolve));
+    for (const paragraph of document.querySelectorAll("p[lang='zh-Hans']")) {
+      paragraph.scrollIntoView();
+      await frame();
+      await frame();
+    }
+  });
 
   const layout = await page.evaluate(() => {
     const overlaps = (a: DOMRect, b: DOMRect): boolean =>
