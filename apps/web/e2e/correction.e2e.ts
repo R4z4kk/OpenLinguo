@@ -113,7 +113,7 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
   ).toBeVisible();
   const third = main.getByRole("region", { name: "Sentence 3" });
   await expect(third.getByRole("button", { name: en.correction.accept })).toBeFocused();
-  await expect(third.locator("p ins")).toHaveText("[added: 手机]");
+  await expect(third.locator("p ins")).toHaveText("[added: 的]");
   const fifth = main.getByRole("region", { name: "Sentence 5" });
   await expect(fifth.locator("p ins")).toHaveText("[added: 给我打]");
   expect(await accessibilityViolations(page)).toEqual([]);
@@ -143,7 +143,7 @@ test("corrects the challenge with the keyboard: cancelled, then unreadable, then
   const corrections = await storedCorrections(page);
   expect(corrections[2]).toMatchObject({
     original: "我电话很新。",
-    corrected: "我手机很新。",
+    corrected: "我的电话很新。",
     choice: "accepted",
     provenance: { origin: "ai", provider: "local", model: MODEL, promptVersion: "zh-correct-v2" },
   });
