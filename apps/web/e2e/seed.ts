@@ -1,6 +1,6 @@
 import type { Page } from "@playwright/test";
 
-export type Store = "texts" | "knownMarks";
+export type Store = "texts" | "knownMarks" | "aiSettings" | "reviews";
 
 /** Writes a row as the app stores it: the page must have opened the database once. */
 export const put = (page: Page, store: Store, row: object): Promise<void> =>
@@ -24,4 +24,27 @@ export const put = (page: Page, store: Store, row: object): Promise<void> =>
         };
       }),
     { name: store, value: row },
+  );
+
+/** Every row of a store, as the app stored it. */
+export const all = (page: Page, store: Store | "resolutions"): Promise<unknown[]> =>
+  page.evaluate(
+    (name) =>
+      new Promise<unknown[]>((resolve, reject) => {
+        const open = indexedDB.open("openlinguo");
+        open.onerror = () => {
+          reject(new Error(String(open.error)));
+        };
+        open.onsuccess = () => {
+          const request = open.result.transaction(name, "readonly").objectStore(name).getAll();
+          request.onerror = () => {
+            reject(new Error(String(request.error)));
+          };
+          request.onsuccess = () => {
+            open.result.close();
+            resolve(request.result);
+          };
+        };
+      }),
+    store,
   );

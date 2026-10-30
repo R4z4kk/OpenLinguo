@@ -2,15 +2,18 @@ import {
   ok,
   type AiProvider,
   type CorrectionInput,
+  type ExplainInput,
   type GlossInput,
   type Result,
+  type StoryInput,
   type VocabularyInput,
 } from "@openlinguo/core";
 import type { TFunction } from "i18next";
 import type { Database } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
-export type AiFeature = "challenge" | "journal" | "interests" | "translation";
+export type AiFeature =
+  "challenge" | "journal" | "interests" | "translation" | "story" | "explanation";
 
 /** The input the feature's PromptTask builds its request from. */
 export type AiPayload =
@@ -21,7 +24,9 @@ export type AiPayload =
       /** The level sent, as the learner reads it: « HSK 2 ». */
       readonly band: string;
     }
-  | { readonly feature: "translation"; readonly input: GlossInput };
+  | { readonly feature: "translation"; readonly input: GlossInput }
+  | { readonly feature: "story"; readonly input: StoryInput; readonly band: string }
+  | { readonly feature: "explanation"; readonly input: ExplainInput };
 
 /** One AI button: what its click sends, and where. */
 export type AiCall = {
@@ -40,6 +45,18 @@ export const markNoticeSeen = (db: Database): Promise<Result<null, ReviewLogFail
     await db.aiNotice.put({ id: "seen" });
     return ok(null);
   });
+
+/** The Chinese words a call sends, as the sent line writes them; empty when it sends none. */
+export const sentWords = (payload: AiPayload): string => {
+  switch (payload.feature) {
+    case "story":
+      return payload.input.words.join("、");
+    case "explanation":
+      return payload.input.sequences.map(({ sequence }) => sequence).join("、");
+    default:
+      return "";
+  }
+};
 
 const itemsOf = (t: TFunction, payload: AiPayload): string[] => {
   const { feature, input } = payload;
@@ -64,6 +81,28 @@ const itemsOf = (t: TFunction, payload: AiPayload): string[] => {
         t("aiNotice.items.word"),
         t("aiNotice.items.reading"),
         t("aiNotice.items.senses", { count: input.glosses.length }),
+      ];
+    case "story":
+      return [
+        t("aiNotice.items.level", { band: payload.band }),
+        t("aiNotice.items.storyTheme", { theme: input.theme }),
+        t(input.length === "short" ? "aiNotice.items.storyShort" : "aiNotice.items.storyMedium"),
+        ...(input.words.length === 0
+          ? []
+          : [
+              t("aiNotice.items.storyWords", {
+                count: input.words.length,
+                words: sentWords(payload),
+              }),
+            ]),
+      ];
+    case "explanation":
+      return [
+        t("aiNotice.items.sequences", {
+          count: input.sequences.length,
+          sequences: sentWords(payload),
+        }),
+        t("aiNotice.items.language"),
       ];
   }
 };

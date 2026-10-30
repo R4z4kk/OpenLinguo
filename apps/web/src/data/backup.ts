@@ -32,8 +32,10 @@ import {
 } from "./database.ts";
 import { DECK_NAME_MAX, entryId, sameDeckName, type DeckFailure } from "./decks.ts";
 import { Interests } from "./interests.ts";
+import { LexiconEntry } from "./lexicon.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
 import { referentials } from "./referential.ts";
+import { Resolution } from "./resolutions.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
 export const BACKUP_FORMAT = "openlinguo-backup";
@@ -160,10 +162,24 @@ export const Backup = z
         }),
       )
       .default([]),
+    // Backups made before the unknown-words panel have no personal lexicon and no kept answers.
+    lexicon: z.array(LexiconEntry).default([]),
+    resolutions: z.array(Resolution).default([]),
   })
   .superRefine((backup, context) => {
-    const { reviews, decks, deckWords, notes, challenges, aiGlosses, journal, texts, knownMarks } =
-      backup;
+    const {
+      reviews,
+      decks,
+      deckWords,
+      notes,
+      challenges,
+      aiGlosses,
+      journal,
+      texts,
+      knownMarks,
+      lexicon,
+      resolutions,
+    } = backup;
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -204,6 +220,17 @@ export const Backup = z
       const id = entryId(mark);
       if (markIds.has(id)) issue(["knownMarks", index], "Duplicate mark for this reading");
       markIds.add(id);
+    });
+    const headwords = new Set<string>();
+    lexicon.forEach(({ headword }, index) => {
+      if (headwords.has(headword)) issue(["lexicon", index, "headword"], "Duplicate headword");
+      headwords.add(headword);
+    });
+    const checks = new Set<string>();
+    resolutions.forEach(({ sequence, source }, index) => {
+      const id = `${sequence}	${source}`;
+      if (checks.has(id)) issue(["resolutions", index], "Duplicate answer for this sequence");
+      checks.add(id);
     });
     const glossIds = new Set<string>();
     aiGlosses.forEach((gloss, index) => {
@@ -260,6 +287,8 @@ const learningTables = (db: Database) => [
   db.journal,
   db.texts,
   db.knownMarks,
+  db.lexicon,
+  db.resolutions,
 ];
 
 export const exportBackup = (
@@ -299,6 +328,8 @@ export const exportBackup = (
         journal: await db.journal.toArray(),
         texts: await db.texts.orderBy("createdAt").toArray(),
         knownMarks: await db.knownMarks.toArray(),
+        lexicon: await db.lexicon.toArray(),
+        resolutions: await db.resolutions.toArray(),
       }),
     ),
   );
@@ -315,6 +346,8 @@ export type ImportSummary = {
   readonly journal: number;
   readonly texts: number;
   readonly marks: number;
+  readonly lexicon: number;
+  readonly resolutions: number;
 };
 
 const replayCards = (
@@ -413,6 +446,19 @@ export const importBackup = (
           (_, index) => localMarks[index] == null,
         );
 
+        const localLexicon = await db.lexicon.bulkGet(
+          backup.lexicon.map(({ headword }) => headword),
+        );
+        const newerLexicon: LexiconEntry[] = backup.lexicon.filter(
+          (entry, index) => entry.validatedAt > (localLexicon[index]?.validatedAt ?? -1),
+        );
+        const localAnswers = await db.resolutions.bulkGet(
+          backup.resolutions.map(({ sequence, source }) => [sequence, source]),
+        );
+        const newerAnswers: Resolution[] = backup.resolutions.filter(
+          (answer, index) => answer.checkedAt > (localAnswers[index]?.checkedAt ?? -1),
+        );
+
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
         await db.decks.bulkAdd(newDecks);
@@ -423,6 +469,8 @@ export const importBackup = (
         await db.journal.bulkPut(newerEntries);
         await db.texts.bulkAdd(newTexts);
         await db.knownMarks.bulkAdd(newMarks);
+        await db.lexicon.bulkPut(newerLexicon);
+        await db.resolutions.bulkPut(newerAnswers);
         return ok({
           reviews: newReviews.length,
           cards: cards.size - localCards,
@@ -434,6 +482,8 @@ export const importBackup = (
           journal: newerEntries.length,
           texts: newTexts.length,
           marks: newMarks.length,
+          lexicon: newerLexicon.length,
+          resolutions: newerAnswers.length,
         });
       },
     ),

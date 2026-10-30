@@ -1,13 +1,15 @@
-import type { LanguagePack } from "@openlinguo/core";
+import type { LanguagePack, Result } from "@openlinguo/core";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
-import { FileText, PenLine, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { FileText, PenLine, Sparkles, Trash2 } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
+import { loadAiConnection, type AiConnection } from "@/data/ai-settings";
 import { database, type StoredText } from "@/data/database";
+import { loadLexicon } from "@/data/lexicon";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import {
   describeCoverageFailure,
@@ -59,8 +61,14 @@ const useStats = (
       const todo = texts.filter(({ id }) => !measured.current.has(id));
       if (todo.length === 0) return;
       const known = await loadKnownWords(database, pack.id);
+      const lexicon = await loadLexicon(database);
+      const measureOf = async (text: StoredText) => {
+        if (!known.ok) return known;
+        if (!lexicon.ok) return lexicon;
+        return measureText(feature, known.value, text, lexicon.value.headwords);
+      };
       for (const text of todo) {
-        const measure = known.ok ? await measureText(feature, known.value, text) : known;
+        const measure = await measureOf(text);
         if (!active) return;
         measured.current.add(text.id);
         const next: Stats = measure.ok
@@ -146,14 +154,29 @@ export const TextLibrary = ({ pack }: { readonly pack: LanguagePack | null }) =>
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const input = useRef<HTMLInputElement>(null);
+  const storyHint = useId();
   const heading = useRef<HTMLHeadingElement>(null);
   const [texts, setTexts] = useState<readonly StoredText[] | null>(null);
   const [loadFailure, setLoadFailure] = useState<ReviewLogFailure | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [deleting, setDeleting] = useState<StoredText | null>(null);
+  const [connection, setConnection] = useState<Result<
+    AiConnection | null,
+    ReviewLogFailure
+  > | null>(null);
   const deleted = useRef(false);
   const stats = useStats(texts, pack);
+
+  useEffect(() => {
+    let active = true;
+    void loadAiConnection(database).then((loaded) => {
+      if (active) setConnection(loaded);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -219,6 +242,19 @@ export const TextLibrary = ({ pack }: { readonly pack: LanguagePack | null }) =>
           <FileText aria-hidden="true" className="size-4" />
           {t("library.import")}
         </Button>
+        {pack?.prompts != null &&
+          connection?.ok === true &&
+          (connection.value === null ? (
+            <Button variant="outline" aria-disabled="true" aria-describedby={storyHint}>
+              <Sparkles aria-hidden="true" className="size-4" />
+              {t("story.write")}
+            </Button>
+          ) : (
+            <Link to="/read/story" className={buttonVariants({ variant: "outline" })}>
+              <Sparkles aria-hidden="true" className="size-4" />
+              {t("story.write")}
+            </Link>
+          ))}
         <input
           ref={input}
           type="file"
@@ -232,6 +268,19 @@ export const TextLibrary = ({ pack }: { readonly pack: LanguagePack | null }) =>
           }}
         />
       </div>
+      {pack?.prompts != null && connection?.ok === true && connection.value === null && (
+        <p id={storyHint} className="mt-3 text-muted">
+          {t("story.noProvider")}{" "}
+          <Link to="/profile" hash="ai" className="underline underline-offset-3">
+            {t("story.toSettings")}
+          </Link>
+        </p>
+      )}
+      {connection?.ok === false && (
+        <p role="alert" className="mt-3 text-danger">
+          {t("ai.loadFailed", { reason: describeFailure(connection.error) })}
+        </p>
+      )}
       {fileError !== null && (
         <p role="alert" className="mt-3 text-danger">
           {fileError}
@@ -276,6 +325,7 @@ export const TextLibrary = ({ pack }: { readonly pack: LanguagePack | null }) =>
       {deleting !== null && (
         <Dialog
           title={t("library.deleteTitle")}
+          sheet={null}
           description={
             <Trans
               i18nKey="library.deleteBody"

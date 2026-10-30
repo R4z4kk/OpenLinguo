@@ -90,14 +90,14 @@ test("reads a text word by word with the keyboard", async ({ page }) => {
   await page.keyboard.press("Shift+Tab");
   await expect(words.nth(2)).toBeFocused();
 
-  // A word is selected with Enter and cleared with Enter or Escape.
+  // Enter opens the word sheet; Escape closes it and the word has focus again.
   await page.keyboard.press("Enter");
+  const sheet = page.getByRole("dialog", { name: "他" });
+  await expect(sheet).toBeVisible();
   await expect(words.nth(2)).toHaveAttribute("aria-current", "true");
-  await page.keyboard.press("ArrowRight");
-  await page.keyboard.press("Enter");
-  await expect(words.nth(2)).not.toHaveAttribute("aria-current", "true");
-  await expect(words.nth(3)).toHaveAttribute("aria-current", "true");
   await page.keyboard.press("Escape");
+  await expect(sheet).toBeHidden();
+  await expect(words.nth(2)).toBeFocused();
   await expect(main.locator("p button[aria-current]")).toHaveCount(0);
   expect(await accessibilityViolations(page)).toEqual([]);
 });

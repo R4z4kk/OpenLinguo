@@ -2,6 +2,7 @@ import type { AnnotatedToken, Knowledge, ReadingChoices } from "@openlinguo/core
 import {
   Fragment,
   memo,
+  useEffect,
   useMemo,
   useRef,
   useState,
@@ -59,7 +60,7 @@ const Word = memo(
         {...(selected ? { "aria-current": true } : {})}
         {...(described.length === 0 ? {} : { "aria-describedby": described.join(" ") })}
         className={cn(
-          "cursor-pointer rounded-sm",
+          "scroll-mb-[50dvh] cursor-pointer rounded-sm",
           roomy && "pt-6",
           underline,
           selected && "ring-2 ring-ink",
@@ -113,9 +114,9 @@ type Props = {
   readonly choices: ReadingChoices;
   readonly mode: PinyinMode;
   readonly features: PinyinFeatures;
-  /** `start` of the selected word's token, `null` for none. */
+  /** `start` of the token of the word open in the sheet, `null` for none. */
   readonly selected: number | null;
-  readonly onSelect: (start: number | null) => void;
+  readonly onSelect: (start: number) => void;
   readonly unknownId: string;
   readonly readingsId: string;
 };
@@ -160,19 +161,26 @@ export const Passage = ({
   );
   const tabStop = stop ?? starts[0] ?? null;
 
+  // The sheet covers the lower half of the screen: the word must stay above it.
+  useEffect(() => {
+    if (selected !== null)
+      container.current
+        ?.querySelector<HTMLElement>(`button[data-start="${String(selected)}"]`)
+        ?.scrollIntoView({ block: "nearest" });
+  }, [selected]);
+
   const select = (event: MouseEvent): void => {
-    const start = startOf(wordButton(event.target));
-    if (start === null) return;
+    const button = wordButton(event.target);
+    const start = startOf(button);
+    if (button === null || start === null) return;
+    // Safari does not focus a clicked button, and the sheet gives focus back to the word.
+    button.focus();
     setStop(start);
-    onSelect(selected === start ? null : start);
+    onSelect(start);
   };
 
   const move = (event: KeyboardEvent): void => {
     if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
-    if (event.key === "Escape") {
-      if (selected !== null) onSelect(null);
-      return;
-    }
     const position = starts.indexOf(startOf(wordButton(event.target)) ?? -1);
     if (position < 0) return;
     const targets: Readonly<Record<string, number>> = {

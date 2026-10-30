@@ -15,11 +15,12 @@ import {
 } from "@openlinguo/core";
 import { readingKey } from "@openlinguo/lang-zh";
 import type { Database, StoredText } from "./database.ts";
+import { readLexicon } from "./lexicon.ts";
 import { describeFailure, guarded, type ReviewLogFailure } from "./review-log.ts";
 
 export type CoverageFailure = LookupError | InvalidReading;
 
-/** The cards and « Je connais » marks of the language; validated names join with the lexicon (#229). */
+/** The cards and « Je connais » marks of the language, and the names of the personal lexicon. */
 export const loadKnownWords = (
   db: Database,
   language: LanguageId,
@@ -30,7 +31,7 @@ export const loadKnownWords = (
         language,
         cards: await db.cards.toArray(),
         marks: await db.knownMarks.toArray(),
-        names: [],
+        names: (await readLexicon(db)).names,
       }),
     ),
   );
@@ -101,8 +102,9 @@ export const measureText = async (
   feature: TextReadingFeature,
   known: KnownWords,
   { body, readingChoices }: Pick<StoredText, "body" | "readingChoices">,
+  headwords: ReadonlySet<string> = new Set(),
 ): Promise<Result<Measure, CoverageFailure>> => {
-  const tokens = await feature.annotate(body);
+  const tokens = await feature.annotate(body, headwords);
   if (!tokens.ok) return tokens;
   const occurrences = occurrencesOf(tokens.value, readingChoices);
   return occurrences.ok ? ok(measureOccurrences(occurrences.value, known)) : occurrences;

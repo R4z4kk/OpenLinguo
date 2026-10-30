@@ -43,7 +43,7 @@ export const DownloadControls = ({
   onChange,
 }: {
   /** The `download`, `resume`, `retry`, `downloading`, `installed` and `delete` texts. */
-  readonly labels: "audio" | "speech";
+  readonly labels: "audio" | "speech" | "unknownWords";
   readonly bytes: number;
   readonly state: DownloadState;
   readonly describedBy: string;
