@@ -21,7 +21,7 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
 | `e2e-shard`: Chromium in 2 shards, WebKit in 4 | skipped | runs | runs |
 | `e2e`: fails unless every shard passed | skipped | runs, required | runs |
 
-- Nothing runs on push: the pull request already tested the merge result. A nightly run (02:37 UTC) and a manual run (`workflow_dispatch`) test `develop` in full. Only pull request runs cancel the run they replace on the same branch.
+- Nothing but the deploy runs on push: the pull request already tested the merge result. A nightly run (02:37 UTC) and a manual run (`workflow_dispatch`) test `develop` in full. Only pull request runs cancel the run they replace on the same branch.
 - Playwright runs with `fullyParallel`, so shards split by test rather than by file.
 - Rulesets:
   - `protect-main` targets `refs/heads/main` explicitly, so it does not follow the default branch. It requires a pull request, `quick` and `e2e`, merge commits only, and forbids deletion and force pushes. The branch does not have to be up to date: after a promotion, `main` holds a merge commit that `develop` lacks, and updating `develop` would need a pull request of its own.
@@ -33,6 +33,11 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
   - The repository lets GitHub Actions create pull requests for this.
   - A manual run does the same without a milestone.
   - The maintainer merges: nothing merges automatically.
+- `.github/workflows/deploy.yml` puts `main` in production on Cloudflare (ADR 0015):
+  - It runs on every push to `main`, that is on every merged promotion, and by hand.
+  - Its job runs in the GitHub environment `production`, which waits for the maintainer's approval and accepts `main` only. The environment holds `CLOUDFLARE_API_TOKEN`, scoped to Pages, D1 and Workers Scripts on the one account, and `CLOUDFLARE_ACCOUNT_ID`.
+  - It builds, applies the D1 migrations (`wrangler d1 migrations apply --remote`), deploys the PWA and the Functions (`wrangler pages deploy --branch=main`), then the cron Worker (`wrangler deploy`). A failed step stops the next ones.
+  - The Pages project has no Git integration and every deploy names the production branch, so there is no preview deployment: it would share the production database.
 
 ## Consequences
 
@@ -40,4 +45,5 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
 - An E2E regression merged into `develop` shows up in the nightly run or on the promotion pull request, not on the pull request that caused it.
 - The shard counts are set in `ci.yml`. Change them when the WebKit to Chromium time ratio moves away from about 2.
 - `main`'s first-parent history is the list of promotions.
+- Migrations run before the code is deployed, so the code in production must keep working with the new schema until the deploy ends.
 - The repository setting that lets Actions create pull requests also lets workflows approve them. Revisit it before reviews become required (M10).

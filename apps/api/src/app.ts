@@ -2,6 +2,7 @@ import { AgeDeclaration } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { secureHeaders } from "hono/secure-headers";
 import { type Auth, AuthEnv, createAuth } from "./auth.ts";
 import { unhealthyJobs } from "./health.ts";
 import { JOBS } from "./jobs.ts";
@@ -28,6 +29,14 @@ const BEFORE_AGE_STEP = new Set([
 
 export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
+
+  // Pages applies apps/web/public/_headers to static files only. HSTS matches it.
+  app.use(
+    secureHeaders({
+      strictTransportSecurity: "max-age=63072000; includeSubDomains",
+      contentSecurityPolicy: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
+    }),
+  );
 
   const authOf = (env: Env): Auth => {
     const settings = AuthEnv.safeParse(env);

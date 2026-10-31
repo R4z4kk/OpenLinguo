@@ -5,12 +5,15 @@
   "main": "src/cron.ts",
   "compatibility_date": "2026-10-19",
   "triggers": { "crons": ["17 3 * * *"] },
+  // No public URL: the Worker has no fetch handler.
+  "workers_dev": false,
+  "preview_urls": false,
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "openlinguo",
-      // Set by #269 once the database exists in the eu jurisdiction: a deploy fails until then.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      // Created with --jurisdiction=eu (ADR 0015); the same database as apps/web/wrangler.jsonc.
+      "database_id": "3d2505dc-d634-4de5-b6f1-3ddbe9074d31",
       "migrations_dir": "migrations",
     },
   ],

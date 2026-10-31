@@ -5,11 +5,12 @@ The server of [ADR 0015](../../docs/adr/0015-backend-and-shared-library.md): a H
 - `pnpm db:generate` writes a migration in `migrations/` after a change to `src/schema.ts`.
 - `pnpm types` regenerates `worker-configuration.d.ts` after a change to `wrangler.jsonc`; `typecheck` fails while it is out of date.
 - Tests run in Vitest against a local D1 in memory, migrated, through wrangler's `getPlatformProxy` (`src/testing/platform.ts`).
-- Locally: `wrangler d1 migrations apply openlinguo --local --persist-to ../web/.wrangler/state`, then from `apps/web`, `wrangler pages dev dist --d1 DB=00000000-0000-0000-0000-000000000000 --persist-to .wrangler/state`.
+- Locally: `wrangler d1 migrations apply openlinguo --local --persist-to ../web/.wrangler/state`, then from `apps/web`, `wrangler pages dev --persist-to .wrangler/state`, which reads `apps/web/wrangler.jsonc`.
+- Production: `.github/workflows/deploy.yml` ([ADR 0010](../../docs/adr/0010-branches-and-ci.md)).
 
 ## Settings of the Pages project
 
-Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one answers 500 and logs its name, never a default. Placeholders for `wrangler pages dev` are in `apps/web/.dev.vars.example`. The maintainer creates and enters the values; they never go in the repo.
+Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one answers 500 and logs its name, never a default. Placeholders for `wrangler pages dev` are in `apps/web/.dev.vars.example`. The maintainer creates the values and enters each one as a secret (type Secret in the dashboard, or `wrangler pages secret put`), since `apps/web/wrangler.jsonc` owns the plain variables; they never go in the repo.
 
 - [ ] `BETTER_AUTH_SECRET`: 32 random characters or more (`openssl rand -base64 32`), as an encrypted secret.
 - [ ] `BETTER_AUTH_URL`: `https://openlinguo.razakk.fr`.
