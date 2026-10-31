@@ -17,6 +17,7 @@ import { ChevronLeft } from "lucide-react";
 import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
+import { useAuthFailure } from "@/components/auth-failure";
 import { Button } from "@/components/ui/button";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
@@ -33,8 +34,10 @@ import { fieldClass } from "@/shell/ai-settings";
 
 const useFailure = () => {
   const { t } = useTranslation("moderation");
+  const authFailure = useAuthFailure();
   return (failure: ApiFailure): string => {
     if (failure.kind === "offline") return t("failure.offline");
+    if (failure.kind === "rate-limited") return authFailure(failure);
     if (failure.kind === "unexpected") return t("failure.unexpected", { status: failure.status });
     switch (failure.code) {
       case "UNAUTHORIZED":
