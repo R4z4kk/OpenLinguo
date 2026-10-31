@@ -1,5 +1,54 @@
 import { z } from "zod";
+import { Pseudonym } from "./submission.ts";
 
 /** The age step after the first sign-in (ADR 0015): « moins de 15 ans » deletes the account. */
 export const AgeDeclaration = z.object({ answer: z.enum(["15-or-over", "under-15"]) });
 export type AgeDeclaration = z.output<typeof AgeDeclaration>;
+
+/** The emailed sign-in code (ADR 0015): 6 digits, valid 10 minutes, 3 attempts. */
+export const EMAIL_CODE = { length: 6, minutes: 10, attempts: 3 } as const;
+/** Wrong authenticator or backup codes that lock the second factor, and for how long. */
+export const SECOND_FACTOR_LOCK = { failures: 10, minutes: 15 } as const;
+
+/** `POST /api/auth/update-user`: only the pseudonym may change (rectification). */
+export const PseudonymUpdate = z.strictObject({ name: Pseudonym });
+export type PseudonymUpdate = z.output<typeof PseudonymUpdate>;
+
+/** The parts of Better Auth's `get-session` answer the app reads; `null` when signed out. */
+export const SessionAnswer = z
+  .object({
+    user: z.object({
+      email: z.string(),
+      name: z.string(),
+      role: z.string().nullish(),
+      twoFactorEnabled: z.boolean().nullish(),
+      ageDeclaredAt: z.coerce.date().nullish(),
+    }),
+    session: z.object({ twoFactorVerifiedAt: z.coerce.date().nullish() }),
+  })
+  .nullable();
+export type SessionAnswer = z.output<typeof SessionAnswer>;
+
+/** `GET /api/auth/list-accounts`: how the account signs in. */
+export const LinkedAccounts = z.array(z.object({ providerId: z.string() }));
+export type LinkedAccounts = z.output<typeof LinkedAccounts>;
+
+/** `POST /api/auth/sign-in/social`: the provider's page to open. */
+export const SocialRedirect = z.object({ url: z.url() });
+
+/** `POST /api/auth/two-factor/enable`: the authenticator's URI and the backup codes, shown once. */
+export const TotpSetup = z.object({
+  totpURI: z.string().startsWith("otpauth://totp/"),
+  backupCodes: z.array(z.string().min(1)).min(1),
+});
+export type TotpSetup = z.output<typeof TotpSetup>;
+
+/** The Better Auth error codes the sign-in screens answer in words. */
+export const AuthErrorCode = z.enum([
+  "INVALID_OTP",
+  "OTP_EXPIRED",
+  "TOO_MANY_ATTEMPTS",
+  "INVALID_CODE",
+  "INVALID_BACKUP_CODE",
+]);
+export type AuthErrorCode = z.output<typeof AuthErrorCode>;

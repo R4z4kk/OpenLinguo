@@ -86,6 +86,10 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
     url: "/profile/account",
     ready: (page) => page.getByRole("button", { name: en.submit.retry }),
   },
+  "/account/sign-in": {
+    url: "/account/sign-in",
+    ready: (page) => page.getByRole("button", { name: en.submit.retry }),
+  },
 };
 
 export const NOT_FOUND_VISIT: Visit = { url: "/missing", ready: title(en.notFound.title) };

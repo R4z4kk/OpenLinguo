@@ -60,6 +60,17 @@ describe("design tokens (docs/design/DESIGN-SYSTEM.md)", () => {
     },
   );
 
+  it.each(THEMES)(
+    "keeps the sign-in buttons' text ≥ 4.5:1 and borders ≥ 3:1 on the page (%s)",
+    (theme) => {
+      expect(ratio(theme, "google-ink", "google-fill")).toBeGreaterThanOrEqual(4.5);
+      for (const ground of GROUNDS) {
+        expect(ratio(theme, "google-stroke", ground)).toBeGreaterThanOrEqual(3);
+        expect(ratio(theme, "github-mark", ground)).toBeGreaterThanOrEqual(3);
+      }
+    },
+  );
+
   it.each(THEMES)("keeps the heatmap shades ≥ 3:1 from their neighbours (%s)", (theme) => {
     expect(ratio(theme, "border-strong", "sunken")).toBeGreaterThanOrEqual(3);
     expect(ratio(theme, "ink", "border-strong")).toBeGreaterThanOrEqual(3);

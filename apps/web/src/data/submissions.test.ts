@@ -81,9 +81,9 @@ describe("newSubmission", () => {
 
 describe("the API calls", () => {
   it("read a signed-in account, with or without a pseudonym, and a signed-out one", async () => {
-    answer(200, { session: {}, user: { name: "小明" } });
+    answer(200, { session: {}, user: { email: "ming@example.test", name: "小明" } });
     expect(await loadAccount()).toEqual({ ok: true, value: { pseudonym: "小明" } });
-    answer(200, { session: {}, user: { name: "" } });
+    answer(200, { session: {}, user: { email: "ming@example.test", name: "" } });
     expect(await loadAccount()).toEqual({ ok: true, value: { pseudonym: null } });
     answer(200, null);
     expect(await loadAccount()).toEqual({ ok: true, value: null });
