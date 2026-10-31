@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./account": "./src/account.ts",
     "./api-error": "./src/api-error.ts",
     "./result": "./src/result.ts",
     "./testing": "./src/testing/language-pack-contract.ts"

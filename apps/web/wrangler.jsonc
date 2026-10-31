@@ -9,7 +9,7 @@
       "binding": "DB",
       "database_name": "openlinguo",
       // The same database as apps/api/wrangler.jsonc.
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "3d2505dc-d634-4de5-b6f1-3ddbe9074d31",
     },
   ],
 }

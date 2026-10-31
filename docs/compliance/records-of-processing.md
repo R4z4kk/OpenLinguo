@@ -10,14 +10,14 @@ Processing that happens only on the user's device (learning data, voice, journal
 
 | Item | Content |
 |---|---|
-| (b) Purposes | Create and manage accounts, authenticate users, send service emails (verification, password reset, inactivity notice) |
+| (b) Purposes | Create and manage accounts, authenticate users without passwords (6-digit code by email, Google, GitHub), send service emails (sign-in codes, inactivity notice) |
 | Legal basis | Contract (art. 6(1)(b)) |
-| (c) Data subjects | Registered users aged 15 and over |
-| (c) Data | Email, pseudonym, password hash, OAuth provider and account id, sessions, age declaration, created and last-active dates |
-| (d) Recipients | Maintainer; SMTP provider; Google or GitHub when chosen for sign-in |
-| (e) Transfers | United States (Google, GitHub; SMTP provider `[TBD]`) — see [sub-processors](sub-processors.md) |
+| (c) Data subjects | Registered users aged 15 and over, by self-declaration right after the first sign-in |
+| (c) Data | Email, pseudonym, Google or GitHub account id, sessions (IP address, user agent), sign-in codes (hashed), date of the age declaration, created and updated dates |
+| (d) Recipients | Maintainer; Cloudflare (processor, D1 in the `eu` jurisdiction); Scaleway (processor, sign-in emails); Google or GitHub when chosen for sign-in, as independent controllers |
+| (e) Transfers | United States (Google, GitHub) — see [sub-processors](sub-processors.md); none for Scaleway, which processes in France |
 | (f) Erasure | At account deletion; after 2 years of inactivity with prior notice — see [retention](retention-schedule.md) |
-| (g) Security | TLS, hashed passwords, least-privilege database user, secrets as Docker secrets, encrypted backups, rate limiting |
+| (g) Security | TLS; no passwords; codes hashed, valid 10 minutes, 3 attempts; cookies `Secure; HttpOnly; SameSite=Lax`; origin check on every state-changing request; rate limits per IP address; secrets as encrypted Pages secrets; no provider token kept |
 
 ## P2 — Shared library submissions and moderation
 
@@ -64,12 +64,12 @@ Processing that happens only on the user's device (learning data, voice, journal
 |---|---|
 | (b) Purposes | Detect and investigate abuse and intrusions |
 | Legal basis | Legitimate interest (art. 6(1)(f)) |
-| (c) Data subjects | Everyone calling the API |
-| (c) Data | IP address, user agent, timestamp, route, status, authentication events |
-| (d) Recipients | Maintainer |
+| (c) Data subjects | Everyone who signs in or asks for a sign-in code |
+| (c) Data | Sign-in, failed sign-in and code-sent events: method, account id when known, IP address, user agent, failure code, time; rate-limit counters per IP address and route |
+| (d) Recipients | Maintainer; Cloudflare (processor) |
 | (e) Transfers | None |
-| (f) Erasure | 6 months (CNIL délibération 2021-122 range: 6 months to 1 year) |
-| (g) Security | Logs stored on the self-hosted server, access restricted to the maintainer |
+| (f) Erasure | 6 months (CNIL délibération 2021-122 range: 6 months to 1 year), by the daily jobs (#278); rate-limit counters after their window, by the same jobs |
+| (g) Security | In D1 (`eu` jurisdiction); readable by the maintainer only; the account id is cleared when the account is deleted |
 
 ## P6 — Rights and support requests
 
