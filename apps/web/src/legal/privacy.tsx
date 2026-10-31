@@ -307,7 +307,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               items={[
                 "Cloudflare, Inc. héberge l’application, l’API et la base de données, pour notre compte et selon nos instructions (contrat de sous-traitance). La base est stockée et traitée dans l’Union européenne.",
                 "Scaleway SAS envoie les e-mails, pour notre compte, en France. Le contenu d’un e-mail est effacé une fois remis ; Scaleway garde l’adresse et le statut d’envoi tant que notre domaine d’envoi est actif.",
-                "Google Ireland ou GitHub, seulement si vous vous connectez avec eux.",
+                "Google Ireland ou GitHub, seulement si vous vous connectez avec eux. Google héberge aussi la boîte de contact (Gmail) : il reçoit les messages que vous y envoyez.",
                 "Les autorités, seulement sur demande écrite prévue par la loi, ou quand nous devons signaler une infraction grave.",
               ]}
             />
@@ -318,8 +318,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 décision d’adéquation de la Commission européenne
               </External>{" "}
               pour le Data Privacy Framework, auquel Cloudflare adhère (vérifié le {checked("fr")}),
-              et sur les clauses contractuelles types de son contrat. GitHub peut aussi traiter des
-              données aux États-Unis, sous le même cadre.
+              et sur les clauses contractuelles types de son contrat. GitHub, et Google pour la
+              boîte de contact, peuvent aussi traiter des données aux États-Unis, sous le même
+              cadre.
             </Paragraph>
           </>
         ),
@@ -638,7 +639,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               items={[
                 "Cloudflare, Inc. hosts the app, the API and the database, on our behalf and on our instructions (processing agreement). The database is stored and processed in the European Union.",
                 "Scaleway SAS sends the emails, on our behalf, in France. An email’s content is erased once delivered; Scaleway keeps the address and delivery status while our sending domain is active.",
-                "Google Ireland or GitHub, only if you sign in with them.",
+                "Google Ireland or GitHub, only if you sign in with them. Google also hosts the contact mailbox (Gmail): it receives the messages you send there.",
                 "Authorities, only on a written request provided for by law, or when we must report a serious offence.",
               ]}
             />
@@ -647,8 +648,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               This transfer relies on the{" "}
               <External href={DPF_DECISION}>European Commission’s adequacy decision</External> for
               the Data Privacy Framework, which Cloudflare has joined (checked on {checked("en")}),
-              and on the standard contractual clauses of its agreement. GitHub may also process data
-              in the U.S., under the same framework.
+              and on the standard contractual clauses of its agreement. GitHub, and Google for the
+              contact mailbox, may also process data in the U.S., under the same framework.
             </Paragraph>
           </>
         ),

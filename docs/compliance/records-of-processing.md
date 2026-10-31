@@ -2,7 +2,7 @@
 
 The fewer-than-250-employees exemption (art. 30(5)) does not apply: the processing below is not occasional.
 
-**Controller (art. 30(1)(a))**: the maintainer, a natural person and non-professional publisher, contact `[CONTACT_EMAIL]` (`CONTACT_EMAIL` in `packages/core/src/compliance-facts.ts`). This register is public, so the name and postal address are not in it: the maintainer publishes only the host's name and address ([LCEN art. 1-1 II](https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614)), and keeps a copy of this register with them outside the repository, given to the CNIL on request (art. 30(4)). No joint controller, no EU representative needed. No data protection officer: the conditions of art. 37 (public authority, large-scale systematic monitoring, large-scale special categories) are not met.
+**Controller (art. 30(1)(a))**: the maintainer, a natural person and non-professional publisher, contact `openlinguo@gmail.com` (`CONTACT_EMAIL` in `packages/core/src/compliance-facts.ts`). This register is public, so the name and postal address are not in it: the maintainer publishes only the host's name and address ([LCEN art. 1-1 II](https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614)), and keeps a copy of this register with them outside the repository, given to the CNIL on request (art. 30(4)). No joint controller, no EU representative needed. No data protection officer: the conditions of art. 37 (public authority, large-scale systematic monitoring, large-scale special categories) are not met.
 
 Processing that happens only on the user's device (learning data, voice, journal, AI key) is not listed: the controller does not receive that data. Nor are the requests the learner sends from the device to their own AI provider: OpenLinguo is most likely not a controller of them ([AI features](ai.md)). The same goes for the Wikidata lookup the learner starts with a click: the unknown character sequences of their text, their IP address and their browser go to the Wikimedia Foundation (U.S.), which deletes, aggregates or de-identifies its request logs after at most 90 days, and OpenLinguo receives nothing ([Wikidata lookup](wikidata.md)). That analysis is less firm than the AI one, because the app and not the learner picks the destination: if an authority held OpenLinguo joint controller of the transmission, this lookup would become a processing of its own here.
 
@@ -106,7 +106,7 @@ Processing that happens only on the user's device (learning data, voice, journal
 | (c) Data subjects | People who contact the project |
 | (c) Data | Email address, message content, request outcome |
 | (d) Recipients | Maintainer |
-| (e) Transfers | Depends on the provider of `[CONTACT_EMAIL]`, recorded with the address |
+| (e) Transfers | The mailbox is a Gmail account: Google Ireland Limited for EEA users, under Google's own terms; Google LLC, active on the DPF list (due 2027-09-13), may process the mail in the U.S. — see [sub-processors](sub-processors.md) |
 | (f) Erasure | Until answered, then the request, the answer and their dates for 5 years as proof; an ID document deleted once the request is answered (#290) |
 | (g) Security | Dedicated mailbox, access restricted to the maintainer; procedures in #290 |
 

@@ -1,7 +1,7 @@
 import type { DatedFact } from "./ai-marking.ts";
 
 /** The one address for users, parents and authorities (DSA arts 11 and 12, Regulation 2021/784 art. 15). */
-export const CONTACT_EMAIL = "[CONTACT_EMAIL]";
+export const CONTACT_EMAIL = "openlinguo@gmail.com";
 
 /** Status on the official Data Privacy Framework list; `value` is the next certification due date. */
 export const DPF_STATUS = {

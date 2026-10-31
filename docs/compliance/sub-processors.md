@@ -25,7 +25,7 @@ Not processors: the learner chooses Google or GitHub to sign in, and each acts u
 - **The learner's AI provider** (see below).
 - **Wikidata** (see below).
 - **GitHub (repository hosting)** holds source code, not user data.
-- **The maintainer's mailbox** for rights and support requests: `[CONTACT_EMAIL]` (`CONTACT_EMAIL` in `compliance-facts.ts`), provider to be recorded with the address.
+- **The contact mailbox**, `openlinguo@gmail.com` (`CONTACT_EMAIL` in `compliance-facts.ts`), for rights, support, parents' and authorities' requests: a consumer Gmail account, provided by Google Ireland Limited to EEA users under Google's own terms and [privacy policy](https://policies.google.com/privacy); Google LLC, active on the DPF list (`DPF_STATUS.google`), may process the mail in the U.S.
 
 ## AI providers chosen by the learner
 
