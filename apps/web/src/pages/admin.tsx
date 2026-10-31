@@ -1,6 +1,7 @@
-import { proficiencyFrameworks, type Result } from "@openlinguo/core";
+import type { Result } from "@openlinguo/core";
 import {
   type BandEstimate,
+  bandName,
   GROUNDS,
   type Ground,
   isLegalGround,
@@ -231,9 +232,6 @@ const useEstimate = (body: string): Estimate | null => {
   }, [feature, body]);
   return feature === null ? null : estimate;
 };
-
-const bandName = (band: number): string =>
-  proficiencyFrameworks["hsk-2025"][band - 1] ?? String(band);
 
 const LevelSection = ({ estimate }: { readonly estimate: Estimate | null }) => {
   const { t, i18n } = useTranslation("moderation");

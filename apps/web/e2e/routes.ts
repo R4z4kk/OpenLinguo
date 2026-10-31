@@ -59,6 +59,15 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   "/read": { url: "/read", ready: title(en.read.title) },
   "/read/new": { url: "/read/new", ready: title(en.library.pasteTitle) },
   "/read/story": { url: "/read/story", ready: title(en.story.title) },
+  // `vite preview` has no API: both pages show their failure and « Réessayer ».
+  "/read/library": {
+    url: "/read/library",
+    ready: (page) => page.getByRole("button", { name: en.globalLibrary.retry }),
+  },
+  "/read/library/$id": {
+    url: "/read/library/00000000-0000-4000-8000-000000000000",
+    ready: (page) => page.getByRole("button", { name: en.globalLibrary.retry }),
+  },
   "/read/$id": {
     url: "/read/00000000-0000-4000-8000-000000000000",
     ready: (page) => page.getByText(en.reader.notFound),

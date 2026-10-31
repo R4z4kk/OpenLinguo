@@ -136,6 +136,20 @@ const STORY: StoredText = {
   provenance: { ...AI_NOTE.provenance, promptVersion: "zh-story-v1" },
   readingChoices: {},
 };
+const COPIED = {
+  id: uuid(202),
+  title: "我的猫",
+  body: "我的猫很可爱。",
+  source: "library",
+  createdAt: start + 2,
+  provenance: null,
+  readingChoices: {},
+  library: {
+    licence: "CC-BY-SA-4.0",
+    attribution: "小明",
+    publishedAt: "2026-10-31T12:00:00.000Z",
+  },
+} satisfies StoredText;
 const MARKS: StoredKnownMark[] = [
   { headword: "行", readingKey: "xing2", markedAt: start },
   { headword: "行", readingKey: "hang2", markedAt: start + 1 },
@@ -300,19 +314,19 @@ describe("round trip", () => {
   });
 
   it("brings texts back with their provenance and chosen readings, and the known marks", async () => {
-    await db.texts.bulkAdd([PASTED, STORY]);
+    await db.texts.bulkAdd([PASTED, STORY, COPIED]);
     await db.knownMarks.bulkAdd(MARKS);
     const exported = await exportBackup(db, SETTINGS, now);
     if (!exported.ok) throw new Error(exported.error.kind);
-    expect(exported.value.texts).toEqual([PASTED, STORY]);
+    expect(exported.value.texts).toEqual([PASTED, STORY, COPIED]);
     expect(exported.value.knownMarks).toEqual(
       MARKS.toSorted((a, b) => (a.readingKey < b.readingKey ? -1 : 1)),
     );
     const parsed = parseBackup(JSON.stringify(exported.value));
     if (!parsed.ok) throw new Error(parsed.error.kind);
     const restored = openDatabase(`backup-test-restored-${String(counter)}`);
-    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ texts: 2, marks: 2 }));
-    expect(await restored.texts.orderBy("createdAt").toArray()).toEqual([PASTED, STORY]);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ texts: 3, marks: 2 }));
+    expect(await restored.texts.orderBy("createdAt").toArray()).toEqual([PASTED, STORY, COPIED]);
     expect(await restored.knownMarks.count()).toBe(2);
     expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ texts: 0, marks: 0 }));
   });
@@ -552,6 +566,16 @@ describe("parseBackup", () => {
     expect(parseBackup(raw({ ...PASTED, provenance: STORY.provenance }))).toMatchObject({
       ok: false,
     });
+  });
+
+  it("refuses a library copy whose licence does not follow its origin", () => {
+    const raw = (text: object): string => JSON.stringify({ ...backup({}), texts: [text] });
+    const story = { ...COPIED, provenance: STORY.provenance };
+    expect(
+      parseBackup(raw({ ...story, library: { ...COPIED.library, licence: "CC0-1.0" } })).ok,
+    ).toBe(true);
+    expect(parseBackup(raw(story))).toMatchObject({ ok: false });
+    expect(parseBackup(raw({ ...COPIED, library: null }))).toMatchObject({ ok: false });
   });
 
   it("accepts a text longer than today's limit, which the benchmark may lower", () => {

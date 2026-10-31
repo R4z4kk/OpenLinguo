@@ -7,6 +7,7 @@ import { secureHeaders } from "hono/secure-headers";
 import { type Auth, AuthEnv, createAuth } from "./auth.ts";
 import { unhealthyJobs } from "./health.ts";
 import { JOBS } from "./jobs.ts";
+import { libraryRoutes } from "./library.ts";
 import type { SendMail } from "./mail.ts";
 import { moderationRoutes } from "./moderation.ts";
 import { scalewayMailer } from "./scaleway-mailer.ts";
@@ -110,6 +111,7 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
   });
 
   app.route("/submissions", submissionRoutes(authOf));
+  app.route("/library", libraryRoutes());
   app.route(
     "/admin",
     moderationRoutes(authOf, (env) => {

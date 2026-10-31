@@ -421,7 +421,7 @@ export const en = {
     emptyTitle: "No text yet",
     emptyBody:
       "Paste a text or import a .txt file to see which words you already know and which to learn.",
-    source: { paste: "pasted", file: ".txt file", ai: "written by AI" },
+    source: { paste: "pasted", file: ".txt file", ai: "written by AI", library: "global library" },
     measuring: "Counting the known words…",
     known: "of words known",
     noWords: "No Chinese word in this text",
@@ -681,6 +681,47 @@ export const en = {
     showNumbers: "Show the numbers",
     tableCaption: "Reviews per learning day, by week.",
     failed: "Your statistics could not be computed: {{reason}}",
+  },
+  globalLibrary: {
+    link: "Global library",
+    back: "My texts",
+    title: "Global library",
+    intro:
+      "Texts sent by learners and read by a person before anyone else can see them. Reading needs no account.",
+    level: "Level",
+    allLevels: "All levels",
+    band: "HSK {{band}}",
+    estimated: "HSK {{band}} · estimated",
+    loading: "Loading the library…",
+    empty: "No published text at this level yet.",
+    more: "Load more",
+    loadingMore: "Loading more texts…",
+    published: "Published {{date}}",
+    retry: "Try again",
+    toPreview: "Back to the global library",
+    text: "Text",
+    licence: "Licence",
+    reuse: {
+      human:
+        "To reuse it, credit its title, {{author}}, OpenLinguo as the source and the licence, say what you changed, and share your changes under the same licence.",
+      ai: "This story is in the public domain: reuse it freely, with no credit required.",
+    },
+    anonymousAuthor: "an anonymous learner",
+    import: "Import",
+    importLabel: "Import « {{title}} »",
+    importing: "Importing…",
+    imported: "Already in My texts",
+    importedLabel: "« {{title}} » is already in My texts",
+    added: "Added to My texts.",
+    open: "Open in the reader",
+    failure: {
+      offline:
+        "No connection: the global library needs the internet. Your own texts still work offline.",
+      notFound: "This text is no longer in the library.",
+      unexpected: "The server gave an unexpected answer ({{status}}). Try again later.",
+    },
+    notSubmittable:
+      "This text comes from the global library: only the person who wrote it can submit it.",
   },
   submit: {
     link: "Submit to the library",

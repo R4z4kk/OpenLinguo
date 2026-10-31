@@ -16,6 +16,8 @@ import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
 import {
+  ReadLibraryItemPage,
+  ReadLibraryPage,
   ReadNewPage,
   ReadPage,
   ReadStoryPage,
@@ -119,6 +121,18 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/read/story",
     component: ReadStoryPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/read/library",
+    component: ReadLibraryPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/read/library/$id",
+    component: ReadLibraryItemPage,
     errorComponent: ModuleError,
   }),
   createRoute({
