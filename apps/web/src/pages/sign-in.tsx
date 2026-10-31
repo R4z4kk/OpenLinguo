@@ -27,20 +27,20 @@ const Continue = ({ to }: { readonly to: string }) => {
 
 /** `/account/sign-in`: sign in, then the age step and the second factor, then back to `return`. */
 export const SignInPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const search = validateSignInSearch(useSearch({ strict: false }));
   const { state, reload } = useSession();
   return (
     <section className="max-w-2xl">
       <Link to="/profile/account" className="-mt-3 mb-1 flex min-h-11 w-fit items-center gap-1">
         <ChevronLeft aria-hidden="true" className="size-5" />
-        {t("auth.back")}
+        {t("back")}
       </Link>
-      <h1 className="text-title">{t("auth.signIn")}</h1>
-      <p className="mt-2 text-muted">{t("auth.intro")}</p>
+      <h1 className="text-title">{t("signIn")}</h1>
+      <p className="mt-2 text-muted">{t("intro")}</p>
       {state.status === "loading" && (
         <p role="status" className="mt-4 text-muted">
-          {t("auth.loading")}
+          {t("loading")}
         </p>
       )}
       {state.status === "failed" && <SessionFailure failure={state.failure} onRetry={reload} />}

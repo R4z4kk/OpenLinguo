@@ -15,7 +15,7 @@ const ANSWERS = [
 
 /** Right after the first sign-in, for every method (ADR 0015); « moins de 15 ans » deletes at once. */
 export const AgeStep = ({ onDeclared }: { readonly onDeclared: () => void }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const describe = useAuthFailure();
   const id = useId();
   const [deleted, setDeleted] = useState(false);
@@ -48,18 +48,18 @@ export const AgeStep = ({ onDeclared }: { readonly onDeclared: () => void }) => 
     return (
       <>
         <h2 ref={heading} tabIndex={-1} className="mt-6 text-subtitle">
-          {t("auth.age.deletedTitle")}
+          {t("age.deletedTitle")}
         </h2>
-        <p className="mt-2">{t("auth.age.deletedBody")}</p>
+        <p className="mt-2">{t("age.deletedBody")}</p>
       </>
     );
 
   return (
     <>
       <h2 ref={heading} tabIndex={-1} className="mt-6 text-subtitle">
-        {t("auth.age.title")}
+        {t("age.title")}
       </h2>
-      <p className="mt-2">{t("auth.age.why")}</p>
+      <p className="mt-2">{t("age.why")}</p>
       {problem !== null && (
         <p ref={alert} role="alert" tabIndex={-1} className="mt-4 text-danger">
           {problem}
@@ -75,10 +75,10 @@ export const AgeStep = ({ onDeclared }: { readonly onDeclared: () => void }) => 
               onClick={() => void answer(value)}
               className="min-h-11 rounded-control border border-border-strong bg-surface px-4 text-left font-semibold hover:bg-sunken"
             >
-              {t(`auth.age.${label}`)}
+              {t(`age.${label}`)}
             </button>
             <p id={`${id}-${value}`} className="text-small text-muted">
-              {t(`auth.age.${line}`)}
+              {t(`age.${line}`)}
             </p>
           </li>
         ))}

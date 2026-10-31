@@ -9,7 +9,8 @@ import {
 import { type ApiFailure, call, post } from "./api.ts";
 
 export type Session = NonNullable<SessionAnswer>;
-export type Provider = "google" | "github";
+const PROVIDERS = ["google", "github"] as const;
+export type Provider = (typeof PROVIDERS)[number];
 export type SignInMethod = Provider | "email";
 
 /** What the account must do before the app can use it (ADR 0015). */
@@ -73,15 +74,15 @@ export const declareAge = (answer: AgeDeclaration["answer"]): Promise<Result<nul
 export const signOut = (): Promise<Result<null, ApiFailure>> =>
   call("/api/auth/sign-out", post({}), nothing);
 
+/** Every account can get an email code; Google and GitHub only once linked. */
 export const loadSignInMethods = (): Promise<Result<readonly SignInMethod[], ApiFailure>> =>
   call("/api/auth/list-accounts", { method: "GET" }, (body) => {
     const linked = parseWith(LinkedAccounts, body);
     if (!linked.ok) return linked;
-    return ok(
-      linked.value.map(({ providerId }): SignInMethod =>
-        providerId === "google" || providerId === "github" ? providerId : "email",
-      ),
+    const providers = PROVIDERS.filter((provider) =>
+      linked.value.some(({ providerId }) => providerId === provider),
     );
+    return ok(["email", ...providers]);
   });
 
 export const savePseudonym = (name: string): Promise<Result<null, ApiFailure>> =>

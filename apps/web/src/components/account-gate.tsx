@@ -43,7 +43,7 @@ export const SessionFailure = ({
   readonly failure: ApiFailure;
   readonly onRetry: () => void;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const describe = useAuthFailure();
   return (
     <div className="mt-4 flex flex-col items-start gap-2">
@@ -51,7 +51,7 @@ export const SessionFailure = ({
         {describe(failure)}
       </p>
       <Button variant="outline" onClick={onRetry}>
-        {t("submit.retry")}
+        {t("retry")}
       </Button>
     </div>
   );

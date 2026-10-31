@@ -33,7 +33,7 @@ export const SignInPanel = ({
   readonly providerError: string | null;
   readonly onSignedIn: () => void;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const describe = useAuthFailure();
   const id = useId();
   const [stage, setStage] = useState<Stage>(
@@ -45,7 +45,7 @@ export const SignInPanel = ({
   const [problem, setProblem] = useState<string | null>(
     providerError === null || providerError === "SIGNUPS_CLOSED"
       ? null
-      : t("auth.failure.provider", { code: providerError }),
+      : t("failure.provider", { code: providerError }),
   );
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
@@ -74,7 +74,7 @@ export const SignInPanel = ({
 
   const requestCode = async (address: string, again: boolean) => {
     if (busy) return;
-    setStatus(t("auth.sending"));
+    setStatus(t("sending"));
     setBusy(true);
     const result = await sendCode(address);
     setBusy(false);
@@ -88,13 +88,13 @@ export const SignInPanel = ({
     setCode("");
     setFieldError(null);
     setStage({ kind: "code", email: address, attemptsLeft: EMAIL_CODE.attempts });
-    if (again) setStatus(t("auth.resent", { email: address }));
+    if (again) setStatus(t("resent", { email: address }));
   };
 
   const submitEmail = () => {
     const address = email.trim().toLowerCase();
     if (!Email.safeParse(address).success) {
-      setFieldError(t("auth.emailInvalid"));
+      setFieldError(t("emailInvalid"));
       emailField.current?.focus();
       return;
     }
@@ -106,11 +106,11 @@ export const SignInPanel = ({
     if (busy) return;
     const typed = code.replace(/\s/gu, "");
     if (!SIX_DIGITS.test(typed)) {
-      setFieldError(t("auth.codeInvalid", { length: EMAIL_CODE.length }));
+      setFieldError(t("codeInvalid", { length: EMAIL_CODE.length }));
       codeField.current?.focus();
       return;
     }
-    setStatus(t("auth.checking"));
+    setStatus(t("checking"));
     setBusy(true);
     const result = await signInWithCode(current.email, typed);
     setBusy(false);
@@ -123,7 +123,7 @@ export const SignInPanel = ({
     const left = current.attemptsLeft - 1;
     if (refusedWith(error, "INVALID_OTP") && left > 0) {
       setStage({ ...current, attemptsLeft: left });
-      setFieldError(t("auth.codeWrong", { count: left }));
+      setFieldError(t("codeWrong", { count: left }));
       codeField.current?.focus();
       return;
     }
@@ -132,7 +132,7 @@ export const SignInPanel = ({
       refusedWith(error, "OTP_EXPIRED") ||
       refusedWith(error, "TOO_MANY_ATTEMPTS")
     ) {
-      setProblem(refusedWith(error, "OTP_EXPIRED") ? t("auth.codeExpired") : t("auth.codeSpent"));
+      setProblem(refusedWith(error, "OTP_EXPIRED") ? t("codeExpired") : t("codeSpent"));
       setStage({ kind: "spent", email: current.email, expired: refusedWith(error, "OTP_EXPIRED") });
       setAlerted((count) => count + 1);
       return;
@@ -149,7 +149,7 @@ export const SignInPanel = ({
       refuse(result.error);
       return;
     }
-    setStatus(t("auth.redirecting"));
+    setStatus(t("redirecting"));
     window.location.assign(result.value);
   };
 
@@ -157,12 +157,12 @@ export const SignInPanel = ({
     return (
       <>
         <h2 ref={heading} tabIndex={-1} className="mt-6 text-subtitle">
-          {t("auth.closedTitle")}
+          {t("closedTitle")}
         </h2>
-        <p className="mt-2">{t("auth.closedBody")}</p>
+        <p className="mt-2">{t("closedBody")}</p>
         <p className="mt-4">
           <Link to="/profile" className="inline-flex min-h-11 items-center underline">
-            {t("profile.title")}
+            {t("profile")}
           </Link>
         </p>
       </>
@@ -177,7 +177,7 @@ export const SignInPanel = ({
           </p>
           {stage.kind === "spent" && (
             <Button variant="outline" onClick={() => void requestCode(stage.email, true)}>
-              {t("auth.newCode")}
+              {t("newCode")}
             </Button>
           )}
         </div>
@@ -192,7 +192,7 @@ export const SignInPanel = ({
           }}
         >
           <label htmlFor={`${id}-email`} className="font-semibold">
-            {t("auth.email")}
+            {t("email")}
           </label>
           <input
             ref={emailField}
@@ -216,7 +216,7 @@ export const SignInPanel = ({
             </p>
           )}
           <Button type="submit" aria-disabled={busy} className="mt-2">
-            {t("auth.getCode")}
+            {t("getCode")}
           </Button>
         </form>
       )}
@@ -229,11 +229,11 @@ export const SignInPanel = ({
             void confirm(stage);
           }}
         >
-          <p>{t("auth.codeIntro", { email: stage.email, minutes: EMAIL_CODE.minutes })}</p>
+          <p>{t("codeIntro", { email: stage.email, minutes: EMAIL_CODE.minutes })}</p>
           <CodeField
             numeric
             inputRef={codeField}
-            label={t("auth.code")}
+            label={t("code")}
             value={code}
             maxLength={EMAIL_CODE.length}
             error={fieldError}
@@ -243,7 +243,7 @@ export const SignInPanel = ({
             }}
           />
           <Button type="submit" aria-disabled={busy}>
-            {t("auth.confirm")}
+            {t("confirm")}
           </Button>
         </form>
       )}
@@ -251,7 +251,7 @@ export const SignInPanel = ({
         <div className="flex flex-col items-start gap-1">
           {stage.kind === "code" && (
             <Button variant="ghost" onClick={() => void requestCode(stage.email, true)}>
-              {t("auth.resend")}
+              {t("resend")}
             </Button>
           )}
           <Button
@@ -263,7 +263,7 @@ export const SignInPanel = ({
               setStage({ kind: "email" });
             }}
           >
-            {t("auth.otherEmail")}
+            {t("otherEmail")}
           </Button>
         </div>
       )}
@@ -272,7 +272,7 @@ export const SignInPanel = ({
       </p>
       {stage.kind === "email" && (
         <>
-          <p className="text-muted">{t("auth.or")}</p>
+          <p className="text-muted">{t("or")}</p>
           <div className="flex flex-col gap-3">
             <button
               type="button"
@@ -281,7 +281,7 @@ export const SignInPanel = ({
               className="inline-flex min-h-11 items-center gap-[10px] rounded-control border border-google-stroke bg-google-fill pr-3 pl-3 font-semibold text-google-ink"
             >
               <GoogleMark className="size-5 flex-none" />
-              {t("auth.google")}
+              {t("google")}
             </button>
             <Button
               variant="outline"
@@ -290,10 +290,10 @@ export const SignInPanel = ({
               onClick={() => void social("github")}
             >
               <GitHubMark className="size-5 flex-none" />
-              {t("auth.github")}
+              {t("github")}
             </Button>
           </div>
-          <p className="text-small text-muted">{t("auth.mailNote")}</p>
+          <p className="text-small text-muted">{t("mailNote")}</p>
         </>
       )}
     </div>

@@ -11,17 +11,17 @@ export const AccountTwoFactor = ({
   readonly session: Session;
   readonly onEnabled: () => void;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const id = useId();
   const enabled = session.user.twoFactorEnabled === true;
   return (
     <section aria-labelledby={`${id}-title`} className="mt-8">
       <h2 id={`${id}-title`} className="text-subtitle">
-        {t("auth.twoFactor.title")}
+        {t("twoFactor.title")}
       </h2>
-      <p className="mt-2">{enabled ? t("auth.twoFactor.on") : t("auth.twoFactor.off")}</p>
+      <p className="mt-2">{enabled ? t("twoFactor.on") : t("twoFactor.off")}</p>
       {!enabled && isAdmin(session) && (
-        <p className="mt-1 font-semibold">{t("auth.twoFactor.required")}</p>
+        <p className="mt-1 font-semibold">{t("twoFactor.required")}</p>
       )}
       {!enabled && <TwoFactorSetup onEnabled={onEnabled} />}
     </section>

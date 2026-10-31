@@ -29,7 +29,7 @@ export const useApiFailure = () => {
   const { t } = useTranslation();
   return (failure: ApiFailure): string => {
     if (failure.kind === "offline") return t("submit.failure.offline");
-    if (failure.kind === "rate-limited") return t("auth.failure.tooManyLater");
+    if (failure.kind === "rate-limited") return t("submit.tooMany");
     if (failure.kind === "unexpected")
       return t("submit.failure.unexpected", { status: failure.status });
     switch (failure.code) {
@@ -331,7 +331,7 @@ export const SubmitForm = ({ id }: { readonly id: string }) => {
                   search={{ return: `/read/${id}/submit` }}
                   className="inline-flex min-h-11 items-center underline"
                 >
-                  {t("auth.signIn")}
+                  {t("submit.signIn")}
                 </Link>
               </p>
             </>

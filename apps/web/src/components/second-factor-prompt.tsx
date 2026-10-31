@@ -13,7 +13,7 @@ import {
 
 /** Every new session of an account with TOTP on asks for it first (ADR 0015). */
 export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const describe = useAuthFailure();
   const [backup, setBackup] = useState(false);
   const [code, setCode] = useState("");
@@ -34,7 +34,7 @@ export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) 
     if (busy) return;
     const typed = code.trim();
     if (typed === "") {
-      setFieldError(backup ? t("auth.twoFactor.backupWrong") : t("auth.twoFactor.wrong"));
+      setFieldError(backup ? t("twoFactor.backupWrong") : t("twoFactor.wrong"));
       field.current?.focus();
       return;
     }
@@ -50,7 +50,7 @@ export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) 
       error.kind === "refused" &&
       (error.code === "INVALID_CODE" || error.code === "INVALID_BACKUP_CODE")
     ) {
-      setFieldError(backup ? t("auth.twoFactor.backupWrong") : t("auth.twoFactor.wrong"));
+      setFieldError(backup ? t("twoFactor.backupWrong") : t("twoFactor.wrong"));
       setProblem(null);
       field.current?.focus();
       return;
@@ -73,8 +73,8 @@ export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) 
         void verify();
       }}
     >
-      <h2 className="text-subtitle">{t("auth.twoFactor.promptTitle")}</h2>
-      <p>{t("auth.twoFactor.promptIntro")}</p>
+      <h2 className="text-subtitle">{t("twoFactor.promptTitle")}</h2>
+      <p>{t("twoFactor.promptIntro")}</p>
       {problem !== null && (
         <p ref={alert} role="alert" tabIndex={-1} className="text-danger">
           {problem}
@@ -83,7 +83,7 @@ export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) 
       <CodeField
         key={String(backup)}
         inputRef={field}
-        label={backup ? t("auth.twoFactor.backupCode") : t("auth.twoFactor.code")}
+        label={backup ? t("twoFactor.backupCode") : t("twoFactor.code")}
         value={code}
         numeric={!backup}
         maxLength={backup ? BACKUP_CODE_LENGTH : TOTP_LENGTH}
@@ -94,7 +94,7 @@ export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) 
         }}
       />
       <Button type="submit" aria-disabled={busy}>
-        {t("auth.twoFactor.verify")}
+        {t("twoFactor.verify")}
       </Button>
       <Button
         variant="ghost"
@@ -104,10 +104,10 @@ export const SecondFactorPrompt = ({ onDone }: { readonly onDone: () => void }) 
           setFieldError(null);
         }}
       >
-        {backup ? t("auth.twoFactor.useApp") : t("auth.twoFactor.useBackup")}
+        {backup ? t("twoFactor.useApp") : t("twoFactor.useBackup")}
       </Button>
       <Button variant="outline" onClick={() => void leave()}>
-        {t("auth.signOut")}
+        {t("signOut")}
       </Button>
     </form>
   );

@@ -159,8 +159,8 @@ describe("the account calls", () => {
     expect(await declareAge("under-15")).toEqual({ ok: true, value: null });
   });
 
-  it("name the sign-in methods, an email code for anything but Google and GitHub", async () => {
+  it("offer an email code to every account, and the linked providers", async () => {
     answer(200, [{ providerId: "github" }, { providerId: "credential" }]);
-    expect(await loadSignInMethods()).toEqual({ ok: true, value: ["github", "email"] });
+    expect(await loadSignInMethods()).toEqual({ ok: true, value: ["email", "github"] });
   });
 });

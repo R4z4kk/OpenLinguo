@@ -67,7 +67,7 @@ type Stage =
 
 /** Three numbered steps, then the backup codes shown once (mockups of #267). */
 export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const describe = useAuthFailure();
   const id = useId();
   const [stage, setStage] = useState<Stage>({ kind: "idle" });
@@ -105,7 +105,7 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
     if (busy) return;
     const typed = code.replace(/\s/gu, "");
     if (typed.length !== TOTP_LENGTH) {
-      setFieldError(t("auth.twoFactor.wrong"));
+      setFieldError(t("twoFactor.wrong"));
       return;
     }
     setBusy(true);
@@ -118,7 +118,7 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
       return;
     }
     if (result.error.kind === "refused" && result.error.code === "INVALID_CODE")
-      setFieldError(t("auth.twoFactor.wrong"));
+      setFieldError(t("twoFactor.wrong"));
     else setProblem(describe(result.error));
   };
 
@@ -139,20 +139,20 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
       <div className="mt-2 flex flex-col items-start gap-2">
         {failure}
         <Button variant="outline" aria-disabled={busy} onClick={() => void start()}>
-          {t("auth.twoFactor.enable")}
+          {t("twoFactor.enable")}
         </Button>
       </div>
     );
 
   const { setup } = stage;
   if (stage.kind === "codes") {
-    const text = backupCodesFile(setup.backupCodes, t("auth.twoFactor.backupFile"));
+    const text = backupCodesFile(setup.backupCodes, t("twoFactor.backupFile"));
     return (
       <div className="mt-4 flex flex-col items-start gap-3">
         <h3 ref={codesHeading} tabIndex={-1} className="font-semibold">
-          {t("auth.twoFactor.backupTitle")}
+          {t("twoFactor.backupTitle")}
         </h3>
-        <p>{t("auth.twoFactor.backupIntro")}</p>
+        <p>{t("twoFactor.backupIntro")}</p>
         <ul className="grid grid-cols-2 gap-x-6 gap-y-1 font-mono">
           {setup.backupCodes.map((backup) => (
             <li key={backup}>{backup}</li>
@@ -165,17 +165,17 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
               download("openlinguo-backup-codes.txt", text);
             }}
           >
-            {t("auth.twoFactor.download")}
+            {t("twoFactor.download")}
           </Button>
           <Button
             variant="outline"
             onClick={() =>
               void copy(text).then((done) => {
-                setStatus(done ? t("auth.twoFactor.codesCopied") : t("auth.twoFactor.copyFailed"));
+                setStatus(done ? t("twoFactor.codesCopied") : t("twoFactor.copyFailed"));
               })
             }
           >
-            {t("auth.twoFactor.copyCodes")}
+            {t("twoFactor.copyCodes")}
           </Button>
         </div>
         {said}
@@ -191,11 +191,11 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
             }}
             className="size-6 flex-none accent-ink"
           />
-          {t("auth.twoFactor.stored")}
+          {t("twoFactor.stored")}
         </label>
         {storeError && (
           <p id={`${id}-store`} className="text-small text-danger">
-            {t("auth.twoFactor.storeFirst")}
+            {t("twoFactor.storeFirst")}
           </p>
         )}
         <Button
@@ -205,7 +205,7 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
             else setStoreError(true);
           }}
         >
-          {t("auth.twoFactor.done")}
+          {t("twoFactor.done")}
         </Button>
       </div>
     );
@@ -225,33 +225,33 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
       <ol className="flex list-decimal flex-col gap-4 pl-5">
         <li className="flex flex-col items-start gap-2">
           <p ref={first} tabIndex={-1}>
-            {t("auth.twoFactor.step1")}
+            {t("twoFactor.step1")}
           </p>
-          <QrCode uri={setup.totpURI} label={t("auth.twoFactor.qr")} />
+          <QrCode uri={setup.totpURI} label={t("twoFactor.qr")} />
         </li>
         {key !== null && (
           <li className="flex flex-col items-start gap-2">
-            <p>{t("auth.twoFactor.step2")}</p>
+            <p>{t("twoFactor.step2")}</p>
             <p className="font-mono text-pinyin break-all">{key}</p>
             <Button
               variant="outline"
               onClick={() =>
                 void copy(key.replaceAll(" ", "")).then((done) => {
-                  setStatus(done ? t("auth.twoFactor.keyCopied") : t("auth.twoFactor.copyFailed"));
+                  setStatus(done ? t("twoFactor.keyCopied") : t("twoFactor.copyFailed"));
                 })
               }
             >
-              {t("auth.twoFactor.copyKey")}
+              {t("twoFactor.copyKey")}
             </Button>
             {said}
           </li>
         )}
         <li className="flex flex-col items-start gap-2">
-          <p>{t("auth.twoFactor.step3", { length: TOTP_LENGTH })}</p>
+          <p>{t("twoFactor.step3", { length: TOTP_LENGTH })}</p>
           <CodeField
             numeric
             inputRef={null}
-            label={t("auth.twoFactor.code")}
+            label={t("twoFactor.code")}
             value={code}
             maxLength={TOTP_LENGTH}
             error={fieldError}
@@ -261,7 +261,7 @@ export const TwoFactorSetup = ({ onEnabled }: { readonly onEnabled: () => void }
             }}
           />
           <Button type="submit" aria-disabled={busy}>
-            {t("auth.twoFactor.verify")}
+            {t("twoFactor.verify")}
           </Button>
         </li>
       </ol>

@@ -14,7 +14,7 @@ export const AccountPseudonym = ({
   readonly session: Session;
   readonly onSaved: () => void;
 }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation("auth");
   const describe = useAuthFailure();
   const id = useId();
   const [name, setName] = useState(session.user.name);
@@ -28,7 +28,7 @@ export const AccountPseudonym = ({
     if (busy) return;
     const parsed = Pseudonym.safeParse(name);
     if (!parsed.success) {
-      setFieldError(t("auth.pseudonym.invalid", { max: PSEUDONYM_MAX }));
+      setFieldError(t("pseudonym.invalid", { max: PSEUDONYM_MAX }));
       field.current?.focus();
       return;
     }
@@ -40,17 +40,17 @@ export const AccountPseudonym = ({
       return;
     }
     setProblem(null);
-    setStatus(t("auth.pseudonym.saved"));
+    setStatus(t("pseudonym.saved"));
     onSaved();
   };
 
   return (
     <section aria-labelledby={`${id}-title`} className="mt-8">
       <h2 id={`${id}-title`} className="text-subtitle">
-        {t("auth.pseudonym.title")}
+        {t("pseudonym.title")}
       </h2>
       {session.user.name === "" ? (
-        <p className="mt-2">{t("auth.pseudonym.none")}</p>
+        <p className="mt-2">{t("pseudonym.none")}</p>
       ) : (
         <form
           noValidate
@@ -61,10 +61,10 @@ export const AccountPseudonym = ({
           }}
         >
           <label htmlFor={`${id}-field`} className="font-semibold">
-            {t("auth.pseudonym.field")}
+            {t("pseudonym.field")}
           </label>
           <p id={`${id}-help`} className="text-small text-muted">
-            {t("auth.pseudonym.help", { max: PSEUDONYM_MAX })} {t("auth.pseudonym.kept")}
+            {t("pseudonym.help", { max: PSEUDONYM_MAX })} {t("pseudonym.kept")}
           </p>
           <input
             ref={field}
@@ -92,7 +92,7 @@ export const AccountPseudonym = ({
             </p>
           )}
           <Button type="submit" variant="outline" aria-disabled={busy}>
-            {t("auth.pseudonym.save")}
+            {t("pseudonym.save")}
           </Button>
           <p role="status" className="text-small">
             {status}

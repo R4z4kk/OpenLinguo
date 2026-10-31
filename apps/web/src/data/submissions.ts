@@ -10,7 +10,8 @@ import {
 import { type ApiFailure, call } from "./api.ts";
 import type { StoredText } from "./database.ts";
 
-export type { ApiFailure };
+// #274 reads `call` from here.
+export { type ApiFailure, call };
 
 export type Account = { readonly pseudonym: string | null };
 

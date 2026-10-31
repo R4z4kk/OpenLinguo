@@ -10,7 +10,7 @@ type Methods =
   | { readonly status: "failed"; readonly failure: ApiFailure }
   | { readonly status: "ready"; readonly methods: readonly SignInMethod[] };
 
-/** Profile › Compte › « Connexion »: how the account signs in, and « Se déconnecter ». */
+/** Profile › Compte › « Connexion »: the address, how it can sign in, and « Se déconnecter ». */
 export const AccountSignInMethod = ({
   session,
   onSignedOut,
@@ -18,7 +18,7 @@ export const AccountSignInMethod = ({
   readonly session: Session;
   readonly onSignedOut: () => void;
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation("auth");
   const describe = useAuthFailure();
   const [methods, setMethods] = useState<Methods>({ status: "loading" });
   const [problem, setProblem] = useState<string | null>(null);
@@ -48,15 +48,13 @@ export const AccountSignInMethod = ({
   return (
     <section aria-labelledby="account-sign-in" className="mt-8">
       <h2 id="account-sign-in" className="text-subtitle">
-        {t("auth.signInSection")}
+        {t("signInSection")}
       </h2>
       {methods.status === "ready" && (
         <p className="mt-2">
-          {t("auth.method", {
-            method: list.format(
-              [...new Set(methods.methods)].map((method) => t(`auth.methods.${method}`)),
-            ),
+          {t("method", {
             email: session.user.email,
+            methods: list.format(methods.methods.map((method) => t(`methods.${method}`))),
           })}
         </p>
       )}
@@ -71,7 +69,7 @@ export const AccountSignInMethod = ({
         </p>
       )}
       <Button variant="outline" className="mt-3" onClick={() => void leave()}>
-        {t("auth.signOut")}
+        {t("signOut")}
       </Button>
     </section>
   );
