@@ -1,3 +1,4 @@
+import { GROUNDS, RESTRICTIONS } from "@openlinguo/core/moderation";
 import { LICENCES, SUBMISSION_STATUSES, type Submission } from "@openlinguo/core/submission";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
@@ -159,6 +160,9 @@ export const submission = sqliteTable(
     attestationVersion: integer().notNull(),
     attestedAt: integer({ mode: "timestamp_ms" }).notNull(),
     status: text({ enum: SUBMISSION_STATUSES }).notNull().default("pending"),
+    /** HSK 2025 band estimated in the admin's browser at approval (ADR 0015). */
+    band: integer(),
+    publishedAt: integer({ mode: "timestamp_ms" }),
     createdAt: createdAt(),
   },
   (table) => [
@@ -171,6 +175,28 @@ export const submission = sqliteTable(
       "submission_status",
       sql`${table.status} in ('pending', 'approved', 'rejected', 'removed')`,
     ),
+  ],
+);
+
+/** A statement of reasons (DSA art. 17(3)) for a rejection or a removal, mailed to the submitter. */
+export const decision = sqliteTable(
+  "decision",
+  {
+    id: text().primaryKey(),
+    submissionId: text()
+      .notNull()
+      .references(() => submission.id, { onDelete: "cascade" }),
+    measure: text({ enum: RESTRICTIONS }).notNull(),
+    source: text({ enum: ["own-initiative"] }).notNull(),
+    ground: text({ enum: GROUNDS }).notNull(),
+    facts: text().notNull(),
+    explanation: text().notNull(),
+    decidedAt: integer({ mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    index("decision_submission").on(table.submissionId),
+    check("decision_measure", sql`${table.measure} in ('rejected', 'removed')`),
+    check("decision_source", sql`${table.source} in ('own-initiative')`),
   ],
 );
 

@@ -27,4 +27,5 @@ Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one a
 - [ ] Google: an OAuth client "Web application" in Google Cloud, redirect URI `https://openlinguo.razakk.fr/api/auth/callback/google`, scopes `openid email profile`; `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (secret).
 - [ ] GitHub: an OAuth App, callback URL `https://openlinguo.razakk.fr/api/auth/callback/github`; `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (secret).
 - [ ] Scaleway Transactional Email, region `fr-par`: a checked sending domain, then an IAM API key whose policy allows only sending Transactional Email in that project; `SCW_SECRET_KEY` (secret), `SCW_PROJECT_ID`, `MAIL_FROM` (an address on the checked domain).
+- [ ] `CONTACT_EMAIL`: the address submitters write to for a review of a moderation decision, given in each statement of reasons; the one `/legal` gives (#279).
 - [ ] `SIGNUPS_OPEN`: leave unset (closed) until #279 and #280 are merged; `true` opens them, `false` closes them, anything else is refused.

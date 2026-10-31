@@ -1,5 +1,6 @@
 import type { Locator, Page } from "@playwright/test";
 import { en } from "../src/i18n/en.ts";
+import { moderationEn } from "../src/i18n/moderation/en.ts";
 
 export type Visit = {
   readonly url: string;
@@ -89,6 +90,14 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   "/account/sign-in": {
     url: "/account/sign-in",
     ready: (page) => page.getByRole("button", { name: en.submit.retry }),
+  },
+  "/admin": {
+    url: "/admin",
+    ready: (page) => page.getByRole("button", { name: moderationEn.retry }),
+  },
+  "/admin/$id": {
+    url: "/admin/00000000-0000-4000-8000-000000000000",
+    ready: (page) => page.getByRole("button", { name: moderationEn.retry }),
   },
 };
 

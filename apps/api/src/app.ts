@@ -8,6 +8,7 @@ import { type Auth, AuthEnv, createAuth } from "./auth.ts";
 import { unhealthyJobs } from "./health.ts";
 import { JOBS } from "./jobs.ts";
 import type { SendMail } from "./mail.ts";
+import { moderationRoutes } from "./moderation.ts";
 import { scalewayMailer } from "./scaleway-mailer.ts";
 import { database, user } from "./schema.ts";
 import { submissionRoutes } from "./submissions.ts";
@@ -45,13 +46,17 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
     }),
   );
 
-  const authOf = (env: Env): Auth => {
+  const settingsOf = (env: Env): AuthEnv => {
     const settings = AuthEnv.safeParse(env);
     if (!settings.success) {
       const names = settings.error.issues.map(({ path }) => path.join(".")).join(", ");
       throw new Error(`Auth settings missing or invalid: ${names}`);
     }
-    return createAuth(database(env.DB), settings.data, mailer(settings.data));
+    return settings.data;
+  };
+  const authOf = (env: Env): Auth => {
+    const settings = settingsOf(env);
+    return createAuth(database(env.DB), settings, mailer(settings));
   };
 
   app.use(async (c, next) => {
@@ -105,6 +110,13 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
   });
 
   app.route("/submissions", submissionRoutes(authOf));
+  app.route(
+    "/admin",
+    moderationRoutes(authOf, (env) => {
+      const settings = settingsOf(env);
+      return { sendMail: mailer(settings), contact: settings.CONTACT_EMAIL };
+    }),
+  );
 
   app.get("/health", async (c) => {
     const unhealthy = await unhealthyJobs(database(c.env.DB), jobs, new Date());

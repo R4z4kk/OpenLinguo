@@ -5,6 +5,8 @@ import { authFr } from "./auth/fr.ts";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
 import type { Language } from "./language.ts";
+import { moderationEn } from "./moderation/en.ts";
+import { moderationFr } from "./moderation/fr.ts";
 
 export const createI18n = (language: Language): i18n => {
   const instance = createInstance();
@@ -12,8 +14,8 @@ export const createI18n = (language: Language): i18n => {
     lng: language,
     fallbackLng: "en",
     resources: {
-      en: { translation: en, auth: authEn },
-      fr: { translation: fr, auth: authFr },
+      en: { translation: en, auth: authEn, moderation: moderationEn },
+      fr: { translation: fr, auth: authFr, moderation: moderationFr },
     },
     interpolation: { escapeValue: false },
     initAsync: false,
