@@ -15,6 +15,7 @@ export const ApiErrorCode = z.enum([
   "SUBMISSION_LIMIT",
   "SUBMISSION_NOT_PENDING",
   "SUBMISSION_NOT_APPROVED",
+  "NOTICE_DECIDED",
 ]);
 export type ApiErrorCode = z.output<typeof ApiErrorCode>;
 

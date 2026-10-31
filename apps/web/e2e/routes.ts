@@ -104,6 +104,18 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
     url: "/admin",
     ready: (page) => page.getByRole("button", { name: moderationEn.retry }),
   },
+  "/admin/notices": {
+    url: "/admin/notices",
+    ready: (page) => page.getByRole("button", { name: moderationEn.retry }),
+  },
+  "/admin/notices/$id": {
+    url: "/admin/notices/00000000-0000-4000-8000-000000000000",
+    ready: (page) => page.getByRole("button", { name: moderationEn.retry }),
+  },
+  "/report": {
+    url: "/report?text=00000000-0000-4000-8000-000000000000",
+    ready: (page) => page.getByRole("button", { name: en.globalLibrary.retry }),
+  },
   "/admin/$id": {
     url: "/admin/00000000-0000-4000-8000-000000000000",
     ready: (page) => page.getByRole("button", { name: moderationEn.retry }),

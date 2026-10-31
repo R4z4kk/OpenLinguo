@@ -1,4 +1,10 @@
-import { GROUNDS, RESTRICTIONS } from "@openlinguo/core/moderation";
+import {
+  DECISION_SOURCES,
+  GROUNDS,
+  NOTICE_OUTCOMES,
+  NOTICE_REASONS,
+  RESTRICTIONS,
+} from "@openlinguo/core/moderation";
 import { LICENCES, SUBMISSION_STATUSES, type Submission } from "@openlinguo/core/submission";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
@@ -187,7 +193,7 @@ export const decision = sqliteTable(
       .notNull()
       .references(() => submission.id, { onDelete: "cascade" }),
     measure: text({ enum: RESTRICTIONS }).notNull(),
-    source: text({ enum: ["own-initiative"] }).notNull(),
+    source: text({ enum: DECISION_SOURCES }).notNull(),
     ground: text({ enum: GROUNDS }).notNull(),
     facts: text().notNull(),
     explanation: text().notNull(),
@@ -196,7 +202,37 @@ export const decision = sqliteTable(
   (table) => [
     index("decision_submission").on(table.submissionId),
     check("decision_measure", sql`${table.measure} in ('rejected', 'removed')`),
-    check("decision_source", sql`${table.source} in ('own-initiative')`),
+    check("decision_source", sql`${table.source} in ('own-initiative', 'notice')`),
+  ],
+);
+
+/** A notice of DSA art. 16 and the decision told to its notifier (16(5)). */
+export const notice = sqliteTable(
+  "notice",
+  {
+    id: text().primaryKey(),
+    submissionId: text()
+      .notNull()
+      .references(() => submission.id, { onDelete: "cascade" }),
+    reason: text({ enum: NOTICE_REASONS }).notNull(),
+    explanation: text().notNull(),
+    name: text(),
+    email: text(),
+    createdAt: createdAt(),
+    outcome: text({ enum: NOTICE_OUTCOMES }),
+    reply: text(),
+    decidedAt: integer({ mode: "timestamp_ms" }),
+  },
+  (table) => [
+    index("notice_submission").on(table.submissionId),
+    check(
+      "notice_reason",
+      sql`${table.reason} in ('copyright', 'defamation', 'hate', 'personal-data', 'child-sexual-abuse', 'serious-offences', 'library-rules')`,
+    ),
+    check(
+      "notice_decision",
+      sql`(${table.outcome} is null and ${table.reply} is null and ${table.decidedAt} is null) or (${table.outcome} in ('kept', 'removed') and ${table.reply} is not null and ${table.decidedAt} is not null)`,
+    ),
   ],
 );
 

@@ -2,6 +2,8 @@ import {
   type Ground,
   isLegalGround,
   LEGAL_GROUNDS,
+  type NoticeDecision,
+  type NoticeReason,
   type StatementOfReasons,
   TERMS_CLAUSES,
 } from "@openlinguo/core/moderation";
@@ -63,7 +65,7 @@ const groundLine = (locale: Locale, ground: Ground) => {
 const statementText = (
   locale: Locale,
   title: string,
-  { measure, ground, facts, explanation }: StatementOfReasons,
+  { measure, source, ground, facts, explanation }: StatementOfReasons,
   contact: string,
 ) =>
   locale === "fr"
@@ -75,7 +77,9 @@ const statementText = (
         measure === "rejected"
           ? "Mesure : refus de publication. Le texte n'est visible nulle part, sans limite de durée."
           : "Mesure : retrait. Le texte n'est plus visible nulle part, sans limite de durée. Les copies déjà importées restent sur les appareils.",
-        "Origine : décision prise à l'initiative de l'administrateur, sans signalement.",
+        source === "notice"
+          ? "Origine : décision prise à la suite d'un signalement."
+          : "Origine : décision prise à l'initiative de l'administrateur, sans signalement.",
         `Motif : ${groundLine("fr", ground)}.`,
         `Faits : ${facts}`,
         `Explication : ${explanation}`,
@@ -90,7 +94,9 @@ const statementText = (
         measure === "rejected"
           ? "Measure: publication refused. The text is visible nowhere, with no time limit."
           : "Measure: removal. The text is no longer visible anywhere, with no time limit. Copies already imported stay on devices.",
-        "Origin: the admin's own initiative, without a notice.",
+        source === "notice"
+          ? "Origin: a decision taken after a notice."
+          : "Origin: the admin's own initiative, without a notice.",
         `Ground: ${groundLine("en", ground)}.`,
         `Facts: ${facts}`,
         `Explanation: ${explanation}`,
@@ -111,4 +117,69 @@ export const statementOfReasonsMail = (
       ? "OpenLinguo : votre texte n'a pas été publié / your text was not published"
       : "OpenLinguo : votre texte a été retiré / your text was removed",
   text: `${statementText("fr", title, statement, contact)}\n\n---\n\n${statementText("en", title, statement, contact)}`,
+});
+
+const REASONS: Readonly<Record<NoticeReason, Readonly<Record<Locale, string>>>> = {
+  copyright: GROUNDS.copyright,
+  defamation: GROUNDS.defamation,
+  hate: GROUNDS.hate,
+  "personal-data": GROUNDS["personal-data"],
+  "child-sexual-abuse": {
+    fr: "contenu pédopornographique ou abus sexuel sur mineur",
+    en: "child sexual abuse material",
+  },
+  "serious-offences": GROUNDS["serious-offences"],
+  "library-rules": {
+    fr: "ne respecte pas les règles de la bibliothèque",
+    en: "breaks the library rules",
+  },
+};
+
+export type NoticeMailFacts = {
+  readonly id: string;
+  readonly title: string;
+  readonly reason: NoticeReason;
+};
+
+/** DSA art. 16(4): French then English, since the notifier has no account. */
+export const noticeReceiptMail = (to: string, { id, title, reason }: NoticeMailFacts): Mail => ({
+  to,
+  subject: `OpenLinguo : signalement ${id} reçu / notice ${id} received`,
+  text: [
+    `Nous avons reçu votre signalement ${id} sur le texte « ${title} » (motif : ${REASONS[reason].fr}).`,
+    "Une personne va le lire et décider. Vous recevrez la décision par e-mail : sous 24 heures pour une infraction grave, sous 7 jours sinon.",
+    "",
+    "---",
+    "",
+    `We received your notice ${id} about the text "${title}" (reason: ${REASONS[reason].en}).`,
+    "A person will read it and decide. You will get the decision by email: within 24 hours for a serious offence, within 7 days otherwise.",
+  ].join("\n"),
+});
+
+/** DSA art. 16(5): the decision and the redress; the submitter's identity is never given. */
+export const noticeDecisionMail = (
+  to: string,
+  { id, title }: NoticeMailFacts,
+  { outcome, reply }: Pick<NoticeDecision, "outcome" | "reply">,
+  contact: string,
+): Mail => ({
+  to,
+  subject: `OpenLinguo : décision sur le signalement ${id} / decision on notice ${id}`,
+  text: [
+    outcome === "removed"
+      ? `Le texte « ${title} » que vous avez signalé (signalement ${id}) a été retiré de la bibliothèque.`
+      : `Le texte « ${title} » que vous avez signalé (signalement ${id}) reste publié.`,
+    `Explication : ${reply}`,
+    "Moyens automatisés : aucun. Une personne a lu le texte et votre signalement.",
+    `Recours : vous pouvez demander un réexamen en écrivant à ${contact}. Vous pouvez aussi saisir le tribunal compétent.`,
+    "",
+    "---",
+    "",
+    outcome === "removed"
+      ? `The text "${title}" you reported (notice ${id}) was removed from the library.`
+      : `The text "${title}" you reported (notice ${id}) stays published.`,
+    `Explanation: ${reply}`,
+    "Automated means: none. A person read the text and your notice.",
+    `Redress: you may ask for a review by writing to ${contact}. You may also go to the competent court.`,
+  ].join("\n"),
 });

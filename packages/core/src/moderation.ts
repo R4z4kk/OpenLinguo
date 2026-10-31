@@ -62,6 +62,8 @@ const prose = z
     `At most ${String(STATEMENT_MAX)} characters`,
   );
 
+export const DECISION_SOURCES = ["own-initiative", "notice"] as const;
+
 /** The admin's part of a statement of reasons; the measure follows from the route. */
 export const NewStatementOfReasons = z.object({
   ground: Ground,
@@ -77,12 +79,104 @@ export const StatementOfReasons = NewStatementOfReasons.extend({
   id: z.string().min(1),
   submissionId: z.string().min(1),
   measure: Restriction,
-  /** Notices arrive with #276. */
-  source: z.literal("own-initiative"),
+  /** DSA art. 17(3)(b): whether the decision follows a notice. */
+  source: z.enum(DECISION_SOURCES),
   automated: z.literal(false),
   decidedAt: z.iso.datetime(),
 });
 export type StatementOfReasons = z.output<typeof StatementOfReasons>;
+
+/**
+ * What a notice claims (DSA art. 16(2)(a)): the checklist's illegal categories, child sexual abuse
+ * material on its own since it needs no name or email (16(2)(c)), and the library rules.
+ */
+export const NOTICE_REASONS = [
+  "copyright",
+  "defamation",
+  "hate",
+  "personal-data",
+  "child-sexual-abuse",
+  "serious-offences",
+  "library-rules",
+] as const;
+export const NoticeReason = z.enum(NOTICE_REASONS);
+export type NoticeReason = z.output<typeof NoticeReason>;
+
+export const NOTIFIER_NAME_MAX = 100;
+export const EMAIL_MAX = 254;
+
+const notifier = {
+  name: z
+    .string()
+    .trim()
+    .min(1)
+    .max(NOTIFIER_NAME_MAX)
+    .refine((value) => !/[\p{Cc}]/u.test(value), "Plain text only")
+    .nullable(),
+  email: z.email().max(EMAIL_MAX).nullable(),
+};
+
+/** `POST /api/notices`, with no account (DSA art. 16(2), #267 mockups). */
+export const NewNotice = z
+  .object({
+    submissionId: z.string().min(1),
+    reason: NoticeReason,
+    /** 16(2)(a): why the notifier holds the text illegal or against the rules. */
+    explanation: prose,
+    ...notifier,
+    /** 16(2)(d). */
+    goodFaith: z.literal(true),
+  })
+  .superRefine(({ reason, name, email }, context) => {
+    if (reason === "child-sexual-abuse") return;
+    if (name === null) context.addIssue({ code: "custom", path: ["name"], message: "Required" });
+    if (email === null) context.addIssue({ code: "custom", path: ["email"], message: "Required" });
+  });
+export type NewNotice = z.output<typeof NewNotice>;
+
+/** Whether the receipt of 16(4) left: `none` when the notice gave no email. */
+export const NoticeReceipt = z.object({
+  id: z.string().min(1),
+  createdAt: z.iso.datetime(),
+  receipt: z.enum(["sent", "failed", "none"]),
+});
+export type NoticeReceipt = z.output<typeof NoticeReceipt>;
+
+export const NOTICE_OUTCOMES = ["kept", "removed"] as const;
+
+/** 16(5): the decision, as the notifier is told it. */
+export const NoticeDecision = z.object({
+  outcome: z.enum(NOTICE_OUTCOMES),
+  reply: prose,
+  decidedAt: z.iso.datetime(),
+});
+export type NoticeDecision = z.output<typeof NoticeDecision>;
+
+/** A notice as the admin reads it; the submitter never sees the notifier. */
+export const Notice = z.object({
+  id: z.string().min(1),
+  submissionId: z.string().min(1),
+  title: z.string().min(1),
+  reason: NoticeReason,
+  explanation: z.string().min(1),
+  name: z.string().min(1).nullable(),
+  email: z.string().min(1).nullable(),
+  createdAt: z.iso.datetime(),
+  decision: NoticeDecision.nullable(),
+});
+export type Notice = z.output<typeof Notice>;
+export const Notices = z.array(Notice);
+
+/** `POST /api/admin/notices/:id/keep`. */
+export const KeepNotice = z.object({ reply: prose });
+export type KeepNotice = z.output<typeof KeepNotice>;
+
+/** The notifiers whose decision mail failed, for the admin to write to by hand. */
+export const NoticeDecided = z.object({
+  unsent: z.array(z.string().min(1)),
+  statement: StatementOfReasons.nullable(),
+});
+export type NoticeDecided = z.output<typeof NoticeDecided>;
 
 /** 1-based rank in HSK 2025, the last one being 7-9. */
 export const BANDS = proficiencyFrameworks["hsk-2025"].length;

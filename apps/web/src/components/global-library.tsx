@@ -179,6 +179,21 @@ const ImportButton = ({
   );
 };
 
+/** « Signaler », named after its text (DSA art. 16). */
+const ReportLink = ({ item }: { readonly item: LibrarySummary }) => {
+  const { t } = useTranslation();
+  return (
+    <Link
+      to="/report"
+      search={{ text: item.id }}
+      aria-label={t("report.linkLabel", { title: item.title })}
+      className="inline-flex min-h-11 items-center underline"
+    >
+      {t("report.link")}
+    </Link>
+  );
+};
+
 const BackLink = ({ to }: { readonly to: "/read" | "/read/library" }) => {
   const { t } = useTranslation();
   return (
@@ -273,7 +288,10 @@ export const GlobalLibrary = () => {
               <BandPill band={item.band} />
               {item.provenance !== null && <AiBadge provenance={item.provenance} />}
               <Credits item={item} />
-              <ImportButton summary={item} item={null} />
+              <div className="flex flex-wrap items-start gap-3">
+                <ImportButton summary={item} item={null} />
+                <ReportLink item={item} />
+              </div>
             </li>
           ))}
         </ul>
@@ -422,7 +440,10 @@ export const LibraryPreview = ({
             <Credits item={item} />
             <CoverageLine stats={stats} />
           </div>
-          <ImportButton summary={item} item={item} />
+          <div className="mt-2 flex flex-wrap items-start gap-3">
+            <ImportButton summary={item} item={item} />
+            <ReportLink item={item} />
+          </div>
           <h2 className="mt-6 text-subtitle">{t("globalLibrary.text")}</h2>
           <p
             lang="zh-Hans"

@@ -723,6 +723,65 @@ export const en = {
     notSubmittable:
       "This text comes from the global library: only the person who wrote it can submit it.",
   },
+  report: {
+    link: "Report",
+    linkLabel: "Report « {{title}} »",
+    back: "Back to the text",
+    title: "Report a text",
+    intro:
+      "Tell us why this text is illegal or breaks the library rules. No account is needed and a person reads every notice.",
+    text: "Text reported",
+    address: "Address",
+    reason: "Reason",
+    choose: "Choose a reason",
+    reasons: {
+      copyright: "Copyright infringement",
+      defamation: "Defamation",
+      hate: "Incitement to hatred, discrimination or violence",
+      "personal-data": "Someone else’s personal data",
+      "child-sexual-abuse": "Child sexual abuse material",
+      "serious-offences": "Another serious offence (terrorism, crimes against humanity…)",
+      "library-rules": "Breaks the library rules",
+    },
+    explanation: "Explanation",
+    explanationHelp: "What is wrong in this text, and where. {{max, number}} characters at most.",
+    identity: "Who is reporting",
+    identityHelp:
+      "Your name and email are needed to handle the notice and send you the decision. The person who sent the text never sees them.",
+    identityOptional:
+      "For child sexual abuse material, your name and email are optional: you may leave them empty.",
+    name: "Your name",
+    email: "Your email",
+    goodFaith:
+      "I declare in good faith that the information and allegations in this notice are accurate and complete.",
+    warning:
+      "Reporting a text you know to be lawful in order to have it removed is punished by one year in prison and a €15,000 fine (LCEN art. 6, VII).",
+    send: "Send the notice",
+    sending: "Sending the notice…",
+    sent: "Notice sent",
+    number: "Notice number: {{id}}",
+    next: "A person will read it and decide: within 24 hours for a serious offence, within 7 days otherwise.",
+    receipt: {
+      sent: "A receipt went to {{email}}. The decision will follow there.",
+      failed:
+        "The receipt could not be emailed. Keep this number: the decision will still be sent to {{email}}.",
+      none: "You gave no email: keep this number if you write to us about this notice.",
+    },
+    toLibrary: "Back to the global library",
+    missing: "No text to report: use « Report » on a text of the global library.",
+    failure: {
+      reason: "Choose a reason.",
+      explanation: "Write what is wrong in this text.",
+      name: "Write your name, or choose child sexual abuse material as the reason.",
+      email: "Write a valid email, or choose child sexual abuse material as the reason.",
+      goodFaith: "Tick the good-faith statement to send the notice.",
+      tooMany: "Too many notices from this connection. Try again in 10 minutes.",
+      offline: "No connection: your answers are kept, try again once online.",
+      notFound: "This text is no longer in the library.",
+      invalid: "The server refused the notice as invalid. Check each field.",
+      unexpected: "The server gave an unexpected answer ({{status}}). Try again later.",
+    },
+  },
   submit: {
     link: "Submit to the library",
     back: "Back to the text",

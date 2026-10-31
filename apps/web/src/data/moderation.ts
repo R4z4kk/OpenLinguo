@@ -9,7 +9,11 @@ import {
   type Approval,
   type BandEstimate,
   estimateBand,
+  type KeepNotice,
   type NewStatementOfReasons,
+  Notice,
+  NoticeDecided,
+  Notices,
   type Restriction,
   StatementOfReasons,
 } from "@openlinguo/core/moderation";
@@ -73,3 +77,28 @@ export const estimateText = async (
     }),
   );
 };
+
+export const loadNotices = (): Promise<Result<readonly Notice[], ApiFailure>> =>
+  call("/api/admin/notices", { method: "GET" }, (body) => parseWith(Notices, body));
+
+const noticePath = (id: string) => `/api/admin/notices/${encodeURIComponent(id)}`;
+
+export const loadNotice = (id: string): Promise<Result<Notice, ApiFailure>> =>
+  call(noticePath(id), { method: "GET" }, (body) => parseWith(Notice, body));
+
+export const keepNotice = (
+  id: string,
+  keep: KeepNotice,
+): Promise<Result<NoticeDecided, ApiFailure>> =>
+  call(`${noticePath(id)}/keep`, { method: "POST", body: JSON.stringify(keep) }, (body) =>
+    parseWith(NoticeDecided, body),
+  );
+
+/** Removes the reported text; every open notice on it is decided with it. */
+export const removeByNotice = (
+  id: string,
+  statement: NewStatementOfReasons,
+): Promise<Result<NoticeDecided, ApiFailure>> =>
+  call(`${noticePath(id)}/remove`, { method: "POST", body: JSON.stringify(statement) }, (body) =>
+    parseWith(NoticeDecided, body),
+  );
