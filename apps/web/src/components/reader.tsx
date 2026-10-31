@@ -325,6 +325,15 @@ const Reader = ({
             {t("reader.severalReadings")}
           </span>
           <Legend />
+          <p className="mt-6">
+            <Link
+              to="/read/$id/submit"
+              params={{ id: text.id }}
+              className="inline-flex min-h-11 items-center underline"
+            >
+              {t("submit.link")}
+            </Link>
+          </p>
           {selectedToken !== null && (
             <WordSheet
               key={selectedToken.start}

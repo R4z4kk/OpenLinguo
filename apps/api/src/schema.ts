@@ -1,3 +1,4 @@
+import { LICENCES, SUBMISSION_STATUSES, type Submission } from "@openlinguo/core/submission";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
@@ -136,6 +137,65 @@ export const securityEvent = sqliteTable(
       "security_event_type",
       sql`${table.type} in ('sign_in', 'sign_in_failed', 'code_sent', 'second_factor', 'second_factor_failed', 'admin_action')`,
     ),
+  ],
+);
+
+const LICENCE_IDS = [LICENCES.human, LICENCES.ai] as const;
+
+/** A text sent to the shared library (ADR 0015); the licence follows the origin. */
+export const submission = sqliteTable(
+  "submission",
+  {
+    id: text().primaryKey(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text().notNull(),
+    body: text().notNull(),
+    origin: text({ enum: ["human", "ai"] }).notNull(),
+    provenance: text({ mode: "json" }).$type<NonNullable<Submission["provenance"]>>(),
+    licence: text({ enum: LICENCE_IDS }).notNull(),
+    attribution: text(),
+    attestationVersion: integer().notNull(),
+    attestedAt: integer({ mode: "timestamp_ms" }).notNull(),
+    status: text({ enum: SUBMISSION_STATUSES }).notNull().default("pending"),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    index("submission_user_status").on(table.userId, table.status),
+    check(
+      "submission_origin",
+      sql`(${table.origin} = 'human' and ${table.provenance} is null and ${table.licence} = 'CC-BY-SA-4.0') or (${table.origin} = 'ai' and ${table.provenance} is not null and ${table.licence} = 'CC0-1.0')`,
+    ),
+    check(
+      "submission_status",
+      sql`${table.status} in ('pending', 'approved', 'rejected', 'removed')`,
+    ),
+  ],
+);
+
+export const HOSTING_OPERATIONS = ["create", "edit", "delete"] as const;
+
+/**
+ * Décret 2021-1362 arts 5 to 7 (read on Légifrance 2026-10-31): kept 1 year, read only by the jobs
+ * and the admin export for an authority. No foreign key: it outlives the text and the account.
+ */
+export const hostingRecord = sqliteTable(
+  "hosting_record",
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    userId: text().notNull(),
+    submissionId: text().notNull(),
+    operation: text({ enum: HOSTING_OPERATIONS }).notNull(),
+    ipAddress: text(),
+    /** Cloudflare does not pass the source port to Functions (request.cf, docs of 2026-10-18). */
+    port: integer(),
+    /** Art. 5 2° b: HTTP version and TLS version, such as `HTTP/2 TLSv1.3`. */
+    protocol: text(),
+    createdAt: createdAt(),
+  },
+  (table) => [
+    check("hosting_record_operation", sql`${table.operation} in ('create', 'edit', 'delete')`),
   ],
 );
 

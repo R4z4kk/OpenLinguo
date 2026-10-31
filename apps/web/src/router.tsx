@@ -1,5 +1,6 @@
 import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
 import { AboutPage } from "@/pages/about";
+import { AccountPage } from "@/pages/account";
 import { AnkiImportPage } from "@/pages/anki-import";
 import { ChallengePage, ChallengesPage } from "@/pages/challenges";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
@@ -8,7 +9,14 @@ import { LearnPage } from "@/pages/learn";
 import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
-import { ReadNewPage, ReadPage, ReadStoryPage, ReadTextPage, ReadUnknownPage } from "@/pages/read";
+import {
+  ReadNewPage,
+  ReadPage,
+  ReadStoryPage,
+  ReadSubmitPage,
+  ReadTextPage,
+  ReadUnknownPage,
+} from "@/pages/read";
 import { ReviewPage } from "@/pages/review";
 import { TodayPage } from "@/pages/today";
 import { TypingDrillPage } from "@/pages/typing-drill";
@@ -120,6 +128,12 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({
     getParentRoute,
+    path: "/read/$id/submit",
+    component: ReadSubmitPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
     path: "/profile",
     component: ProfilePage,
     errorComponent: ModuleError,
@@ -128,6 +142,12 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/profile/about",
     component: AboutPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/profile/account",
+    component: AccountPage,
     errorComponent: ModuleError,
   }),
 ]);

@@ -8,6 +8,7 @@
     "./account": "./src/account.ts",
     "./api-error": "./src/api-error.ts",
     "./result": "./src/result.ts",
+    "./submission": "./src/submission.ts",
     "./testing": "./src/testing/language-pack-contract.ts"
   },
   "scripts": {
