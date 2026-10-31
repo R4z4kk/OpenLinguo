@@ -433,7 +433,12 @@ export const fr: Messages = {
     emptyTitle: "Aucun texte pour l’instant",
     emptyBody:
       "Collez un texte ou importez un fichier .txt pour voir quels mots vous connaissez déjà et lesquels apprendre.",
-    source: { paste: "collé", file: "fichier .txt", ai: "écrit par l’IA" },
+    source: {
+      paste: "collé",
+      file: "fichier .txt",
+      ai: "écrit par l’IA",
+      library: "bibliothèque globale",
+    },
     measuring: "Comptage des mots connus…",
     known: "de mots connus",
     noWords: "Aucun mot chinois dans ce texte",
@@ -695,6 +700,47 @@ export const fr: Messages = {
     showNumbers: "Afficher les chiffres",
     tableCaption: "Révisions par jour d’apprentissage, par semaine.",
     failed: "Vos statistiques n’ont pas pu être calculées\u00a0: {{reason}}",
+  },
+  globalLibrary: {
+    link: "Bibliothèque globale",
+    back: "Mes textes",
+    title: "Bibliothèque globale",
+    intro:
+      "Des textes envoyés par des apprenants et lus par une personne avant que d’autres puissent les voir. Lire ne demande pas de compte.",
+    level: "Niveau",
+    allLevels: "Tous les niveaux",
+    band: "HSK {{band}}",
+    estimated: "HSK {{band}} · estimé",
+    loading: "Chargement de la bibliothèque…",
+    empty: "Aucun texte publié à ce niveau pour l’instant.",
+    more: "Afficher plus",
+    loadingMore: "Chargement d’autres textes…",
+    published: "Publié le {{date}}",
+    retry: "Réessayer",
+    toPreview: "Retour à la bibliothèque globale",
+    text: "Texte",
+    licence: "Licence",
+    reuse: {
+      human:
+        "Pour le réutiliser, citez son titre, {{author}}, OpenLinguo comme source et la licence, dites ce que vous avez changé et partagez vos changements sous la même licence.",
+      ai: "Cette histoire est dans le domaine public : réutilisez-la librement, sans citer personne.",
+    },
+    anonymousAuthor: "un apprenant anonyme",
+    import: "Importer",
+    importLabel: "Importer « {{title}} »",
+    importing: "Importation…",
+    imported: "Déjà dans Mes textes",
+    importedLabel: "« {{title}} » est déjà dans Mes textes",
+    added: "Ajouté à Mes textes.",
+    open: "Ouvrir dans le lecteur",
+    failure: {
+      offline:
+        "Pas de connexion : la bibliothèque globale a besoin d’internet. Vos propres textes restent lisibles hors ligne.",
+      notFound: "Ce texte n’est plus dans la bibliothèque.",
+      unexpected: "Le serveur a répondu de façon inattendue ({{status}}). Réessayez plus tard.",
+    },
+    notSubmittable:
+      "Ce texte vient de la bibliothèque globale : seule la personne qui l’a écrit peut le soumettre.",
   },
   submit: {
     link: "Soumettre à la bibliothèque",

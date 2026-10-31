@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AiProvenance } from "./ai-provenance.ts";
+import { Band } from "./moderation.ts";
 
 /** Confirmed by the reader benchmark on 2026-10-22 (ADR 0014, update). */
 export const MAX_TEXT_CHARACTERS = 20_000;
@@ -59,13 +60,13 @@ export const NewSubmission = z.discriminatedUnion("origin", [
 ]);
 export type NewSubmission = z.output<typeof NewSubmission>;
 
-const shared = {
+const listed = {
   id: z.string().min(1),
   title: z.string().min(1),
-  body: z.string().min(1),
   /** The pseudonym at the time of submission, `null` for anonymous. */
   attribution: z.string().min(1).nullable(),
 };
+const shared = { ...listed, body: z.string().min(1) };
 const humanLicensed = { ...human, licence: z.literal(LICENCES.human) };
 const aiLicensed = { ...ai, licence: z.literal(LICENCES.ai) };
 
@@ -86,7 +87,16 @@ export type Submission = z.output<typeof Submission>;
 
 export const Submissions = z.array(Submission);
 
-const published = { ...shared, publishedAt: z.iso.datetime() };
+/** The band is the admin's estimate at approval (ADR 0015). */
+const card = { ...listed, band: Band, publishedAt: z.iso.datetime() };
+const published = { ...card, body: z.string().min(1) };
+
+/** An approved text as the global library lists it, without its body. */
+export const LibrarySummary = z.discriminatedUnion("origin", [
+  z.object({ ...card, ...humanLicensed }),
+  z.object({ ...card, ...aiLicensed }),
+]);
+export type LibrarySummary = z.output<typeof LibrarySummary>;
 
 /** An approved text in the public library. */
 export const LibraryItem = z.discriminatedUnion("origin", [
@@ -94,3 +104,24 @@ export const LibraryItem = z.discriminatedUnion("origin", [
   z.object({ ...published, ...aiLicensed }),
 ]);
 export type LibraryItem = z.output<typeof LibraryItem>;
+
+export const LIBRARY_PAGE_SIZE = 20;
+
+/** `GET /api/library`: one page, the latest published first. */
+export const LibraryPage = z.object({
+  items: z.array(LibrarySummary).max(LIBRARY_PAGE_SIZE),
+  nextPage: z.number().int().min(2).nullable(),
+});
+export type LibraryPage = z.output<typeof LibraryPage>;
+
+const Counting = z
+  .string()
+  .regex(/^[1-9]\d{0,5}$/u)
+  .transform(Number);
+
+/** `GET /api/library` query: each parameter absent or a positive integer. */
+export const LibraryQuery = z.object({
+  band: Counting.pipe(Band).nullable(),
+  page: Counting.nullable(),
+});
+export type LibraryQuery = z.output<typeof LibraryQuery>;

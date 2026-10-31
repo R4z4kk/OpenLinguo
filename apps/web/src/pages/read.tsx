@@ -1,5 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { GlobalLibrary, LibraryPreview } from "@/components/global-library";
 import { ReadAloud } from "@/components/read-aloud";
 import { TextReader } from "@/components/reader";
 import { StoryForm } from "@/components/story-form";
@@ -44,6 +45,16 @@ export const ReadTextPage = () => {
   const { state } = useData();
   const id = idParam(useParams({ strict: false }));
   return state.status === "ready" ? <TextReader id={id} pack={state.pack} /> : null;
+};
+
+/** Read › « Bibliothèque globale ». */
+export const ReadLibraryPage = () => <GlobalLibrary />;
+
+/** Read › « Bibliothèque globale » › a text. */
+export const ReadLibraryItemPage = () => {
+  const { state } = useData();
+  const id = idParam(useParams({ strict: false }));
+  return state.status === "ready" ? <LibraryPreview key={id} id={id} pack={state.pack} /> : null;
 };
 
 /** Read › a text › « Soumettre à la bibliothèque ». */

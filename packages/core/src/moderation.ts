@@ -88,6 +88,10 @@ export type StatementOfReasons = z.output<typeof StatementOfReasons>;
 export const BANDS = proficiencyFrameworks["hsk-2025"].length;
 export const Band = z.number().int().min(1).max(BANDS);
 
+/** The HSK 2025 name of a band: 1 to 6, then 7-9. */
+export const bandName = (band: number): string =>
+  proficiencyFrameworks["hsk-2025"][band - 1] ?? String(band);
+
 export const Approval = z.object({ band: Band });
 export type Approval = z.output<typeof Approval>;
 

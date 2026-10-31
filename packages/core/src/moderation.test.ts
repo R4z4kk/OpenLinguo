@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { AnnotatedToken } from "./language-pack.ts";
 import {
+  bandName,
   Approval,
   estimateBand,
   Ground,
@@ -134,5 +135,12 @@ describe("Approval", () => {
     expect(parseWith(Approval, { band: 7 }).ok).toBe(true);
     expect(parseWith(Approval, { band: 0 }).ok).toBe(false);
     expect(parseWith(Approval, { band: 2.5 }).ok).toBe(false);
+  });
+});
+
+describe("bandName", () => {
+  it("names a band as HSK 2025 does", () => {
+    expect(bandName(1)).toBe("1");
+    expect(bandName(7)).toBe("7-9");
   });
 });

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   LibraryItem,
+  LibraryQuery,
+  LibrarySummary,
   MAX_TEXT_CHARACTERS,
   NewSubmission,
   PSEUDONYM_MAX,
@@ -106,17 +108,45 @@ describe("Submission and LibraryItem", () => {
     expect(parseWith(Submission, { ...story, licence: "CC-BY-SA-4.0" }).ok).toBe(false);
   });
 
-  it("describe a published text with its licence, provenance and attribution", () => {
-    const item = {
+  it("describe a published text with its level, licence, provenance and attribution", () => {
+    const summary = {
       id: "s1",
       title: "小猫",
-      body: "小猫很可爱。",
       attribution: "小明",
       origin: "ai",
       provenance,
       licence: "CC0-1.0",
+      band: 2,
       publishedAt: "2026-10-31T12:00:00.000Z",
     };
+    expect(parseWith(LibrarySummary, summary)).toEqual({ ok: true, value: summary });
+    const item = { ...summary, body: "小猫很可爱。" };
     expect(parseWith(LibraryItem, item)).toEqual({ ok: true, value: item });
+    expect(parseWith(LibraryItem, { ...item, band: 0 }).ok).toBe(false);
+    expect(parseWith(LibraryItem, { ...item, licence: "CC-BY-SA-4.0" }).ok).toBe(false);
+  });
+});
+
+describe("LibraryQuery", () => {
+  it("reads an absent or positive band and page from the query string", () => {
+    expect(parseWith(LibraryQuery, { band: null, page: null })).toEqual({
+      ok: true,
+      value: { band: null, page: null },
+    });
+    expect(parseWith(LibraryQuery, { band: "3", page: "2" })).toEqual({
+      ok: true,
+      value: { band: 3, page: 2 },
+    });
+  });
+
+  it.each([
+    { band: "0", page: null },
+    { band: "10", page: null },
+    { band: "2.5", page: null },
+    { band: null, page: "0" },
+    { band: null, page: "-1" },
+    { band: null, page: "abc" },
+  ])("refuses %o", (query) => {
+    expect(parseWith(LibraryQuery, query).ok).toBe(false);
   });
 });

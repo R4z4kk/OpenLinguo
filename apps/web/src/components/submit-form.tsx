@@ -54,6 +54,7 @@ export const useApiFailure = () => {
 type Loaded =
   | { readonly status: "loading" }
   | { readonly status: "missing" }
+  | { readonly status: "copied" }
   | { readonly status: "unreadable"; readonly reason: string }
   | { readonly status: "failed"; readonly failure: ApiFailure }
   | { readonly status: "ready"; readonly text: StoredText; readonly account: Account | null };
@@ -264,6 +265,7 @@ export const SubmitForm = ({ id }: { readonly id: string }) => {
       if (!active) return;
       if (!text.ok) setLoaded({ status: "unreadable", reason: describeFailure(text.error) });
       else if (text.value === null) setLoaded({ status: "missing" });
+      else if (text.value.source === "library") setLoaded({ status: "copied" });
       else if (!account.ok) setLoaded({ status: "failed", failure: account.error });
       else setLoaded({ status: "ready", text: text.value, account: account.value });
     });
@@ -296,6 +298,7 @@ export const SubmitForm = ({ id }: { readonly id: string }) => {
             : t("submit.textFailed", { reason: loaded.reason })}
         </p>
       )}
+      {loaded.status === "copied" && <p className="mt-4">{t("globalLibrary.notSubmittable")}</p>}
       {loaded.status === "failed" && (
         <div className="mt-4 flex flex-col items-start gap-2">
           <p role="alert" className="text-danger">
