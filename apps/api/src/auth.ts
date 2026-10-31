@@ -1,3 +1,4 @@
+import { EMAIL_CODE, PseudonymUpdate, SECOND_FACTOR_LOCK } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -42,11 +43,11 @@ export type AuthEnv = z.output<typeof AuthEnv>;
 const CODE_PATH = "/email-otp/send-verification-otp";
 const OTP_SIGN_IN_PATH = "/sign-in/email-otp";
 const CALLBACK_PATH = "/callback/:id";
+const UPDATE_USER_PATH = "/update-user";
 const SECOND_FACTOR_METHODS = new Map([
   ["/two-factor/verify-totp", "totp"],
   ["/two-factor/verify-backup-code", "backup-code"],
 ]);
-const SECOND_FACTOR_LOCK = { failures: 10, minutes: 15 };
 
 const access = createAccessControl(defaultStatements);
 /** No role changes, creation, impersonation or deletion: the role is granted outside the app. */
@@ -160,9 +161,9 @@ export const createAuth = (db: Database, env: AuthEnv, sendMail: SendMail) => {
     },
     plugins: [
       emailOTP({
-        otpLength: 6,
-        expiresIn: 600,
-        allowedAttempts: 3,
+        otpLength: EMAIL_CODE.length,
+        expiresIn: EMAIL_CODE.minutes * 60,
+        allowedAttempts: EMAIL_CODE.attempts,
         storeOTP: "hashed",
         async sendVerificationOTP({ email, otp }, ctx) {
           const locale = localeOf(ctx?.headers?.get("accept-language") ?? null);
@@ -219,6 +220,15 @@ export const createAuth = (db: Database, env: AuthEnv, sendMail: SendMail) => {
             throw refusal("TOO_MANY_REQUESTS", {
               code: "TOO_MANY_ATTEMPTS",
               message: `Too many wrong codes, try again in ${String(SECOND_FACTOR_LOCK.minutes)} minutes`,
+            });
+          }
+          return;
+        }
+        if (ctx.path === UPDATE_USER_PATH) {
+          if (!PseudonymUpdate.safeParse(ctx.body).success) {
+            throw refusal("BAD_REQUEST", {
+              code: "INVALID_REQUEST",
+              message: "Only the pseudonym can change, as plain text",
             });
           }
           return;

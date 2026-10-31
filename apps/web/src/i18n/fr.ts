@@ -767,6 +767,8 @@ export const fr: Messages = {
     textMissing: "Ce texte n’est plus sur cet appareil.",
     textFailed: "Le texte n’a pas pu être chargé\u00a0: {{reason}}",
     retry: "Réessayer",
+    signIn: "Se connecter",
+    tooMany: "Trop de demandes. Réessayez plus tard.",
   },
   account: {
     link: "Compte",

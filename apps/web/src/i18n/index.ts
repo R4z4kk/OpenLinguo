@@ -1,5 +1,7 @@
 import { createInstance, type i18n } from "i18next";
 import { initReactI18next } from "react-i18next";
+import { authEn } from "./auth/en.ts";
+import { authFr } from "./auth/fr.ts";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
 import type { Language } from "./language.ts";
@@ -9,7 +11,10 @@ export const createI18n = (language: Language): i18n => {
   void instance.use(initReactI18next).init({
     lng: language,
     fallbackLng: "en",
-    resources: { en: { translation: en }, fr: { translation: fr } },
+    resources: {
+      en: { translation: en, auth: authEn },
+      fr: { translation: fr, auth: authFr },
+    },
     interpolation: { escapeValue: false },
     initAsync: false,
   });

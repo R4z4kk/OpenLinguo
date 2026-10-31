@@ -33,9 +33,11 @@ const plain = (max: number, singleLine: boolean) =>
       "Plain text only",
     );
 
+export const Pseudonym = plain(PSEUDONYM_MAX, true);
+
 export const Attribution = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("anonymous") }),
-  z.object({ kind: z.literal("pseudonym"), name: plain(PSEUDONYM_MAX, true) }),
+  z.object({ kind: z.literal("pseudonym"), name: Pseudonym }),
 ]);
 export type Attribution = z.output<typeof Attribution>;
 

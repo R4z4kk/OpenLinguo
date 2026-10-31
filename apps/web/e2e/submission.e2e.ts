@@ -31,7 +31,20 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
     const request = route.request();
     const { pathname } = new URL(request.url());
     if (pathname === "/api/auth/get-session") {
-      await json(route, 200, api.signedIn ? { session: {}, user: { name: "" } } : null);
+      await json(
+        route,
+        200,
+        api.signedIn
+          ? {
+              session: {},
+              user: {
+                email: "lin@example.test",
+                name: "",
+                ageDeclaredAt: "2026-10-31T10:00:00.000Z",
+              },
+            }
+          : null,
+      );
       return;
     }
     if (api.refusal !== null) {
