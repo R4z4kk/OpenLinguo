@@ -66,6 +66,10 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
     url: "/read/00000000-0000-4000-8000-000000000000/unknown",
     ready: (page) => page.getByText(en.reader.notFound),
   },
+  "/read/$id/submit": {
+    url: "/read/00000000-0000-4000-8000-000000000000/submit",
+    ready: (page) => page.getByText(en.submit.textMissing),
+  },
   "/profile": {
     url: "/profile",
     ready: (page) =>
@@ -77,6 +81,11 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
         .filter({ has: page.getByText(en.stats.showNumbers) }),
   },
   "/profile/about": { url: "/profile/about", ready: title(en.about.title) },
+  // `vite preview` has no API: the page shows its failure and « Réessayer ».
+  "/profile/account": {
+    url: "/profile/account",
+    ready: (page) => page.getByRole("button", { name: en.submit.retry }),
+  },
 };
 
 export const NOT_FOUND_VISIT: Visit = { url: "/missing", ready: title(en.notFound.title) };

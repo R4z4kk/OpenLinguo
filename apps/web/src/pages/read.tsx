@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ReadAloud } from "@/components/read-aloud";
 import { TextReader } from "@/components/reader";
 import { StoryForm } from "@/components/story-form";
+import { SubmitForm } from "@/components/submit-form";
 import { TextLibrary } from "@/components/text-library";
 import { TextForm } from "@/components/text-form";
 import { UnknownWords } from "@/components/unknown-words";
@@ -44,6 +45,9 @@ export const ReadTextPage = () => {
   const id = idParam(useParams({ strict: false }));
   return state.status === "ready" ? <TextReader id={id} pack={state.pack} /> : null;
 };
+
+/** Read › a text › « Soumettre à la bibliothèque ». */
+export const ReadSubmitPage = () => <SubmitForm id={idParam(useParams({ strict: false }))} />;
 
 /** Read › the unknown words of a text of the library. */
 export const ReadUnknownPage = () => {

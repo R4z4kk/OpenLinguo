@@ -15,7 +15,7 @@ describe("ApiError", () => {
 });
 
 describe("ApiErrorCode", () => {
-  it("names the account refusals", () => {
+  it("names the account and submission refusals", () => {
     for (const code of [
       "UNAUTHORIZED",
       "INVALID_REQUEST",
@@ -25,6 +25,8 @@ describe("ApiErrorCode", () => {
       "TWO_FACTOR_REQUIRED",
       "TOO_MANY_ATTEMPTS",
       "ADMIN_REQUIRED",
+      "SUBMISSION_LIMIT",
+      "SUBMISSION_NOT_PENDING",
     ]) {
       expect(parseWith(ApiError, { code, message: "refused" }).ok).toBe(true);
     }
