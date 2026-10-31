@@ -12,6 +12,8 @@ export const ApiErrorCode = z.enum([
   "TWO_FACTOR_REQUIRED",
   "TOO_MANY_ATTEMPTS",
   "ADMIN_REQUIRED",
+  "SUBMISSION_LIMIT",
+  "SUBMISSION_NOT_PENDING",
 ]);
 export type ApiErrorCode = z.output<typeof ApiErrorCode>;
 

@@ -10,6 +10,7 @@ import { JOBS } from "./jobs.ts";
 import type { SendMail } from "./mail.ts";
 import { scalewayMailer } from "./scaleway-mailer.ts";
 import { database, user } from "./schema.ts";
+import { submissionRoutes } from "./submissions.ts";
 
 export type Mailer = (env: AuthEnv) => SendMail;
 
@@ -102,6 +103,8 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
     await db.update(user).set({ ageDeclaredAt: new Date() }).where(eq(user.id, current.user.id));
     return c.body(null, 204);
   });
+
+  app.route("/submissions", submissionRoutes(authOf));
 
   app.get("/health", async (c) => {
     const unhealthy = await unhealthyJobs(database(c.env.DB), jobs, new Date());
