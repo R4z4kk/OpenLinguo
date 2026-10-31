@@ -174,7 +174,7 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
 - **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
-- **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Scaleway Transactional Email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening, privacy policy, legal notices.
+- **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Scaleway Transactional Email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening and DPIA (#280), privacy policy, legal notices.
 
 ## Deployment
 

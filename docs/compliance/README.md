@@ -12,6 +12,7 @@ Values in `[BRACKETS]` are filled in M7, when the server and accounts go live.
 | [Sub-processors](sub-processors.md) | Third parties that process personal data, and transfers |
 | [Breach procedure](breach-procedure.md) | GDPR art. 33–34 response and internal register |
 | [DPIA screening](dpia-screening.md) | Whether a data protection impact assessment is required |
+| [DPIA](dpia.md) | Impact assessment of accounts, the shared library, the décret 2021-1362 retention and the M8 leagues (CNIL PIA method), with its action plan |
 | [AI features](ai.md) | Roles, AI Act art. 50 per output, gap analysis against the code of practice, provenance specification |
 | [Wikidata lookup](wikidata.md) | What the lookup sends to the Wikimedia Foundation, roles, the U.S. transfer, the dated endpoint |
 | [Privacy notice](privacy-notice.md) | Public text, AI features and key storage so far; completed in M7 |
