@@ -1,4 +1,9 @@
-import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+} from "@tanstack/react-router";
 import { AboutPage } from "@/pages/about";
 import { AccountPage } from "@/pages/account";
 import { AnkiImportPage } from "@/pages/anki-import";
@@ -148,6 +153,18 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/profile/account",
     component: AccountPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminQueuePage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin/$id",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminReviewPage"),
     errorComponent: ModuleError,
   }),
 ]);

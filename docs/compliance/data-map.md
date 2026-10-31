@@ -35,7 +35,7 @@ In Cloudflare D1, created in the `eu` jurisdiction (ADR 0015).
 | Sign-in codes: 6 digits, stored hashed, valid 10 minutes, 3 attempts | Asking for a code | Maintainer, as a hash only |
 | Authenticator (optional, mandatory for the admin): TOTP secret and backup codes, encrypted with the server secret; the time a session passed it (#271) | Turning on TOTP | Maintainer, encrypted only |
 | Age declaration: the date of « J'ai 15 ans ou plus », asked right after the first sign-in; « J'ai moins de 15 ans » deletes the account at once | Age step | Maintainer |
-| Library submissions: title and plain text, origin (the learner's text, or a story with its AI provenance), licence fixed by the origin (CC BY-SA 4.0 or CC0 1.0), attribution (the pseudonym or anonymous), attestation version and time, status (#273); moderation notes later (#274) | « Soumettre à la bibliothèque » | Maintainer; published texts are public |
+| Library submissions: title and plain text, origin (the learner's text, or a story with its AI provenance), licence fixed by the origin (CC BY-SA 4.0 or CC0 1.0), attribution (the pseudonym or anonymous), attestation version and time, status (#273); at approval, the HSK band estimated in the admin's browser and the publication time; for a rejection or removal, a statement of reasons (DSA art. 17(3): measure, own initiative, legal ground or terms clause, facts, explanation, no automated means) emailed to the submitter (#274) | « Soumettre à la bibliothèque » | Maintainer; published texts are public |
 | Hosting records (décret 2021-1362 arts 5 to 7): account id, submission id, operation (create, edit, delete), IP address, HTTP and TLS versions, time; the source port column stays empty because Cloudflare does not pass it | Each creation or withdrawal of a submission | Only the daily jobs and the admin export for an authority |
 | Synced cards and review log (M8) | Sync | Maintainer (operations only) |
 | League entries: pseudonym, predefined avatar id, weekly XP (M8) | Recomputed from synced review logs | Other league members see pseudonym, avatar and XP |
@@ -51,7 +51,7 @@ In Cloudflare D1, created in the `eu` jurisdiction (ADR 0015).
 | Wikimedia Foundation, U.S. ([Wikidata lookup](wikidata.md)) | The unknown character sequences of a text (names of people, places, organizations) in the web address of the request, the IP address, the browser's user agent and the app's `Api-User-Agent`; no cookie, no referrer. Request logs: deleted, aggregated or de-identified after at most 90 days, backups up to 5 years | Only when the learner presses « Chercher sur Wikidata », after the notice shown before the first call: one request per 50 sequences, one after the other; nothing in the background |
 | Cloudflare (PWA hosting) | IP address and request metadata of every page load | Always, as the CDN serving the app |
 | Google, GitHub (OAuth) | Sign-in exchange; OpenLinguo keeps only the account id and the email | Only if the user chooses that sign-in method |
-| Scaleway (Transactional Email, France, processor) | Email address, the mail: the sign-in code, later the inactivity notice. No open or click tracking | When the learner asks for a code |
+| Scaleway (Transactional Email, France, processor) | Email address, the mail: the sign-in code, the statement of reasons of a rejection or removal (#274), later the inactivity notice. No open or click tracking | When the learner asks for a code |
 
 What each AI feature sends, shown under its button as « Sent: … » (ADR 0012):
 

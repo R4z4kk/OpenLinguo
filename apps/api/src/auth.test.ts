@@ -1,4 +1,3 @@
-import { createHmac } from "node:crypto";
 import { err } from "@openlinguo/core/result";
 import { eq } from "drizzle-orm";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,6 +15,7 @@ import {
 } from "./schema.ts";
 import { memoryMailer } from "./testing/memory-mailer.ts";
 import { migratedPlatform } from "./testing/platform.ts";
+import { totp } from "./testing/totp.ts";
 
 const ORIGIN = "https://openlinguo.example.test";
 const platform = await migratedPlatform();
@@ -30,6 +30,7 @@ const settings = {
   SCW_SECRET_KEY: "scw-key",
   SCW_PROJECT_ID: "11111111-1111-4111-8111-111111111111",
   MAIL_FROM: "no-reply@example.test",
+  CONTACT_EMAIL: "contact@example.test",
 };
 afterAll(() => platform.dispose());
 
@@ -406,22 +407,6 @@ describe("AuthEnv", () => {
   });
 });
 
-const BASE32 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-
-/** RFC 6238 with SHA-1, 6 digits and 30 seconds, from the secret of an otpauth URI. */
-const totp = (uri: string, at = Date.now()) => {
-  const secret = new URL(uri).searchParams.get("secret") ?? "";
-  const bits = secret
-    .toUpperCase()
-    .replace(/./g, (char) => BASE32.indexOf(char).toString(2).padStart(5, "0"));
-  const key = Buffer.from((bits.match(/.{8}/g) ?? []).map((byte) => Number.parseInt(byte, 2)));
-  const counter = Buffer.alloc(8);
-  counter.writeBigUInt64BE(BigInt(Math.floor(at / 30_000)));
-  const mac = createHmac("sha1", key).update(counter).digest();
-  const offset = (mac.at(-1) ?? 0) & 0xf;
-  return String((mac.readUInt32BE(offset) & 0x7fffffff) % 1_000_000).padStart(6, "0");
-};
-
 const otherCode = (code: string) => String((Number(code) + 500_000) % 1_000_000).padStart(6, "0");
 
 const declared = async (call: ReturnType<typeof appWith>, email: string) => {
@@ -479,7 +464,7 @@ describe("second factor and admin", () => {
 
     expect((await call("/api/auth/admin/list-users", null, cookie)).status).toBe(200);
     expect((await call(`/api/auth/admin/get-user?id=${adminId}`, null, cookie)).status).toBe(200);
-    expect((await call("/api/admin/queue", null, cookie)).status).toBe(404);
+    expect((await call("/api/admin/queue", null, cookie)).status).toBe(200);
 
     const logged = await db.select().from(securityEvent).orderBy(securityEvent.id);
     expect(

@@ -20,6 +20,7 @@ const env = {
   SCW_SECRET_KEY: "scw-key",
   SCW_PROJECT_ID: "11111111-1111-4111-8111-111111111111",
   MAIL_FROM: "no-reply@example.test",
+  CONTACT_EMAIL: "contact@example.test",
   SIGNUPS_OPEN: "true",
 };
 afterAll(() => platform.dispose());

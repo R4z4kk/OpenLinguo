@@ -7,7 +7,7 @@ None of these is used before M7. Before each goes live, verify its status on the
 | Cloudflare, Inc. (Pages) | Processor — serves the PWA | IP address, request metadata | Global CDN, US company | DPF (reported active, secondary sources) or SCCs | Verify in M7 |
 | Google LLC (OAuth) | Independent controller for its sign-in | Sign-in exchange, only if chosen by the user | US | DPF (reported active, secondary sources) | Verify in M7 |
 | GitHub, Inc. (OAuth) | Independent controller for its sign-in | Sign-in exchange, only if chosen by the user | US | Own DPF certification (Microsoft list, last updated 2024-09) | Verify in M7 |
-| Scaleway SAS (Transactional Email) | Processor — service emails: sign-in codes (#270), inactivity notice | Email address, message content; no open or click tracking | France ("stored and processed in France", [data privacy](https://www.scaleway.com/en/docs/transactional-email/reference-content/data-privacy/)) | None needed (EU) | Chosen in ADR 0015; accept its DPA, part of the contract, before go-live |
+| Scaleway SAS (Transactional Email) | Processor — service emails: sign-in codes (#270), statements of reasons (#274), inactivity notice | Email address, message content; no open or click tracking | France ("stored and processed in France", [data privacy](https://www.scaleway.com/en/docs/transactional-email/reference-content/data-privacy/)) | None needed (EU) | Chosen in ADR 0015; accept its DPA, part of the contract, before go-live |
 
 Not sub-processors:
 

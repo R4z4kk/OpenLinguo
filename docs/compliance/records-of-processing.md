@@ -26,8 +26,8 @@ Processing that happens only on the user's device (learning data, voice, journal
 | (b) Purposes | Receive texts proposed for the public library, moderate them, publish approved texts with attribution |
 | Legal basis | Contract (art. 6(1)(b)) |
 | (c) Data subjects | Registered users who submit texts |
-| (c) Data | Title and plain text, origin with the AI provenance of a story, licence fixed by the origin (CC BY-SA 4.0 or CC0 1.0), attribution (pseudonym or anonymous), attestation version and time, submitter account id, moderation status and notes |
-| (d) Recipients | Maintainer; the public for approved texts (attribution name only) |
+| (c) Data | Title and plain text, origin with the AI provenance of a story, licence fixed by the origin (CC BY-SA 4.0 or CC0 1.0), attribution (pseudonym or anonymous), attestation version and time, submitter account id, moderation status, estimated HSK band and publication time, statements of reasons for rejections and removals (#274) |
+| (d) Recipients | Maintainer; the public for approved texts (attribution name only); Scaleway (processor) for the statement of reasons emailed to the submitter |
 | (e) Transfers | None |
 | (f) Erasure | Pending or rejected submissions deleted with the account; published texts stay under their licence (CC BY-SA 4.0, or CC0 1.0 for a story) with the chosen attribution unless a takedown is requested |
 | (g) Security | As P1; plain text only, at most 20,000 characters, at most 5 pending per account, admin-only moderation endpoints |

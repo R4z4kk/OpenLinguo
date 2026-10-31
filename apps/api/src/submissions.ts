@@ -88,6 +88,8 @@ export const submissionRoutes = (authOf: (env: Env) => Auth) =>
         attribution: name,
         attestedAt: now,
         status: "pending" as const,
+        band: null,
+        publishedAt: null,
         createdAt: now,
       };
       const created = db.insert(submission).values(row);

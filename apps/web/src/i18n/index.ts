@@ -3,13 +3,18 @@ import { initReactI18next } from "react-i18next";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
 import type { Language } from "./language.ts";
+import { moderationEn } from "./moderation/en.ts";
+import { moderationFr } from "./moderation/fr.ts";
 
 export const createI18n = (language: Language): i18n => {
   const instance = createInstance();
   void instance.use(initReactI18next).init({
     lng: language,
     fallbackLng: "en",
-    resources: { en: { translation: en }, fr: { translation: fr } },
+    resources: {
+      en: { translation: en, moderation: moderationEn },
+      fr: { translation: fr, moderation: moderationFr },
+    },
     interpolation: { escapeValue: false },
     initAsync: false,
   });

@@ -8,6 +8,7 @@
 | Sign-in codes | Valid 10 minutes; deleted when used or refused, otherwise by the daily jobs after expiry (#278) | Strictly necessary |
 | Rate-limit counters (IP address and route) | Needed for 10 minutes at most; Better Auth never deletes them, so the daily jobs purge older rows (#278) | Security |
 | Pending or rejected library submissions | Deleted with the account; a pending text can be withdrawn at any time | Purpose ends |
+| Statements of reasons (rejections and removals) | 1 year after the decision (#278); deleted earlier with the text or the account | DSA art. 17; ADR 0015 |
 | Hosting records of each creation, edit or deletion of a submission | 1 year, also after the text or the account is deleted (#278) | Décret 2021-1362 arts 5 and 7 |
 | Published library texts | Kept while published, under their licence (CC BY-SA 4.0, or CC0 1.0 for a story) with the chosen attribution; removed on takedown | License terms |
 | Synced cards and review log | Until account deletion or user deletion of synced data | Purpose ends |

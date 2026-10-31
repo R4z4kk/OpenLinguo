@@ -35,6 +35,8 @@ export const AuthEnv = z.object({
   SCW_SECRET_KEY: z.string().min(1),
   SCW_PROJECT_ID: z.uuid(),
   MAIL_FROM: z.email(),
+  /** Where submitters ask for a review of a decision (DSA art. 17(3)(f)). */
+  CONTACT_EMAIL: z.email(),
   SIGNUPS_OPEN: z.enum(["true", "false"]).default("false"),
 });
 export type AuthEnv = z.output<typeof AuthEnv>;

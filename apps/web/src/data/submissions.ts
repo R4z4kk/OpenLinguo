@@ -21,7 +21,7 @@ export type Account = { readonly pseudonym: string | null };
 
 const NOT_JSON = Symbol("not JSON");
 
-const call = async <T>(
+export const call = async <T>(
   path: string,
   init: RequestInit,
   read: (body: unknown) => Result<T, unknown>,
