@@ -1,0 +1,17 @@
+# Read by .github/workflows/osv-scanner.yml. Each exception expires: the scan fails again after its date.
+# Checked 2026-10-31: `pnpm why -r --prod` finds none of these packages in a shipped dependency.
+
+[[IgnoredVulns]]
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2026-12-01
+reason = "glob 11 via workbox-build, build time only. Fixed in glob 14.0.2 (2026-10-27), which workbox-build does not accept yet."
+
+[[IgnoredVulns]]
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-12-01
+reason = "minimatch 5 via filelist and 10 via eslint, dev only. Fixed in minimatch 11.0.1 (2026-10-27), which they do not accept yet."
+
+[[IgnoredVulns]]
+id = "GHSA-gcqx-w48m-w2h4"
+ignoreUntil = 2026-12-01
+reason = "deepmerge 4.3.1 via @rollup/plugin-node-resolve, build time only, merging the build's own options. No fixed version."
