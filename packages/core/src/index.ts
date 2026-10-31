@@ -12,6 +12,7 @@ export {
   type StructuredMode,
 } from "./ai-client.ts";
 export { AiProvenance } from "./ai-provenance.ts";
+export { ApiError, ApiErrorCode } from "./api-error.ts";
 export {
   coverage,
   knowledgeOf,

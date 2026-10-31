@@ -1,0 +1,17 @@
+// The cron Worker of the daily jobs. The API itself runs as Pages Functions (apps/web/functions).
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "openlinguo-jobs",
+  "main": "src/cron.ts",
+  "compatibility_date": "2026-10-19",
+  "triggers": { "crons": ["17 3 * * *"] },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "openlinguo",
+      // Set by #269 once the database exists in the eu jurisdiction: a deploy fails until then.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations",
+    },
+  ],
+}

@@ -6,7 +6,12 @@ packages:
 # Supply chain: never install a version published less than 7 days ago.
 minimumReleaseAge: 10080
 
-# Supply chain: dependency build scripts run only when listed in `allowBuilds` (none today);
+# Supply chain: dependency build scripts run only when listed in `allowBuilds`;
 # an unreviewed one fails the install (https://pnpm.io/settings/build). Already pnpm 12's
 # default, stated here so a default change cannot weaken it silently.
 strictDepBuilds: true
+
+# Reviewed 2026-10-31: both only check the platform binary of their optional dependency (wrangler).
+allowBuilds:
+  esbuild: true
+  workerd: true
