@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { check, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /** One row per run of a daily job, read by `GET /api/health`. */
 export const jobRun = sqliteTable(
@@ -25,7 +25,7 @@ const updatedAt = () =>
     .$defaultFn(() => new Date())
     .$onUpdateFn(() => new Date());
 
-/** Better Auth's tables (models `user`, `session`, `account`, `verification`, `rateLimit`). */
+/** Better Auth's tables (models `user`, `session`, `account`, `verification`, `rateLimit`, `twoFactor`). */
 export const user = sqliteTable("user", {
   id: text().primaryKey(),
   name: text().notNull(),
@@ -33,6 +33,11 @@ export const user = sqliteTable("user", {
   emailVerified: integer({ mode: "boolean" }).notNull().default(false),
   image: text(),
   ageDeclaredAt: integer({ mode: "timestamp_ms" }),
+  role: text(),
+  banned: integer({ mode: "boolean" }).default(false),
+  banReason: text(),
+  banExpires: integer({ mode: "timestamp_ms" }),
+  twoFactorEnabled: integer({ mode: "boolean" }).default(false),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -46,6 +51,8 @@ export const session = sqliteTable("session", {
   userId: text()
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  impersonatedBy: text(),
+  twoFactorVerifiedAt: integer({ mode: "timestamp_ms" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -84,23 +91,51 @@ export const rateLimit = sqliteTable("rate_limit", {
   lastRequest: integer().notNull(),
 });
 
-export const SECURITY_EVENT_TYPES = ["sign_in", "sign_in_failed", "code_sent"] as const;
+export const twoFactor = sqliteTable(
+  "two_factor",
+  {
+    id: text().primaryKey(),
+    secret: text().notNull(),
+    backupCodes: text().notNull(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    verified: integer({ mode: "boolean" }).default(true),
+    failedVerificationCount: integer().default(0),
+    lockedUntil: integer({ mode: "timestamp_ms" }),
+  },
+  (table) => [index("two_factor_user_id").on(table.userId)],
+);
 
-/** Sign-ins, failures and codes sent (ADR 0015), kept 6 months. */
+export const SECURITY_EVENT_TYPES = [
+  "sign_in",
+  "sign_in_failed",
+  "code_sent",
+  "second_factor",
+  "second_factor_failed",
+  "admin_action",
+] as const;
+
+/** Sign-ins, failures, codes sent, second factors and admin actions (ADR 0015), kept 6 months. */
 export const securityEvent = sqliteTable(
   "security_event",
   {
     id: integer().primaryKey({ autoIncrement: true }),
     type: text({ enum: SECURITY_EVENT_TYPES }).notNull(),
+    /** The sign-in method, the second factor or the admin operation. */
     method: text().notNull(),
     userId: text().references(() => user.id, { onDelete: "set null" }),
     ipAddress: text(),
     userAgent: text(),
     reason: text(),
+    target: text(),
     createdAt: createdAt(),
   },
   (table) => [
-    check("security_event_type", sql`${table.type} in ('sign_in', 'sign_in_failed', 'code_sent')`),
+    check(
+      "security_event_type",
+      sql`${table.type} in ('sign_in', 'sign_in_failed', 'code_sent', 'second_factor', 'second_factor_failed', 'admin_action')`,
+    ),
   ],
 );
 

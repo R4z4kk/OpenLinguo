@@ -4,6 +4,7 @@
 |---|---|---|
 | Account data | Until deletion by the user; after 2 years without any user action, notice by email, then deletion 30 days later | CNIL reference of 2 years of inactivity |
 | Sessions | Until sign-out or expiry: 7 days, extended by a day of use (Better Auth defaults, #270) | Strictly necessary |
+| Authenticator (TOTP secret, backup codes) | Until turned off or the account is deleted; a backup code is deleted once used | Purpose ends |
 | Sign-in codes | Valid 10 minutes; deleted when used or refused, otherwise by the daily jobs after expiry (#278) | Strictly necessary |
 | Rate-limit counters (IP address and route) | Needed for 10 minutes at most; Better Auth never deletes them, so the daily jobs purge older rows (#278) | Security |
 | Pending or rejected library submissions | Deleted with the account | Purpose ends |

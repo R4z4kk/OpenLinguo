@@ -22,6 +22,9 @@ describe("ApiErrorCode", () => {
       "AGE_DECLARATION_REQUIRED",
       "SIGNUPS_CLOSED",
       "MAIL_FAILED",
+      "TWO_FACTOR_REQUIRED",
+      "TOO_MANY_ATTEMPTS",
+      "ADMIN_REQUIRED",
     ]) {
       expect(parseWith(ApiError, { code, message: "refused" }).ok).toBe(true);
     }
