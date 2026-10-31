@@ -1,0 +1,15 @@
+// The Pages project: the built PWA and the API's Functions (functions/). Deployed by .github/workflows/deploy.yml.
+{
+  "$schema": "../api/node_modules/wrangler/config-schema.json",
+  "name": "openlinguo",
+  "pages_build_output_dir": "./dist",
+  "compatibility_date": "2026-10-19",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "openlinguo",
+      // The same database as apps/api/wrangler.jsonc.
+      "database_id": "00000000-0000-0000-0000-000000000000",
+    },
+  ],
+}

@@ -52,6 +52,19 @@ describe("GET /api/health", () => {
   });
 });
 
+describe("security headers", () => {
+  it("are set on every response, errors included", async () => {
+    const response = await createApp([]).request("/api/nope", {}, platform.env);
+    expect(response.headers.get("content-security-policy")).toBe(
+      "default-src 'none'; frame-ancestors 'none'",
+    );
+    expect(response.headers.get("strict-transport-security")).toBe(
+      "max-age=63072000; includeSubDomains",
+    );
+    expect(response.headers.get("x-content-type-options")).toBe("nosniff");
+  });
+});
+
 describe("errors", () => {
   it("answers 404 NOT_FOUND for an unknown route", async () => {
     const response = await createApp([]).request("/api/nope", {}, platform.env);

@@ -1,4 +1,5 @@
-# Every route, on Cloudflare Pages and in `vite preview`. HSTS value from the OWASP HTTP Headers Cheat Sheet.
+# Every static route, on Cloudflare Pages and in `vite preview`. HSTS value from the OWASP HTTP Headers Cheat Sheet.
+# Pages does not apply this file to the API's Functions: apps/api/src/app.ts sets their headers. connect-src 'self' covers the API.
 # connect-src: the AI providers and local servers of ADR 0012, and the Wikidata endpoint of ADR 0014; a cloud provider is added here by pull request.
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; media-src 'self' blob:; connect-src 'self' https://api.groq.com https://openrouter.ai https://api.mistral.ai https://query.wikidata.org http://localhost:* http://127.0.0.1:*; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'

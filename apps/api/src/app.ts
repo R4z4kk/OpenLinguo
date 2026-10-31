@@ -1,11 +1,20 @@
 import type { ApiError } from "@openlinguo/core/api-error";
 import { Hono } from "hono";
+import { secureHeaders } from "hono/secure-headers";
 import { unhealthyJobs } from "./health.ts";
 import { JOBS } from "./jobs.ts";
 import { database } from "./schema.ts";
 
 export const createApp = (jobs: readonly string[]) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
+
+  // Pages applies apps/web/public/_headers to static files only. HSTS matches it.
+  app.use(
+    secureHeaders({
+      strictTransportSecurity: "max-age=63072000; includeSubDomains",
+      contentSecurityPolicy: { defaultSrc: ["'none'"], frameAncestors: ["'none'"] },
+    }),
+  );
 
   app.get("/health", async (c) => {
     const unhealthy = await unhealthyJobs(database(c.env.DB), jobs, new Date());
