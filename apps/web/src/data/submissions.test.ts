@@ -89,6 +89,14 @@ describe("the API calls", () => {
     expect(await loadAccount()).toEqual({ ok: true, value: null });
   });
 
+  it("never read a page that is not JSON as signed out", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(() => Promise.resolve(new Response("<!doctype html>", { status: 200 }))),
+    );
+    expect(await loadAccount()).toEqual({ ok: false, error: { kind: "unexpected", status: 200 } });
+  });
+
   it("post the text as JSON and check the answer", async () => {
     answer(201, submitted);
     const sent = await sendSubmission(newSubmission(pasted, { kind: "anonymous" }));

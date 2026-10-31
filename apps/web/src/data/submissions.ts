@@ -19,6 +19,8 @@ export type ApiFailure =
 const SessionAnswer = z.object({ user: z.object({ name: z.string() }) }).nullable();
 export type Account = { readonly pseudonym: string | null };
 
+const NOT_JSON = Symbol("not JSON");
+
 const call = async <T>(
   path: string,
   init: RequestInit,
@@ -34,7 +36,9 @@ const call = async <T>(
   } catch {
     return err({ kind: "offline" });
   }
-  const body: unknown = response.status === 204 ? null : await response.json().catch(() => null);
+  const body: unknown =
+    response.status === 204 ? null : await response.json().catch(() => NOT_JSON);
+  if (body === NOT_JSON) return err({ kind: "unexpected", status: response.status });
   if (!response.ok) {
     const refusal = parseWith(ApiError, body);
     return refusal.ok

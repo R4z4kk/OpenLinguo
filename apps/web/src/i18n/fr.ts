@@ -746,7 +746,8 @@ export const fr: Messages = {
     send: "Envoyer pour relecture",
     sending: "Envoi…",
     sent: "Texte envoyé",
-    sentBody: "Il attend sa relecture. Vous pouvez le suivre dans «\u00a0Mes textes envoyés\u00a0».",
+    sentBody:
+      "Il attend sa relecture. Vous pouvez le suivre dans «\u00a0Mes textes envoyés\u00a0».",
     mine: "Mes textes envoyés",
     failure: {
       unticked: "Cochez chaque déclaration pour envoyer le texte.",

@@ -26,11 +26,24 @@ Processing that happens only on the user's device (learning data, voice, journal
 | (b) Purposes | Receive texts proposed for the public library, moderate them, publish approved texts with attribution |
 | Legal basis | Contract (art. 6(1)(b)) |
 | (c) Data subjects | Registered users who submit texts |
-| (c) Data | Text, chosen attribution name, CC BY-SA 4.0 attestation, submitter account id, moderation status and notes |
+| (c) Data | Title and plain text, origin with the AI provenance of a story, licence fixed by the origin (CC BY-SA 4.0 or CC0 1.0), attribution (pseudonym or anonymous), attestation version and time, submitter account id, moderation status and notes |
 | (d) Recipients | Maintainer; the public for approved texts (attribution name only) |
 | (e) Transfers | None |
-| (f) Erasure | Pending or rejected submissions deleted with the account; published texts stay under CC BY-SA 4.0 with the chosen attribution unless a takedown is requested |
-| (g) Security | As P1; plain-text submissions only, size limits, admin-only moderation endpoints |
+| (f) Erasure | Pending or rejected submissions deleted with the account; published texts stay under their licence (CC BY-SA 4.0, or CC0 1.0 for a story) with the chosen attribution unless a takedown is requested |
+| (g) Security | As P1; plain text only, at most 20,000 characters, at most 5 pending per account, admin-only moderation endpoints |
+
+## P8 — Hosting records (décret 2021-1362)
+
+| Item | Content |
+|---|---|
+| (b) Purposes | Keep the data that identifies whoever created, edited or deleted hosted content, for a judicial or administrative request (LCEN art. 6 V, décret 2021-1362 arts 5 to 8) |
+| Legal basis | Legal obligation (art. 6(1)(c)) |
+| (c) Data subjects | Registered users who submit or withdraw texts |
+| (c) Data | Account id, submission id, operation, IP address, HTTP and TLS versions, time; only what is already collected (art. 8) |
+| (d) Recipients | Maintainer, only to answer an authority |
+| (e) Transfers | None |
+| (f) Erasure | 1 year after the operation, by the daily jobs (#278); kept when the text or the account is deleted |
+| (g) Security | In D1 (`eu` jurisdiction), no foreign key to the account, read only by the jobs and the admin export |
 
 ## P3 — Sync (M8)
 
