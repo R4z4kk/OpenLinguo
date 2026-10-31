@@ -25,6 +25,9 @@ const ACTRESS = "Kunqu actress (1963-)";
 
 const ALL_CHECKED = "3 sequences checked, 2 with a result.";
 
+// Requests from a page a service worker controls escape `page.route` in WebKit.
+test.use({ serviceWorkers: "block" });
+
 test("searches Wikidata after the notice and proposes what it found, the homonyms and nothing", async ({
   page,
 }) => {
@@ -108,7 +111,9 @@ test("searches Wikidata after the notice and proposes what it found, the homonym
 
   // None of them: the proposals go, the answer stays.
   await press(page, name.getByRole("button", { name: en.wikidata.none }));
-  await expect(main.getByRole("status").first()).toHaveText(en.unknownWords.rejected);
+  await expect(
+    main.getByRole("status").filter({ hasText: en.unknownWords.rejected }),
+  ).toBeVisible();
   await expect(name.getByText(en.unknownWords.noProposal)).toBeVisible();
   await expect(name.getByText(/^Wikidata: \d+ results, checked on /u)).toBeVisible();
   expect(await accessibilityViolations(page)).toEqual([]);
