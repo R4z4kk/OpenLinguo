@@ -1,11 +1,9 @@
-import { err, ok, type InvalidReading, type Result } from "@openlinguo/core";
+import { err, ok, type Result, type TextReadingError } from "@openlinguo/core";
 import { formatNumbered, parseNumbered, type ReadingToken, type Tone } from "./pinyin.ts";
 
 export type ReadingWord = { readonly text: string; readonly reading: string };
 
-export type SandhiError =
-  | InvalidReading
-  | { readonly kind: "unaligned-reading"; readonly text: string; readonly reading: string };
+export type SandhiError = TextReadingError;
 
 type Unit = {
   readonly word: number;

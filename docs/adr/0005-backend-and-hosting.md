@@ -1,6 +1,6 @@
 # 0005 — Backend and hosting
 
-- Status: Accepted
+- Status: Accepted; hosting, Postgres and password sign-in superseded by [ADR 0015](0015-backend-and-shared-library.md)
 - Date: 2026-10-09
 
 ## Context

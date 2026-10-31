@@ -18,6 +18,8 @@ const prompts: PromptPack = {
   correction: task,
   vocabulary: task,
   glossTranslation: task,
+  explanation: task,
+  story: task,
   checkReading: () => Promise.resolve(ok([])),
 };
 
@@ -35,6 +37,7 @@ const pack = (
     romanization: null,
     decomposition: null,
     ime: null,
+    textReading: null,
     ...features,
   },
   prompts: withPrompts,

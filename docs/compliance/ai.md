@@ -22,7 +22,7 @@ Sources:
   - the provider definition applies "whether for payment or free of charge" (art. 3(3));
   - the open-source exclusion stops at systems that fall "under Article 5 or 50" (art. 2(12)).
 - Learners are not deployers. A deployer uses a system "except where the AI system is used in the course of a personal non-professional activity" (art. 3(4)), and art. 2(10) removes those duties.
-- The companies hosting the models (Groq, OpenRouter, Mistral) provide the models. A provider may rely on an upstream marking solution (guidelines para 74). OpenLinguo relies on none and marks its outputs itself (section 4).
+- The companies hosting the models (Groq, OpenRouter, Mistral) provide the models. A provider may rely on an upstream marking solution (guidelines para 74). OpenLinguo marks its outputs itself (section 4). No preset's provider documents a text watermark yet; section 3.1 follows them for stories.
 - Art. 50 applies from 2 August 2026 (art. 113). The four-month delay of art. 111(4) only covers systems "placed on the market before 2 August 2026". OpenLinguo had no AI feature then, so M5 must comply when it ships.
 - Open point: "making available on the market" requires a commercial activity (art. 3(10)), and "putting into service" is defined in relation to a deployer (art. 3(11)). A free app used by private persons might fall outside both. No authority has said so, and compliance costs little, so OpenLinguo assumes it is the provider.
 
@@ -44,7 +44,7 @@ When both hold, "l'acteur ne fait que fournir un logiciel", and the GDPR does no
 
 1. Every call starts with a click by the learner. Nothing is sent in the background.
 2. The learner picks the provider and pastes their own key. No provider is preselected, and no key is shared or bundled with the app.
-3. There is no relay, proxy, analytics or log. Requests go straight from the browser to the provider, and the CSP `connect-src` only lists the presets and local servers.
+3. There is no relay, proxy, analytics or log. Requests go straight from the browser to the provider, and the CSP `connect-src` only lists the presets, local servers and the Wikidata endpoint, to which no AI payload goes ([Wikidata lookup](wikidata.md)).
 4. Each feature sends only what it needs. The « Sent: … » line shows this before the click.
 5. OpenLinguo receives nothing from providers: no affiliate link, no paid placement.
 
@@ -80,7 +80,8 @@ OpenLinguo, too, decides which data goes into each prompt, and the EDPB counts "
 | Explanation of each change | In scope, very short text | This is new text, one or two sentences per change. That is far below the 200 tokens from which the code requires a watermark (section 3). It is marked by the provenance field and the badge. |
 | French glosses of a dictionary entry (#188) | Exempt | These are "AI-generated translations of text". Glosses are also short labels, like the "single words, image captions, alt-text, UI labels" that para 68 places outside 50(2). |
 | Words suggested from interests (#187) | Outside | The AI returns headwords. Only those that are dictionary entries are kept, and they are shown with the dictionary's own pinyin and glosses. The AI only selects existing content, like systems that "only select or rank existing content" (para 65). |
-| Story generation, its coverage check and the « explain unknown sequences » call | M6 | These moved to M6 (#34). A story is new text and often longer than 200 tokens, so it is in scope and the code expects a watermark. M6 decides how to handle it, using section 3. |
+| Stories (#232) | In scope, watermark expected | A story is new free-form text: about 150 characters when short, about 400 when medium. The code names no tokenizer for its 200 tokens, so every story is treated as longer. It carries the provenance field and the badge, and no watermark (section 3.1). Its coverage is computed on the device, not by the AI. |
+| Explanation of unknown sequences (#231, `zh-explain-v1`) | Type outside, meaning in scope, very short text | Each answer is a type and a short meaning, shown on its own. The type is a single word, which para 68 places outside 50(2). The meaning is far below 200 tokens, so the code asks for no watermark (glossary, "very short text"). The schema refuses a meaning over 200 characters, so the answer stays in that class. The recordings of 2026-10-21 (`groq-explain.json`, `local-explain.json`) show it: four answers cost 82 completion tokens on Groq (958 minus 876 of reasoning, which is not output) and 85 on Ollama, JSON included, and the longest meaning is 29 characters. It is marked by the provenance field and the badge. |
 
 **Art. 50(1) and (5).** « Correct » is a prompt followed by a reply, so it is an interaction. « Suggest words » and « Translate to French » are arguably outside 50(1): the guidelines list "automated translation or transcription tools" among the systems that do not interact (§3.2.1). OpenLinguo treats every AI feature the same way anyway (#182, #207):
 
@@ -95,13 +96,13 @@ OpenLinguo, too, decides which data goes into each prompt, and the EDPB counts "
 
 The Commission and the AI Board confirmed the code as "an adequate voluntary tool". OpenLinguo does not sign it. A provider that does not sign "should carry out a gap analysis that compares the measures they have implemented" with the code's (guidelines para 148). The comparison below covers Section 1 of the code, on marking and detection, which is addressed to providers. Section 2 covers deployer labels under art. 50(4) and does not apply.
 
-In M5, the only outputs within art. 50(2) are the explanations of changes, each shorter than 200 tokens (section 2).
+In M5, the only outputs within art. 50(2) are the explanations of changes, each shorter than 200 tokens (section 2). M6 adds the meanings of unknown sequences, also very short text, and stories, for which the code expects a watermark (section 3.1).
 
-| Code measure | What it asks | OpenLinguo in M5 | Gap |
+| Code measure | What it asks | OpenLinguo | Gap |
 |---|---|---|---|
 | 1.1 Machine-readable marking | At least one technique. For free-form text, "a single-layer of marking" (a watermark) suffices | The provenance field on every stored AI item (section 4) | See 1.1.1 and 1.1.2 |
 | 1.1.1 Signed metadata | Where the format carries metadata: record the AI origin, signed and time-stamped, unless "in a local deployment scenario" | Origin and `createdAt` recorded, unsigned | Unsigned. A client-only app has nowhere to keep a signing key safe, which is the code's own local-deployment exception |
-| 1.1.2 Imperceptible watermark | A watermark, "with the exception of very short text" (under 200 tokens, per the glossary) | None | None in M5: explanations are very short text. M6 stories go over 200 tokens and remain open. Under para 81, a provider is "not obliged to make use of a technical solution that is not yet developed" |
+| 1.1.2 Imperceptible watermark | A watermark, "with the exception of very short text" (under 200 tokens, per the glossary) | None | None for very short text: explanations and meanings. Stories carry none: not technically feasible for OpenLinguo, and each provider's watermark is followed (section 3.1) |
 | 1.1.3 Fingerprinting or logging (optional) | — | Nothing is logged | — |
 | 1.2 Non-removal of markings | Forbid stripping them. For open source, it is enough to "alert users to this best practice in the documentation" | Section 4 asks users not to strip the field. Backup export and import keep it (#182) | None |
 | 1.3 Provenance information (optional) | AI system, provider, timestamp, model | `provider`, `model`, `promptVersion`, `createdAt` | — |
@@ -115,6 +116,24 @@ In M5, the only outputs within art. 50(2) are the explanations of changes, each 
 | 4.2 Testing | Before release and regularly | Unit tests on the provenance schema and the backup round trip (#182). E2E tests on recorded responses (#190) | No detection benchmark, as none exists for metadata |
 | 4.3 Training | Proportionate training of personnel | One maintainer, no staff. This document | None |
 | 4.4 Cooperation with authorities | Provide documentation on request | This document is public. The contact is the repository until the legal notice ships (M7) | The French authority is not designated yet (section 5) |
+
+### 3.1 Generated stories (M6)
+
+Decided by the maintainer in [ADR 0014](../adr/0014-graded-reader.md). Sources read on 2026-10-20.
+
+- **The code expects a watermark.** A story is free-form text, and "for free-form text longer than 200 tokens, watermarking still needs to be applied" (sub-measure 1.1.2). Free-form text "cannot transport metadata", so the watermark is the one layer the code asks for (measure 1.1). Stories carry the badge, the provenance field and the backup metadata, and no watermark.
+- **Not technically feasible for OpenLinguo.** Feasible solutions are those that can be implemented "within the specific technical architecture and operational environment concerned" (para 81). A text watermark is put in while the model picks its words, and the [study behind the code](https://op.europa.eu/en/publication-detail/-/publication/6c981119-4829-11f1-8095-01aa75ed71a1/language-en) notes that it "cannot be added to already generated text". The sampling runs at the provider: OpenLinguo sends a prompt and receives finished text. The code and para 74 do name post-hoc watermarking as a strategy, but the study finds that "likelihood-based techniques consistently outperform older rule-based and synonym-substitution methods", and calls sentence-level credentials in "zero-space Unicode characters" "still at an early stage of development" and "easily removed". A mark added afterwards would be invisible characters, which the code's robustness tests defeat ("characters insertion / deletion", "homoglyphs", measure 3.3), and which would break segmentation, coverage, speech, cards and search in the reader.
+- **The state of the art moved.** Since 5 October 2026, OpenAI's API offers an opt-in text watermark for some models, off by default. OpenAI plans to bring it to its cloud partners and to publish it as open source ([OpenAI](https://openai.com/index/eu-text-provenance/)). OpenLinguo has no OpenAI preset. Para 81 adds that feasibility "is an objective notion that is not dependent on the specific resources and capabilities of individual providers": an authority may read it as asking OpenLinguo to offer stories only through providers that mark their text. This is a documented gap, not a signature.
+- **Each provider's watermark is followed.** A provider may rely on an upstream model provider's marking "to the extent that the marking solution is compliant with Article 50(2) AI Act", without prejudice to its own responsibility (para 74). When a preset's provider documents a text watermark, this section records it and checks whether stories carry it. State on 2026-10-20:
+
+| Provider | Text watermark | Sources |
+|---|---|---|
+| Groq | Not documented. The services agreement forbids altering provenance information "that may be included in information such as metadata, digital signatures, or watermarks", without saying that Groq adds any. Not a signatory of the code | [Services agreement](https://console.groq.com/docs/legal/services-agreement) (last modified 22 June 2026), [documentation](https://console.groq.com/llms-full.txt) |
+| OpenRouter | Not documented for text. Each model's answer comes from its upstream provider. Not a signatory of the code | [Terms](https://openrouter.ai/terms) (last updated 31 August 2026), [documentation](https://openrouter.ai/docs/llms-full.txt) |
+| Mistral | Announced, not documented for the API. Mistral signed Section 1 of the code and "will provide output marking and a detection solution in accordance with the Code of Practice by December 2, 2026" for Vibe Code, its own system | [Vibe Code](https://legal.mistral.ai/ai-governance/ai-systems/vibe-code), [signatories](https://digital-strategy.ec.europa.eu/en/news/strong-backing-code-practice-transparency-ai-generated-content) (last updated 24 September 2026), [documentation](https://docs.mistral.ai/llms-full.txt) |
+| Local | The learner's own server: OpenLinguo cannot know whether it marks its text | — |
+
+**Dated values.** `MARKING_FACTS` and `UPSTREAM_WATERMARK` in `packages/core/src/ai-marking.ts` hold the 200-token threshold, the code's version and the three statuses above, each with its source. The code's version is its publication date, 10 June 2026, as the PDF carries no version number. The review date is 2027-04-20, and 2026-12-03 for Mistral, the day after its announced date. From each review date a unit test fails until the value is read again on its source and this section updated.
 
 ## 4. Provenance: the public detection specification
 
@@ -159,4 +178,4 @@ State on 2026-10-19:
 | Joint Commission and EDPB guidelines on the AI Act and data protection law | Not published. Footnote 37 of the art. 50 guidelines calls them "under preparation", and they are on neither the EDPB news page nor its guidelines page | [EDPB news](https://www.edpb.europa.eu/news/news_en), [EDPB guidelines](https://www.edpb.europa.eu/our-work-tools/general-guidance/guidelines-recommendations-best-practices_en) |
 | French authority supervising art. 50 | Not designated in law yet. The government plan gives art. 50(1) and (2) to the DGCCRF and Arcom. The bill that would do so has been at the Assemblée nationale (text n° 2518) since 20 February 2026. The Senate adopted it on 18 February 2026, as text n° 63, arts 24 quinquies and 24 terdecies | [DGE, 9 September 2025](https://www.entreprises.gouv.fr/priorites-et-actions/transition-numerique/soutenir-le-developpement-de-lia-au-service-de-0), [Senate file](https://www.senat.fr/dossier-legislatif/pjl25-118.html) |
 | A CNIL, EDPB or CJEU position on bring-your-own-key apps | None found | Section 1.2 |
-| Watermarking of generated stories | Open, decided in M6 | Section 3 |
+| Watermarking of generated stories | Decided on 2026-10-20 (ADR 0014): none by OpenLinguo, each provider's watermark followed | Section 3.1 |

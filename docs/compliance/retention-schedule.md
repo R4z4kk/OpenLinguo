@@ -3,7 +3,9 @@
 | Data | Retention | Basis |
 |---|---|---|
 | Account data | Until deletion by the user; after 2 years without any user action, notice by email, then deletion 30 days later | CNIL reference of 2 years of inactivity |
-| Sessions | Until sign-out or expiry `[duration set in M7]` | Strictly necessary |
+| Sessions | Until sign-out or expiry: 7 days, extended by a day of use (Better Auth defaults, #270) | Strictly necessary |
+| Sign-in codes | Valid 10 minutes; deleted when used or refused, otherwise by the daily jobs after expiry (#278) | Strictly necessary |
+| Rate-limit counters (IP address and route) | Needed for 10 minutes at most; Better Auth never deletes them, so the daily jobs purge older rows (#278) | Security |
 | Pending or rejected library submissions | Deleted with the account | Purpose ends |
 | Published library texts | Kept while published, under CC BY-SA 4.0 with the chosen attribution; removed on takedown | License terms |
 | Synced cards and review log | Until account deletion or user deletion of synced data | Purpose ends |

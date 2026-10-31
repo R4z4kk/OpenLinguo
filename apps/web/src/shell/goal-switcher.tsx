@@ -8,12 +8,17 @@ import {
   saveSetting,
   type PresetSetting,
 } from "@/data/daily-goal";
+import { COVERAGE_TARGET } from "@/data/reader-settings";
 
 const storage = (): Storage => localStorage;
 
-const settings = { dailyGoal: DAILY_GOAL, newCardsPerDay: NEW_CARDS_PER_DAY } as const;
+const settings = {
+  dailyGoal: DAILY_GOAL,
+  newCardsPerDay: NEW_CARDS_PER_DAY,
+  coverageTarget: COVERAGE_TARGET,
+} as const;
 
-/** Today and the session read the choice when they open. */
+/** Today, the session and the reader read the choice when they open. */
 export const GoalSwitcher = ({ name }: { readonly name: keyof typeof settings }) => {
   const { t } = useTranslation();
   const setting: PresetSetting<number> = settings[name];
@@ -23,7 +28,7 @@ export const GoalSwitcher = ({ name }: { readonly name: keyof typeof settings })
 
   return (
     <SegmentedControl
-      legend={t(`goal.${name}`)}
+      legend={name === "coverageTarget" ? t("reader.targetLegend") : t(`goal.${name}`)}
       name={name}
       options={setting.values.map((option) => ({
         value: option,

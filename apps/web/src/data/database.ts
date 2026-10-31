@@ -2,6 +2,7 @@ import type {
   AiProvenance,
   Card,
   CardState,
+  ReadingChoices,
   Review,
   StrokeData,
   Subject,
@@ -12,6 +13,8 @@ import type { AiSettings } from "./ai-settings.ts";
 import type { Corrections } from "./correction.ts";
 import { DAILY_GOAL } from "./daily-goal.ts";
 import type { NameKind } from "./format.ts";
+import type { LexiconEntry } from "./lexicon.ts";
+import type { Resolution } from "./resolutions.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
 
 export type StoredEntry = {
@@ -154,8 +157,8 @@ export type StoredName = {
   readonly kind: NameKind;
 };
 
-/** Present once the learner confirmed the AI notice; never in the backup. */
-export type StoredAiNotice = { readonly id: "seen" };
+/** Present once the learner confirmed the AI notice (`seen`) or the Wikidata one; never in the backup. */
+export type StoredAiNotice = { readonly id: "seen" | "wikidata" };
 
 /** French glosses an AI translated from an entry's English ones, each with its source. */
 export type StoredAiGloss = WordKey & {
@@ -190,6 +193,27 @@ export type StoredJournalEntry = {
   readonly updatedAt: number;
 };
 
+type StoredTextFields = {
+  /** Random UUID. */
+  readonly id: string;
+  /** The learner's, else the first characters of the text. */
+  readonly title: string;
+  readonly body: string;
+  readonly createdAt: number;
+  /** The reading chosen for an occurrence, keyed by the UTF-16 offset of its token. */
+  readonly readingChoices: ReadingChoices;
+};
+
+/** A text to read, kept on the device and in the backup; a story carries its provenance (ADR 0014). */
+export type StoredText = StoredTextFields &
+  (
+    | { readonly source: "paste" | "file"; readonly provenance: null }
+    | { readonly source: "ai"; readonly provenance: AiProvenance }
+  );
+
+/** A reading marked « Je connais »: known without a card. */
+export type StoredKnownMark = WordKey & { readonly markedAt: number };
+
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
@@ -219,6 +243,10 @@ export type Database = Dexie & {
   challenges: EntityTable<StoredChallenge, "day">;
   aiGlosses: EntityTable<StoredAiGloss, "id">;
   journal: EntityTable<StoredJournalEntry, "day">;
+  texts: EntityTable<StoredText, "id">;
+  knownMarks: Table<StoredKnownMark, [string, string]>;
+  lexicon: EntityTable<LexiconEntry, "headword">;
+  resolutions: Table<Resolution, [string, string]>;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -315,6 +343,8 @@ export const openDatabase = (name: string): Database => {
         Object.assign(review, { wordDone: null });
       }),
   );
+  db.version(23).stores({ texts: "id, createdAt", knownMarks: "[headword+readingKey]" });
+  db.version(24).stores({ lexicon: "headword", resolutions: "[sequence+source], sequence" });
   return db;
 };
 

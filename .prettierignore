@@ -5,3 +5,6 @@ coverage/
 data/*/
 apps/web/public/data/
 apps/web/src/lib/sherpa-onnx/sherpa-onnx-asr.mjs
+# Generated: drizzle-kit (apps/api/migrations) and wrangler types
+apps/api/migrations/meta/
+apps/api/worker-configuration.d.ts

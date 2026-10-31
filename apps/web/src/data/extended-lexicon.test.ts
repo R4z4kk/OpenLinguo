@@ -23,7 +23,12 @@ const replaced: ExtendedRow[] = [
 const files = (shards: readonly (readonly [string, ExtendedRow[]])[]) => {
   const index: OnDemandIndex = {
     version: shards.map(([, rows]) => hash(rows)).join(":"),
-    files: shards.map(([name, rows]) => ({ name, sha256: hash(rows), rows: rows.length })),
+    files: shards.map(([name, rows]) => ({
+      name,
+      sha256: hash(rows),
+      rows: rows.length,
+      bytes: encode(rows).length,
+    })),
   };
   return new Map([
     ["wiktionary-zh/index.json", encode(index)],

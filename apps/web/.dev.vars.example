@@ -1,0 +1,11 @@
+# Copy to .dev.vars (git-ignored) for `wrangler pages dev`. Placeholders only: real values never go in the repo.
+BETTER_AUTH_SECRET=replace-with-32-or-more-random-characters
+BETTER_AUTH_URL=http://localhost:8788
+GOOGLE_CLIENT_ID=replace-me
+GOOGLE_CLIENT_SECRET=replace-me
+GITHUB_CLIENT_ID=replace-me
+GITHUB_CLIENT_SECRET=replace-me
+SCW_SECRET_KEY=replace-me
+SCW_PROJECT_ID=00000000-0000-4000-8000-000000000000
+MAIL_FROM=no-reply@example.test
+SIGNUPS_OPEN=false

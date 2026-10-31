@@ -9,6 +9,9 @@ updates:
     groups:
       development:
         dependency-type: development
+      # react-dom throws at startup unless react has its exact version.
+      react:
+        patterns: ["react", "react-dom"]
     ignore:
       # typescript-eslint supports typescript <6.1 only.
       - dependency-name: typescript

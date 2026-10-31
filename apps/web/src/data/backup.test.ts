@@ -23,7 +23,16 @@ import {
   type Backup,
   type Settings,
 } from "./backup.ts";
-import { deckWordId, MY_WORDS, openDatabase, type Database } from "./database.ts";
+import {
+  deckWordId,
+  MY_WORDS,
+  openDatabase,
+  type Database,
+  type StoredKnownMark,
+  type StoredText,
+} from "./database.ts";
+import type { LexiconEntry } from "./lexicon.ts";
+import type { Resolution } from "./resolutions.ts";
 
 const DAY = 24 * 60 * 60_000;
 const start = Date.UTC(2026, 9, 21, 6);
@@ -109,6 +118,49 @@ const ENTRY = {
 
 const uuid = (n: number): string => `00000000-0000-4000-8000-${n.toString(16).padStart(12, "0")}`;
 
+const PASTED: StoredText = {
+  id: uuid(200),
+  title: "周末去张家界",
+  body: "我去张家界玩了。",
+  source: "paste",
+  createdAt: start,
+  provenance: null,
+  readingChoices: { 4: "jia1" },
+};
+const STORY: StoredText = {
+  id: uuid(201),
+  title: "小花和大雨",
+  body: "小花在家。外面下大雨。",
+  source: "ai",
+  createdAt: start + 1,
+  provenance: { ...AI_NOTE.provenance, promptVersion: "zh-story-v1" },
+  readingChoices: {},
+};
+const MARKS: StoredKnownMark[] = [
+  { headword: "行", readingKey: "xing2", markedAt: start },
+  { headword: "行", readingKey: "hang2", markedAt: start + 1 },
+];
+
+const NAME: LexiconEntry = {
+  headword: "王小红",
+  kind: "person",
+  reading: "wang2 xiao3 hong2",
+  gloss: null,
+  source: "name-signal",
+  provenance: null,
+  validatedAt: start,
+};
+const ANSWER: Resolution = {
+  sequence: "王小红",
+  source: "wikidata",
+  found: [
+    { kind: "person", reading: null, gloss: "chanteuse", reference: "Q42", provenance: null },
+  ],
+  checkedAt: start,
+};
+const NOTHING: Resolution = { sequence: "袁家界拍", source: "ai", found: [], checkedAt: start };
+const byHeadword = (a: LexiconEntry, b: LexiconEntry): number => (a.headword < b.headword ? -1 : 1);
+
 const review = (n: number, cardId: string, reviewedAt: number, grade: Grade): Review => ({
   id: uuid(n),
   cardId,
@@ -153,6 +205,10 @@ const backup = (data: Partial<Backup>): Backup => ({
   challenges: [],
   aiGlosses: [],
   journal: [],
+  texts: [],
+  knownMarks: [],
+  lexicon: [],
+  resolutions: [],
   ...data,
 });
 
@@ -243,6 +299,65 @@ describe("round trip", () => {
     expect(await restored.journal.toArray()).toEqual([ENTRY, newer]);
   });
 
+  it("brings texts back with their provenance and chosen readings, and the known marks", async () => {
+    await db.texts.bulkAdd([PASTED, STORY]);
+    await db.knownMarks.bulkAdd(MARKS);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    expect(exported.value.texts).toEqual([PASTED, STORY]);
+    expect(exported.value.knownMarks).toEqual(
+      MARKS.toSorted((a, b) => (a.readingKey < b.readingKey ? -1 : 1)),
+    );
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ texts: 2, marks: 2 }));
+    expect(await restored.texts.orderBy("createdAt").toArray()).toEqual([PASTED, STORY]);
+    expect(await restored.knownMarks.count()).toBe(2);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(ok({ texts: 0, marks: 0 }));
+  });
+
+  it("brings the personal lexicon and the kept answers back, the latest of each", async () => {
+    const AI_ENTRY = {
+      ...NAME,
+      headword: "李明",
+      source: "ai" as const,
+      provenance: AI_NOTE.provenance,
+    };
+    await db.lexicon.bulkAdd([NAME, AI_ENTRY]);
+    await db.resolutions.bulkAdd([ANSWER, NOTHING]);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    expect(exported.value.lexicon).toEqual([AI_ENTRY, NAME].toSorted(byHeadword));
+    expect(exported.value.resolutions).toHaveLength(2);
+    const parsed = parseBackup(JSON.stringify(exported.value));
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    await restored.lexicon.add({ ...NAME, gloss: "newer", validatedAt: NAME.validatedAt + 1 });
+    await restored.resolutions.add({ ...ANSWER, found: [], checkedAt: ANSWER.checkedAt - 1 });
+    expect(await importBackup(restored, parsed.value)).toMatchObject(
+      ok({ lexicon: 1, resolutions: 2 }),
+    );
+    expect(await restored.lexicon.get("王小红")).toMatchObject({ gloss: "newer" });
+    expect(await restored.lexicon.get("李明")).toEqual(AI_ENTRY);
+    expect(await restored.resolutions.get(["王小红", "wikidata"])).toEqual(ANSWER);
+    expect(await importBackup(restored, parsed.value)).toMatchObject(
+      ok({ lexicon: 0, resolutions: 0 }),
+    );
+  });
+
+  it("keeps the local text when the same one is in the backup", async () => {
+    const chosen = { ...PASTED, readingChoices: { 4: "jia1", 7: "le5" } };
+    await db.texts.add(PASTED);
+    const exported = await exportBackup(db, SETTINGS, now);
+    if (!exported.ok) throw new Error(exported.error.kind);
+    const restored = openDatabase(`backup-test-restored-${String(counter)}`);
+    await restored.texts.add(chosen);
+    expect(await importBackup(restored, exported.value)).toMatchObject(ok({ texts: 0 }));
+    expect(await restored.texts.toArray()).toEqual([chosen]);
+  });
+
   it("keeps the AI glosses with their provenance", async () => {
     await db.aiGlosses.add({ ...GLOSS, id: GLOSS_ID });
     const exported = await exportBackup(db, SETTINGS, now);
@@ -285,6 +400,10 @@ describe("round trip", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await restored.cards.toArray()).toEqual(
@@ -381,6 +500,65 @@ describe("parseBackup", () => {
     expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
   });
 
+  it("reads a backup made before the library as having no texts and no known marks", () => {
+    const before = backup({});
+    Reflect.deleteProperty(before, "texts");
+    Reflect.deleteProperty(before, "knownMarks");
+    expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
+  it("reads a backup made before the unknown-words panel as having no lexicon and no answers", () => {
+    const before = backup({});
+    Reflect.deleteProperty(before, "lexicon");
+    Reflect.deleteProperty(before, "resolutions");
+    expect(parseBackup(JSON.stringify(before))).toEqual(ok(backup({})));
+  });
+
+  it("reads an answer kept before items had a reference as having none", () => {
+    const item = { kind: "person", reading: null, gloss: "chanteuse", provenance: null } as const;
+    const older = { ...backup({}), resolutions: [{ ...ANSWER, found: [item] }] };
+    expect(parseBackup(JSON.stringify(older))).toEqual(
+      ok(backup({ resolutions: [{ ...ANSWER, found: [{ ...item, reference: null }] }] })),
+    );
+  });
+
+  it("refuses a headword twice, and a source's answer twice", () => {
+    expect(parseBackup(JSON.stringify(backup({ lexicon: [NAME, NAME] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "lexicon.1.headword" }] },
+    });
+    expect(parseBackup(JSON.stringify(backup({ resolutions: [ANSWER, ANSWER] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "resolutions.1" }] },
+    });
+  });
+
+  it("refuses two texts with one id, and two marks of one reading", () => {
+    expect(parseBackup(JSON.stringify(backup({ texts: [PASTED, PASTED] })))).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "texts.1.id" }] },
+    });
+    expect(parseBackup(JSON.stringify(backup({ knownMarks: [...MARKS, ...MARKS] })))).toMatchObject(
+      {
+        ok: false,
+        error: { issues: [{ path: "knownMarks.2" }, { path: "knownMarks.3" }] },
+      },
+    );
+  });
+
+  it("refuses a story without provenance, and provenance on a text that is not a story", () => {
+    const raw = (text: object): string => JSON.stringify({ ...backup({}), texts: [text] });
+    expect(parseBackup(raw({ ...STORY, provenance: null }))).toMatchObject({ ok: false });
+    expect(parseBackup(raw({ ...PASTED, provenance: STORY.provenance }))).toMatchObject({
+      ok: false,
+    });
+  });
+
+  it("accepts a text longer than today's limit, which the benchmark may lower", () => {
+    const long = { ...PASTED, body: "好".repeat(25_000) };
+    expect(parseBackup(JSON.stringify(backup({ texts: [long] }))).ok).toBe(true);
+  });
+
   it("reads a backup made before M5 as having no AI glosses", () => {
     const preM5 = backup({});
     Reflect.deleteProperty(preM5, "aiGlosses");
@@ -460,6 +638,10 @@ describe("importBackup", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await db.cards.get(RECOGNITION.id)).toEqual({
@@ -490,6 +672,10 @@ describe("importBackup", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await importBackup(db, data)).toEqual(
@@ -502,6 +688,10 @@ describe("importBackup", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await db.decks.toArray()).toEqual([ANIMALS]);
@@ -532,6 +722,10 @@ describe("importBackup", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await db.decks.toArray()).toEqual([
@@ -564,6 +758,10 @@ describe("importBackup", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect(await importBackup(db, data)).toEqual(
@@ -576,6 +774,10 @@ describe("importBackup", () => {
         challenges: 0,
         glosses: 0,
         journal: 0,
+        texts: 0,
+        marks: 0,
+        lexicon: 0,
+        resolutions: 0,
       }),
     );
     expect((await db.notes.toArray()).map(({ id, meaning }) => [id, meaning])).toEqual([

@@ -120,7 +120,7 @@
               "index": 0,
               "message": {
                 "role": "assistant",
-                "content": "{\n  \"sentences\": [\n    {\n      \"index\": 1,\n      \"changes\": [\n        {\n          \"from\": \"\",\n          \"to\": \"\",\n          \"explanation\": \"Correct, no changes needed.\"\n        }\n      ],\n      \"corrected\": \"我给妈妈打电话。\",\n      \"reading\": \"wǒ gěi māma dǎ diàn huà\",\n      \"meaning\": \"I call my mother.\"\n    },\n    {\n      \"index\": 2,\n      \"changes\": [\n        {\n          \"from\": \"\",\n          \"to\": \"\",\n          \"explanation\": \"Correct, no changes needed.\"\n        }\n      ],\n      \"corrected\": \"你的电话号码是多少？\",\n      \"reading\": \"nǐ de diàn huà hào mǎ shì duō shǎo\",\n      \"meaning\": \"What is your phone number?\"\n    },\n    {\n      \"index\": 3,\n      \"changes\": [\n        {\n          \"from\": \"我电话很新。\",\n          \"to\": \"我手机很新。\",\n          \"explanation\": \"Correct usage: 'phone' as a device is '手机', not '电话'.\"\n        }\n      ],\n      \"corrected\": \"我手机很新。\",\n      \"reading\": \"wǒ shǒu jī hěn xīn\",\n      \"meaning\": \"My phone is new.\"\n    },\n    {\n      \"index\": 4,\n      \"changes\": [\n        {\n          \"from\": \"\",\n          \"to\": \"\",\n          \"explanation\": \"Correct, no changes needed.\"\n        }\n      ],\n      \"corrected\": \"晚上我不想接电话。\",\n      \"reading\": \"wǎn shàng wǒ bù xiǎng jiē diàn huà\",\n      \"meaning\": \"I don't want to answer the phone at night.\"\n    },\n    {\n      \"index\": 5,\n      \"changes\": [\n        {\n          \"from\": \"请你电话我。\",\n          \"to\": \"请你给我打电话。\",\n          \"explanation\": \"Correct structure: '请' followed by '给我打电话' for 'please call me'.\"\n        }\n      ],\n      \"corrected\": \"请你给我打电话。\",\n      \"reading\": \"qǐng nǐ gěi wǒ dǎ diàn huà\",\n      \"meaning\": \"Please call me.\"\n    }\n  ]\n}"
+                "content": "{\"sentences\": [\n  {\n    \"index\": 1,\n    \"changes\": [],\n    \"corrected\": \"我给妈妈打电话。\",\n    \"reading\": \"wǒ gěi māmā dǎ diànhuà\",\n    \"meaning\": \"I call my mom.\"\n  },\n  {\n    \"index\": 2,\n    \"changes\": [],\n    \"corrected\": \"你的电话号码是多少？\",\n    \"reading\": \"nǐ de diànhuà hào mǎ shì duō shǎo\",\n    \"meaning\": \"What's your phone number?\"\n  },\n  {\n    \"index\": 3,\n    \"changes\": [\n      {\n        \"from\": \"我电话很新。\",\n        \"to\": \"我的电话很新。\",\n        \"explanation\": \"needs a possessive pronoun\"\n      }\n    ],\n    \"corrected\": \"我的电话很新。\",\n    \"reading\": \"wǒ de diànhuà hěn xīn\",\n    \"meaning\": \"My phone is new.\"\n  },\n  {\n    \"index\": 4,\n    \"changes\": [],\n    \"corrected\": \"晚上我不想接电话。\",\n    \"reading\": \"wǎn shàng wǒ bù xiǎng jiē diànhuà\",\n    \"meaning\": \"I don't want to answer the phone at night.\"\n  },\n  {\n    \"index\": 5,\n    \"changes\": [\n      {\n        \"from\": \"请你电话我。\",\n        \"to\": \"请你给我打电话。\",\n        \"explanation\": \"missing '给' and '打' in the verb phrase\"\n      }\n    ],\n    \"corrected\": \"请你给我打电话。\",\n    \"reading\": \"qǐng nǐ gěi wǒ dǎ diànhuà\",\n    \"meaning\": \"Please call me.\"\n  }\n] }"
               },
               "finish_reason": "stop"
             }
@@ -128,10 +128,10 @@
           "usage": {
             "prompt_tokens": 324,
             "prompt_tokens_details": {
-              "cached_tokens": 323
+              "cached_tokens": 0
             },
-            "completion_tokens": 494,
-            "total_tokens": 818
+            "completion_tokens": 398,
+            "total_tokens": 722
           }
         }
       }

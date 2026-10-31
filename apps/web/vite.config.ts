@@ -156,8 +156,9 @@ export default defineConfig({
           },
         ],
         navigateFallback: "/index.html",
-        // License texts (NOTICES_FILE, /data/licenses/) open as files, not as the app.
-        navigateFallbackDenylist: [/\.txt$/u],
+        // License texts (NOTICES_FILE, /data/licenses/) open as files, not as the app; the API
+        // (apps/web/functions) answers its own navigations, such as sign-in redirects.
+        navigateFallbackDenylist: [/\.txt$/u, /^\/api\//u],
       },
     }),
     notices.app,

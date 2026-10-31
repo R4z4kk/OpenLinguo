@@ -5,15 +5,19 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./account": "./src/account.ts",
+    "./api-error": "./src/api-error.ts",
+    "./result": "./src/result.ts",
     "./testing": "./src/testing/language-pack-contract.ts"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
-    "record:ai": "node src/testing/record-ai-responses.ts"
+    "record:ai": "node src/testing/record-ai-responses.ts",
+    "record:wikidata": "node src/testing/record-wikidata-responses.ts"
   },
   "dependencies": {
     "pitchy": "4.1.0",
     "ts-fsrs": "5.4.2",
-    "zod": "^4.6.5"
+    "zod": "^4.6.7"
   }
 }

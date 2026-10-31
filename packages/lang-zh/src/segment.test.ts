@@ -1,9 +1,13 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { createSegmenter } from "./segment.ts";
 import { loadCedictRows } from "./testing/dataset-shards.ts";
 
-const words = (segment: ReturnType<typeof createSegmenter>, text: string): string =>
-  segment(text)
+const words = (
+  segment: ReturnType<typeof createSegmenter>,
+  text: string,
+  extra: ReadonlySet<string> = new Set(),
+): string =>
+  segment(text, extra)
     .map((token) => token.text)
     .join("|");
 
@@ -41,6 +45,25 @@ describe("createSegmenter", () => {
 
   it("returns no token for empty text", () => {
     expect(segment("")).toEqual([]);
+  });
+
+  it("cuts extra headwords as words for that call only, even longer than the lexicon's", () => {
+    const extra = new Set(["王小红", "王小红先生"]);
+    expect(words(segment, "王小红先生的电话", extra)).toBe("王小红先生|的|电话");
+    expect(words(segment, "王小红的电话", extra)).toBe("王小红|的|电话");
+    expect(words(segment, "王小红的电话")).toBe("王|小|红|的|电话");
+  });
+
+  it("does not walk the lexicon again to take extra headwords", () => {
+    const lexicon = new Set(["电话", "的"]);
+    const own = createSegmenter(lexicon);
+    const walk = vi.spyOn(lexicon, Symbol.iterator);
+    expect(own("王小红的电话", new Set(["王小红"])).map(({ text }) => text)).toEqual([
+      "王小红",
+      "的",
+      "电话",
+    ]);
+    expect(walk).not.toHaveBeenCalled();
   });
 });
 

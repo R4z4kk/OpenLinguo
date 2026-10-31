@@ -6,6 +6,7 @@ dist/
 *.tsbuildinfo
 .env
 .env.*
+.dev.vars
 # Generated from data/ by apps/web/scripts/pack-data.ts
 apps/web/public/data/
 # Audio packs downloaded from their GitHub release by apps/web/scripts/audio-packs.ts
@@ -20,3 +21,5 @@ tools/asr/.mirror/
 tools/sherpa-onnx/out/
 # Speech-recognition files published by apps/web/scripts/speech-model.ts
 apps/web/public/models/
+# Local Workers state of wrangler (getPlatformProxy, pages dev, d1 --local)
+.wrangler/

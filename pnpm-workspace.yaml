@@ -6,7 +6,19 @@ packages:
 # Supply chain: never install a version published less than 7 days ago.
 minimumReleaseAge: 10080
 
-# Supply chain: dependency build scripts run only when listed in `allowBuilds` (none today);
+# Supply chain: dependency build scripts run only when listed in `allowBuilds`;
 # an unreviewed one fails the install (https://pnpm.io/settings/build). Already pnpm 12's
 # default, stated here so a default change cannot weaken it silently.
 strictDepBuilds: true
+
+# Reviewed 2026-10-31: both only check the platform binary of their optional dependency (wrangler).
+allowBuilds:
+  esbuild: true
+  workerd: true
+
+# Security, dev-only: lift the vulnerable versions only, so each line goes inert once upstream moves.
+# undici via wrangler's miniflare (8 GHSAs fixed in 7.30.1): drop once wrangler >= 4.153.
+# esbuild via drizzle-kit's deprecated @esbuild-kit (GHSA-67mh-4wv8-2f99): drop once drizzle-kit leaves it.
+overrides:
+  "undici@<7.30.1": ^7.30.1
+  "esbuild@<0.25.0": ^0.25.12

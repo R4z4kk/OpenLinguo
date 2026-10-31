@@ -26,12 +26,16 @@ import {
   type StoredDeck,
   type StoredDeckWord,
   type StoredJournalEntry,
+  type StoredKnownMark,
   type StoredNote,
+  type StoredText,
 } from "./database.ts";
 import { DECK_NAME_MAX, entryId, sameDeckName, type DeckFailure } from "./decks.ts";
 import { Interests } from "./interests.ts";
+import { LexiconEntry } from "./lexicon.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
 import { referentials } from "./referential.ts";
+import { Resolution } from "./resolutions.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
 export const BACKUP_FORMAT = "openlinguo-backup";
@@ -54,6 +58,20 @@ export const Settings = z.object({
 export type Settings = z.output<typeof Settings>;
 
 const Header = z.object({ format: z.literal(BACKUP_FORMAT), version: z.number().int().min(1) });
+
+const TextFields = z.object({
+  id: z.uuid(),
+  title: z.string().min(1),
+  body: z.string().min(1),
+  createdAt: z.number().int().nonnegative(),
+  readingChoices: z.record(z.string().regex(/^\d+$/u), z.string().min(1)),
+});
+
+/** A story has its provenance, any other text none. The size limit is not checked: it may be lowered. */
+const Text = z.discriminatedUnion("source", [
+  TextFields.extend({ source: z.enum(["paste", "file"]), provenance: z.null() }),
+  TextFields.extend({ source: z.literal("ai"), provenance: AiProvenance }),
+]);
 
 const DeckId = z.union([z.literal(MY_WORDS), z.uuid()]);
 
@@ -133,8 +151,35 @@ export const Backup = z
         }),
       )
       .default([]),
+    // Backups made before the library have no texts and no known marks.
+    texts: z.array(Text).default([]),
+    knownMarks: z
+      .array(
+        z.object({
+          headword: z.string().min(1),
+          readingKey: z.string().min(1),
+          markedAt: z.number().int().nonnegative(),
+        }),
+      )
+      .default([]),
+    // Backups made before the unknown-words panel have no personal lexicon and no kept answers.
+    lexicon: z.array(LexiconEntry).default([]),
+    resolutions: z.array(Resolution).default([]),
   })
-  .superRefine(({ reviews, decks, deckWords, notes, challenges, aiGlosses, journal }, context) => {
+  .superRefine((backup, context) => {
+    const {
+      reviews,
+      decks,
+      deckWords,
+      notes,
+      challenges,
+      aiGlosses,
+      journal,
+      texts,
+      knownMarks,
+      lexicon,
+      resolutions,
+    } = backup;
     const issue = (path: (string | number)[], message: string): void => {
       context.addIssue({ code: "custom", path, message });
     };
@@ -164,6 +209,28 @@ export const Backup = z
     journal.forEach(({ day }, index) => {
       if (entryDays.has(day)) issue(["journal", index, "day"], "Duplicate journal day");
       entryDays.add(day);
+    });
+    const textIds = new Set<string>();
+    texts.forEach(({ id }, index) => {
+      if (textIds.has(id)) issue(["texts", index, "id"], "Duplicate text id");
+      textIds.add(id);
+    });
+    const markIds = new Set<string>();
+    knownMarks.forEach((mark, index) => {
+      const id = entryId(mark);
+      if (markIds.has(id)) issue(["knownMarks", index], "Duplicate mark for this reading");
+      markIds.add(id);
+    });
+    const headwords = new Set<string>();
+    lexicon.forEach(({ headword }, index) => {
+      if (headwords.has(headword)) issue(["lexicon", index, "headword"], "Duplicate headword");
+      headwords.add(headword);
+    });
+    const checks = new Set<string>();
+    resolutions.forEach(({ sequence, source }, index) => {
+      const id = `${sequence}	${source}`;
+      if (checks.has(id)) issue(["resolutions", index], "Duplicate answer for this sequence");
+      checks.add(id);
     });
     const glossIds = new Set<string>();
     aiGlosses.forEach((gloss, index) => {
@@ -218,6 +285,10 @@ const learningTables = (db: Database) => [
   db.challenges,
   db.aiGlosses,
   db.journal,
+  db.texts,
+  db.knownMarks,
+  db.lexicon,
+  db.resolutions,
 ];
 
 export const exportBackup = (
@@ -255,6 +326,10 @@ export const exportBackup = (
           }),
         ),
         journal: await db.journal.toArray(),
+        texts: await db.texts.orderBy("createdAt").toArray(),
+        knownMarks: await db.knownMarks.toArray(),
+        lexicon: await db.lexicon.toArray(),
+        resolutions: await db.resolutions.toArray(),
       }),
     ),
   );
@@ -269,6 +344,10 @@ export type ImportSummary = {
   readonly challenges: number;
   readonly glosses: number;
   readonly journal: number;
+  readonly texts: number;
+  readonly marks: number;
+  readonly lexicon: number;
+  readonly resolutions: number;
 };
 
 const replayCards = (
@@ -358,6 +437,28 @@ export const importBackup = (
           (entry, index) => entry.updatedAt > (localEntries[index]?.updatedAt ?? -1),
         );
 
+        const localTexts = await db.texts.bulkGet(backup.texts.map(({ id }) => id));
+        const newTexts: StoredText[] = backup.texts.filter((_, index) => localTexts[index] == null);
+        const localMarks = await db.knownMarks.bulkGet(
+          backup.knownMarks.map(({ headword, readingKey }) => [headword, readingKey]),
+        );
+        const newMarks: StoredKnownMark[] = backup.knownMarks.filter(
+          (_, index) => localMarks[index] == null,
+        );
+
+        const localLexicon = await db.lexicon.bulkGet(
+          backup.lexicon.map(({ headword }) => headword),
+        );
+        const newerLexicon: LexiconEntry[] = backup.lexicon.filter(
+          (entry, index) => entry.validatedAt > (localLexicon[index]?.validatedAt ?? -1),
+        );
+        const localAnswers = await db.resolutions.bulkGet(
+          backup.resolutions.map(({ sequence, source }) => [sequence, source]),
+        );
+        const newerAnswers: Resolution[] = backup.resolutions.filter(
+          (answer, index) => answer.checkedAt > (localAnswers[index]?.checkedAt ?? -1),
+        );
+
         await db.reviews.bulkAdd(newReviews);
         await db.cards.bulkPut(replayed.value);
         await db.decks.bulkAdd(newDecks);
@@ -366,6 +467,10 @@ export const importBackup = (
         await db.aiGlosses.bulkPut(newerGlosses);
         await db.challenges.bulkPut(newerChallenges);
         await db.journal.bulkPut(newerEntries);
+        await db.texts.bulkAdd(newTexts);
+        await db.knownMarks.bulkAdd(newMarks);
+        await db.lexicon.bulkPut(newerLexicon);
+        await db.resolutions.bulkPut(newerAnswers);
         return ok({
           reviews: newReviews.length,
           cards: cards.size - localCards,
@@ -375,6 +480,10 @@ export const importBackup = (
           challenges: newerChallenges.length,
           glosses: newerGlosses.length,
           journal: newerEntries.length,
+          texts: newTexts.length,
+          marks: newMarks.length,
+          lexicon: newerLexicon.length,
+          resolutions: newerAnswers.length,
         });
       },
     ),

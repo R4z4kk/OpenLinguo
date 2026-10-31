@@ -1,0 +1,26 @@
+{
+  "recordedAt": "2026-10-21",
+  "scenario": "nothing",
+  "exchanges": [
+    {
+      "request": {
+        "method": "GET",
+        "path": "/sparql",
+        "body": {
+          "query": "SELECT ?s ?item ?class ?coord ?fr ?en WHERE {\n  VALUES ?s { \"王小红\"@zh \"王小红\"@zh-hans }\n  { ?item rdfs:label ?s } UNION { ?item skos:altLabel ?s }\n  OPTIONAL { ?item wdt:P31 ?class }\n  OPTIONAL { ?item wdt:P625 ?coord }\n  OPTIONAL { ?item schema:description ?fr FILTER(LANG(?fr) = \"fr\") }\n  OPTIONAL { ?item schema:description ?en FILTER(LANG(?en) = \"en\") }\n}"
+        }
+      },
+      "response": {
+        "status": 200,
+        "body": {
+          "head": {
+            "vars": ["s", "item", "class", "coord", "fr", "en"]
+          },
+          "results": {
+            "bindings": []
+          }
+        }
+      }
+    }
+  ]
+}

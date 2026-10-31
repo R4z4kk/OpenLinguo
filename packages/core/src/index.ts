@@ -12,6 +12,18 @@ export {
   type StructuredMode,
 } from "./ai-client.ts";
 export { AiProvenance } from "./ai-provenance.ts";
+export { ApiError, ApiErrorCode } from "./api-error.ts";
+export {
+  coverage,
+  knowledgeOf,
+  knownWords,
+  type Coverage,
+  type Knowledge,
+  type KnownWords,
+  type KnownWordsCard,
+  type KnownWordsInput,
+  type Occurrence,
+} from "./coverage.ts";
 export { decompositionOutline, type OutlineItem } from "./decomposition.ts";
 export { inMemoryDictionary, intlTokenizer } from "./dictionary.ts";
 export {
@@ -24,6 +36,7 @@ export { contour, F0_VERSION, POINTS_PER_SYLLABLE, type Contour, type F0Error } 
 export {
   LANGUAGE_IDS,
   proficiencyFrameworks,
+  type AnnotatedToken,
   type DecompositionFeature,
   type DecompositionNode,
   type DictEntry,
@@ -40,9 +53,12 @@ export {
   type LanguagePack,
   type LookupError,
   type ProficiencyFramework,
+  type ReadingChoices,
   type RomanizationFeature,
   type StrokeData,
   type StrokeFeature,
+  type TextReadingError,
+  type TextReadingFeature,
   type Token,
   type ToneFeature,
 } from "./language-pack.ts";
@@ -73,12 +89,21 @@ export type {
   CorrectionAnswer,
   CorrectionChange,
   CorrectionInput,
+  ExplainAnswer,
+  ExplainedSequence,
+  ExplainInput,
   GlossAnswer,
   GlossInput,
+  NameKind,
   PromptPack,
   PromptTask,
   ReadingCheckError,
   ReadingMismatch,
+  SequenceKind,
+  StoryAnswer,
+  StoryInput,
+  StoryLength,
+  StoryName,
   VocabularyAnswer,
   VocabularyInput,
 } from "./prompt-pack.ts";
@@ -181,3 +206,15 @@ export {
   type WritingQuizError,
   type WritingStep,
 } from "./writing-quiz.ts";
+export {
+  isWikidataSequence,
+  lookupWikidata,
+  WIKIDATA_ENDPOINT,
+  type WikidataCandidate,
+  type WikidataError,
+  type WikidataErrorKind,
+  type WikidataKind,
+  type WikidataLookup,
+  type WikidataRequest,
+  type WikidataResult,
+} from "./wikidata.ts";

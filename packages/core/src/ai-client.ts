@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { eitherSignal } from "./abort.ts";
 import type { ChatMessage } from "./prompt-pack.ts";
 import { err, ok, type Result } from "./result.ts";
 import { parseWith, type ValidationError } from "./validation.ts";
@@ -269,14 +270,12 @@ const withDeadline = async <T>(
   const timer = setTimeout(() => {
     limit.abort();
   }, CALL_LIMIT_MS);
+  const call = eitherSignal(caller, limit.signal);
   try {
-    return await run({
-      caller,
-      call: AbortSignal.any([caller, limit.signal]),
-      deadline: Date.now() + CALL_LIMIT_MS,
-    });
+    return await run({ caller, call: call.signal, deadline: Date.now() + CALL_LIMIT_MS });
   } finally {
     clearTimeout(timer);
+    call.release();
   }
 };
 

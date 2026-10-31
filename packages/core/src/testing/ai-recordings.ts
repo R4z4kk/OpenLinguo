@@ -42,7 +42,7 @@ export const COLOUR_MESSAGES: readonly ChatMessage[] = [
 export const UNKNOWN_MODEL = "openlinguo/no-such-model";
 export const INVALID_KEY = "invalid-openlinguo-key";
 
-const Exchange = z.object({
+export const Exchange = z.object({
   request: z.object({ method: z.string(), path: z.string(), body: z.unknown() }),
   response: z.object({ status: z.number().int(), body: z.unknown() }),
 });

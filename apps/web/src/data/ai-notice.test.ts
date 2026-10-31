@@ -78,6 +78,34 @@ describe("sentItems", () => {
     );
   });
 
+  it("lists what a story sends: the band, the theme, the length and the words", () => {
+    const input = {
+      band: 2,
+      theme: "Voyage",
+      length: "medium",
+      words: ["旅游", "照片", "礼物"],
+    } as const;
+    const payload = { feature: "story", input, band: "HSK 2" } as const;
+    expect(sentItems(fr, "fr", payload)).toBe(
+      "votre niveau (HSK 2), le thème « Voyage », une longueur moyenne et vos 3 mots en cours d’apprentissage (旅游、照片、礼物)",
+    );
+    expect(
+      sentItems(en, "en", {
+        ...payload,
+        input: { ...input, theme: "Travel", length: "short", words: ["旅游"] },
+      }),
+    ).toBe(
+      "your level (HSK 2), the theme “Travel”, a short length, and your word in its learning steps (旅游)",
+    );
+  });
+
+  it("sends no words when none is being learned", () => {
+    const input = { band: 1, theme: "Travel", length: "short", words: [] } as const;
+    expect(sentItems(en, "en", { feature: "story", input, band: "HSK 1" })).toBe(
+      "your level (HSK 1), the theme “Travel”, and a short length",
+    );
+  });
+
   it("counts the English senses a translation sends", () => {
     const input = {
       headword: "一路平安",
@@ -90,5 +118,21 @@ describe("sentItems", () => {
     expect(
       sentItems(en, "en", { feature: "translation", input: { ...input, glosses: ["bon voyage"] } }),
     ).toBe("the word, its pinyin, and its English sense");
+  });
+
+  it("lists the unknown sequences an explanation sends, with their sentences", () => {
+    const sequences = [
+      { sequence: "王芳", sentence: "我的同学王芳和老师去玩了。" },
+      { sequence: "红白机", sentence: "我们要一起玩红白机。" },
+    ];
+    expect(
+      sentItems(fr, "fr", { feature: "explanation", input: { sequences, language: "fr" } }),
+    ).toBe("les 2 suites inconnues (王芳、红白机) avec leur phrase et la langue de l’interface");
+    expect(
+      sentItems(en, "en", {
+        feature: "explanation",
+        input: { sequences: sequences.slice(0, 1), language: "en" },
+      }),
+    ).toBe("the unknown sequence (王芳) with its sentence and the interface language");
   });
 });

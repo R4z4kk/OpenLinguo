@@ -56,6 +56,16 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
       page.getByRole("img", { name: en.word.strokeImage.replace("{{character}}", "行") }),
   },
   "/read": { url: "/read", ready: title(en.read.title) },
+  "/read/new": { url: "/read/new", ready: title(en.library.pasteTitle) },
+  "/read/story": { url: "/read/story", ready: title(en.story.title) },
+  "/read/$id": {
+    url: "/read/00000000-0000-4000-8000-000000000000",
+    ready: (page) => page.getByText(en.reader.notFound),
+  },
+  "/read/$id/unknown": {
+    url: "/read/00000000-0000-4000-8000-000000000000/unknown",
+    ready: (page) => page.getByText(en.reader.notFound),
+  },
   "/profile": {
     url: "/profile",
     ready: (page) =>

@@ -4,6 +4,7 @@ import { createIme, type ImeWordsOf } from "./ime.ts";
 import { toDiacritic, tonesOf } from "./pinyin.ts";
 import { createPrompts, type ZhProficiency } from "./prompts.ts";
 import { createSegmenter } from "./segment.ts";
+import { createTextReading } from "./text-reading.ts";
 
 export {
   formatNumbered,
@@ -44,6 +45,7 @@ export { createPrompts, type ZhProficiency } from "./prompts.ts";
 export { applySandhi, type ReadingWord, type SandhiError } from "./sandhi.ts";
 export { createSegmenter } from "./segment.ts";
 export { alignChars, readingChars, type CharMatch, type SpokenChar } from "./transcript.ts";
+export { findUnknownSequences, sentenceAround, type UnknownSequence } from "./unknown-sequences.ts";
 
 export type ZhPackSources = {
   readonly lookup: DictionaryLookup;
@@ -79,6 +81,7 @@ export const createZhPack = ({
       romanization: { system: "pinyin", toDisplay: toDiacritic },
       decomposition: createDecomposition(lookup, decompositions),
       ime: createIme(wordsOfPinyin),
+      textReading: createTextReading(lookup, tokenize),
     },
     prompts: createPrompts({ lookup, tokenize, proficiency }),
   };

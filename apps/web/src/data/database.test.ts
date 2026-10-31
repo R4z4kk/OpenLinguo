@@ -127,4 +127,53 @@ describe("openDatabase", () => {
     expect(db.tables.map(({ name }) => name)).not.toContain("aiNotices");
     db.close();
   });
+
+  it("adds the texts and the known marks to a database of version 22, keeping its data", async () => {
+    const legacy = new Dexie("texts-migration-test");
+    legacy.version(22).stores({ journal: "day" });
+    const entry = { day: "2026-10-19", text: "我打电话。", corrections: [], updatedAt: 0 };
+    await legacy.table("journal").add(entry);
+    legacy.close();
+
+    const db = openDatabase("texts-migration-test");
+    expect(await db.journal.toArray()).toEqual([entry]);
+    expect(await db.texts.count()).toBe(0);
+    expect(await db.knownMarks.count()).toBe(0);
+    await db.knownMarks.bulkAdd([
+      { headword: "行", readingKey: "xing2", markedAt: 1 },
+      { headword: "行", readingKey: "hang2", markedAt: 2 },
+    ]);
+    expect(await db.knownMarks.get(["行", "hang2"])).toEqual({
+      headword: "行",
+      readingKey: "hang2",
+      markedAt: 2,
+    });
+    db.close();
+  });
+
+  it("adds the lexicon and the kept answers to a database of version 23, keeping its data", async () => {
+    const legacy = new Dexie("lexicon-migration-test");
+    legacy.version(23).stores({ knownMarks: "[headword+readingKey]" });
+    const mark = { headword: "行", readingKey: "xing2", markedAt: 1 };
+    await legacy.table("knownMarks").add(mark);
+    legacy.close();
+
+    const db = openDatabase("lexicon-migration-test");
+    expect(await db.knownMarks.toArray()).toEqual([mark]);
+    expect(await db.lexicon.count()).toBe(0);
+    const found = {
+      kind: "person",
+      reading: null,
+      gloss: null,
+      reference: null,
+      provenance: null,
+    } as const;
+    await db.resolutions.bulkAdd([
+      { sequence: "王小红", source: "wikidata", found: [found], checkedAt: 1 },
+      { sequence: "王小红", source: "ai", found: [], checkedAt: 2 },
+    ]);
+    expect((await db.resolutions.where("sequence").equals("王小红").toArray()).length).toBe(2);
+    expect(await db.resolutions.get(["王小红", "ai"])).toMatchObject({ checkedAt: 2 });
+    db.close();
+  });
 });
