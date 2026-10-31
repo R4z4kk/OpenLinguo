@@ -8,6 +8,13 @@
       "when": 1793442787478,
       "tag": "0000_job_run",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793446575434,
+      "tag": "0001_auth",
+      "breakpoints": true
     }
   ]
 }

@@ -6,6 +6,7 @@ dist/
 *.tsbuildinfo
 .env
 .env.*
+.dev.vars
 # Generated from data/ by apps/web/scripts/pack-data.ts
 apps/web/public/data/
 # Audio packs downloaded from their GitHub release by apps/web/scripts/audio-packs.ts
