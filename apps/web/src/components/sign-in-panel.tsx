@@ -8,6 +8,7 @@ import { CodeField } from "@/components/code-field";
 import { GitHubMark, GoogleMark } from "@/components/provider-marks";
 import { Button } from "@/components/ui/button";
 import { type Provider, sendCode, signInWithCode, startSocial } from "@/data/account";
+import { LegalLinks } from "@/legal/legal-page";
 import type { ApiFailure } from "@/data/api";
 import { fieldClass } from "@/shell/ai-settings";
 
@@ -294,6 +295,8 @@ export const SignInPanel = ({
             </Button>
           </div>
           <p className="text-small text-muted">{t("mailNote")}</p>
+          <p className="text-small text-muted">{t("signInLinks", { ns: "legal" })}</p>
+          <LegalLinks />
         </>
       )}
     </div>

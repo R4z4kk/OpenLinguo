@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./account": "./src/account.ts",
     "./api-error": "./src/api-error.ts",
+    "./compliance-facts": "./src/compliance-facts.ts",
     "./moderation": "./src/moderation.ts",
     "./result": "./src/result.ts",
     "./submission": "./src/submission.ts",
