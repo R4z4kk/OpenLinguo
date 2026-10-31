@@ -25,8 +25,8 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | Audio | Pre-generated neural TTS (static files) + F0 contours extracted offline |
 | STT | Paraformer in browser (sherpa-onnx WebAssembly, Web Worker, model on demand) |
 | Reader content | AI-generated + coverage check, user import, in-app "submit to global library" → admin moderation |
-| Backend | Self-hosted TS API: Hono + Drizzle + Postgres + Better Auth (email/password + Google + GitHub) |
-| Hosting | PWA on Cloudflare Pages at `openlinguo.razakk.fr` (custom domain, OVH CNAME), API at `openlinguo-api.razakk.fr` on a self-hosted Docker host behind Traefik, Postgres 16. Same registrable domain → first-party cookies |
+| Backend | TS API: Hono + Drizzle + Better Auth (email code + Google + GitHub, no passwords) on Cloudflare D1 ([ADR 0015](adr/0015-backend-and-shared-library.md)) |
+| Hosting | Cloudflare free plan: PWA on Pages at `openlinguo.razakk.fr` (custom domain, OVH CNAME), API as Pages Functions on the same origin (`/api/*`), D1 in the `eu` jurisdiction, a cron Worker for retention jobs. A third-party host keeps the maintainer anonymous (LCEN art. 1-1 II) |
 | Multi-language | Capability-based LanguagePack; `lang-zh` full, `lang-en` core (generic modules only) |
 | Gamification | Full: XP, levels, streaks, daily goal, achievements (local) + weekly leagues (server) |
 | Team | Solo for v1, contributors after v1 → automated PR security gates + mandatory human review |
@@ -45,7 +45,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 ```
 apps/
   web/            React + Vite PWA (vite-plugin-pwa, TanStack Router, Tailwind, i18next, Dexie)
-  api/            Hono + Drizzle + Postgres + Better Auth (Docker image → GHCR → homelab)
+  api/            Hono + Drizzle + Better Auth on D1, mounted as Pages Functions; cron Worker
 packages/
   core/           Result type, domain model, LanguagePack interface + contract tests,
                   FSRS wrapper (ts-fsrs), session composer, XP/achievement rules, shared zod schemas
@@ -101,7 +101,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **STT**: Paraformer-small run by sherpa-onnx WebAssembly in a Web Worker (replaced transformers.js Whisper, too slow on phones, #119); opencc-js t→s conversion kept. STT checks intelligibility only; tone accuracy comes from the pitch module (CER hides same-character tone errors).
 - **AI (BYOK)**: in-house OpenAI-compatible client in `core` (`fetch` + zod, no dependency; `openai` and the Vercel AI SDK tested and rejected, [ADR 0012](adr/0012-ai-mobilization-byok.md)): strict JSON-schema output, `json_object` fallback with the schema in the prompt, zod validation, two retries on 429/5xx (providers hide `Retry-After` from scripts), typed errors parsed per provider shape. CSP `connect-src` lists the cloud presets and `localhost`/`127.0.0.1`. Key in IndexedDB or memory only, never in backups, sync or our API. Prompts versioned per language pack.
 - **Comprehensible input**: target ≥98% known-word coverage (Hu & Nation 2000), configurable.
-- **Backend security**: CORS allowlist, secure cookies, Better Auth CSRF, rate limits, zod + size limits, `secureHeaders`, plain-text submissions only, admin role via Better Auth admin plugin.
+- **Backend security**: same origin as the PWA (no CORS), secure cookies, Better Auth CSRF, rate limits, zod + size limits, `secureHeaders`, plain-text submissions only, admin role via Better Auth admin plugin with a mandatory TOTP code (CNIL 2025-019).
 
 ## Design & UX
 
@@ -148,13 +148,15 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 | Obligation | Source | Applies to us | Implementation |
 |---|---|---|---|
 | Lawful basis: contract / legitimate interest | GDPR art. 6(1)(b), 6(1)(f) (CNIL official text) | Yes | Account, sync, leagues = contract; security logs = legitimate interest |
-| Minor's consent: 16 by default, member states down to 13; France 15, below 15 joint consent with a parent | GDPR art. 8(1); Loi Informatique et Libertés art. 45 (Légifrance, in force 2019-06-01) | Only for consent-based processing (none in v1) | Accounts 15+ by design choice, information written in plain language |
+| Minor's consent: 16 by default, member states down to 13; France 15, below 15 joint consent with a parent | GDPR art. 8(1); Loi Informatique et Libertés art. 45 (Légifrance, in force 2019-06-01) | Only for consent-based processing (none in v1) | Accounts 15+ by design choice, self-declared (CNIL recommendations 1 and 7), parents can ask for deletion, information written in plain language. No French "digital majority" is in force: loi 2023-566 has no decree, art. 1 of loi 2026-813 was struck down (décision 2026-911 DC); checked 2026-10-31 |
 | Records of processing; <250-employee exemption does not apply to non-occasional processing | GDPR art. 30(5) | Yes | `docs/compliance/records-of-processing.md` |
 | Breach notification to CNIL within 72 h | GDPR art. 33(1) | Yes | `docs/compliance/breach-procedure.md` |
 | Consent-exempt trackers: authentication, intrinsic UI personalization (e.g. language), consent-choice storage | Loi I&L art. 82 + CNIL cookie guidelines 2020-09-17 | Yes | Session/CSRF cookies + language/theme only → no banner |
-| Security log retention 6 months–1 year (default range) | CNIL délibération 2021-122 (2021-10-14) | Yes | API/Traefik logs purged at 6 months |
+| Security log retention 6 months–1 year (default range) | CNIL fiche « Tracer les opérations » (délibération 2021-122 excludes perimeter logging; checked 2026-10-31) | Yes | API security events purged at 6 months |
 | Inactive accounts: 2 years after last user action as the reference | CNIL guidance (commercial-activities reference, non-binding) | Yes (analogy) | Notice email, then deletion at 2 years of inactivity |
-| Legal notices: natural person → name, address, phone; publication director; host name/address/phone | LCEN art. 1-1 (created by SREN law 2024-449, in force 2024-05-23) | Yes | `/legal` page; self-hosted, so the maintainer is named as host |
+| Legal notices: natural person → name, address, phone; publication director; host name/address/phone; a non-professional publisher may give only the host's details (II) | LCEN art. 1-1 (created by SREN law 2024-449, in force 2024-05-23) | Yes | `/legal` page: anonymous non-professional publisher, Cloudflare named as host (ADR 0015) |
+| Hosting service: notice and action, statements of reasons, terms, points of contact | DSA arts 11, 12, 14, 16, 17, 18 (micro regime); LCEN art. 6 | Yes, for the shared library (checked 2026-10-31) | Report form, statement of reasons for every rejection or removal, `/terms`, moderation runbook (ADR 0015) |
+| Host's identification data of contributors | LCEN art. 6 V, décret 2021-1362 | Yes, as far as collected | IP and time of each submission operation 1 year; email 5 years and pseudonym 1 year after an account that submitted is deleted (ADR 0015) |
 | AI interaction disclosure (providers) | AI Act art. 50(1), applies from 2026-08-02 (art. 113) | Yes, we build the AI-integrated system | Visible "AI" label on every AI feature and output |
 | Machine-readable marking of synthetic text (providers); standard-editing assistance exempt | AI Act art. 50(2); Commission guidelines C(2026) 5054 (2026-07-20) | Yes for generated stories (M6); corrections and translations exempt as standard editing, single words outside (checked 2026-10-19, ADR 0012) | `origin: "ai"` + provider, model, prompt version, date stored and exposed in exports and library API; gap analysis against the code of practice |
 | AI-generated public-interest text disclosure (deployers) | AI Act art. 50(4) | Unlikely (learning content), human-reviewed library anyway | Badge kept on library items |
@@ -164,24 +166,24 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 
 ### Measures
 
-- **Data map**: on-device only → cards, review logs, recordings, journal, AI key (never reaches our servers). Server → account (email, pseudonym, password hash, OAuth ids), sessions, submissions (text + attribution + license attestation), synced logs, league XP, security logs (IP).
+- **Data map**: on-device only → cards, review logs, recordings, journal, AI key (never reaches our servers). Server → account (email, pseudonym, OAuth ids, age declaration; no password), sessions, submissions (text + attribution + license attestation), host records of submissions (IP, décret 2021-1362), notices and statements of reasons, synced logs, league XP, security events (IP).
 - **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
 - **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, the speech-recognition model and its WebAssembly runtime served from our own origin (decided in #119, ADR 0007).
 - **BYOK AI**: notice at setup naming the provider, its privacy policy and training opt-out; one notice before the first AI call of any kind saying what each AI button sends (#207); data flows device → provider on the learner's click, never through us. OpenLinguo is most likely not a controller of these transmissions (ADR 0012).
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
-- **Minors**: app usable without account by anyone; accounts 15+ (age declaration, France digital majority). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
+- **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
-- **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Google/GitHub OAuth, SMTP provider), breach procedure (72 h), DPIA screening, privacy policy, legal notices.
+- **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Scaleway Transactional Email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening, privacy policy, legal notices.
 
 ## Deployment
 
 Infrastructure specifics (hosts, ports, credentials) live in the maintainer's private infrastructure docs, not in this repo.
 
-- **API**: Docker image built by GitHub Actions → GHCR, deployed on a self-hosted Docker host behind Traefik at `openlinguo-api.razakk.fr` (Let's Encrypt TLS, security-headers + rate-limit middlewares, API handles its own auth). Port bound to the internal network only.
-- **Database**: dedicated Postgres 16 database `openlinguo` + least-privilege user; password generated server-side and passed as a Docker secret (`_FILE`), never in clear. Migrations run as a one-shot container before start; nightly `pg_dump` backup; uptime and log monitoring.
-- **PWA**: Cloudflare Pages with custom domain `openlinguo.razakk.fr`. Same registrable domain as the API → `SameSite=Lax` first-party cookies, CORS allowlist `https://openlinguo.razakk.fr` with credentials. `*.pages.dev` is not used for users (API cookies would become third-party, blocked by Safari).
-- **Headers**: the reverse proxy's shared security headers send `Permissions-Policy: microphone=()`; this only affects documents it serves, so the PWA must never be served through it. The PWA's own `_headers` set `microphone=(self)`, a strict CSP and HSTS.
+- **API**: Pages Functions on the PWA's origin (`/api/*`), deployed with the PWA by `deploy.yml` (promotion merged into `main` or manual, GitHub environment `production` with approval, Cloudflare token scoped to Pages and D1). No preview deployments. See [ADR 0015](adr/0015-backend-and-shared-library.md).
+- **Database**: one D1 database created with jurisdiction `eu`; migrations applied by `deploy.yml` before the deploy; backups are D1 Time Travel (7 days). A cron Worker bound to it runs the retention jobs; `/api/health` answers 503 when one failed or is late, polled by the maintainer's Uptime Kuma.
+- **PWA**: Cloudflare Pages with custom domain `openlinguo.razakk.fr` (Pages is the only Cloudflare product that accepts a domain whose DNS stays at OVH). Same origin as the API → `SameSite=Lax` first-party cookies, no CORS. `*.pages.dev` is not used for users.
+- **Headers**: the PWA's own `_headers` set `microphone=(self)`, a strict CSP and HSTS; API responses add Hono's `secureHeaders`.
 
 ## Data sources (checked 2026-10-09)
 
@@ -218,7 +220,7 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M6 — Graded reader.** Reader (segmentation, tap popup, add-to-SRS, known-word highlighting, coverage %), user import (paste, .txt), unknown-word resolution cascade, AI story generation with coverage check and proper names, stored locally (moved from M5, ADR 0012). See [ADR 0014](adr/0014-graded-reader.md). *Exit: imported text shows coverage, popup lookup offline.*
 
-**M7 — Backend & shared library.** Hono API, Drizzle migrations, Better Auth (email/password + Google + GitHub, email verification), submissions with CC BY-SA 4.0 attestation, server-side level estimate, admin moderation UI, public library endpoints (AI badge + origin), takedown process, age gate 15+, account export/delete, retention jobs (logs 6 months, inactive accounts 2 years), privacy policy + legal notices + records of processing, self-hosted deploy (see Deployment), PWA on Cloudflare Pages custom domain. *Exit: submit → admin approve → visible to another device; export/delete verified end to end.*
+**M7 — Backend & shared library.** Hono API, Drizzle migrations, Better Auth (email code + Google + GitHub, TOTP for the admin), submissions with CC BY-SA 4.0 (or CC0 for AI stories) attestation, level estimate at moderation, admin moderation UI with statements of reasons, public library endpoints (AI badge + origin), notice and action (DSA), age gate 15+, account export/delete, retention jobs (logs 6 months, inactive accounts 2 years, décret 2021-1362 records), privacy policy + legal notices + terms + records of processing + DPIA, Cloudflare deploy (see Deployment), PWA on Cloudflare Pages custom domain. See [ADR 0015](adr/0015-backend-and-shared-library.md). *Exit: submit → admin approve → visible to another device; export/delete verified end to end.*
 
 **M8 — Sync + leagues.** Append-only review-log sync + LWW card content sync, server recomputes XP from logs, weekly leagues opt-in (pseudonyms, predefined avatars, no messaging), plausibility caps (local-first cannot fully prevent cheating — documented). *Exit: two devices converge, league table from server-computed XP.*
 
@@ -237,8 +239,8 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 5. iOS PWA storage eviction → `persist()`, backups, Capacitor post-v1.
 6. BYOK CORS differs by provider → cloud presets checked from our origin, CSP `connect-src` lists them plus local servers (ADR 0012); Safari cannot reach a local server from the HTTPS app.
 7. User submissions copyright → attestation, moderation, takedown.
-8. Homelab exposure → API only, TLS via Traefik, rate limits, backups, monitoring.
-9. Open choices deferred to their milestone: SMTP provider (M7). Audio hosting decided in #113 and speech-model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
+8. Cloudflare free-plan limits (10 ms CPU per request, D1 quotas) and terms → no passwords, no server-side text processing, Workers Paid as the way out (ADR 0015).
+9. SMTP provider decided in M7: Scaleway Transactional Email (ADR 0015). Audio hosting decided in #113 and speech-model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
 10. Legal basis verified on primary texts, but not legal advice; watch items re-checked at M10.
 11. Visual-only widgets (pitch curve, decomposition tree, heatmap) need text alternatives (numeric score, tone label, list view).
 

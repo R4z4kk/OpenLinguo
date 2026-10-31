@@ -15,7 +15,7 @@ The app processes learning data, voice, and optional accounts for EU users, incl
 - No third-party runtime requests by default: fonts, stroke data, audio, speech-recognition models and the ONNX Runtime binary come from project origins (#119, ADR 0007).
 - Accounts are restricted to users aged 15 and over; leagues use pseudonyms and predefined avatars, with no messaging.
 - Rights: in-app export and account deletion, profile rectification, contact address.
-- Retention: security logs 6 months (CNIL délibération 2021-122), inactive accounts deleted after 2 years with prior notice.
+- Retention: security logs 6 months (CNIL fiche « Tracer les opérations », range 6 months to 1 year; see ADR 0015), inactive accounts deleted after 2 years with prior notice.
 - `docs/compliance/`: records of processing (GDPR art. 30), data map, retention schedule, sub-processors, breach procedure (72 h, art. 33), DPIA screening, privacy policy, legal notices (LCEN art. 1-1).
 - AI outputs are labeled and carry machine-readable provenance (AI Act art. 50).
 
