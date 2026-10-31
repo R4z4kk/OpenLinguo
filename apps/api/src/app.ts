@@ -1,5 +1,6 @@
 import { AgeDeclaration } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
+import { getSessionCookie } from "better-auth/cookies";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
@@ -48,7 +49,7 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
   };
 
   app.use(async (c, next) => {
-    if (!c.req.header("cookie") || BEFORE_AGE_STEP.has(c.req.path)) return next();
+    if (!getSessionCookie(c.req.raw) || BEFORE_AGE_STEP.has(c.req.path)) return next();
     const current = await authOf(c.env).api.getSession({ headers: c.req.raw.headers });
     if (current && !current.user.ageDeclaredAt) {
       const body = {
