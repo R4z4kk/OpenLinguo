@@ -16,6 +16,8 @@ export default defineConfig(
     "**/coverage/",
     "**/test-results/",
     "**/playwright-report/",
+    "**/.wrangler/",
+    "apps/api/worker-configuration.d.ts",
     // Emscripten's output (tools/sherpa-onnx), committed in apps/web.
     "**/sherpa-onnx-asr.mjs",
   ]),

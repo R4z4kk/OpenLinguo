@@ -20,3 +20,5 @@ tools/asr/.mirror/
 tools/sherpa-onnx/out/
 # Speech-recognition files published by apps/web/scripts/speech-model.ts
 apps/web/public/models/
+# Local Workers state of wrangler (getPlatformProxy, pages dev, d1 --local)
+.wrangler/
