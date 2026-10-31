@@ -13,3 +13,17 @@ describe("ApiError", () => {
     expect(parseWith(ApiError, { code: "INTERNAL" }).ok).toBe(false);
   });
 });
+
+describe("ApiErrorCode", () => {
+  it("names the account refusals", () => {
+    for (const code of [
+      "UNAUTHORIZED",
+      "INVALID_REQUEST",
+      "AGE_DECLARATION_REQUIRED",
+      "SIGNUPS_CLOSED",
+      "MAIL_FAILED",
+    ]) {
+      expect(parseWith(ApiError, { code, message: "refused" }).ok).toBe(true);
+    }
+  });
+});

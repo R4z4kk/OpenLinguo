@@ -27,14 +27,18 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 
 ## On the OpenLinguo server (from M7)
 
+In Cloudflare D1, created in the `eu` jurisdiction (ADR 0015).
+
 | Data | Source | Who can see it |
 |---|---|---|
-| Account: email, pseudonym, password hash, OAuth provider id, sessions, created and last-active dates | Sign-up, sign-in | Maintainer (admin) |
-| Age declaration (15+) | Sign-up checkbox | Maintainer |
+| Account: email, pseudonym (empty until the learner sets one), the Google or GitHub account id, sessions (IP address, user agent, expiry), created and updated dates. No password; no name, picture or token from Google or GitHub (#270) | Sign-in | Maintainer (admin) |
+| Sign-in codes: 6 digits, stored hashed, valid 10 minutes, 3 attempts | Asking for a code | Maintainer, as a hash only |
+| Age declaration: the date of « J'ai 15 ans ou plus », asked right after the first sign-in; « J'ai moins de 15 ans » deletes the account at once | Age step | Maintainer |
 | Library submissions: text, attribution name, license attestation, moderation status and notes | Submit to library | Maintainer; published texts are public |
 | Synced cards and review log (M8) | Sync | Maintainer (operations only) |
 | League entries: pseudonym, predefined avatar id, weekly XP (M8) | Recomputed from synced review logs | Other league members see pseudonym, avatar and XP |
-| Security logs: IP address, user agent, timestamp, route, auth events | Every API request | Maintainer |
+| Security events: sign-in, failed sign-in and code sent, with the method, the account id when known, IP address, user agent, failure code and time; no email address | Each sign-in, failure and code sent | Maintainer |
+| Rate-limit counters: IP address and route, count, time of the last request | Each request to `/api/auth` | Maintainer (operations only) |
 | Rights and support requests | Email | Maintainer |
 
 ## With third parties
@@ -44,8 +48,8 @@ Stored in the browser (IndexedDB). Never sent to the OpenLinguo server unless th
 | The learner's AI provider (BYOK, [AI features](ai.md)) | What the feature sends (table below), the learner's key, the model id, OpenLinguo's prompt, and the IP address and request metadata of the request | Only when the learner presses an AI button, after the notice naming the provider and the AI notice shown before the first call; nothing in the background |
 | Wikimedia Foundation, U.S. ([Wikidata lookup](wikidata.md)) | The unknown character sequences of a text (names of people, places, organizations) in the web address of the request, the IP address, the browser's user agent and the app's `Api-User-Agent`; no cookie, no referrer. Request logs: deleted, aggregated or de-identified after at most 90 days, backups up to 5 years | Only when the learner presses « Chercher sur Wikidata », after the notice shown before the first call: one request per 50 sequences, one after the other; nothing in the background |
 | Cloudflare (PWA hosting) | IP address and request metadata of every page load | Always, as the CDN serving the app |
-| Google, GitHub (OAuth) | Sign-in exchange | Only if the user chooses that sign-in method |
-| SMTP provider `[TBD in M7]` | Email address, message content | Verification, password reset, inactivity notice |
+| Google, GitHub (OAuth) | Sign-in exchange; OpenLinguo keeps only the account id and the email | Only if the user chooses that sign-in method |
+| Scaleway (Transactional Email, France, processor) | Email address, the mail: the sign-in code, later the inactivity notice. No open or click tracking | When the learner asks for a code |
 
 What each AI feature sends, shown under its button as « Sent: … » (ADR 0012):
 
