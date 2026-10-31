@@ -31,13 +31,14 @@ In Cloudflare D1, created in the `eu` jurisdiction (ADR 0015).
 
 | Data | Source | Who can see it |
 |---|---|---|
-| Account: email, pseudonym (empty until the learner sets one), the Google or GitHub account id, sessions (IP address, user agent, expiry), created and updated dates. No password; no name, picture or token from Google or GitHub (#270) | Sign-in | Maintainer (admin) |
+| Account: email, pseudonym (empty until the learner sets one), the Google or GitHub account id, sessions (IP address, user agent, expiry), created and updated dates, role, ban status. No password; no name, picture or token from Google or GitHub (#270) | Sign-in | Maintainer (admin) |
 | Sign-in codes: 6 digits, stored hashed, valid 10 minutes, 3 attempts | Asking for a code | Maintainer, as a hash only |
+| Authenticator (optional, mandatory for the admin): TOTP secret and backup codes, encrypted with the server secret; the time a session passed it (#271) | Turning on TOTP | Maintainer, encrypted only |
 | Age declaration: the date of « J'ai 15 ans ou plus », asked right after the first sign-in; « J'ai moins de 15 ans » deletes the account at once | Age step | Maintainer |
 | Library submissions: text, attribution name, license attestation, moderation status and notes | Submit to library | Maintainer; published texts are public |
 | Synced cards and review log (M8) | Sync | Maintainer (operations only) |
 | League entries: pseudonym, predefined avatar id, weekly XP (M8) | Recomputed from synced review logs | Other league members see pseudonym, avatar and XP |
-| Security events: sign-in, failed sign-in and code sent, with the method, the account id when known, IP address, user agent, failure code and time; no email address | Each sign-in, failure and code sent | Maintainer |
+| Security events: sign-in, failed sign-in, code sent, authenticator code passed or failed, and admin actions with the account concerned, with the method or operation, the account id when known, IP address, user agent, failure code and time; no email address | Each sign-in, failure, code sent, authenticator check and admin action | Maintainer |
 | Rate-limit counters: IP address and route, count, time of the last request | Each request to `/api/auth` | Maintainer (operations only) |
 | Rights and support requests | Email | Maintainer |
 
