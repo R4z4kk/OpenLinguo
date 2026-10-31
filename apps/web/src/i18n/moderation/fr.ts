@@ -69,6 +69,7 @@ export const moderationFr: ModerationMessages = {
     measureRemoved: "Retrait de la bibliothèque, partout, sans limite de durée.",
     source: "Origine",
     sourceValue: "Initiative de l’administrateur",
+    sourceNotice: "Un signalement",
     ground: "Motif",
     choose: "Choisir un motif",
     legal: "Contenu illégal",
@@ -98,6 +99,45 @@ export const moderationFr: ModerationMessages = {
     sent: "Décision envoyée",
     sentBody: "La personne a reçu l’exposé des motifs par e-mail.",
   },
+  sections: "Sections de la modération",
+  notices: "Signalements",
+  noticesIntro:
+    "Les signalements ouverts d’abord, les plus anciens en premier. Objectif : 24 heures pour une infraction grave, 7 jours sinon.",
+  noNotices: "Aucun signalement.",
+  receivedOn: "Reçu le {{date}}",
+  noticeStatus: { open: "À décider", kept: "Texte gardé", removed: "Texte retiré" },
+  reasons: {
+    copyright: "Atteinte au droit d’auteur",
+    defamation: "Diffamation",
+    hate: "Incitation à la haine, à la discrimination ou à la violence",
+    "personal-data": "Données personnelles d’une autre personne",
+    "child-sexual-abuse": "Contenu pédopornographique",
+    "serious-offences": "Autre infraction grave",
+    "library-rules": "Ne respecte pas les règles de la bibliothèque",
+  },
+  notice: {
+    reportedText: "Texte signalé",
+    reason: "Motif",
+    explanation: "Explication de la personne qui signale",
+    notifier: "Auteur du signalement",
+    anonymousNotifier: "Sans nom ni e-mail (contenu pédopornographique)",
+    received: "Reçu",
+    keep: "Garder le texte",
+    removeText: "Retirer le texte",
+    reply: "Réponse à la personne qui signale",
+    replyHelp:
+      "Pourquoi le texte reste, en mots simples. Envoyée par e-mail avec les recours (DSA art. 16(5)).",
+    sendKeep: "Garder et envoyer la décision",
+    decided: {
+      kept: "Décidé le {{date}} : texte gardé.",
+      removed: "Décidé le {{date}} : texte retiré.",
+    },
+    sentKeptBody: "La personne qui a signalé a reçu la décision par e-mail.",
+    sentRemovedBody:
+      "L’auteur du texte a reçu l’exposé des motifs, et chaque personne qui l’a signalé la décision.",
+    unsent:
+      "Ces personnes n’ont pas pu être prévenues par e-mail, écrivez-leur vous-même : {{emails}}",
+  },
   failure: {
     signedOut: "Connectez-vous d’abord avec le compte administrateur.",
     twoFactor: "Saisissez d’abord votre code d’authentification.",
@@ -115,5 +155,7 @@ export const moderationFr: ModerationMessages = {
     ground: "Choisissez un motif.",
     facts: "Décrivez les faits.",
     explanation: "Écrivez l’explication.",
+    noticeDecided: "Ce signalement est déjà décidé.",
+    reply: "Écrivez la réponse à la personne qui signale.",
   },
 };

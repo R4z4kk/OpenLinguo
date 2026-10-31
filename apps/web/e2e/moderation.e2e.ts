@@ -116,8 +116,8 @@ test("approves the oldest text with its estimated level, after the six checks", 
   const main = page.getByRole("main");
   await page.goto("/admin");
   await expect(main.getByRole("heading", { level: 1, name: m.title })).toBeVisible();
-  await expect(main.getByRole("listitem").first()).toContainText("我的周末");
-  await expect(main.getByRole("listitem")).toHaveCount(2);
+  await expect(main.locator("ol").getByRole("listitem").first()).toContainText("我的周末");
+  await expect(main.locator("ol").getByRole("listitem")).toHaveCount(2);
   expect(await accessibilityViolations(page)).toEqual([]);
 
   await press(page, "我的周末");

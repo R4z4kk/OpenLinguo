@@ -10,6 +10,7 @@ import { JOBS } from "./jobs.ts";
 import { libraryRoutes } from "./library.ts";
 import type { SendMail } from "./mail.ts";
 import { moderationRoutes } from "./moderation.ts";
+import { noticeRoutes } from "./notices.ts";
 import { scalewayMailer } from "./scaleway-mailer.ts";
 import { database, user } from "./schema.ts";
 import { submissionRoutes } from "./submissions.ts";
@@ -110,15 +111,15 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
     return c.body(null, 204);
   });
 
+  const moderationOf = (env: Env) => {
+    const settings = settingsOf(env);
+    return { sendMail: mailer(settings), contact: settings.CONTACT_EMAIL };
+  };
+
   app.route("/submissions", submissionRoutes(authOf));
   app.route("/library", libraryRoutes());
-  app.route(
-    "/admin",
-    moderationRoutes(authOf, (env) => {
-      const settings = settingsOf(env);
-      return { sendMail: mailer(settings), contact: settings.CONTACT_EMAIL };
-    }),
-  );
+  app.route("/notices", noticeRoutes(moderationOf));
+  app.route("/admin", moderationRoutes(authOf, moderationOf));
 
   app.get("/health", async (c) => {
     const unhealthy = await unhealthyJobs(database(c.env.DB), jobs, new Date());

@@ -33,6 +33,7 @@ A rejection or a removal records a statement of reasons (DSA art. 17(3)): the me
 - A receipt goes out at once when the notice holds an email (16(4)).
 - Decide "in a timely, diligent, non-arbitrary and objective manner" (16(6)). The host keeps its exemption only if, once it knows, it "acts expeditiously to remove or to disable access to the illegal content" (art. 6(1)(b)); no delay is set, so the project's own targets are 24 hours for a notice that names a serious offence and 7 days otherwise.
 - Remove the text with the statement of reasons, or keep it. The notifier gets the decision with its redress (16(5)); the submitter gets the statement of reasons, never the notifier's identity.
+- In `/admin` › « Signalements », removing a text through a notice decides every open notice on that text: each notifier with an email gets the decision. A decision mail that fails does not undo the removal; `/admin` lists the addresses to write to by hand. `POST /api/notices` takes at most 5 notices per address in 10 minutes.
 - Copies already imported on devices stay there, as `/terms` says: the app cannot reach them.
 
 ## 3. Reporting offences

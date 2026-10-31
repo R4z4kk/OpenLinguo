@@ -742,6 +742,66 @@ export const fr: Messages = {
     notSubmittable:
       "Ce texte vient de la bibliothèque globale : seule la personne qui l’a écrit peut le soumettre.",
   },
+  report: {
+    link: "Signaler",
+    linkLabel: "Signaler « {{title}} »",
+    back: "Retour au texte",
+    title: "Signaler un texte",
+    intro:
+      "Dites-nous pourquoi ce texte est illégal ou ne respecte pas les règles de la bibliothèque. Pas besoin de compte : une personne lit chaque signalement.",
+    text: "Texte signalé",
+    address: "Adresse",
+    reason: "Motif",
+    choose: "Choisissez un motif",
+    reasons: {
+      copyright: "Atteinte au droit d’auteur",
+      defamation: "Diffamation",
+      hate: "Incitation à la haine, à la discrimination ou à la violence",
+      "personal-data": "Données personnelles d’une autre personne",
+      "child-sexual-abuse": "Contenu pédopornographique",
+      "serious-offences": "Autre infraction grave (terrorisme, crimes contre l’humanité…)",
+      "library-rules": "Ne respecte pas les règles de la bibliothèque",
+    },
+    explanation: "Explication",
+    explanationHelp: "Ce qui ne va pas dans ce texte, et où. {{max, number}} caractères au plus.",
+    identity: "Qui signale",
+    identityHelp:
+      "Votre nom et votre e-mail servent à traiter le signalement et à vous envoyer la décision. La personne qui a envoyé le texte ne les voit jamais.",
+    identityOptional:
+      "Pour un contenu pédopornographique, votre nom et votre e-mail sont facultatifs : vous pouvez les laisser vides.",
+    name: "Votre nom",
+    email: "Votre e-mail",
+    goodFaith:
+      "Je déclare de bonne foi que les informations et allégations de ce signalement sont exactes et complètes.",
+    warning:
+      "Signaler un texte en le sachant licite pour le faire retirer est puni d’un an de prison et de 15 000 € d’amende (LCEN, art. 6, VII).",
+    send: "Envoyer le signalement",
+    sending: "Envoi du signalement…",
+    sent: "Signalement envoyé",
+    number: "Numéro du signalement : {{id}}",
+    next: "Une personne va le lire et décider : sous 24 heures pour une infraction grave, sous 7 jours sinon.",
+    receipt: {
+      sent: "Un accusé de réception est parti à {{email}}. La décision suivra à cette adresse.",
+      failed:
+        "L’accusé de réception n’a pas pu partir. Gardez ce numéro : la décision sera tout de même envoyée à {{email}}.",
+      none: "Vous n’avez pas donné d’e-mail : gardez ce numéro si vous nous écrivez à propos de ce signalement.",
+    },
+    toLibrary: "Retour à la bibliothèque globale",
+    missing:
+      "Aucun texte à signaler : utilisez « Signaler » sur un texte de la bibliothèque globale.",
+    failure: {
+      reason: "Choisissez un motif.",
+      explanation: "Écrivez ce qui ne va pas dans ce texte.",
+      name: "Écrivez votre nom, ou choisissez le motif « Contenu pédopornographique ».",
+      email: "Écrivez un e-mail valide, ou choisissez le motif « Contenu pédopornographique ».",
+      goodFaith: "Cochez la déclaration de bonne foi pour envoyer le signalement.",
+      tooMany: "Trop de signalements depuis cette connexion. Réessayez dans 10 minutes.",
+      offline: "Pas de connexion. Vos réponses sont gardées : réessayez une fois en ligne.",
+      notFound: "Ce texte n’est plus dans la bibliothèque.",
+      invalid: "Le serveur a refusé le signalement. Vérifiez chaque champ.",
+      unexpected: "Le serveur a répondu de façon inattendue ({{status}}). Réessayez plus tard.",
+    },
+  },
   submit: {
     link: "Soumettre à la bibliothèque",
     back: "Retour au texte",

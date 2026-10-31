@@ -15,6 +15,7 @@ import { LegalNoticePage, PrivacyPage, TermsPage } from "@/pages/legal";
 import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
+import { ReportPage, validateReportSearch } from "@/pages/report";
 import {
   ReadLibraryItemPage,
   ReadLibraryPage,
@@ -186,6 +187,18 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({
     getParentRoute,
+    path: "/admin/notices",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminNoticesPage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin/notices/$id",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminNoticePage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
     path: "/admin/$id",
     component: lazyRouteComponent(() => import("@/pages/admin"), "AdminReviewPage"),
     errorComponent: ModuleError,
@@ -206,6 +219,13 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/terms",
     component: TermsPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/report",
+    component: ReportPage,
+    validateSearch: validateReportSearch,
     errorComponent: ModuleError,
   }),
 ]);

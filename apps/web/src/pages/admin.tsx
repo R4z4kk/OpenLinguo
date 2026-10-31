@@ -9,6 +9,9 @@ import {
   LEGAL_GROUNDS,
   MODERATION_CHECKS,
   type ModerationCheck,
+  type NewStatementOfReasons,
+  type Notice,
+  type NoticeDecided,
   type Restriction,
   TERMS_CLAUSES,
 } from "@openlinguo/core/moderation";
@@ -25,8 +28,12 @@ import { database } from "@/data/database";
 import {
   approveSubmission,
   estimateText,
+  keepNotice,
   loadForReview,
+  loadNotice,
+  loadNotices,
   loadQueue,
+  removeByNotice,
   restrictSubmission,
 } from "@/data/moderation";
 import type { ApiFailure } from "@/data/api";
@@ -55,6 +62,8 @@ const useFailure = () => {
         return t("failure.notPending");
       case "SUBMISSION_NOT_APPROVED":
         return t("failure.notApproved");
+      case "NOTICE_DECIDED":
+        return t("failure.noticeDecided");
       case "MAIL_FAILED":
         return t("failure.mail");
       case "INVALID_REQUEST":
@@ -132,7 +141,7 @@ const BackLink = ({
   to,
   children,
 }: {
-  readonly to: "/profile/account" | "/admin";
+  readonly to: "/profile/account" | "/admin" | "/admin/notices";
   readonly children: ReactNode;
 }) => (
   <Link to={to} className="-mt-3 mb-1 flex min-h-11 w-fit items-center gap-1">
@@ -162,6 +171,37 @@ const Details = ({ submission }: { readonly submission: Submission }) => {
   );
 };
 
+const SECTIONS = [
+  ["/admin", "queue"],
+  ["/admin/notices", "notices"],
+] as const;
+
+/** The two tabbed links of the mockups: « Textes en attente » and « Signalements ». */
+const Sections = ({ current }: { readonly current: (typeof SECTIONS)[number][0] }) => {
+  const { t } = useTranslation("moderation");
+  return (
+    <nav aria-label={t("sections")} className="mt-4">
+      <ul className="flex flex-wrap gap-4 border-b border-hairline">
+        {SECTIONS.map(([to, key]) => (
+          <li key={to}>
+            <Link
+              to={to}
+              aria-current={to === current ? "page" : false}
+              className={
+                to === current
+                  ? "-mb-px inline-flex min-h-11 items-center border-b-2 border-ink font-semibold"
+                  : "inline-flex min-h-11 items-center text-muted underline"
+              }
+            >
+              {t(key)}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+};
+
 /** `/admin`: the texts awaiting review, oldest first (ADR 0015). */
 export const AdminQueuePage = () => {
   const { t } = useTranslation("moderation");
@@ -170,6 +210,7 @@ export const AdminQueuePage = () => {
     <section className="max-w-[880px]">
       <BackLink to="/profile/account">{t("account")}</BackLink>
       <h1 className="text-title">{t("title")}</h1>
+      <Sections current="/admin" />
       <h2 className="mt-6 text-subtitle">{t("queue")}</h2>
       <p className="mt-2 text-muted">{t("queueIntro")}</p>
       {queue.status === "loading" && (
@@ -337,14 +378,16 @@ const useAlert = () => {
   return { raise, node };
 };
 
-const StatementForm = ({
-  submission,
+const StatementForm = <T,>({
   measure,
+  source,
+  submit,
   onDecided,
 }: {
-  readonly submission: Submission;
   readonly measure: Restriction;
-  readonly onDecided: () => void;
+  readonly source: "own-initiative" | "notice";
+  readonly submit: (statement: NewStatementOfReasons) => Promise<Result<T, ApiFailure>>;
+  readonly onDecided: (decided: T) => void;
 }) => {
   const { t } = useTranslation("moderation");
   const describe = useFailure();
@@ -372,13 +415,9 @@ const StatementForm = ({
       return;
     }
     setSending(true);
-    const result = await restrictSubmission(submission.id, measure, {
-      ground,
-      facts,
-      explanation,
-    });
+    const result = await submit({ ground, facts, explanation });
     setSending(false);
-    if (result.ok) onDecided();
+    if (result.ok) onDecided(result.value);
     else alert.raise(describe(result.error));
   };
 
@@ -408,7 +447,10 @@ const StatementForm = ({
           t("statement.measure"),
           measure === "rejected" ? t("statement.measureRejected") : t("statement.measureRemoved"),
         )}
-        {fixed(t("statement.source"), t("statement.sourceValue"))}
+        {fixed(
+          t("statement.source"),
+          source === "notice" ? t("statement.sourceNotice") : t("statement.sourceValue"),
+        )}
       </dl>
       <div className="mt-4 flex flex-col gap-2">
         <label htmlFor={`${id}-ground`} className="font-semibold">
@@ -580,8 +622,9 @@ const Decision = ({
       </p>
       {restricting && (
         <StatementForm
-          submission={submission}
           measure={measure}
+          source="own-initiative"
+          submit={(statement) => restrictSubmission(submission.id, measure, statement)}
           onDecided={() => {
             onDone({ kind: "restricted" });
           }}
@@ -669,6 +712,284 @@ export const AdminReviewPage = () => {
       )}
       {loaded.status === "failed" && <LoadFailure failure={loaded.failure} onRetry={retry} />}
       {loaded.status === "ready" && <Review key={loaded.value.id} submission={loaded.value} />}
+    </section>
+  );
+};
+
+/** `/admin/notices`: open notices first, the oldest first (DSA art. 16). */
+export const AdminNoticesPage = () => {
+  const { t, i18n } = useTranslation("moderation");
+  const [notices, retry] = useLoaded(loadNotices, "notices");
+  const date = new Intl.DateTimeFormat(i18n.language, { dateStyle: "long", timeStyle: "short" });
+  return (
+    <section className="max-w-[880px]">
+      <BackLink to="/profile/account">{t("account")}</BackLink>
+      <h1 className="text-title">{t("title")}</h1>
+      <Sections current="/admin/notices" />
+      <h2 className="mt-6 text-subtitle">{t("notices")}</h2>
+      <p className="mt-2 text-muted">{t("noticesIntro")}</p>
+      {notices.status === "loading" && (
+        <p role="status" className="mt-4 text-muted">
+          {t("loading")}
+        </p>
+      )}
+      {notices.status === "failed" && <LoadFailure failure={notices.failure} onRetry={retry} />}
+      {notices.status === "ready" &&
+        (notices.value.length === 0 ? (
+          <p className="mt-4 text-muted">{t("noNotices")}</p>
+        ) : (
+          <ol className="mt-4 flex flex-col gap-3">
+            {notices.value.map((notice) => (
+              <li
+                key={notice.id}
+                className="flex flex-col gap-1 rounded-card border border-hairline bg-surface p-4"
+              >
+                <Link
+                  to="/admin/notices/$id"
+                  params={{ id: notice.id }}
+                  className="inline-flex min-h-11 items-center font-zh font-semibold underline"
+                  lang="zh-Hans"
+                >
+                  {notice.title}
+                </Link>
+                <p className="text-small">
+                  {t(`reasons.${notice.reason}`)} ·{" "}
+                  <strong>{t(`noticeStatus.${notice.decision?.outcome ?? "open"}`)}</strong>
+                </p>
+                <p className="text-small text-muted">
+                  {t("receivedOn", { date: date.format(new Date(notice.createdAt)) })}
+                </p>
+              </li>
+            ))}
+          </ol>
+        ))}
+    </section>
+  );
+};
+
+const KeepForm = ({
+  notice,
+  onDecided,
+}: {
+  readonly notice: Notice;
+  readonly onDecided: (decided: NoticeDecided) => void;
+}) => {
+  const { t } = useTranslation("moderation");
+  const describe = useFailure();
+  const id = useId();
+  const alert = useAlert();
+  const [reply, setReply] = useState("");
+  const [sending, setSending] = useState(false);
+  const [checked, setChecked] = useState(false);
+
+  const send = async () => {
+    if (sending) return;
+    setChecked(true);
+    if (reply.trim() === "") {
+      alert.raise(t("failure.reply"));
+      return;
+    }
+    setSending(true);
+    const result = await keepNotice(notice.id, { reply });
+    setSending(false);
+    if (result.ok) onDecided(result.value);
+    else alert.raise(describe(result.error));
+  };
+
+  return (
+    <form
+      noValidate
+      aria-labelledby={`${id}-title`}
+      className="mt-6 rounded-card border border-hairline bg-surface p-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        void send();
+      }}
+    >
+      <h2 id={`${id}-title`} className="text-subtitle">
+        {t("notice.keep")}
+      </h2>
+      {alert.node}
+      <div className="mt-4 flex flex-col gap-2">
+        <label htmlFor={`${id}-reply`} className="font-semibold">
+          {t("notice.reply")}
+        </label>
+        <textarea
+          id={`${id}-reply`}
+          value={reply}
+          rows={4}
+          aria-describedby={`${id}-reply-help`}
+          aria-invalid={checked && reply.trim() === ""}
+          onChange={(event) => {
+            setReply(event.currentTarget.value);
+          }}
+          className={`${fieldClass} py-2`}
+        />
+        <p id={`${id}-reply-help`} className="text-small text-muted">
+          {t("notice.replyHelp")}
+        </p>
+      </div>
+      <div className="mt-6">
+        <Button type="submit" aria-disabled={sending}>
+          {t("notice.sendKeep")}
+        </Button>
+      </div>
+      <p role="status" className="mt-3 text-small">
+        {sending ? t("statement.sending") : ""}
+      </p>
+    </form>
+  );
+};
+
+type NoticeDone = { readonly outcome: "kept" | "removed"; readonly unsent: readonly string[] };
+
+const NoticeReview = ({ notice }: { readonly notice: Notice }) => {
+  const { t, i18n } = useTranslation("moderation");
+  const id = useId();
+  const [text, retry] = useLoaded(loadForReview, notice.submissionId);
+  const [action, setAction] = useState<"keep" | "remove" | null>(null);
+  const [done, setDone] = useState<NoticeDone | null>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const date = new Intl.DateTimeFormat(i18n.language, { dateStyle: "long", timeStyle: "short" });
+  useEffect(() => {
+    if (done !== null) heading.current?.focus();
+  }, [done]);
+
+  if (done !== null)
+    return (
+      <>
+        <h2 ref={heading} tabIndex={-1} className="mt-6 text-subtitle">
+          {t("statement.sent")}
+        </h2>
+        <p className="mt-2">
+          {done.outcome === "kept" ? t("notice.sentKeptBody") : t("notice.sentRemovedBody")}
+        </p>
+        {done.unsent.length > 0 && (
+          <p role="alert" className="mt-4 text-danger">
+            {t("notice.unsent", { emails: done.unsent.join(", ") })}
+          </p>
+        )}
+        <p className="mt-4">
+          <Link to="/admin/notices" className="inline-flex min-h-11 items-center underline">
+            {t("notices")}
+          </Link>
+        </p>
+      </>
+    );
+  return (
+    <div className="lg:grid lg:grid-cols-2 lg:gap-8">
+      <section aria-labelledby={`${id}-text`} className="mt-6">
+        <h2 id={`${id}-text`} className="font-semibold">
+          {t("notice.reportedText")}
+        </h2>
+        {text.status === "loading" && (
+          <p role="status" className="mt-2 text-muted">
+            {t("loading")}
+          </p>
+        )}
+        {text.status === "failed" && <LoadFailure failure={text.failure} onRetry={retry} />}
+        {text.status === "ready" && (
+          <>
+            <p className="mt-2 text-small font-semibold">{t(`status.${text.value.status}`)}</p>
+            <p lang="zh-Hans" className="mt-2 font-zh whitespace-pre-wrap">
+              {text.value.body}
+            </p>
+          </>
+        )}
+      </section>
+      <div>
+        <dl className="mt-6 flex flex-col gap-3">
+          <div>
+            <dt className="font-semibold">{t("notice.reason")}</dt>
+            <dd>{t(`reasons.${notice.reason}`)}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">{t("notice.explanation")}</dt>
+            <dd className="whitespace-pre-wrap">{notice.explanation}</dd>
+          </div>
+          <div>
+            <dt className="font-semibold">{t("notice.notifier")}</dt>
+            <dd>
+              {notice.name === null && notice.email === null
+                ? t("notice.anonymousNotifier")
+                : [notice.name, notice.email].filter((part) => part !== null).join(" · ")}
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold">{t("notice.received")}</dt>
+            <dd>{date.format(new Date(notice.createdAt))}</dd>
+          </div>
+        </dl>
+        {notice.decision !== null ? (
+          <p className="mt-6">
+            {t(`notice.decided.${notice.decision.outcome}`, {
+              date: date.format(new Date(notice.decision.decidedAt)),
+            })}{" "}
+            {notice.decision.reply}
+          </p>
+        ) : (
+          <>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {(["keep", "remove"] as const).map((choice) => (
+                <Button
+                  key={choice}
+                  variant="outline"
+                  aria-expanded={action === choice}
+                  onClick={() => {
+                    setAction((open) => (open === choice ? null : choice));
+                  }}
+                >
+                  {choice === "keep" ? t("notice.keep") : t("notice.removeText")}
+                </Button>
+              ))}
+            </div>
+            {action === "keep" && (
+              <KeepForm
+                notice={notice}
+                onDecided={({ unsent }) => {
+                  setDone({ outcome: "kept", unsent });
+                }}
+              />
+            )}
+            {action === "remove" && (
+              <StatementForm
+                measure="removed"
+                source="notice"
+                submit={(statement) => removeByNotice(notice.id, statement)}
+                onDecided={({ unsent }) => {
+                  setDone({ outcome: "removed", unsent });
+                }}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/** `/admin/notices/$id`: one notice, the reported text and the decision. */
+export const AdminNoticePage = () => {
+  const { t } = useTranslation("moderation");
+  const id = idParam(useParams({ strict: false }));
+  const [loaded, retry] = useLoaded(loadNotice, id);
+  return (
+    <section className="max-w-[1040px]">
+      <BackLink to="/admin/notices">{t("notices")}</BackLink>
+      {loaded.status === "ready" ? (
+        <h1 lang="zh-Hans" className="font-zh text-title">
+          {loaded.value.title}
+        </h1>
+      ) : (
+        <h1 className="text-title">{t("title")}</h1>
+      )}
+      {loaded.status === "loading" && (
+        <p role="status" className="mt-4 text-muted">
+          {t("loading")}
+        </p>
+      )}
+      {loaded.status === "failed" && <LoadFailure failure={loaded.failure} onRetry={retry} />}
+      {loaded.status === "ready" && <NoticeReview key={loaded.value.id} notice={loaded.value} />}
     </section>
   );
 };

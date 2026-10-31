@@ -6,7 +6,9 @@ import {
   estimateBand,
   Ground,
   isLegalGround,
+  NewNotice,
   NewStatementOfReasons,
+  NoticeDecision,
   STATEMENT_MAX,
   StatementOfReasons,
   TERMS_CLAUSES,
@@ -127,6 +129,7 @@ describe("StatementOfReasons", () => {
     };
     expect(parseWith(StatementOfReasons, decision).ok).toBe(true);
     expect(parseWith(StatementOfReasons, { ...decision, automated: true }).ok).toBe(false);
+    expect(parseWith(StatementOfReasons, { ...decision, source: "notice" }).ok).toBe(true);
   });
 });
 
@@ -142,5 +145,54 @@ describe("bandName", () => {
   it("names a band as HSK 2025 does", () => {
     expect(bandName(1)).toBe("1");
     expect(bandName(7)).toBe("7-9");
+  });
+});
+
+describe("NewNotice", () => {
+  const notice = {
+    submissionId: "s1",
+    reason: "copyright",
+    explanation: " Copié du manuel 汉语教程, leçon 3. ",
+    name: " Lin Wei ",
+    email: "lin@example.test",
+    goodFaith: true,
+  };
+
+  it("keeps a notice with its reasons, the notifier and the good-faith statement", () => {
+    expect(parseWith(NewNotice, notice)).toEqual({
+      ok: true,
+      value: { ...notice, explanation: "Copié du manuel 汉语教程, leçon 3.", name: "Lin Wei" },
+    });
+  });
+
+  it("asks for a name and an email, except for child sexual abuse material", () => {
+    const anonymous = { ...notice, name: null, email: null };
+    expect(parseWith(NewNotice, anonymous)).toMatchObject({
+      ok: false,
+      error: { issues: [{ path: "name" }, { path: "email" }] },
+    });
+    expect(parseWith(NewNotice, { ...anonymous, reason: "child-sexual-abuse" }).ok).toBe(true);
+  });
+
+  it.each([
+    { goodFaith: false },
+    { email: "not an email" },
+    { name: "Lin\u0007Wei" },
+    { explanation: "" },
+    { reason: "spam" },
+  ])("refuses %o", (change) => {
+    expect(parseWith(NewNotice, { ...notice, ...change }).ok).toBe(false);
+  });
+});
+
+describe("NoticeDecision", () => {
+  it("records what the notifier is told", () => {
+    const decided = {
+      outcome: "kept",
+      reply: "Le texte cite 4 phrases.",
+      decidedAt: "2026-11-01T10:00:00.000Z",
+    };
+    expect(parseWith(NoticeDecision, decided).ok).toBe(true);
+    expect(parseWith(NoticeDecision, { ...decided, outcome: "rejected" }).ok).toBe(false);
   });
 });
