@@ -16,6 +16,7 @@ export const ApiErrorCode = z.enum([
   "SUBMISSION_NOT_PENDING",
   "SUBMISSION_NOT_APPROVED",
   "NOTICE_DECIDED",
+  "USE_ACCOUNT_DELETION",
 ]);
 export type ApiErrorCode = z.output<typeof ApiErrorCode>;
 

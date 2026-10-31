@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { AccountData } from "@/components/account-data";
 import { AccountGate, SessionFailure, useSession } from "@/components/account-gate";
 import { AccountPseudonym } from "@/components/account-pseudonym";
 import { AccountSignInMethod } from "@/components/account-sign-in-method";
@@ -14,6 +15,11 @@ export const AccountPage = () => {
   const { t } = useTranslation("auth");
   const { state, reload } = useSession();
   const [signedOutNow, setSignedOutNow] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const deletedHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (deleted) deletedHeading.current?.focus();
+  }, [deleted]);
   return (
     <section className="max-w-2xl">
       <Link to="/profile" className="-mt-3 mb-1 flex min-h-11 w-fit items-center gap-1">
@@ -27,7 +33,15 @@ export const AccountPage = () => {
         </p>
       )}
       {state.status === "failed" && <SessionFailure failure={state.failure} onRetry={reload} />}
-      {state.status === "loaded" && state.session === null && (
+      {deleted && (
+        <>
+          <h2 ref={deletedHeading} tabIndex={-1} className="mt-6 text-subtitle">
+            {t("deletion.doneTitle")}
+          </h2>
+          <p className="mt-2">{t("deletion.doneBody")}</p>
+        </>
+      )}
+      {!deleted && state.status === "loaded" && state.session === null && (
         <>
           <p role="status" className="mt-4">
             {signedOutNow ? t("signedOutNow") : t("signedOut")}
@@ -58,6 +72,12 @@ export const AccountPage = () => {
               <AccountPseudonym session={session} onSaved={reload} />
               <AccountTwoFactor session={session} onEnabled={reload} />
               <AccountSubmissions />
+              <AccountData
+                onDeleted={() => {
+                  setDeleted(true);
+                  reload();
+                }}
+              />
             </>
           )}
         </AccountGate>
