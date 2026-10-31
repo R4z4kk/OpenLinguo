@@ -20,7 +20,7 @@
     "@tanstack/react-router": "^1.170.41",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "dexie": "^4.4.6",
+    "dexie": "^4.4.7",
     "fzstd": "^0.1.1",
     "i18next": "^26.4.2",
     "lucide-react": "^1.54.0",
