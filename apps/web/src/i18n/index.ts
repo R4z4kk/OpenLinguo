@@ -4,6 +4,8 @@ import { authEn } from "./auth/en.ts";
 import { authFr } from "./auth/fr.ts";
 import { en } from "./en.ts";
 import { fr } from "./fr.ts";
+import { legalEn } from "./legal/en.ts";
+import { legalFr } from "./legal/fr.ts";
 import type { Language } from "./language.ts";
 import { moderationEn } from "./moderation/en.ts";
 import { moderationFr } from "./moderation/fr.ts";
@@ -14,8 +16,8 @@ export const createI18n = (language: Language): i18n => {
     lng: language,
     fallbackLng: "en",
     resources: {
-      en: { translation: en, auth: authEn, moderation: moderationEn },
-      fr: { translation: fr, auth: authFr, moderation: moderationFr },
+      en: { translation: en, auth: authEn, moderation: moderationEn, legal: legalEn },
+      fr: { translation: fr, auth: authFr, moderation: moderationFr, legal: legalFr },
     },
     interpolation: { escapeValue: false },
     initAsync: false,

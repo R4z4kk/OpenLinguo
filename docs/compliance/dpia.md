@@ -25,7 +25,7 @@ Law and guidance:
 - CNIL délibération [2021-131](https://www.legifrance.gouv.fr/cnil/id/CNILTEXT000045543374/) (2021-09-23): two years of inactivity "apparait proportionné"; not binding.
 - EDPB, [CEF 2025 report on the right to erasure](https://www.edpb.europa.eu/system/files/2026-02/edpb_cef-report_2025_right-to-erasure_en.pdf) (2026-02-10), issue 6: keep track of erasures and apply them on restored systems.
 
-Provider facts (Cloudflare D1 `eu` jurisdiction, DPAs, Data Privacy Framework status, Scaleway's processing in France) are taken from [ADR 0015](../adr/0015-backend-and-shared-library.md#findings-2026-10-31), read on 2026-10-31, and are re-read with dates by #279.
+Provider facts (Cloudflare D1 `eu` jurisdiction, DPAs, Data Privacy Framework status, Scaleway's processing in France) were re-read on their own pages on 2026-10-31 and are dated in [sub-processors](sub-processors.md) and `packages/core/src/compliance-facts.ts` (#279).
 
 ## Why a DPIA
 
@@ -45,7 +45,7 @@ OpenLinguo is a free, open-source, local-first app for learning Chinese. Everyth
 
 - **Controller**: the maintainer, a natural person, non-professional publisher (LCEN art. 1-1 II). No processor of their own staff, no DPO (art. 37 not met).
 - **Processors**: Cloudflare, Inc. (Pages Functions, D1 database in the `eu` jurisdiction, cron Worker), under its DPA, part of the self-serve terms; Scaleway SAS (Transactional Email, data processed in France), under the DPA in its contract.
-- **Independent controllers** when the learner chooses them for sign-in: Google LLC, GitHub, Inc.
+- **Independent controllers** when the learner chooses them for sign-in: Google Ireland Limited for EEA users, GitHub, Inc. or GitHub B.V.
 - **Benefits**: for learners, texts graded to their level written by other learners, and later the same cards on every device; for the project, a library without any third-party content licence.
 - **Applicable frameworks**: no approved code of conduct or certification (art. 40, 42). The CNIL guidance and the platform law listed in the sources.
 
@@ -98,8 +98,8 @@ Not on the server: learning data unless sync is on, voice, journal, AI key and A
 | Access and portability (art. 15, 20) | `GET /api/account/export`: account, sessions, submissions, decisions, as JSON (#277) | Planned |
 | Rectification and erasure (art. 16, 17) | Pseudonym in Profile (#272); deletion cascades at once, with the choice for published texts (#277); erasure log re-applied after a restore, as the EDPB asks; requests by email answered within one month (#290) | Planned |
 | Restriction and objection (art. 18, 21) | Objection to security events is open (legitimate interest) and stated in the notice (#279); hosting records rest on a legal obligation, so art. 21 does not apply to them | Planned |
-| Processors (art. 28) | Cloudflare and Scaleway DPAs, checked and dated in #279 | Planned |
-| Transfers (art. 44–49) | D1 runs and stores data in the EU; Cloudflare, Inc. is a U.S. company on the Data Privacy Framework list, its DPA falls back on the SCCs; Google and GitHub are chosen by the learner and act as independent controllers. Statuses dated with a CI check in #279 | Planned |
+| Processors (art. 28) | Cloudflare and Scaleway DPAs, checked and dated in #279 ([sub-processors](sub-processors.md)) | Done |
+| Transfers (art. 44–49) | D1 runs and stores data in the EU; Cloudflare, Inc. is a U.S. company on the Data Privacy Framework list, its DPA falls back on the SCCs; Google and GitHub are chosen by the learner and act as independent controllers. Statuses dated with a CI check in #279 | Done |
 
 ## 3. Risks
 
@@ -216,7 +216,7 @@ Already tracked: age step, security events and sign-ups flag (#270), admin TOTP 
 - **Accounts and library (M7): validated**, on condition that #289 to #293 are merged before sign-ups open, which #281 enforces.
 - **Leagues (M8): not yet validated.** The measures of #295 are required; leagues stay off in production until #296 completes this assessment with the real design.
 - The maintainer's validation is recorded by merging the pull request that adds or changes this document.
-- **Review by 2027-10-31** (`reviewBy`, checked in CI by #294), or earlier when:
+- **Review by 2027-10-31** (`DPIA_REVIEW` in `packages/core/src/compliance-facts.ts`: a unit test fails from that date, #294), or earlier when:
   - the risk changes (art. 35(11)): a new category of data, a new recipient, a change of host or of retention;
   - leagues or sync are designed (#296);
   - the CNIL publishes the update of its recommendations on minors (recommendation 1 is "en cours de mise à jour");

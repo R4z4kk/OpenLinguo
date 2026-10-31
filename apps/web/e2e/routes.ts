@@ -99,6 +99,9 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
     url: "/admin/00000000-0000-4000-8000-000000000000",
     ready: (page) => page.getByRole("button", { name: moderationEn.retry }),
   },
+  "/legal": { url: "/legal?lang=en", ready: title("Legal notice") },
+  "/privacy": { url: "/privacy?lang=en", ready: title("Privacy") },
+  "/terms": { url: "/terms?lang=en", ready: title("Terms of use") },
 };
 
 export const NOT_FOUND_VISIT: Visit = { url: "/missing", ready: title(en.notFound.title) };
