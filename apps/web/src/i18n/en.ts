@@ -749,6 +749,8 @@ export const en = {
     textMissing: "This text is not on this device any more.",
     textFailed: "The text could not be loaded: {{reason}}",
     retry: "Try again",
+    signIn: "Sign in",
+    tooMany: "Too many requests. Try again later.",
   },
   account: {
     link: "Account",

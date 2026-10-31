@@ -29,6 +29,7 @@ export const useApiFailure = () => {
   const { t } = useTranslation();
   return (failure: ApiFailure): string => {
     if (failure.kind === "offline") return t("submit.failure.offline");
+    if (failure.kind === "rate-limited") return t("submit.tooMany");
     if (failure.kind === "unexpected")
       return t("submit.failure.unexpected", { status: failure.status });
     switch (failure.code) {
@@ -322,7 +323,18 @@ export const SubmitForm = ({ id }: { readonly id: string }) => {
             </span>
           </p>
           {loaded.account === null ? (
-            <p className="mt-4">{t("submit.failure.signedOut")}</p>
+            <>
+              <p className="mt-4">{t("submit.failure.signedOut")}</p>
+              <p className="mt-2">
+                <Link
+                  to="/account/sign-in"
+                  search={{ return: `/read/${id}/submit` }}
+                  className="inline-flex min-h-11 items-center underline"
+                >
+                  {t("submit.signIn")}
+                </Link>
+              </p>
+            </>
           ) : (
             <Form text={loaded.text} account={loaded.account} />
           )}

@@ -16,7 +16,7 @@ import {
 import { Submission, Submissions } from "@openlinguo/core/submission";
 import type { Database } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
-import { type ApiFailure, call } from "./submissions.ts";
+import { type ApiFailure, call } from "./api.ts";
 
 const path = (id: string) => `/api/admin/submissions/${encodeURIComponent(id)}`;
 

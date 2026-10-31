@@ -17,6 +17,11 @@
   --color-tone-3: light-dark(#0b796e, #71e1bb);
   --color-tone-4: light-dark(#0619db, #a3b2dd);
   --color-tone-neutral: light-dark(#5f6662, #a3aba6);
+  /* Sign-in buttons: Google's light and dark themes and GitHub's black or white mark (#272). */
+  --color-google-fill: light-dark(#ffffff, #131314);
+  --color-google-stroke: light-dark(#747775, #8e918f);
+  --color-google-ink: light-dark(#1f1f1f, #e3e3e3);
+  --color-github-mark: light-dark(#000000, #ffffff);
 
   /* OpenLinguo Han Fallback draws the rare dataset characters the other fonts lack (#67). */
   --font-sans:

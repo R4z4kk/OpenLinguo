@@ -269,6 +269,27 @@ describe("age step", () => {
   });
 });
 
+describe("pseudonym", () => {
+  it("changes only a plain-text pseudonym of at most 40 characters", async () => {
+    const call = appWith(true);
+    const cookie = await declared(call, "named@example.test");
+    for (const body of [
+      { name: "x".repeat(41) },
+      { name: "two\nlines" },
+      { name: " " },
+      { name: "Lin", image: "https://photos.example.test/1" },
+      {},
+    ]) {
+      const refused = await call("/api/auth/update-user", body, cookie);
+      expect(refused.status).toBe(400);
+      expect(await refused.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    }
+    expect((await call("/api/auth/update-user", { name: "Lin" }, cookie)).status).toBe(200);
+    const [named] = await db.select().from(user);
+    expect(named).toMatchObject({ name: "Lin", image: null });
+  });
+});
+
 const base64url = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
 
 const stubProviders = () => {

@@ -23,6 +23,7 @@ import {
   ReadUnknownPage,
 } from "@/pages/read";
 import { ReviewPage } from "@/pages/review";
+import { SignInPage, validateSignInSearch } from "@/pages/sign-in";
 import { TodayPage } from "@/pages/today";
 import { TypingDrillPage } from "@/pages/typing-drill";
 import { WordPage } from "@/pages/word";
@@ -153,6 +154,13 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/profile/account",
     component: AccountPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/account/sign-in",
+    component: SignInPage,
+    validateSearch: validateSignInSearch,
     errorComponent: ModuleError,
   }),
   createRoute({

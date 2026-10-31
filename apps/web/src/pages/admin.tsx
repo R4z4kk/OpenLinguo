@@ -27,7 +27,7 @@ import {
   loadQueue,
   restrictSubmission,
 } from "@/data/moderation";
-import type { ApiFailure } from "@/data/submissions";
+import type { ApiFailure } from "@/data/api";
 import { describeCoverageFailure } from "@/data/text-coverage";
 import { fieldClass } from "@/shell/ai-settings";
 
