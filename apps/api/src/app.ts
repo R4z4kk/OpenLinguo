@@ -20,13 +20,18 @@ const scaleway: Mailer = (env) =>
     from: env.MAIL_FROM,
   });
 
+const ALWAYS_OPEN = new Set(["/api/auth/get-session", "/api/auth/sign-out"]);
 /** Reachable before the age step is answered (ADR 0015). */
-const BEFORE_AGE_STEP = new Set([
-  "/api/account/age",
-  "/api/auth/delete-user",
-  "/api/auth/get-session",
-  "/api/auth/sign-out",
+const BEFORE_AGE_STEP = new Set(["/api/account/age", "/api/auth/delete-user"]);
+/** Reachable before the second factor of an account that turned it on is verified. */
+const BEFORE_SECOND_FACTOR = new Set([
+  "/api/auth/two-factor/verify-totp",
+  "/api/auth/two-factor/verify-backup-code",
 ]);
+const isAdminPath = (path: string) =>
+  path.startsWith("/api/admin/") || path.startsWith("/api/auth/admin/");
+
+const refused = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 
 export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
@@ -49,14 +54,26 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
   };
 
   app.use(async (c, next) => {
-    if (!getSessionCookie(c.req.raw) || BEFORE_AGE_STEP.has(c.req.path)) return next();
-    const current = await authOf(c.env).api.getSession({ headers: c.req.raw.headers });
-    if (current && !current.user.ageDeclaredAt) {
-      const body = {
-        code: "AGE_DECLARATION_REQUIRED",
-        message: "Answer the age step first",
-      } satisfies ApiError;
-      return c.json(body, 403);
+    const path = c.req.path;
+    const admin = isAdminPath(path);
+    if (ALWAYS_OPEN.has(path)) return next();
+    const current = getSessionCookie(c.req.raw)
+      ? await authOf(c.env).api.getSession({ headers: c.req.raw.headers })
+      : null;
+    if (!current) return admin ? c.json(refused("UNAUTHORIZED", "Sign in first"), 401) : next();
+    if (!current.user.ageDeclaredAt && !BEFORE_AGE_STEP.has(path)) {
+      return c.json(refused("AGE_DECLARATION_REQUIRED", "Answer the age step first"), 403);
+    }
+    const secondFactorPending =
+      current.user.twoFactorEnabled === true && !current.session.twoFactorVerifiedAt;
+    if (secondFactorPending && !BEFORE_SECOND_FACTOR.has(path)) {
+      return c.json(refused("TWO_FACTOR_REQUIRED", "Enter your authenticator code first"), 403);
+    }
+    if (admin && current.user.role !== "admin") {
+      return c.json(refused("ADMIN_REQUIRED", "Reserved to the admin"), 403);
+    }
+    if (admin && current.user.twoFactorEnabled !== true) {
+      return c.json(refused("TWO_FACTOR_REQUIRED", "Turn on an authenticator code first"), 403);
     }
     return next();
   });
