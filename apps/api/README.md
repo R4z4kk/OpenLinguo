@@ -50,6 +50,6 @@ Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one a
 
 ## Settings of the cron Worker
 
-The daily jobs read only what the inactivity notice needs, checked at each run by `MailEnv` (`src/cron.ts`). A missing one fails only `inactive-accounts`, so `/api/health` answers 503 while the other jobs still run. Enter each one once from `apps/api` with `wrangler secret put <NAME>`; a deploy keeps them.
+The daily jobs read only what the inactivity notice needs, checked at each run by `MailEnv` (`src/cron.ts`). A missing one fails `inactive-accounts` at every run, even with no one to notify, so `/api/health` answers 503 from the first run after the deploy; the other jobs still run. Enter each one once from `apps/api` with `wrangler secret put <NAME>`; a deploy keeps them.
 
 - [ ] `BETTER_AUTH_URL`, `SCW_SECRET_KEY`, `SCW_PROJECT_ID`, `MAIL_FROM`: the same values as in the Pages project.
