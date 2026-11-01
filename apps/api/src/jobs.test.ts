@@ -1,6 +1,7 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { runJobs } from "./jobs.ts";
 import { database, jobRun } from "./schema.ts";
+import { memoryMailer } from "./testing/memory-mailer.ts";
 import { migratedPlatform } from "./testing/platform.ts";
 
 const platform = await migratedPlatform();
@@ -15,19 +16,22 @@ describe("runJobs", () => {
     vi.spyOn(console, "error").mockImplementation(() => null);
     const ran: string[] = [];
     const before = Date.now();
-    await runJobs(db, [
-      {
-        name: "breaks",
-        run: () => Promise.reject(new Error("D1 timeout")),
-      },
-      {
-        name: "purges",
-        run: () => {
-          ran.push("purges");
-          return Promise.resolve();
+    await runJobs(
+      { db, now: new Date(), outbox: () => ({ sendMail: memoryMailer().sendMail, appUrl: "" }) },
+      [
+        {
+          name: "breaks",
+          run: () => Promise.reject(new Error("D1 timeout")),
         },
-      },
-    ]);
+        {
+          name: "purges",
+          run: () => {
+            ran.push("purges");
+            return Promise.resolve();
+          },
+        },
+      ],
+    );
     const runs = await db.select().from(jobRun).orderBy(jobRun.id);
     expect(ran).toEqual(["purges"]);
     expect(runs.map(({ job, status }) => ({ job, status }))).toEqual([

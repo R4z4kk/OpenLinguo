@@ -271,6 +271,12 @@ describe("POST /api/account/delete", () => {
 });
 
 describe("reapplyErasures", () => {
+  const jobContext = {
+    db,
+    now: new Date(),
+    outbox: () => ({ sendMail: mailer.sendMail, appUrl: ORIGIN }),
+  };
+
   it("deletes an account again after a restore, with the learner's choice", async () => {
     const cookie = await signedIn();
     await submitted(cookie, "已发表", "approved");
@@ -285,7 +291,7 @@ describe("reapplyErasures", () => {
     await db.delete(user);
     await db.insert(user).values(restoredUser);
     await db.insert(submission).values(restoredTexts);
-    await reapplyErasures.run(db);
+    await reapplyErasures.run(jobContext);
 
     expect(await db.select({ id: user.id }).from(user)).toEqual([{ id: DELETED_ACCOUNT.id }]);
     expect(await texts()).toEqual([
@@ -302,7 +308,7 @@ describe("reapplyErasures", () => {
       published: "remove",
       erasedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
     });
-    await reapplyErasures.run(db);
+    await reapplyErasures.run(jobContext);
     expect(await db.select().from(erasure)).toEqual([]);
   });
 });

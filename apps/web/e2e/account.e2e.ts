@@ -198,6 +198,8 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
             ageDeclaredAt: current.ageDeclaredAt,
             role: current.role,
             twoFactorEnabled: current.twoFactorEnabled,
+            activeAt: at,
+            inactivityNoticeAt: null,
           },
           signInMethods: [],
           sessions: [],

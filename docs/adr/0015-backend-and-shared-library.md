@@ -79,7 +79,7 @@ All choices below are the maintainer's, 2026-10-31.
 | Security events | after 6 months |
 | Sessions, codes, verification tokens | at expiry |
 | Accounts with no age answer | after 24 hours |
-| Inactive accounts | after 2 years without action, with an email 30 days before |
+| Inactive accounts | after 2 years without action, an email, then deletion 30 days later |
 | Connection records and sealed pseudonyms (décret) | after 1 year |
 | Sealed emails (décret) | after 5 years |
 | Notices and statements of reasons | 1 year after the decision |

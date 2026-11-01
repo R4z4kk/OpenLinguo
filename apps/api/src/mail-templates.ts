@@ -183,3 +183,22 @@ export const noticeDecisionMail = (
     `Redress: you may ask for a review by writing to ${contact}. You may also go to the competent court.`,
   ].join("\n"),
 });
+
+/** ADR 0015: 30 days before the deletion of an unused account, French then English. */
+export const inactivityNoticeMail = (to: string, deletionOn: Date, appUrl: string): Mail => {
+  const day = deletionOn.toISOString().slice(0, 10);
+  const link = `${appUrl}/profile/account`;
+  return {
+    to,
+    subject: `OpenLinguo : votre compte sera supprimé le ${day} / your account will be deleted on ${day}`,
+    text: [
+      "Aucune connexion à votre compte OpenLinguo depuis 2 ans.",
+      `Sans connexion d'ici le ${day}, il sera supprimé ce jour-là. Pour le garder, connectez-vous : ${link}`,
+      "Vos textes publiés dans la bibliothèque y resteront, sans nom. Si vous avez envoyé des textes, la loi (décret 2021-1362) nous oblige à garder votre e-mail 5 ans et vos pseudonymes 1 an, sous clé. Vos données d'apprentissage sur vos appareils ne sont pas touchées.",
+      "---",
+      "No one has signed in to your OpenLinguo account for 2 years.",
+      `Unless you sign in by ${day}, it will be deleted that day. To keep it, sign in: ${link}`,
+      "Your texts published in the library stay there, with no name. If you sent texts, French law (décret 2021-1362) makes us keep your email for 5 years and your pseudonyms for 1 year, locked away. Your learning data on your devices is not touched.",
+    ].join("\n\n"),
+  };
+};

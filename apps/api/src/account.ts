@@ -166,6 +166,8 @@ const toExport = async (db: Database, userId: string, now: Date): Promise<Accoun
       ageDeclaredAt: found.ageDeclaredAt === null ? null : iso(found.ageDeclaredAt),
       role: found.role,
       twoFactorEnabled: found.twoFactorEnabled === true,
+      activeAt: found.activeAt === null ? null : iso(found.activeAt),
+      inactivityNoticeAt: found.inactivityNoticeAt === null ? null : iso(found.inactivityNoticeAt),
     },
     signInMethods: methods.map((method) => ({ ...method, createdAt: iso(method.createdAt) })),
     sessions: sessions.map((row) => ({
@@ -222,8 +224,7 @@ export const accountRoutes = (authOf: (env: Env) => Auth) =>
 /** Runs each logged deletion again, so a Time Travel restore cannot bring an account back. */
 export const reapplyErasures: Job = {
   name: "reapply-erasures",
-  run: async (db) => {
-    const now = new Date();
+  run: async ({ db, now }) => {
     await db
       .delete(erasure)
       .where(lt(erasure.erasedAt, new Date(now.getTime() - ERASURE_LOG_DAYS * DAY_MS)));
