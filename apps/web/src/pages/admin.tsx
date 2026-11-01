@@ -512,6 +512,9 @@ const StatementForm = <T,>({
           />
           <p id={`${id}-${field}-help`} className="text-small text-muted">
             {t(`statement.${field}Help`)}
+            {field === "explanation" && ground === "personal-data" && (
+              <> {t("statement.personalDataHelp")}</>
+            )}
           </p>
         </div>
       ))}

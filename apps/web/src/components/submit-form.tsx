@@ -158,8 +158,11 @@ const Form = ({ text, account }: { readonly text: StoredText; readonly account: 
           <NewTabLink href={t(`submit.${origin}.url`)}>{t(`submit.${origin}.link`)}</NewTabLink>
         </p>
       </section>
-      <fieldset className="mt-6 min-w-0">
+      <fieldset className="mt-6 min-w-0" aria-describedby={`${id}-identity`}>
         <legend className="font-semibold">{t("submit.signature")}</legend>
+        <p id={`${id}-identity`} className="text-small text-muted">
+          {t("pseudonym.identity", { ns: "auth" })}
+        </p>
         {[false, true].map((choice) => (
           <label key={String(choice)} className="flex min-h-11 cursor-pointer items-center gap-3">
             <input
