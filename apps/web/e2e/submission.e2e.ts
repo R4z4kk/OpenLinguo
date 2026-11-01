@@ -1,5 +1,6 @@
 import { LICENCES, NewSubmission, type Submission } from "@openlinguo/core/submission";
 import { expect, type Page, type Route } from "@playwright/test";
+import { authEn } from "../src/i18n/auth/en.ts";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
@@ -135,6 +136,10 @@ test("submits a learner's text with the keyboard, then withdraws it", async ({ p
   await expect(main.getByRole("heading", { level: 1, name: en.submit.title })).toBeVisible();
   await expect(main.getByText(en.submit.human.name).first()).toBeVisible();
   await expect(main.getByText(en.submit.human.origin)).toBeVisible();
+  await expect(main.getByRole("radio", { name: en.submit.anonymous })).toBeChecked();
+  await expect(main.getByRole("group", { name: en.submit.signature })).toHaveAccessibleDescription(
+    authEn.pseudonym.identity,
+  );
   expect(await accessibilityViolations(page)).toEqual([]);
 
   await press(page, en.submit.send);

@@ -400,6 +400,7 @@ test("rectifies the pseudonym", async ({ page }) => {
   await page.goto("/profile/account");
   const field = main.getByRole("textbox", { name: authEn.pseudonym.field });
   await expect(field).toHaveValue("小明", { timeout: 90_000 });
+  await expect(field).toHaveAccessibleDescription(new RegExp(authEn.pseudonym.identity));
   await typeInto(page, authEn.pseudonym.field, "Lin");
   await press(page, authEn.pseudonym.save);
   await expect(main.getByRole("status").getByText(authEn.pseudonym.saved)).toBeVisible();

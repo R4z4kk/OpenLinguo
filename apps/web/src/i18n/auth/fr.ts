@@ -105,6 +105,8 @@ export const authFr: AuthMessages = {
     help: "{{max}}\u00a0caractères au plus. Il n’est jamais repris de Google ou de GitHub.",
     invalid: "Saisissez {{max}}\u00a0caractères au plus, sur une ligne.",
     kept: "Les textes déjà envoyés gardent le nom avec lequel ils ont été envoyés.",
+    identity:
+      "N’utilisez ni votre nom complet, ni votre école, ni votre ville : un pseudonyme ne doit pas dire qui vous êtes.",
     save: "Enregistrer",
     saved: "Pseudonyme enregistré.",
   },

@@ -162,7 +162,11 @@ test("rejects a text with a statement of reasons, kept when the mail fails", asy
   await expect(main.getByRole("alert")).toHaveText(m.failure.ground);
   await expect(main.getByRole("alert")).toBeFocused();
 
-  await main.getByRole("combobox", { name: m.statement.ground }).selectOption("not-chinese");
+  const ground = main.getByRole("combobox", { name: m.statement.ground });
+  await ground.selectOption("personal-data");
+  await expect(main.getByText(m.statement.personalDataHelp)).toBeVisible();
+  await ground.selectOption("not-chinese");
+  await expect(main.getByText(m.statement.personalDataHelp)).toBeHidden();
   await main.getByRole("textbox", { name: m.statement.facts }).focus();
   await page.keyboard.type("The text is a list of English words.");
   await main.getByRole("textbox", { name: m.statement.explanation }).focus();

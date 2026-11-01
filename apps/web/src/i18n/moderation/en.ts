@@ -44,7 +44,8 @@ export const moderationEn = {
       copyright: "No third-party text protected by copyright",
       defamation: "No defamation of a person or a group",
       hate: "No incitement to hatred, discrimination or violence",
-      "personal-data": "No personal data of another person",
+      "personal-data":
+        "No personal data, of another person or of the submitter (full name, school, town, contact details), pseudonym included",
       "serious-offences":
         "No serious offence listed in LCEN art. 6 IV.A (terrorism, child abuse, crimes against humanity…)",
       "library-rules":
@@ -86,6 +87,7 @@ export const moderationEn = {
     factsHelp: "What the text contains, as you read it.",
     explanation: "Explanation",
     explanationHelp: "Why it is illegal or against the rules, in plain words.",
+    personalDataHelp: "Say what to remove, so the text can be sent again without it.",
     automated: "Automated means",
     automatedValue: "None: a person read the text and took the decision.",
     redress: "Redress",

@@ -64,7 +64,8 @@ export const AccountPseudonym = ({
             {t("pseudonym.field")}
           </label>
           <p id={`${id}-help`} className="text-small text-muted">
-            {t("pseudonym.help", { max: PSEUDONYM_MAX })} {t("pseudonym.kept")}
+            {t("pseudonym.help", { max: PSEUDONYM_MAX })} {t("pseudonym.identity")}{" "}
+            {t("pseudonym.kept")}
           </p>
           <input
             ref={field}

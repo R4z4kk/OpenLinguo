@@ -46,7 +46,8 @@ export const moderationFr: ModerationMessages = {
       copyright: "Aucun texte d’autrui protégé par le droit d’auteur",
       defamation: "Aucune diffamation d’une personne ou d’un groupe",
       hate: "Aucune provocation à la haine, à la discrimination ou à la violence",
-      "personal-data": "Aucune donnée personnelle d’une autre personne",
+      "personal-data":
+        "Aucune donnée personnelle, ni d’une autre personne ni de l’auteur (nom complet, école, ville, coordonnées), pseudonyme compris",
       "serious-offences":
         "Aucune infraction grave de la LCEN art. 6 IV.A (terrorisme, pédocriminalité, crimes contre l’humanité…)",
       "library-rules":
@@ -89,6 +90,7 @@ export const moderationFr: ModerationMessages = {
     factsHelp: "Ce que contient le texte, tel que vous l’avez lu.",
     explanation: "Explication",
     explanationHelp: "Pourquoi c’est illégal ou contraire aux règles, en mots simples.",
+    personalDataHelp: "Dites quoi retirer, pour que le texte puisse être renvoyé sans.",
     automated: "Moyens automatisés",
     automatedValue: "Aucun : une personne a lu le texte et pris la décision.",
     redress: "Recours",

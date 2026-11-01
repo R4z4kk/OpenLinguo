@@ -97,6 +97,8 @@ export const authEn = {
     help: "Up to {{max}} characters. It is never taken from Google or GitHub.",
     invalid: "Enter at most {{max}} characters on one line.",
     kept: "Texts already sent keep the name they were sent with.",
+    identity:
+      "Don’t use your full name, your school or your town: a pseudonym must not say who you are.",
     save: "Save",
     saved: "Pseudonym saved.",
   },
