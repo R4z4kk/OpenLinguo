@@ -297,7 +297,7 @@ describe("the daily jobs", () => {
     await runJobs(
       context({
         outbox: () => {
-          throw new Error("Mail settings missing or invalid: SCW_SECRET_KEY");
+          throw new Error("Mail settings missing or invalid: LETTERMINT_API_TOKEN");
         },
       }),
       JOBS,
@@ -312,7 +312,7 @@ describe("the daily jobs", () => {
     expect(console.error).toHaveBeenCalledWith(
       "job inactive-accounts failed",
       new Error(
-        "Inactivity job failed: mail settings: Mail settings missing or invalid: SCW_SECRET_KEY",
+        "Inactivity job failed: mail settings: Mail settings missing or invalid: LETTERMINT_API_TOKEN",
       ),
     );
     expect(await db.select({ id: user.id }).from(user)).toEqual([{ id: "learner" }]);

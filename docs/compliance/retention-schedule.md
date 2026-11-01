@@ -32,6 +32,6 @@ Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md), enforc
 | Data | Retention | Basis |
 |---|---|---|
 | Rights and support requests (mailbox) | Until answered, then the request, the answer and their dates for 5 years as proof; an ID document is deleted once the request is answered (#290) | Proof of compliance, GDPR art. 5(2). 5 years follows the limitation period of [Code civil art. 2224](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000019017112): our own choice, the article sets no retention |
-| Emails at Scaleway | Content deleted once the receiving server accepts it; sending logs and metadata (recipient address, status) kept as long as the sending domain is active | Scaleway's [data privacy page](https://www.scaleway.com/en/docs/transactional-email/reference-content/data-privacy/), `PROCESSOR_FACTS.scalewaySendingLogs`, checked 2026-10-31 |
+| Emails at Lettermint | Content, recipient address, metadata and events 28 days after sending; delivery events used for analytics at most 90 days | Lettermint's [DPA](https://lettermint.co/dpa) §3.1, `PROCESSOR_FACTS.lettermintRetention`, checked 2026-11-01 |
 | Pages Functions logs at Cloudflare | Not stored: live tail only | [Pages Functions logging](https://developers.cloudflare.com/pages/functions/debugging-and-logging/), checked 2026-10-31 |
 | On-device data | Under the user's control; cleared by "Delete local data" or by clearing site data | Not held by the controller |

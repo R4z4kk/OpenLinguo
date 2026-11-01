@@ -15,7 +15,7 @@ export const authFr: AuthMessages = {
   google: "Continuer avec Google",
   github: "Continuer avec GitHub",
   redirecting: "Ouverture de la page du fournisseur…",
-  mailNote: "L’e-mail part de Scaleway, en France, sans pistage.",
+  mailNote: "L’e-mail part de Lettermint, aux Pays-Bas, sans pistage.",
   codeIntro: "Nous avons envoyé un code à {{email}}. Il est valable {{minutes}}\u00a0minutes.",
   code: "Code reçu par e-mail",
   codeInvalid: "Saisissez les {{length}}\u00a0chiffres du code.",

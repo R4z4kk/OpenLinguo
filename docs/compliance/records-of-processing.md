@@ -14,8 +14,8 @@ Processing that happens only on the user's device (learning data, voice, journal
 | Legal basis | Contract (art. 6(1)(b)) |
 | (c) Data subjects | Registered users aged 15 and over, by self-declaration right after the first sign-in |
 | (c) Data | Email, pseudonym, Google or GitHub account id, sessions (IP address, user agent), sign-in codes (hashed), date of the age declaration, role and ban status, optional TOTP secret and backup codes (encrypted), created and updated dates |
-| (d) Recipients | Maintainer; Cloudflare (processor, D1 in the `eu` jurisdiction); Scaleway (processor, sign-in emails); Google Ireland or GitHub when chosen for sign-in, as independent controllers |
-| (e) Transfers | Cloudflare, Inc. (U.S. company, DPF and SCCs) for requests its network handles outside the EU; none for Scaleway, which processes in France; the exchange with Google Ireland is not a transfer; GitHub, Inc. or GitHub B.V., DPF — see [sub-processors](sub-processors.md) |
+| (d) Recipients | Maintainer; Cloudflare (processor, D1 in the `eu` jurisdiction); Lettermint (processor, sign-in emails); Google Ireland or GitHub when chosen for sign-in, as independent controllers |
+| (e) Transfers | Cloudflare, Inc. (U.S. company, DPF and SCCs) for requests its network handles outside the EU; none for Lettermint, which processes email data in the EU; the exchange with Google Ireland is not a transfer; GitHub, Inc. or GitHub B.V., DPF — see [sub-processors](sub-processors.md) |
 | (f) Erasure | At account deletion; after 2 years of inactivity with prior notice — see [retention](retention-schedule.md) |
 | (g) Security | TLS; no passwords; codes hashed, valid 10 minutes, 3 attempts; cookies `Secure; HttpOnly; SameSite=Lax`; origin check on every state-changing request; rate limits per IP address; secrets as encrypted Pages secrets; no provider token kept; TOTP mandatory for the admin (CNIL recommendation 2025-019), optional for others, asked on every new session once on; the admin role is granted outside the app |
 
@@ -27,7 +27,7 @@ Processing that happens only on the user's device (learning data, voice, journal
 | Legal basis | Contract (art. 6(1)(b)) |
 | (c) Data subjects | Registered users who submit texts |
 | (c) Data | Title and plain text, origin with the AI provenance of a story, licence fixed by the origin (CC BY-SA 4.0 or CC0 1.0), attribution (pseudonym or anonymous), attestation version and time, submitter account id, moderation status, estimated HSK band and publication time, statements of reasons for rejections and removals (DSA art. 17(3), #274) |
-| (d) Recipients | Maintainer; the public for approved texts (attribution name only); Scaleway (processor) for the statement of reasons emailed to the submitter |
+| (d) Recipients | Maintainer; the public for approved texts (attribution name only); Lettermint (processor) for the statement of reasons emailed to the submitter |
 | (e) Transfers | As P1 for Cloudflare |
 | (f) Erasure | Pending or rejected submissions deleted with the account; statements of reasons 1 year after the decision; published texts stay under their licence (CC BY-SA 4.0, or CC0 1.0 for a story) with the chosen attribution unless removed — see [retention](retention-schedule.md) |
 | (g) Security | As P1; plain text only, at most 20,000 characters, at most 5 pending per account, admin-only moderation endpoints |
@@ -40,7 +40,7 @@ Processing that happens only on the user's device (learning data, voice, journal
 | Legal basis | Legal obligation (art. 6(1)(c)): DSA art. 16 and 17, LCEN art. 6 |
 | (c) Data subjects | Anyone who reports a text, with no account; the submitter of the text reported |
 | (c) Data | The text concerned, the reasons, the notifier's name and email (optional for child sexual abuse material, DSA art. 16(2)(c)), the good-faith statement, the time, the decision and its statement of reasons; for a removal order, the order and the text removed |
-| (d) Recipients | Maintainer; Scaleway (processor) for the receipt and the decision; the submitter receives the statement of reasons, never the notice or the notifier's identity; the competent authorities for a report under LCEN art. 6 IV.A or DSA art. 18 |
+| (d) Recipients | Maintainer; Lettermint (processor) for the receipt and the decision; the submitter receives the statement of reasons, never the notice or the notifier's identity; the competent authorities for a report under LCEN art. 6 IV.A or DSA art. 18 |
 | (e) Transfers | As P1 for Cloudflare |
 | (f) Erasure | 1 year after the decision, by the daily jobs (#278); a text removed on a terrorist content removal order and its related data kept 6 months (Regulation 2021/784 art. 6(2)) |
 | (g) Security | As P1; `POST /api/notices` rate limited; notices readable only on admin routes |

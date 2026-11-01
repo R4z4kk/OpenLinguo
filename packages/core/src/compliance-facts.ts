@@ -40,18 +40,19 @@ export const PROCESSOR_FACTS = {
     checkedOn: "2026-10-31",
     reviewBy: "2027-04-30",
   },
-  scalewayDpa: {
-    value: "Data Processing Agreement, version of 2024-06-01, integral part of the contract",
-    source: "https://www.scaleway.com/en/contracts/",
-    checkedOn: "2026-10-31",
-    reviewBy: "2027-04-30",
+  lettermintDpa: {
+    value:
+      "DPA version of 2026-10-09, part of the Terms and Conditions; email data processed in the EU (section 8.1)",
+    source: "https://lettermint.co/dpa",
+    checkedOn: "2026-11-01",
+    reviewBy: "2027-05-01",
   },
-  /** Scaleway says it plans to shorten this in 2027. */
-  scalewaySendingLogs: {
-    value: "kept as long as the sending domain is active; mail content deleted once accepted",
-    source: "https://www.scaleway.com/en/docs/transactional-email/reference-content/data-privacy/",
-    checkedOn: "2026-10-31",
-    reviewBy: "2027-04-30",
+  lettermintRetention: {
+    value:
+      "content, recipient addresses, metadata and events 28 days after the message; delivery events for analytics at most 90 days",
+    source: "https://lettermint.co/dpa (section 3.1)",
+    checkedOn: "2026-11-01",
+    reviewBy: "2027-05-01",
   },
 } as const satisfies Readonly<Record<string, DatedFact>>;
 

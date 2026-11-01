@@ -12,18 +12,14 @@ import { libraryRoutes } from "./library.ts";
 import type { SendMail } from "./mail.ts";
 import { moderationRoutes } from "./moderation.ts";
 import { noticeRoutes } from "./notices.ts";
-import { scalewayMailer } from "./scaleway-mailer.ts";
+import { lettermintMailer } from "./lettermint-mailer.ts";
 import { database, user } from "./schema.ts";
 import { submissionRoutes } from "./submissions.ts";
 
 export type Mailer = (env: AuthEnv) => SendMail;
 
-const scaleway: Mailer = (env) =>
-  scalewayMailer({
-    secretKey: env.SCW_SECRET_KEY,
-    projectId: env.SCW_PROJECT_ID,
-    from: env.MAIL_FROM,
-  });
+const lettermint: Mailer = (env) =>
+  lettermintMailer({ token: env.LETTERMINT_API_TOKEN, from: env.MAIL_FROM });
 
 const ALWAYS_OPEN = new Set(["/api/auth/get-session", "/api/auth/sign-out"]);
 /** Reachable before the age step is answered (ADR 0015). */
@@ -38,7 +34,7 @@ const isAdminPath = (path: string) =>
 
 const refused = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 
-export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) => {
+export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
   // Pages applies apps/web/public/_headers to static files only. HSTS matches it.
