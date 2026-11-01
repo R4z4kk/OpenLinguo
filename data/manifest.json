@@ -10,16 +10,16 @@
   "cc-cedict": {
     "source": "https://www.mdbg.net/chinese/export/cedict/cedict_1_0_ts_utf-8_mdbg.txt.gz",
     "license": "CC-BY-SA-4.0",
-    "version": "2026-10-09T09:12:50Z",
-    "retrievedAt": "2026-10-09T14:18:09.970Z",
+    "version": "2026-10-31T21:06:18Z",
+    "retrievedAt": "2026-11-01T13:26:25.952Z",
     "maxAgeDays": 90,
-    "sha256": "dd2307775fd21f5d350e6cb0e6a946bfe2eaedd79bb9ce524a67e7fccddf6a8f"
+    "sha256": "31b9443682a1c0da94f8d4d296f58c2f989313ee26e64fb862336e6d3c84c486"
   },
   "cfdict": {
     "source": "https://chine.in/assets/cfdict/cfdict.xml",
     "license": "CC-BY-SA-3.0",
     "version": "2024-12-14T02:30",
-    "retrievedAt": "2026-10-09T17:14:04.715Z",
+    "retrievedAt": "2026-11-01T13:26:27.915Z",
     "maxAgeDays": 90,
     "sha256": "9c408f08998fefdc898e10adbf16b315e4cd6a4d7fa08e8204791e6312a5e520"
   },
@@ -27,7 +27,7 @@
     "source": "https://github.com/lxgw/LxgwWenkaiGB/releases/download/v1.522/LXGWWenKaiGB-Regular.ttf",
     "license": "OFL-1.1",
     "version": "LXGW WenKai GB v1.522",
-    "retrievedAt": "2026-10-09T20:48:58.450Z",
+    "retrievedAt": "2026-11-01T13:27:41.241Z",
     "maxAgeDays": 365,
     "sha256": "295568c131648062107543aa159c97dd49564be791136c2abf74cad83eba3f7f"
   },
@@ -35,7 +35,7 @@
     "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/SC/NotoSansSC-Regular.otf",
     "license": "OFL-1.1",
     "version": "notofonts/noto-cjk@f8d1575",
-    "retrievedAt": "2026-10-09T20:48:24.030Z",
+    "retrievedAt": "2026-11-01T13:26:58.334Z",
     "maxAgeDays": 365,
     "sha256": "faa6c9df652116dde789d351359f3d7e5d2285a2b2a1f04a2d7244df706d5ea9"
   },
@@ -43,7 +43,7 @@
     "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/f8d157532fbfaeda587e826d4cd5b21a49186f7c/Sans/SubsetOTF/SC/NotoSansSC-Bold.otf",
     "license": "OFL-1.1",
     "version": "notofonts/noto-cjk@f8d1575",
-    "retrievedAt": "2026-10-09T20:48:40.887Z",
+    "retrievedAt": "2026-11-01T13:27:19.826Z",
     "maxAgeDays": 365,
     "sha256": "c6cb5a93abaa9edc8ee7463b7ebb7f42d618d40e6ed2f7a5371c97b0b64767c0"
   },
@@ -51,7 +51,7 @@
     "source": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP1-Regular.ttf",
     "license": "OFL-1.1",
     "version": "Plangothic V2.9.5795",
-    "retrievedAt": "2026-10-12T09:37:44.352Z",
+    "retrievedAt": "2026-11-01T13:27:59.276Z",
     "maxAgeDays": 365,
     "sha256": "550b5d0775b15405946b18f4843df439a51e69508d7e6778d94c1f7a53dc5ad6"
   },
@@ -59,7 +59,7 @@
     "source": "https://github.com/Fitzgerald-Porthmouth-Koenigsegg/Plangothic-Project/releases/download/V2.9.5795/PlangothicP2-Regular.ttf",
     "license": "OFL-1.1",
     "version": "Plangothic V2.9.5795",
-    "retrievedAt": "2026-10-12T09:37:45.855Z",
+    "retrievedAt": "2026-11-01T13:28:00.087Z",
     "maxAgeDays": 365,
     "sha256": "681933370adfe0fc7253f77735275a82fea09fe4f8adba907bdeb46c110daf8f"
   },
@@ -67,7 +67,7 @@
     "source": "https://raw.githubusercontent.com/elkmovie/hsk30/7f3d4fdcfcb6e826001df062747c943d1fa8160e/charlist.txt",
     "license": "MIT transcription (Pleco Inc.) of the GF0025-2021 standard",
     "version": "GF0025-2021, elkmovie/hsk30@7f3d4fd",
-    "retrievedAt": "2026-10-09T18:36:03.640Z",
+    "retrievedAt": "2026-11-01T13:26:56.430Z",
     "maxAgeDays": 365,
     "sha256": "63dc1900d81ab76f358ca3ed169a7c4a2f8f2faaeeed6c394d13a5642ccfb7a4"
   },
@@ -75,7 +75,7 @@
     "source": "https://raw.githubusercontent.com/elkmovie/hsk30/7f3d4fdcfcb6e826001df062747c943d1fa8160e/wordlist.txt",
     "license": "MIT transcription (Pleco Inc.) of the GF0025-2021 standard",
     "version": "GF0025-2021, elkmovie/hsk30@7f3d4fd",
-    "retrievedAt": "2026-10-09T18:36:04.076Z",
+    "retrievedAt": "2026-11-01T13:26:56.582Z",
     "maxAgeDays": 365,
     "sha256": "4a8cfdc3a8fa85ced837c71aa187454c4d0ee36a1f70765655a93acb6a463af3"
   },
@@ -83,7 +83,7 @@
     "source": "https://registry.npmjs.org/hanzi-writer-data/-/hanzi-writer-data-2.0.1.tgz",
     "license": "Arphic-1999",
     "version": "hanzi-writer-data@2.0.1",
-    "retrievedAt": "2026-10-09T19:28:36.212Z",
+    "retrievedAt": "2026-11-01T13:26:57.797Z",
     "maxAgeDays": 365,
     "sha256": "72baf3d82b114e60d6e40ea05f24d2262a05cd39d544e2f322ba2fceb7beff15"
   },
@@ -91,7 +91,7 @@
     "source": "https://raw.githubusercontent.com/harukicoder/hsk30/36c0d11347b5d4caea52917d1262404824ad58d5/corpus/syllabus2025/syllabus2025_chars.tsv",
     "license": "MIT transcription of CLEC/CTI syllabus facts",
     "version": "2025-11 syllabus, harukicoder/hsk30@36c0d11",
-    "retrievedAt": "2026-10-09T18:10:14.665Z",
+    "retrievedAt": "2026-11-01T13:26:55.711Z",
     "maxAgeDays": 365,
     "sha256": "baeeb3aa87f3982e7636f25e0830f67a435db74ea04ab89cdfb28acce6f44656"
   },
@@ -99,7 +99,7 @@
     "source": "https://raw.githubusercontent.com/harukicoder/hsk30/36c0d11347b5d4caea52917d1262404824ad58d5/corpus/syllabus2025/syllabus2025_words.tsv",
     "license": "MIT transcription of CLEC/CTI syllabus facts",
     "version": "2025-11 syllabus, harukicoder/hsk30@36c0d11",
-    "retrievedAt": "2026-10-09T18:10:15.183Z",
+    "retrievedAt": "2026-11-01T13:26:55.886Z",
     "maxAgeDays": 365,
     "sha256": "8d5f5823c31f78445ba06fc78a6e60f0992fb3a027e076b12bad5f0e24179cf2"
   },
@@ -107,7 +107,7 @@
     "source": "https://raw.githubusercontent.com/fxsjy/jieba/67fa2e36e72f69d9134b8a1037b83fbb070b9775/jieba/dict.txt",
     "license": "MIT",
     "version": "fxsjy/jieba@67fa2e3",
-    "retrievedAt": "2026-10-12T12:36:41.308Z",
+    "retrievedAt": "2026-11-01T13:26:53.126Z",
     "maxAgeDays": 365,
     "sha256": "7197c3211ddd98962b036cdf40324d1ea2bfaa12bd028e68faa70111a88e12a8"
   },
@@ -115,7 +115,7 @@
     "source": "https://raw.githubusercontent.com/skishore/makemeahanzi/bddc96d41bef78427ed0e034e9f7e31d71fd1b92/dictionary.txt",
     "license": "LGPL-3.0-or-later",
     "version": "skishore/makemeahanzi@bddc96d",
-    "retrievedAt": "2026-10-09T19:28:35.758Z",
+    "retrievedAt": "2026-11-01T13:26:57.178Z",
     "maxAgeDays": 365,
     "sha256": "744bb05d5b0742e9ee35c37791f94d56a173349b3367569e7ca11e510364d203"
   },
@@ -130,24 +130,24 @@
   "wiktionary-fr-zh": {
     "source": "https://kaikki.org/frwiktionary/Chinois/kaikki.org-dictionary-Chinois.jsonl.gz",
     "license": "CC-BY-SA-4.0",
-    "version": "sha256 b24060c79a90",
-    "retrievedAt": "2026-10-09T19:01:10.578Z",
+    "version": "sha256 0a8158b267eb",
+    "retrievedAt": "2026-11-01T13:26:30.605Z",
     "maxAgeDays": 90,
-    "sha256": "b24060c79a908fffd25fb94b269ccc4384bc98bbd30c834eba36526997b87eb4"
+    "sha256": "0a8158b267ebc4827685d607dcff103293cf8f0a2a854f57a31817bc5d8872bf"
   },
   "wiktionary-zh": {
     "source": "https://kaikki.org/dictionary/Chinese/kaikki.org-dictionary-Chinese.jsonl.gz",
     "license": "CC-BY-SA-4.0",
-    "version": "sha256 be38ed4cf2ae",
-    "retrievedAt": "2026-10-12T11:18:41.576Z",
+    "version": "sha256 9663c0132201",
+    "retrievedAt": "2026-11-01T13:26:33.338Z",
     "maxAgeDays": 90,
-    "sha256": "be38ed4cf2ae0667baa31e25b831b25e0a170fd891cfc212683240c09f08bf38"
+    "sha256": "9663c01322014cea417fbe4812cc073ca2d6a6998946edb244bf4f26853819c9"
   },
   "wordfreq-zh": {
     "source": "https://raw.githubusercontent.com/rspeer/wordfreq/912caf64b657478d1dff1138efdc078947d54bb1/wordfreq/data/large_zh.msgpack.gz",
     "license": "CC-BY-SA-4.0",
     "version": "large_zh, rspeer/wordfreq@912caf6",
-    "retrievedAt": "2026-10-09T21:45:04.354Z",
+    "retrievedAt": "2026-11-01T13:26:54.978Z",
     "maxAgeDays": 365,
     "sha256": "e079d7aaff1cfb92874850cb3ffbc7b611af939d9d671c1cbda932d968467cdd"
   }

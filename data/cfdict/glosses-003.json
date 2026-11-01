@@ -1,8 +1,4 @@
 [
-["甘汞","gan1 gong3",["calomel"]],
-["甘油","gan1 you2",["glycérine"]],
-["甘甜","gan1 tian2",["doux","sucré","agréable"]],
-["甘纳许","gan1 na4 xu3",["ganache (emprunt)"]],
 ["甘肃","gan1 su4",["Gansu"]],
 ["甘肃柳莺","gan1 su4 liu3 ying1",["Pouillot du Gansu"]],
 ["甘苦","gan1 ku3",["douceur et amertume de la vie","joies et peines","partager joies et épreuves","prendre part à la joie et à la douleur de qqn","être solidaire pour le meilleur et pour le pire","dureté d'un travail"]],
@@ -1989,7 +1985,6 @@
 ["研磨","yan2 mo2",["broyer","polir","moudre","rodage","meule"]],
 ["研究","yan2 jiu1",["étudier","faire de la recherche","examiner","recherche scientifique","étude","connaissances approfondies"]],
 ["研究中心","yan2 jiu1 zhong1 xin1",["centre de recherche"]],
-["研究人员","yan2 jiu1 ren2 yuan2",["chercheur"]],
 ["研究员","yan2 jiu1 yuan2",["chercheur","directeur de recherche"]],
 ["研究所","yan2 jiu1 suo3",["institut de recherche"]],
 ["研究报告","yan2 jiu1 bao4 gao4",["rapport de recherche"]],
@@ -5227,7 +5222,6 @@
 ["羢","rong2",["laine de mouton"]],
 ["群","qun2",["groupe (math.)","groupe","troupeau","essaim"]],
 ["群众","qun2 zhong4",["les masses"]],
-["群众外包","qun2 zhong4 wai4 bao1",["crowdsourcing"]],
 ["群体","qun2 ti3",["colonie"]],
 ["群发","qun2 fa1",["envoyer à plusieurs destinataires","envoi de masse","se dérouler de manière groupée"]],
 ["群发性地震","qun2 fa1 xing4 di4 zhen4",["masse sismique"]],
@@ -8428,7 +8422,6 @@
 ["蠼","qu2",["dermaptère","perce-oreilles"]],
 ["蠼螋","qu2 sou1",["dermaptère","perce-oreilles"]],
 ["血","xue4",["sang"]],
-["血","xie3",["sang"]],
 ["血丝","xue4 si1",["traits de sang","veines visibles","(les yeux) injectés de sang"]],
 ["血债要用血来还","xue4 zhai4 yao4 yong4 xue4 lai2 huan2",["une dette de sang doit être lavée dans le sang","le sang appelle le sang"]],
 ["血压","xue4 ya1",["pression artérielle"]],
@@ -9998,5 +9991,12 @@
 ["调兵山市","diao4 bing1 shan1 shi4",["Diaobingshan (Liaoning)"]],
 ["调养","tiao2 yang3",["se soigner","ménager sa santé"]],
 ["调制","tiao2 zhi4",["préparation","préparatoire","confectionner"]],
-["调制解调器","tiao2 zhi4 jie3 tiao2 qi4",["modem"]]
+["调制解调器","tiao2 zhi4 jie3 tiao2 qi4",["modem"]],
+["调剂","tiao2 ji4",["préparer un produit pharmaceutique","préparer une ordonnance","ajuster","régler"]],
+["调动","diao4 dong4",["changer","muter","mobiliser"]],
+["调升","diao4 sheng1",["promouvoir","promotionner","mettre en avant"]],
+["调升","tiao2 sheng1",["ajuster vers le haut","mettre à niveau","hausse (des prix)"]],
+["调协","tiao2 xie2",["harmoniser","coïncider","faire se correspondre","coordonner"]],
+["调发","diao4 fa1",["déployer"]],
+["调变","tiao2 bian4",["modulation","moduler (électronique)"]]
 ]

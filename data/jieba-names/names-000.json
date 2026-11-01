@@ -1985,6 +1985,7 @@
 ["中君臣","person"],
 ["中和作用","organization"],
 ["中和力","name"],
+["中和市","place"],
 ["中和西乡","place"],
 ["中唐时期","name"],
 ["中商","organization"],
@@ -6604,7 +6605,6 @@
 ["伯爵爵位","person"],
 ["伯父母","person"],
 ["伯牙","place"],
-["伯特利","person"],
 ["伯玉知非","person"],
 ["伯班克","person"],
 ["伯理复","person"],
@@ -9323,7 +9323,6 @@
 ["共青团中央书记处","organization"],
 ["关一战","person"],
 ["关东地区","place"],
-["关东糖","person"],
 ["关中人","person"],
 ["关丽仪","person"],
 ["关乃忻","person"],
@@ -9998,5 +9997,6 @@
 ["冯振武","person"],
 ["冯提尔","person"],
 ["冯敏杰","person"],
-["冯敬之","person"]
+["冯敬之","person"],
+["冯文修","person"]
 ]
