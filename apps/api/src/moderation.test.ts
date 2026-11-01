@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import type { SendMail } from "./mail.ts";
 import {
+  DELETED_ACCOUNT,
   database,
   decision,
   securityEvent,
@@ -301,5 +302,28 @@ describe("decision", () => {
     expect(await db.select().from(decision)).toHaveLength(1);
     await db.delete(user).where(eq(user.email, "learner@example.test"));
     expect(await db.select().from(decision)).toEqual([]);
+  });
+});
+
+describe("a kept text of a deleted account", () => {
+  it("is removed with the statement stored and no mail to send", async () => {
+    const { id } = await submitted(await signedIn("learner@example.test"));
+    await db
+      .insert(user)
+      .values({ ...DELETED_ACCOUNT, emailVerified: false })
+      .onConflictDoNothing();
+    await db
+      .update(submission)
+      .set({ status: "approved", userId: DELETED_ACCOUNT.id })
+      .where(eq(submission.id, id));
+    const admin = await signedInAdmin();
+    const before = mailer.sent.length;
+    const response = await call(`/api/admin/submissions/${id}/remove`, statement, admin);
+    expect(response.status).toBe(201);
+    expect(mailer.sent.length).toBe(before);
+    expect(await statusOf(id)).toBe("removed");
+    expect(await db.select({ source: decision.source }).from(decision)).toEqual([
+      { source: "own-initiative" },
+    ]);
   });
 });

@@ -56,6 +56,38 @@ export const authEn = {
     deletedTitle: "Account deleted",
     deletedBody: "Nothing was kept. The app and the library stay usable without an account.",
   },
+  data: {
+    title: "My data",
+    intro:
+      "Everything the server holds about your account, in one JSON file: the account, how it signs in, its sessions, the texts you sent, the decisions on them and the security events. Your learning data stays on this device: Profile › Data saves it.",
+    download: "Download my data (.json)",
+    downloading: "Preparing the file…",
+    downloaded: "File saved: {{name}}",
+  },
+  deletion: {
+    title: "Delete my account",
+    intro: "Deletes your account on the server. Your learning data on this device stays.",
+    open: "Delete my account",
+    dialogTitle: "Delete your account?",
+    dialogBody:
+      "Your account, its sessions and its sign-in methods are deleted at once. This cannot be undone.",
+    published: "Your published texts",
+    choices: {
+      "keep-anonymous": "Keep them, with no name",
+      "keep-named": "Keep them with my pseudonym",
+      remove: "Remove them from the library",
+    },
+    pending: "Texts awaiting review or refused are deleted.",
+    copies:
+      "Copies other learners already imported stay on their devices: the CC BY-SA licence cannot be withdrawn.",
+    keptTitle: "What the law makes us keep",
+    kept: "If you sent texts to the library, French law (décret 2021-1362) makes us keep your email for 5 years and your pseudonyms for 1 year, locked away: only authorities entitled by law can ask for them. The address and time of each change to your texts are kept for 1 year.",
+    cancel: "Cancel",
+    confirm: "Delete for good",
+    deleting: "Deleting your account…",
+    doneTitle: "Account deleted",
+    doneBody: "Your account is deleted. The app and the library stay usable without an account.",
+  },
   pseudonym: {
     title: "Pseudonym",
     none: "None yet. You choose it the first time you sign a text.",

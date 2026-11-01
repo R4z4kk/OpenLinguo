@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { AgeDeclaration, PseudonymUpdate, SessionAnswer, TotpSetup } from "./account.ts";
+import {
+  AccountDeletion,
+  AccountExport,
+  AgeDeclaration,
+  PseudonymUpdate,
+  SessionAnswer,
+  TotpSetup,
+} from "./account.ts";
 import { parseWith } from "./validation.ts";
 
 describe("AgeDeclaration", () => {
@@ -52,5 +59,42 @@ describe("TotpSetup", () => {
     expect(parseWith(TotpSetup, { totpURI, backupCodes: ["abcde-fghij"] }).ok).toBe(true);
     expect(parseWith(TotpSetup, { totpURI: "https://x.test", backupCodes: ["a"] }).ok).toBe(false);
     expect(parseWith(TotpSetup, { totpURI, backupCodes: [] }).ok).toBe(false);
+  });
+});
+
+describe("AccountDeletion", () => {
+  it("takes one of the three choices for published texts", () => {
+    for (const published of ["keep-named", "keep-anonymous", "remove"]) {
+      expect(parseWith(AccountDeletion, { published }).ok).toBe(true);
+    }
+    expect(parseWith(AccountDeletion, { published: "keep" }).ok).toBe(false);
+    expect(parseWith(AccountDeletion, {}).ok).toBe(false);
+  });
+});
+
+describe("AccountExport", () => {
+  it("describes the account without tokens", () => {
+    const at = "2026-11-01T10:00:00.000Z";
+    const exported = {
+      exportedAt: at,
+      account: {
+        id: "u1",
+        email: "lin@example.test",
+        pseudonym: null,
+        createdAt: at,
+        ageDeclaredAt: at,
+        role: null,
+        twoFactorEnabled: false,
+      },
+      signInMethods: [{ providerId: "email-otp", createdAt: at }],
+      sessions: [{ createdAt: at, expiresAt: at, ipAddress: "198.51.100.1", userAgent: null }],
+      submissions: [],
+      decisions: [],
+      securityEvents: [
+        { type: "sign_in", method: "email-otp", ipAddress: null, userAgent: null, createdAt: at },
+      ],
+    };
+    expect(parseWith(AccountExport, exported)).toEqual({ ok: true, value: exported });
+    expect(parseWith(AccountExport, { ...exported, sessions: [{ token: "t" }] }).ok).toBe(false);
   });
 });

@@ -1,9 +1,10 @@
+import { reapplyErasures } from "./account.ts";
 import { type Database, jobRun } from "./schema.ts";
 
 export type Job = { readonly name: string; readonly run: (db: Database) => Promise<void> };
 
 /** The daily jobs, run by the cron Worker and checked by `GET /api/health`. */
-export const JOBS: readonly Job[] = [];
+export const JOBS: readonly Job[] = [reapplyErasures];
 
 export const runJobs = async (db: Database, jobs: readonly Job[]): Promise<void> => {
   for (const job of jobs) {

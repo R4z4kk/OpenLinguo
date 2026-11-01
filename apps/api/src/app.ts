@@ -4,6 +4,7 @@ import { getSessionCookie } from "better-auth/cookies";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
+import { accountRoutes } from "./account.ts";
 import { type Auth, AuthEnv, createAuth } from "./auth.ts";
 import { unhealthyJobs } from "./health.ts";
 import { JOBS } from "./jobs.ts";
@@ -69,6 +70,10 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
       ? await authOf(c.env).api.getSession({ headers: c.req.raw.headers })
       : null;
     if (!current) return admin ? c.json(refused("UNAUTHORIZED", "Sign in first"), 401) : next();
+    // Once the age step is answered, deletion seals what the décret keeps: only our route does it.
+    if (path === "/api/auth/delete-user" && current.user.ageDeclaredAt) {
+      return c.json(refused("USE_ACCOUNT_DELETION", "Delete the account in Compte"), 403);
+    }
     if (!current.user.ageDeclaredAt && !BEFORE_AGE_STEP.has(path)) {
       return c.json(refused("AGE_DECLARATION_REQUIRED", "Answer the age step first"), 403);
     }
@@ -116,6 +121,7 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
     return { sendMail: mailer(settings), contact: settings.CONTACT_EMAIL };
   };
 
+  app.route("/account", accountRoutes(authOf));
   app.route("/submissions", submissionRoutes(authOf));
   app.route("/library", libraryRoutes());
   app.route("/notices", noticeRoutes(moderationOf));

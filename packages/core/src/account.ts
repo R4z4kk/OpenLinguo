@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { Pseudonym } from "./submission.ts";
+import { StatementOfReasons } from "./moderation.ts";
+import { Pseudonym, Submissions } from "./submission.ts";
 
 /** The age step after the first sign-in (ADR 0015): « moins de 15 ans » deletes the account. */
 export const AgeDeclaration = z.object({ answer: z.enum(["15-or-over", "under-15"]) });
@@ -52,3 +53,49 @@ export const AuthErrorCode = z.enum([
   "INVALID_BACKUP_CODE",
 ]);
 export type AuthErrorCode = z.output<typeof AuthErrorCode>;
+
+/** What happens to the published texts when the account is deleted (ADR 0015). */
+export const PUBLISHED_CHOICES = ["keep-named", "keep-anonymous", "remove"] as const;
+export const PublishedChoice = z.enum(PUBLISHED_CHOICES);
+export type PublishedChoice = z.output<typeof PublishedChoice>;
+
+/** `POST /api/account/delete`. */
+export const AccountDeletion = z.object({ published: PublishedChoice });
+export type AccountDeletion = z.output<typeof AccountDeletion>;
+
+const instant = z.iso.datetime();
+
+/** `GET /api/account/export` (GDPR art. 15 and 20): no token, no secret. */
+export const AccountExport = z.object({
+  exportedAt: instant,
+  account: z.object({
+    id: z.string().min(1),
+    email: z.string().min(1),
+    pseudonym: z.string().nullable(),
+    createdAt: instant,
+    ageDeclaredAt: instant.nullable(),
+    role: z.string().nullable(),
+    twoFactorEnabled: z.boolean(),
+  }),
+  signInMethods: z.array(z.object({ providerId: z.string().min(1), createdAt: instant })),
+  sessions: z.array(
+    z.object({
+      createdAt: instant,
+      expiresAt: instant,
+      ipAddress: z.string().nullable(),
+      userAgent: z.string().nullable(),
+    }),
+  ),
+  submissions: Submissions,
+  decisions: z.array(StatementOfReasons),
+  securityEvents: z.array(
+    z.object({
+      type: z.string().min(1),
+      method: z.string().min(1),
+      ipAddress: z.string().nullable(),
+      userAgent: z.string().nullable(),
+      createdAt: instant,
+    }),
+  ),
+});
+export type AccountExport = z.output<typeof AccountExport>;

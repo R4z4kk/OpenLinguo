@@ -43,6 +43,13 @@
       "when": 1793481371882,
       "tag": "0005_notices",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793484640900,
+      "tag": "0006_account_deletion",
+      "breakpoints": true
     }
   ]
 }

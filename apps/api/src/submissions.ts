@@ -6,7 +6,7 @@ import {
   Submission,
 } from "@openlinguo/core/submission";
 import { and, count, desc, eq } from "drizzle-orm";
-import { type Context, Hono } from "hono";
+import { Hono } from "hono";
 import type { Auth } from "./auth.ts";
 import { database, type HOSTING_OPERATIONS, hostingRecord, submission, user } from "./schema.ts";
 
@@ -24,25 +24,27 @@ const toSubmission = (row: typeof submission.$inferSelect): Submission =>
     createdAt: row.createdAt.toISOString(),
   });
 
-/** The connection identifier and protocols of décret 2021-1362 art. 5 2°, for one operation. */
-const hostingRow = (
-  c: Context<Routes>,
-  submissionId: string,
-  operation: (typeof HOSTING_OPERATIONS)[number],
-) => {
-  const cf = c.req.raw.cf;
+export type Connection = { readonly ipAddress: string | null; readonly protocol: string | null };
+
+/** The connection identifier and protocols of décret 2021-1362 art. 5 2°. */
+export const connectionOf = (request: Request): Connection => {
+  const cf = request.cf;
   const protocol = [cf?.["httpProtocol"], cf?.["tlsVersion"]].filter(
     (part): part is string => typeof part === "string" && part !== "",
   );
   return {
-    userId: c.var.userId,
-    submissionId,
-    operation,
-    ipAddress: c.req.header("cf-connecting-ip") ?? null,
-    port: null,
+    ipAddress: request.headers.get("cf-connecting-ip"),
     protocol: protocol.length > 0 ? protocol.join(" ") : null,
   };
 };
+
+/** One operation on a text, for `hosting_record`. */
+export const hostingRow = (
+  userId: string,
+  submissionId: string,
+  operation: (typeof HOSTING_OPERATIONS)[number],
+  { ipAddress, protocol }: Connection,
+) => ({ userId, submissionId, operation, ipAddress, port: null, protocol });
 
 /** `/api/submissions`: the signed-in learner's texts sent to the shared library (ADR 0015). */
 export const submissionRoutes = (authOf: (env: Env) => Auth) =>
@@ -93,7 +95,9 @@ export const submissionRoutes = (authOf: (env: Env) => Auth) =>
         createdAt: now,
       };
       const created = db.insert(submission).values(row);
-      const recorded = db.insert(hostingRecord).values(hostingRow(c, row.id, "create"));
+      const recorded = db
+        .insert(hostingRecord)
+        .values(hostingRow(c.var.userId, row.id, "create", connectionOf(c.req.raw)));
       if (name !== null && c.var.userName === "") {
         const named = db.update(user).set({ name }).where(eq(user.id, c.var.userId));
         await db.batch([created, recorded, named]);
@@ -113,7 +117,9 @@ export const submissionRoutes = (authOf: (env: Env) => Auth) =>
       }
       await db.batch([
         db.delete(submission).where(and(mine, eq(submission.status, "pending"))),
-        db.insert(hostingRecord).values(hostingRow(c, id, "delete")),
+        db
+          .insert(hostingRecord)
+          .values(hostingRow(c.var.userId, id, "delete", connectionOf(c.req.raw))),
       ]);
       return c.body(null, 204);
     });

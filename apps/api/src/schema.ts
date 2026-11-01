@@ -1,3 +1,4 @@
+import { PUBLISHED_CHOICES } from "@openlinguo/core/account";
 import {
   DECISION_SOURCES,
   GROUNDS,
@@ -258,6 +259,52 @@ export const hostingRecord = sqliteTable(
   },
   (table) => [
     check("hosting_record_operation", sql`${table.operation} in ('create', 'edit', 'delete')`),
+  ],
+);
+
+/**
+ * Holds the published texts a deleted account chose to keep (ADR 0015): no person, no session, an
+ * `.invalid` address that cannot receive a code. The retention jobs (#278) must never delete it.
+ */
+export const DELETED_ACCOUNT = {
+  id: "deleted-account",
+  name: "",
+  email: "deleted-account@openlinguo.invalid",
+  ageDeclaredAt: new Date(0),
+} as const;
+
+/**
+ * Décret 2021-1362 arts 2 and 3, for a deleted account that submitted: the email for 5 years, the
+ * pseudonyms for 1 year. Read only by the jobs and the admin export for an authority.
+ */
+export const sealedIdentity = sqliteTable("sealed_identity", {
+  userId: text().primaryKey(),
+  email: text().notNull(),
+  emailUntil: integer({ mode: "timestamp_ms" }).notNull(),
+  /** `null` once the year is over. */
+  pseudonyms: text({ mode: "json" }).$type<string[]>(),
+  pseudonymsUntil: integer({ mode: "timestamp_ms" }).notNull(),
+  sealedAt: createdAt(),
+});
+
+/**
+ * Accounts deleted in the last 8 days, deleted again after a D1 Time Travel restore (EDPB CEF 2025
+ * report on erasure), with the learner's choice and the connection the décret records.
+ */
+export const erasure = sqliteTable(
+  "erasure",
+  {
+    userId: text().primaryKey(),
+    published: text({ enum: PUBLISHED_CHOICES }).notNull(),
+    ipAddress: text(),
+    protocol: text(),
+    erasedAt: integer({ mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [
+    check(
+      "erasure_published",
+      sql`${table.published} in ('keep-named', 'keep-anonymous', 'remove')`,
+    ),
   ],
 );
 

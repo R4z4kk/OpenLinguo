@@ -9,10 +9,12 @@ import {
   type Restriction,
   type StatementOfReasons,
 } from "@openlinguo/core/moderation";
+import { ok } from "@openlinguo/core/result";
 import { Submission } from "@openlinguo/core/submission";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { type Context, Hono } from "hono";
+import { isDeletedAccount } from "./account.ts";
 import type { Auth } from "./auth.ts";
 import type { SendMail } from "./mail.ts";
 import { noticeDecisionMail, statementOfReasonsMail } from "./mail-templates.ts";
@@ -100,7 +102,12 @@ export const moderationRoutes = (
     if (!parsed.success) return invalid(c, parsed.error.issues);
     const db = database(c.env.DB);
     const [found] = await db
-      .select({ title: submission.title, status: submission.status, email: user.email })
+      .select({
+        title: submission.title,
+        status: submission.status,
+        email: user.email,
+        userId: user.id,
+      })
       .from(submission)
       .innerJoin(user, eq(user.id, submission.userId))
       .where(eq(submission.id, id));
@@ -121,9 +128,10 @@ export const moderationRoutes = (
       decidedAt: decidedAt.toISOString(),
     };
     const { sendMail, contact } = moderationOf(c.env);
-    const sent = await sendMail(
-      statementOfReasonsMail(found.email, found.title, statement, contact),
-    );
+    // A text kept by a deleted account has no one to tell.
+    const sent = isDeletedAccount(found.userId)
+      ? ok(null)
+      : await sendMail(statementOfReasonsMail(found.email, found.title, statement, contact));
     if (!sent.ok) {
       console.error("statement of reasons not sent", sent.error);
       return c.json(refusal("MAIL_FAILED", "The statement of reasons could not be sent"), 502);

@@ -1,4 +1,11 @@
-import { AgeDeclaration, PseudonymUpdate } from "@openlinguo/core/account";
+import {
+  AccountDeletion,
+  type AccountExport,
+  AgeDeclaration,
+  type PublishedChoice,
+  PseudonymUpdate,
+} from "@openlinguo/core/account";
+import { LICENCES, type Submission } from "@openlinguo/core/submission";
 import { expect, type Page, type Route } from "@playwright/test";
 import { z } from "zod";
 import { authEn } from "../src/i18n/auth/en.ts";
@@ -29,6 +36,8 @@ type FakeApi = {
   expired: boolean;
   offline: boolean;
   readonly codesSentTo: string[];
+  readonly submissions: Submission[];
+  deletedWith: PublishedChoice | null;
 };
 
 const user = (email: string, rest: Partial<User>): User => ({
@@ -49,6 +58,8 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
     expired: false,
     offline: false,
     codesSentTo: [],
+    submissions: [],
+    deletedWith: null,
   };
   const json = (route: Route, status: number, body: unknown) =>
     route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
@@ -169,7 +180,43 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
         return;
       }
       case "/api/submissions":
-        await json(route, 200, []);
+        await json(route, 200, api.submissions);
+        return;
+      case "/api/account/export": {
+        if (current === null) {
+          await refuse(route, 401, "UNAUTHORIZED");
+          return;
+        }
+        const at = new Date().toISOString();
+        const exported: AccountExport = {
+          exportedAt: at,
+          account: {
+            id: "u1",
+            email: current.email,
+            pseudonym: current.name === "" ? null : current.name,
+            createdAt: at,
+            ageDeclaredAt: current.ageDeclaredAt,
+            role: current.role,
+            twoFactorEnabled: current.twoFactorEnabled,
+          },
+          signInMethods: [],
+          sessions: [],
+          submissions: api.submissions,
+          decisions: [],
+          securityEvents: [],
+        };
+        await json(route, 200, exported);
+        return;
+      }
+      case "/api/account/delete":
+        if (current === null) {
+          await refuse(route, 401, "UNAUTHORIZED");
+          return;
+        }
+        api.deletedWith = AccountDeletion.parse(body).published;
+        api.users.delete(current.email);
+        api.current = null;
+        await route.fulfill({ status: 204 });
         return;
       default:
         await refuse(route, 404, "NOT_FOUND");
@@ -406,4 +453,71 @@ test("sets up the admin's authenticator, then asks every new session for it", as
   await page.keyboard.press("Enter");
   await expect(main.getByText(authEn.twoFactor.on)).toBeVisible();
   expect(api.current.verified).toBe(true);
+});
+
+test("downloads the account data, then deletes the account and keeps its texts", async ({
+  page,
+}) => {
+  const api = await fakeApi(page);
+  api.users.set("lin@example.test", user("lin@example.test", { name: "小明" }));
+  api.current = { email: "lin@example.test", verified: false };
+  api.submissions.push({
+    id: "s1",
+    title: "我的周末",
+    body: "我周末去公园。",
+    origin: "human",
+    provenance: null,
+    licence: LICENCES.human,
+    attribution: "小明",
+    status: "approved",
+    attestationVersion: 1,
+    attestedAt: "2026-10-31T10:00:00.000Z",
+    createdAt: "2026-10-31T10:00:00.000Z",
+  });
+  const main = page.getByRole("main");
+  await page.goto("/profile/account");
+  await expect(main.getByRole("heading", { name: authEn.data.title })).toBeVisible({
+    timeout: 90_000,
+  });
+  const saved = page.waitForEvent("download");
+  await press(page, authEn.data.download);
+  expect((await saved).suggestedFilename()).toMatch(
+    /^openlinguo-account-\d{4}-\d{2}-\d{2}\.json$/u,
+  );
+  await expect(main.getByRole("status").getByText(/^File saved: /u)).toBeVisible();
+  await noViolations(page);
+
+  await press(page, authEn.deletion.open);
+  const dialog = page.getByRole("dialog", { name: authEn.deletion.dialogTitle });
+  await expect(dialog.getByRole("button", { name: authEn.deletion.cancel })).toBeFocused();
+  await expect(
+    dialog.getByRole("radio", { name: authEn.deletion.choices["keep-anonymous"] }),
+  ).toBeChecked();
+  await expect(dialog.getByText(authEn.deletion.keptTitle)).toBeVisible();
+  await noViolations(page);
+
+  await dialog.getByRole("radio", { name: authEn.deletion.choices["keep-named"] }).check();
+  await dialog.getByRole("button", { name: authEn.deletion.confirm }).click();
+  await expect(main.getByRole("heading", { name: authEn.deletion.doneTitle })).toBeFocused();
+  expect(api.deletedWith).toBe("keep-named");
+  expect(api.users.has("lin@example.test")).toBe(false);
+  await noViolations(page);
+});
+
+test("asks nothing about published texts for an account without any", async ({ page }) => {
+  const api = await fakeApi(page);
+  api.users.set("lin@example.test", user("lin@example.test", {}));
+  api.current = { email: "lin@example.test", verified: false };
+  const main = page.getByRole("main");
+  await page.goto("/profile/account");
+  await expect(main.getByRole("heading", { name: authEn.deletion.title })).toBeVisible({
+    timeout: 90_000,
+  });
+  await press(page, authEn.deletion.open);
+  const dialog = page.getByRole("dialog", { name: authEn.deletion.dialogTitle });
+  await expect(dialog.getByText(authEn.deletion.copies)).toBeVisible();
+  await expect(dialog.getByRole("radio")).toHaveCount(0);
+  await press(page, authEn.deletion.cancel);
+  await expect(dialog).toBeHidden();
+  expect(api.deletedWith).toBeNull();
 });

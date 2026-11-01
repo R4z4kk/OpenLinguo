@@ -28,7 +28,9 @@ export const Dialog = ({
   useEffect(() => {
     if (dialog === null || dialog.open) return;
     dialog.showModal();
+    // Otherwise the browser focuses the first focusable element, or the one marked to start on.
     if (focusHeading) heading.current?.focus();
+    else dialog.querySelector<HTMLElement>("[data-autofocus]")?.focus();
   }, [dialog, focusHeading]);
   const close = (): void => {
     dialog?.close();

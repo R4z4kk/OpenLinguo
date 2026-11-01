@@ -62,6 +62,40 @@ export const authFr: AuthMessages = {
     deletedBody:
       "Rien n’a été gardé. L’application et la bibliothèque restent utilisables sans compte.",
   },
+  data: {
+    title: "Mes données",
+    intro:
+      "Tout ce que le serveur garde sur votre compte, dans un fichier JSON : le compte, comment il se connecte, ses sessions, les textes envoyés, les décisions sur ces textes et les événements de sécurité. Vos données d’apprentissage restent sur cet appareil : Profil › Données les sauvegarde.",
+    download: "Télécharger mes données (.json)",
+    downloading: "Préparation du fichier…",
+    downloaded: "Fichier enregistré : {{name}}",
+  },
+  deletion: {
+    title: "Supprimer mon compte",
+    intro:
+      "Supprime votre compte sur le serveur. Vos données d’apprentissage sur cet appareil restent.",
+    open: "Supprimer mon compte",
+    dialogTitle: "Supprimer votre compte ?",
+    dialogBody:
+      "Votre compte, ses sessions et ses moyens de connexion sont supprimés tout de suite. C’est définitif.",
+    published: "Vos textes publiés",
+    choices: {
+      "keep-anonymous": "Les garder, sans nom",
+      "keep-named": "Les garder avec mon pseudonyme",
+      remove: "Les retirer de la bibliothèque",
+    },
+    pending: "Les textes en attente de relecture ou refusés sont supprimés.",
+    copies:
+      "Les copies déjà importées par d’autres apprenants restent sur leurs appareils : la licence CC BY-SA ne peut pas être retirée.",
+    keptTitle: "Ce que la loi nous oblige à garder",
+    kept: "Si vous avez envoyé des textes à la bibliothèque, la loi française (décret 2021-1362) nous oblige à garder votre e-mail 5 ans et vos pseudonymes 1 an, sous clé : seules les autorités que la loi y autorise peuvent les demander. L’adresse et l’heure de chaque changement sur vos textes sont gardées 1 an.",
+    cancel: "Annuler",
+    confirm: "Supprimer définitivement",
+    deleting: "Suppression de votre compte…",
+    doneTitle: "Compte supprimé",
+    doneBody:
+      "Votre compte est supprimé. L’application et la bibliothèque restent utilisables sans compte.",
+  },
   pseudonym: {
     title: "Pseudonyme",
     none: "Aucun pour l’instant. Vous le choisissez la première fois que vous signez un texte.",

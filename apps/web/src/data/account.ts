@@ -1,7 +1,9 @@
 import { ok, parseWith, type Result } from "@openlinguo/core";
 import {
+  AccountExport,
   type AgeDeclaration,
   LinkedAccounts,
+  type PublishedChoice,
   SessionAnswer,
   SocialRedirect,
   TotpSetup,
@@ -105,3 +107,11 @@ export const keyOf = (totpURI: string): string | null => {
 
 export const backupCodesFile = (codes: readonly string[], heading: string): string =>
   `${heading}\n\n${codes.join("\n")}\n`;
+
+/** GDPR art. 15 and 20: what the server holds about the account. */
+export const exportAccount = (): Promise<Result<AccountExport, ApiFailure>> =>
+  call("/api/account/export", { method: "GET" }, (body) => parseWith(AccountExport, body));
+
+/** Deletes the account; its published texts follow `published` (ADR 0015). */
+export const deleteAccount = (published: PublishedChoice): Promise<Result<null, ApiFailure>> =>
+  call("/api/account/delete", post({ published }), nothing);
