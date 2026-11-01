@@ -351,8 +351,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         body: (
           <Paragraph>
             Si votre enfant a un compte, vous pouvez demander qu’il soit supprimé en écrivant à{" "}
-            <Contact />, avec l’adresse e-mail du compte. Nous prévenons votre enfant par e-mail
-            avant de le supprimer.
+            <Contact />, avec l’adresse e-mail du compte. Nous prévenons votre enfant par e-mail :
+            le compte est supprimé 14 jours plus tard, sauf s’il nous dit avoir 15 ans ou plus, âge
+            à partir duquel la loi le laisse décider seul.
           </Paragraph>
         ),
       },
@@ -680,7 +681,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         body: (
           <Paragraph>
             If your child has an account, you may ask for it to be deleted by writing to <Contact />
-            , with the account’s email address. We tell your child by email before deleting it.
+            , with the account’s email address. We tell your child by email: the account is deleted
+            14 days later, unless they tell us they are 15 or over, the age from which the law lets
+            them decide alone.
           </Paragraph>
         ),
       },

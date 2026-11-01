@@ -133,6 +133,24 @@ export const moderationEn = {
       "The submitter has the statement of reasons, and every notifier of this text the decision.",
     unsent: "These notifiers could not be emailed, write to them yourself: {{emails}}",
   },
+  accounts: {
+    tab: "Accounts",
+    title: "Delete an account",
+    intro:
+      "Only at the end of a request in the runbook (docs/compliance/requests.md): a parent’s request after the 14 days, or a checked rights request. Published texts stay, with no name.",
+    email: "Email address of the account",
+    delete: "Delete this account",
+    empty: "Enter the account’s email address.",
+    confirmTitle: "Delete the account {{email}}?",
+    confirmBody:
+      "The account, its sessions and its texts awaiting review are deleted at once. Its published texts stay, with no name. This cannot be undone.",
+    cancel: "Cancel",
+    confirm: "Delete for good",
+    deleting: "Deleting the account…",
+    deleted: "Account deleted: {{email}}",
+    notFound: "No account uses this address.",
+    refused: "An admin account and the placeholder of deleted accounts are not deleted here.",
+  },
   failure: {
     signedOut: "Sign in with the admin account first.",
     twoFactor: "Enter your authenticator code first.",

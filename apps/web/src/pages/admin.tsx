@@ -23,10 +23,12 @@ import { useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
 import { useAuthFailure } from "@/components/auth-failure";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { useData } from "@/data/data-context";
 import { database } from "@/data/database";
 import {
   approveSubmission,
+  deleteAccountAsAdmin,
   estimateText,
   keepNotice,
   loadForReview,
@@ -174,9 +176,10 @@ const Details = ({ submission }: { readonly submission: Submission }) => {
 const SECTIONS = [
   ["/admin", "queue"],
   ["/admin/notices", "notices"],
+  ["/admin/accounts", "accounts.tab"],
 ] as const;
 
-/** The two tabbed links of the mockups: « Textes en attente » and « Signalements ». */
+/** « Textes en attente », « Signalements » and « Comptes ». */
 const Sections = ({ current }: { readonly current: (typeof SECTIONS)[number][0] }) => {
   const { t } = useTranslation("moderation");
   return (
@@ -990,6 +993,120 @@ export const AdminNoticePage = () => {
       )}
       {loaded.status === "failed" && <LoadFailure failure={loaded.failure} onRetry={retry} />}
       {loaded.status === "ready" && <NoticeReview key={loaded.value.id} notice={loaded.value} />}
+    </section>
+  );
+};
+
+type Deletion =
+  | { readonly status: "idle" | "confirming" | "deleting" }
+  | { readonly status: "deleted"; readonly email: string }
+  | { readonly status: "failed"; readonly message: string };
+
+/** `/admin/accounts`: deletes an account for a parent's or a rights request (requests.md). */
+export const AdminAccountsPage = () => {
+  const { t } = useTranslation("moderation");
+  const describe = useFailure();
+  const id = useId();
+  const [email, setEmail] = useState("");
+  const [deletion, setDeletion] = useState<Deletion>({ status: "idle" });
+  const address = email.trim();
+
+  const remove = async (close: () => void) => {
+    if (deletion.status === "deleting") return;
+    setDeletion({ status: "deleting" });
+    const result = await deleteAccountAsAdmin(address);
+    close();
+    if (result.ok) {
+      setDeletion({ status: "deleted", email: address });
+      setEmail("");
+      return;
+    }
+    const { error } = result;
+    const refusedWith = (code: string) => error.kind === "refused" && error.code === code;
+    setDeletion({
+      status: "failed",
+      message: refusedWith("NOT_FOUND")
+        ? t("accounts.notFound")
+        : refusedWith("INVALID_REQUEST")
+          ? t("accounts.refused")
+          : describe(error),
+    });
+  };
+
+  return (
+    <section className="max-w-[880px]">
+      <BackLink to="/profile/account">{t("account")}</BackLink>
+      <h1 className="text-title">{t("title")}</h1>
+      <Sections current="/admin/accounts" />
+      <h2 className="mt-6 text-subtitle">{t("accounts.title")}</h2>
+      <p className="mt-2 text-muted">{t("accounts.intro")}</p>
+      <form
+        noValidate
+        className="mt-4 flex flex-col gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (address === "") {
+            setDeletion({ status: "failed", message: t("accounts.empty") });
+            return;
+          }
+          setDeletion({ status: "confirming" });
+        }}
+      >
+        <label htmlFor={`${id}-email`} className="font-semibold">
+          {t("accounts.email")}
+        </label>
+        <input
+          id={`${id}-email`}
+          type="email"
+          autoComplete="off"
+          value={email}
+          onChange={(event) => {
+            setEmail(event.currentTarget.value);
+          }}
+          className={fieldClass}
+        />
+        <div className="mt-2">
+          <Button type="submit" variant="danger">
+            {t("accounts.delete")}
+          </Button>
+        </div>
+      </form>
+      {deletion.status === "failed" && (
+        <p role="alert" className="mt-4 text-danger">
+          {deletion.message}
+        </p>
+      )}
+      <p role="status" className="mt-3 text-small">
+        {deletion.status === "deleting" && t("accounts.deleting")}
+        {deletion.status === "deleted" && t("accounts.deleted", { email: deletion.email })}
+      </p>
+      {(deletion.status === "confirming" || deletion.status === "deleting") && (
+        <Dialog
+          title={t("accounts.confirmTitle", { email: address })}
+          description={t("accounts.confirmBody")}
+          sheet={null}
+          onClose={() => {
+            setDeletion((current) =>
+              current.status === "confirming" ? { status: "idle" } : current,
+            );
+          }}
+        >
+          {(close) => (
+            <div className="mt-6 flex flex-wrap justify-end gap-3">
+              <Button variant="outline" data-autofocus onClick={close}>
+                {t("accounts.cancel")}
+              </Button>
+              <Button
+                variant="danger"
+                aria-disabled={deletion.status === "deleting"}
+                onClick={() => void remove(close)}
+              >
+                {t("accounts.confirm")}
+              </Button>
+            </div>
+          )}
+        </Dialog>
+      )}
     </section>
   );
 };

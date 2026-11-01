@@ -56,6 +56,10 @@ export const AuthErrorCode = z.enum([
 ]);
 export type AuthErrorCode = z.output<typeof AuthErrorCode>;
 
+/** `POST /api/admin/accounts/delete`: a parent's or a rights request (docs/compliance/requests.md). */
+export const AdminAccountDeletion = z.object({ email: z.email() });
+export type AdminAccountDeletion = z.output<typeof AdminAccountDeletion>;
+
 /** What happens to the published texts when the account is deleted (ADR 0015). */
 export const PUBLISHED_CHOICES = ["keep-named", "keep-anonymous", "remove"] as const;
 export const PublishedChoice = z.enum(PUBLISHED_CHOICES);

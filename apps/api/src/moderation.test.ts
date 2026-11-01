@@ -10,6 +10,9 @@ import {
   DELETED_ACCOUNT,
   database,
   decision,
+  erasure,
+  hostingRecord,
+  sealedIdentity,
   securityEvent,
   session,
   submission,
@@ -47,6 +50,9 @@ beforeEach(async () => {
     codeRequest,
     securityEvent,
     decision,
+    hostingRecord,
+    sealedIdentity,
+    erasure,
     submission,
     twoFactor,
     session,
@@ -136,6 +142,7 @@ describe("moderation access", () => {
       [`/api/admin/submissions/${id}`, null],
       [`/api/admin/submissions/${id}/approve`, { band: 1 }],
       [`/api/admin/submissions/${id}/reject`, statement],
+      ["/api/admin/accounts/delete", { email: "admin@example.test" }],
     ] as const) {
       const refused = await call(path, body, learner);
       expect(refused.status).toBe(403);
@@ -333,5 +340,67 @@ describe("a kept text of a deleted account", () => {
     expect(await db.select({ source: decision.source }).from(decision)).toEqual([
       { source: "own-initiative" },
     ]);
+  });
+});
+
+describe("POST /api/admin/accounts/delete", () => {
+  it("deletes an account by its address, keeps its published texts without a name, and records it", async () => {
+    const learner = await signedIn("learner@example.test");
+    const { id } = await submitted(learner);
+    await db
+      .update(submission)
+      .set({ status: "approved", attribution: "小明" })
+      .where(eq(submission.id, id));
+    const [found] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.email, "learner@example.test"));
+    const admin = await signedInAdmin();
+
+    const response = await call(
+      "/api/admin/accounts/delete",
+      { email: "Learner@Example.test" },
+      admin,
+    );
+    expect(response.status).toBe(204);
+    expect(await db.select().from(user).where(eq(user.email, "learner@example.test"))).toEqual([]);
+    expect(
+      await db
+        .select({ userId: submission.userId, attribution: submission.attribution })
+        .from(submission),
+    ).toEqual([{ userId: DELETED_ACCOUNT.id, attribution: null }]);
+    expect(await db.select({ email: sealedIdentity.email }).from(sealedIdentity)).toEqual([
+      { email: "learner@example.test" },
+    ]);
+    expect(
+      await db.select({ userId: erasure.userId, published: erasure.published }).from(erasure),
+    ).toEqual([{ userId: found?.id, published: "keep-anonymous" }]);
+    expect(await adminActions()).toContainEqual({
+      method: "moderation/delete-account",
+      target: found?.id ?? "",
+    });
+  });
+
+  it("refuses an unknown address, an admin account, the placeholder and a missing address", async () => {
+    const admin = await signedInAdmin();
+    await db
+      .insert(user)
+      .values({ ...DELETED_ACCOUNT, emailVerified: false })
+      .onConflictDoNothing();
+    const unknown = await call(
+      "/api/admin/accounts/delete",
+      { email: "nobody@example.test" },
+      admin,
+    );
+    expect(unknown.status).toBe(404);
+    expect(await unknown.json()).toMatchObject({ code: "NOT_FOUND" });
+    for (const body of [{ email: "admin@example.test" }, { email: DELETED_ACCOUNT.email }, {}]) {
+      const refused = await call("/api/admin/accounts/delete", body, admin);
+      expect(refused.status).toBe(400);
+      expect(await refused.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    }
+    expect(await db.select({ id: user.id }).from(user).where(eq(user.role, "admin"))).toHaveLength(
+      1,
+    );
   });
 });

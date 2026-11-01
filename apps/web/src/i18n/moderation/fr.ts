@@ -138,6 +138,24 @@ export const moderationFr: ModerationMessages = {
     unsent:
       "Ces personnes n’ont pas pu être prévenues par e-mail, écrivez-leur vous-même : {{emails}}",
   },
+  accounts: {
+    tab: "Comptes",
+    title: "Supprimer un compte",
+    intro:
+      "Seulement au bout d’une demande du runbook (docs/compliance/requests.md) : une demande de parent après les 14 jours, ou une demande de droits vérifiée. Les textes publiés restent, sans nom.",
+    email: "Adresse e-mail du compte",
+    delete: "Supprimer ce compte",
+    empty: "Saisissez l’adresse e-mail du compte.",
+    confirmTitle: "Supprimer le compte {{email}} ?",
+    confirmBody:
+      "Le compte, ses sessions et ses textes en attente sont supprimés tout de suite. Ses textes publiés restent, sans nom. C’est définitif.",
+    cancel: "Annuler",
+    confirm: "Supprimer définitivement",
+    deleting: "Suppression du compte…",
+    deleted: "Compte supprimé : {{email}}",
+    notFound: "Aucun compte n’utilise cette adresse.",
+    refused: "Un compte admin et le compte des textes gardés ne se suppriment pas ici.",
+  },
   failure: {
     signedOut: "Connectez-vous d’abord avec le compte administrateur.",
     twoFactor: "Saisissez d’abord votre code d’authentification.",

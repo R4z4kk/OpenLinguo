@@ -57,7 +57,7 @@ In Cloudflare D1, created in the `eu` jurisdiction (ADR 0015).
 | Cloudflare, Inc. (processor: Pages, Pages Functions, D1 in the `eu` jurisdiction, cron Worker) | IP address and request metadata of every request; everything stored on the server, above | Always, as the host of the app and the API |
 | Google Ireland, GitHub (OAuth, independent controllers) | Sign-in exchange; OpenLinguo keeps only the account id and the email | Only if the user chooses that sign-in method |
 | Lettermint (transactional email, Netherlands, processor) | Email address, the mail: the sign-in code, the statement of reasons of a rejection or removal (#274), the receipt and decision of a notice (#276), the inactivity notice (#278). No open or click tracking. Content, address and metadata kept 28 days; delivery events at most 90 days | When the learner asks for a code, and for each of those emails |
-| Competent authorities | Hosting records and sealed identity, on a written requisition (#290); a report of a serious offence (LCEN art. 6 IV.A, DSA art. 18) | Only on request or when a report is due ([moderation runbook](moderation.md)) |
+| Competent authorities | Hosting records and sealed identity, on a written requisition ([requests runbook](requests.md)); a report of a serious offence (LCEN art. 6 IV.A, DSA art. 18) | Only on request or when a report is due ([moderation runbook](moderation.md)) |
 
 What each AI feature sends, shown under its button as « Sent: … » (ADR 0012):
 

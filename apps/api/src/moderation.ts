@@ -1,3 +1,4 @@
+import { AdminAccountDeletion } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
 import {
   Approval,
@@ -14,11 +15,12 @@ import { Submission } from "@openlinguo/core/submission";
 import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { type Context, Hono } from "hono";
-import { isDeletedAccount } from "./account.ts";
+import { accountDeletion, isDeletedAccount } from "./account.ts";
 import type { Auth } from "./auth.ts";
 import type { SendMail } from "./mail.ts";
 import { noticeDecisionMail, statementOfReasonsMail } from "./mail-templates.ts";
 import { database, decision, notice, securityEvent, submission, user } from "./schema.ts";
+import { connectionOf } from "./submissions.ts";
 
 type Routes = { Bindings: Env; Variables: { readonly adminId: string } };
 
@@ -184,113 +186,145 @@ export const moderationRoutes = (
     return found ?? null;
   };
 
-  return new Hono<Routes>()
-    .use(async (c, next) => {
-      const current = await authOf(c.env).api.getSession({ headers: c.req.raw.headers });
-      if (!current) return c.json(refusal("UNAUTHORIZED", "Sign in first"), 401);
-      c.set("adminId", current.user.id);
-      return next();
-    })
-    .get("/queue", async (c) => {
-      const rows = await database(c.env.DB)
-        .select()
-        .from(submission)
-        .where(eq(submission.status, "pending"))
-        .orderBy(asc(submission.createdAt));
-      return c.json(rows.map(toSubmission));
-    })
-    .get("/submissions/:id", async (c) => {
-      const [row] = await database(c.env.DB)
-        .select()
-        .from(submission)
-        .where(eq(submission.id, c.req.param("id")));
-      return row
-        ? c.json(toSubmission(row))
-        : c.json(refusal("NOT_FOUND", "No such submission"), 404);
-    })
-    .post("/submissions/:id/approve", async (c) => {
-      const parsed = Approval.safeParse(await c.req.json().catch(() => null));
-      if (!parsed.success) return invalid(c, parsed.error.issues);
-      const db = database(c.env.DB);
-      const id = c.req.param("id");
-      const [found] = await db
-        .select({ status: submission.status })
-        .from(submission)
-        .where(eq(submission.id, id));
-      if (!found) return c.json(refusal("NOT_FOUND", "No such submission"), 404);
-      if (found.status !== "pending") return c.json(NOT_IN_STATE.pending, 409);
-      await db.batch([
-        db
-          .update(submission)
-          .set({ status: "approved", band: parsed.data.band, publishedAt: new Date() })
-          .where(and(eq(submission.id, id), eq(submission.status, "pending"))),
-        db.insert(securityEvent).values(adminAction(c, "approve", id)),
-      ]);
-      return c.body(null, 204);
-    })
-    .post("/submissions/:id/reject", (c) => own(c, "pending", "rejected"))
-    .post("/submissions/:id/remove", (c) => own(c, "approved", "removed"))
-    .get("/notices", async (c) => {
-      const rows = await database(c.env.DB)
-        .select(noticeColumns)
-        .from(notice)
-        .innerJoin(submission, eq(submission.id, notice.submissionId))
-        .orderBy(sql`${notice.decidedAt} is not null`, asc(notice.createdAt));
-      return c.json(rows.map(toNotice));
-    })
-    .get("/notices/:id", async (c) => {
-      const found = await findNotice(c);
-      return found ? c.json(toNotice(found)) : c.json(refusal("NOT_FOUND", "No such notice"), 404);
-    })
-    .post("/notices/:id/keep", async (c) => {
-      const parsed = KeepNotice.safeParse(await c.req.json().catch(() => null));
-      if (!parsed.success) return invalid(c, parsed.error.issues);
-      const found = await findNotice(c);
-      if (!found) return c.json(refusal("NOT_FOUND", "No such notice"), 404);
-      if (found.outcome !== null) return c.json(DECIDED, 409);
-      const db = database(c.env.DB);
-      await db.batch([
-        db
-          .update(notice)
-          .set({ outcome: "kept", reply: parsed.data.reply, decidedAt: new Date() })
-          .where(and(eq(notice.id, found.id), isNull(notice.outcome))),
-        db.insert(securityEvent).values(adminAction(c, "keep", found.id)),
-      ]);
-      const unsent = await tellNotifiers(
-        c,
-        [found],
-        { title: found.title, reason: found.reason },
-        { outcome: "kept", reply: parsed.data.reply },
-      );
-      return c.json({ unsent, statement: null } satisfies NoticeDecided);
-    })
-    .post("/notices/:id/remove", async (c) => {
-      const found = await findNotice(c);
-      if (!found) return c.json(refusal("NOT_FOUND", "No such notice"), 404);
-      if (found.outcome !== null) return c.json(DECIDED, 409);
-      const db = database(c.env.DB);
-      const open = and(eq(notice.submissionId, found.submissionId), isNull(notice.outcome));
-      const notified = await db
-        .select({ id: notice.id, email: notice.email })
-        .from(notice)
-        .where(open);
-      const decided = await restrict(
-        c,
-        found.submissionId,
-        "approved",
-        "removed",
-        "notice",
-        (decidedAt, reply) => [
-          db.update(notice).set({ outcome: "removed", reply, decidedAt }).where(open),
-        ],
-      );
-      if (decided instanceof Response) return decided;
-      const unsent = await tellNotifiers(
-        c,
-        notified,
-        { title: found.title, reason: found.reason },
-        { outcome: "removed", reply: decided.explanation },
-      );
-      return c.json({ unsent, statement: decided } satisfies NoticeDecided, 201);
-    });
+  return (
+    new Hono<Routes>()
+      .use(async (c, next) => {
+        const current = await authOf(c.env).api.getSession({ headers: c.req.raw.headers });
+        if (!current) return c.json(refusal("UNAUTHORIZED", "Sign in first"), 401);
+        c.set("adminId", current.user.id);
+        return next();
+      })
+      .get("/queue", async (c) => {
+        const rows = await database(c.env.DB)
+          .select()
+          .from(submission)
+          .where(eq(submission.status, "pending"))
+          .orderBy(asc(submission.createdAt));
+        return c.json(rows.map(toSubmission));
+      })
+      .get("/submissions/:id", async (c) => {
+        const [row] = await database(c.env.DB)
+          .select()
+          .from(submission)
+          .where(eq(submission.id, c.req.param("id")));
+        return row
+          ? c.json(toSubmission(row))
+          : c.json(refusal("NOT_FOUND", "No such submission"), 404);
+      })
+      .post("/submissions/:id/approve", async (c) => {
+        const parsed = Approval.safeParse(await c.req.json().catch(() => null));
+        if (!parsed.success) return invalid(c, parsed.error.issues);
+        const db = database(c.env.DB);
+        const id = c.req.param("id");
+        const [found] = await db
+          .select({ status: submission.status })
+          .from(submission)
+          .where(eq(submission.id, id));
+        if (!found) return c.json(refusal("NOT_FOUND", "No such submission"), 404);
+        if (found.status !== "pending") return c.json(NOT_IN_STATE.pending, 409);
+        await db.batch([
+          db
+            .update(submission)
+            .set({ status: "approved", band: parsed.data.band, publishedAt: new Date() })
+            .where(and(eq(submission.id, id), eq(submission.status, "pending"))),
+          db.insert(securityEvent).values(adminAction(c, "approve", id)),
+        ]);
+        return c.body(null, 204);
+      })
+      // The requests runbook decides when; published texts stay without a name, the default choice.
+      .post("/accounts/delete", async (c) => {
+        const parsed = AdminAccountDeletion.safeParse(await c.req.json().catch(() => null));
+        if (!parsed.success) return invalid(c, parsed.error.issues);
+        const db = database(c.env.DB);
+        const [found] = await db
+          .select({ id: user.id, role: user.role })
+          .from(user)
+          .where(eq(user.email, parsed.data.email.toLowerCase()));
+        if (!found) return c.json(refusal("NOT_FOUND", "No account with this address"), 404);
+        if (found.role === "admin" || isDeletedAccount(found.id)) {
+          return c.json(refusal("INVALID_REQUEST", "This account is not deleted here"), 400);
+        }
+        const writes = await accountDeletion(
+          db,
+          found.id,
+          "keep-anonymous",
+          connectionOf(c.req.raw),
+          new Date(),
+        );
+        if (writes === null)
+          return c.json(refusal("NOT_FOUND", "No account with this address"), 404);
+        await db.batch([
+          db.insert(securityEvent).values(adminAction(c, "delete-account", found.id)),
+          ...writes,
+        ]);
+        return c.body(null, 204);
+      })
+      .post("/submissions/:id/reject", (c) => own(c, "pending", "rejected"))
+      .post("/submissions/:id/remove", (c) => own(c, "approved", "removed"))
+      .get("/notices", async (c) => {
+        const rows = await database(c.env.DB)
+          .select(noticeColumns)
+          .from(notice)
+          .innerJoin(submission, eq(submission.id, notice.submissionId))
+          .orderBy(sql`${notice.decidedAt} is not null`, asc(notice.createdAt));
+        return c.json(rows.map(toNotice));
+      })
+      .get("/notices/:id", async (c) => {
+        const found = await findNotice(c);
+        return found
+          ? c.json(toNotice(found))
+          : c.json(refusal("NOT_FOUND", "No such notice"), 404);
+      })
+      .post("/notices/:id/keep", async (c) => {
+        const parsed = KeepNotice.safeParse(await c.req.json().catch(() => null));
+        if (!parsed.success) return invalid(c, parsed.error.issues);
+        const found = await findNotice(c);
+        if (!found) return c.json(refusal("NOT_FOUND", "No such notice"), 404);
+        if (found.outcome !== null) return c.json(DECIDED, 409);
+        const db = database(c.env.DB);
+        await db.batch([
+          db
+            .update(notice)
+            .set({ outcome: "kept", reply: parsed.data.reply, decidedAt: new Date() })
+            .where(and(eq(notice.id, found.id), isNull(notice.outcome))),
+          db.insert(securityEvent).values(adminAction(c, "keep", found.id)),
+        ]);
+        const unsent = await tellNotifiers(
+          c,
+          [found],
+          { title: found.title, reason: found.reason },
+          { outcome: "kept", reply: parsed.data.reply },
+        );
+        return c.json({ unsent, statement: null } satisfies NoticeDecided);
+      })
+      .post("/notices/:id/remove", async (c) => {
+        const found = await findNotice(c);
+        if (!found) return c.json(refusal("NOT_FOUND", "No such notice"), 404);
+        if (found.outcome !== null) return c.json(DECIDED, 409);
+        const db = database(c.env.DB);
+        const open = and(eq(notice.submissionId, found.submissionId), isNull(notice.outcome));
+        const notified = await db
+          .select({ id: notice.id, email: notice.email })
+          .from(notice)
+          .where(open);
+        const decided = await restrict(
+          c,
+          found.submissionId,
+          "approved",
+          "removed",
+          "notice",
+          (decidedAt, reply) => [
+            db.update(notice).set({ outcome: "removed", reply, decidedAt }).where(open),
+          ],
+        );
+        if (decided instanceof Response) return decided;
+        const unsent = await tellNotifiers(
+          c,
+          notified,
+          { title: found.title, reason: found.reason },
+          { outcome: "removed", reply: decided.explanation },
+        );
+        return c.json({ unsent, statement: decided } satisfies NoticeDecided, 201);
+      })
+  );
 };

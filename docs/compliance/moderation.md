@@ -57,13 +57,13 @@ Keep the text, the notice and the report reference until the authority answers, 
    wrangler d1 execute openlinguo --remote --command "UPDATE submission SET status = 'removed' WHERE id = '<submission id>'"
    ```
 
-   Record that direct write in the access register (#290).
+   Record that direct write in the access register ([requests runbook](requests.md), section 5).
 2. Preserve the text and the related data for six months from the removal (art. 6(2)), longer only at the authority's or a court's request: export the submission and its hosting records to an encrypted file outside the app before the daily jobs could purge them.
 3. Reply to the authority with the time of removal.
 4. An order from another Member State may be contested by "a reasoned request" to the French authority "within 48 hours" (art. 4(4)), while still removing within the hour (4(2)).
 
-**Judicial orders and requisitions** for the data of `hosting_record`: only a written requisition whose legal basis is checked, as the requests runbook says (#290).
+**Judicial orders and requisitions** for the data of `hosting_record`: only a written requisition whose legal basis is checked, as the [requests runbook](requests.md) says (section 4).
 
 ## 5. Register
 
-One line per notice decided, report made or order received, kept with the access register of #290: date and time received, origin (notice id, authority, reference), text concerned, action and time of action, report reference, preservation end date. The notices and statements of reasons themselves are deleted 1 year after the decision ([retention](retention-schedule.md)).
+One line per notice decided, report made or order received, kept with the access register of the [requests runbook](requests.md): date and time received, origin (notice id, authority, reference), text concerned, action and time of action, report reference, preservation end date. The notices and statements of reasons themselves are deleted 1 year after the decision ([retention](retention-schedule.md)).

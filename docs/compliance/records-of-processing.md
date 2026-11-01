@@ -108,7 +108,7 @@ Processing that happens only on the user's device (learning data, voice, journal
 | (d) Recipients | Maintainer |
 | (e) Transfers | The mailbox is a Gmail account: Google Ireland Limited for EEA users, under Google's own terms; Google LLC, active on the DPF list (due 2027-09-13), may process the mail in the U.S. — see [sub-processors](sub-processors.md) |
 | (f) Erasure | Until answered, then the request, the answer and their dates for 5 years as proof; an ID document deleted once the request is answered (#290) |
-| (g) Security | Dedicated mailbox, access restricted to the maintainer; procedures in #290 |
+| (g) Security | Dedicated mailbox, access restricted to the maintainer; procedures and access register in the [requests runbook](requests.md) |
 
 ## P7 — Web app delivery
 

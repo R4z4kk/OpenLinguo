@@ -24,6 +24,11 @@ import { type ApiFailure, call } from "./api.ts";
 
 const path = (id: string) => `/api/admin/submissions/${encodeURIComponent(id)}`;
 
+export const deleteAccountAsAdmin = (email: string): Promise<Result<null, ApiFailure>> =>
+  call("/api/admin/accounts/delete", { method: "POST", body: JSON.stringify({ email }) }, () =>
+    ok(null),
+  );
+
 export const loadQueue = (): Promise<Result<readonly Submission[], ApiFailure>> =>
   call("/api/admin/queue", { method: "GET" }, (body) => parseWith(Submissions, body));
 

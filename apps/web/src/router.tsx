@@ -199,6 +199,12 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({
     getParentRoute,
+    path: "/admin/accounts",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminAccountsPage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
     path: "/admin/$id",
     component: lazyRouteComponent(() => import("@/pages/admin"), "AdminReviewPage"),
     errorComponent: ModuleError,

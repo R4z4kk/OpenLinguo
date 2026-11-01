@@ -1,3 +1,4 @@
+import { AdminAccountDeletion } from "@openlinguo/core/account";
 import {
   KeepNotice,
   NewNotice,
@@ -56,10 +57,11 @@ type FakeApi = {
   readonly kept: KeepNotice[];
   readonly removed: NewStatementOfReasons[];
   unsent: string[];
+  readonly deletedAccounts: string[];
 };
 
 const fakeApi = async (page: Page): Promise<FakeApi> => {
-  const api: FakeApi = { notices: [], kept: [], removed: [], unsent: [] };
+  const api: FakeApi = { notices: [], kept: [], removed: [], unsent: [], deletedAccounts: [] };
   const json = (route: Route, status: number, body: unknown) =>
     route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   await page.route("**/api/**", async (route) => {
@@ -78,6 +80,14 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
         createdAt: new Date().toISOString(),
         receipt: notice.email === null ? "none" : "sent",
       });
+    } else if (pathname === "/api/admin/accounts/delete") {
+      const { email } = AdminAccountDeletion.parse(request.postDataJSON());
+      if (email === "nobody@example.test") {
+        await json(route, 404, { code: "NOT_FOUND", message: "No account with this address" });
+      } else {
+        api.deletedAccounts.push(email);
+        await route.fulfill({ status: 204 });
+      }
     } else if (pathname === "/api/admin/notices") {
       await json(route, 200, [NOTICE]);
     } else if (pathname === "/api/admin/notices/n1") {
@@ -238,4 +248,33 @@ test("keeps a reported text and answers the notifier", async ({ page }) => {
   await press(page, m.notice.sendKeep);
   await expect(main.getByText(m.notice.sentKeptBody)).toBeVisible();
   expect(api.kept).toEqual([{ reply: "Courte citation, autorisée." }]);
+});
+
+test("deletes an account from the admin, after a confirmation", async ({ page }) => {
+  const api = await fakeApi(page);
+  await dataReady(page);
+  const main = page.getByRole("main");
+  await page.goto("/admin/accounts");
+  await press(page, m.accounts.delete);
+  await expect(main.getByRole("alert")).toHaveText(m.accounts.empty);
+
+  await main.getByRole("textbox", { name: m.accounts.email }).fill("nobody@example.test");
+  await press(page, m.accounts.delete);
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByRole("button", { name: m.accounts.cancel })).toBeFocused();
+  await dialog.getByRole("button", { name: m.accounts.confirm }).click();
+  await expect(main.getByRole("alert")).toHaveText(m.accounts.notFound);
+
+  await main.getByRole("textbox", { name: m.accounts.email }).fill("child@example.test");
+  await press(page, m.accounts.delete);
+  await expect(dialog).toHaveAccessibleName(
+    m.accounts.confirmTitle.replace("{{email}}", "child@example.test"),
+  );
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await dialog.getByRole("button", { name: m.accounts.confirm }).click();
+  await expect(
+    main.getByRole("status").getByText("Account deleted: child@example.test"),
+  ).toBeVisible();
+  expect(api.deletedAccounts).toEqual(["child@example.test"]);
+  expect(await accessibilityViolations(page)).toEqual([]);
 });
