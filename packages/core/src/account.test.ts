@@ -85,6 +85,8 @@ describe("AccountExport", () => {
         ageDeclaredAt: at,
         role: null,
         twoFactorEnabled: false,
+        activeAt: at,
+        inactivityNoticeAt: null,
       },
       signInMethods: [{ providerId: "email-otp", createdAt: at }],
       sessions: [{ createdAt: at, expiresAt: at, ipAddress: "198.51.100.1", userAgent: null }],

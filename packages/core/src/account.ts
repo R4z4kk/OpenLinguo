@@ -76,6 +76,9 @@ export const AccountExport = z.object({
     ageDeclaredAt: instant.nullable(),
     role: z.string().nullable(),
     twoFactorEnabled: z.boolean(),
+    /** The latest use the server knows of, for the deletion after 2 years unused. */
+    activeAt: instant.nullable(),
+    inactivityNoticeAt: instant.nullable(),
   }),
   signInMethods: z.array(z.object({ providerId: z.string().min(1), createdAt: instant })),
   sessions: z.array(

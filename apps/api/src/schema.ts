@@ -47,6 +47,9 @@ export const user = sqliteTable("user", {
   banReason: text(),
   banExpires: integer({ mode: "timestamp_ms" }),
   twoFactorEnabled: integer({ mode: "boolean" }).default(false),
+  /** The latest session use, copied daily by the inactivity job; `null` means `createdAt`. */
+  activeAt: integer({ mode: "timestamp_ms" }),
+  inactivityNoticeAt: integer({ mode: "timestamp_ms" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
