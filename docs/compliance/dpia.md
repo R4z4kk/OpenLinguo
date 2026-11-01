@@ -121,7 +121,7 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 | Organisation | Sign-ups closed by default (`SIGNUPS_OPEN=false`) until the measures below are merged | #281 |
 | | Cloudflare and GitHub accounts secured, direct database reads only for a recorded reason | #291 |
 | | Breach procedure covering the server, notice template for teenagers | #293 |
-| | Runbooks for rights, parents' and authorities' requests; moderation runbook | #290, #279 |
+| | [Requests runbook](requests.md) for rights, parents' (account holder told, deleted after 14 days unless 15 or over) and authorities' requests; moderation runbook | #290, #279 |
 
 ### 3.2 Security risks
 

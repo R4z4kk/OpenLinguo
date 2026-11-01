@@ -15,6 +15,7 @@ Values that can expire (Data Privacy Framework statuses, processor agreements, t
 | [DPIA](dpia.md) | Impact assessment of accounts, the shared library, the décret 2021-1362 retention and the M8 leagues (CNIL PIA method), with its action plan |
 | [AI features](ai.md) | Roles, AI Act art. 50 per output, gap analysis against the code of practice, provenance specification |
 | [Moderation runbook](moderation.md) | Checklist, notices, PHAROS reports, 24-hour and 1-hour removal orders |
+| [Requests runbook](requests.md) | Rights requests, parents' requests to delete a child's account, authorities' requisitions, and the access register |
 | [Wikidata lookup](wikidata.md) | What the lookup sends to the Wikimedia Foundation, roles, the U.S. transfer, the dated endpoint |
 | [Privacy notice](privacy-notice.md) | Where the public legal pages live: `/legal`, `/privacy`, `/terms` |
 | [Accessibility statement template](accessibility-statement-template.md) | Published at v1 |
