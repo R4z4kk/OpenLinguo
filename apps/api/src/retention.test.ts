@@ -274,7 +274,7 @@ describe("the daily jobs", () => {
     expect(await statuses()).toContainEqual({ job: "inactive-accounts", status: "failed" });
     expect(console.error).toHaveBeenCalledWith(
       "job inactive-accounts failed",
-      new Error("Inactivity notice not sent to bounced: 422 invalid recipient"),
+      new Error("Inactivity job failed: bounced: 422 invalid recipient"),
     );
     const rows = await db
       .select({ id: user.id, noticeAt: user.inactivityNoticeAt })
@@ -286,9 +286,13 @@ describe("the daily jobs", () => {
     ]);
   });
 
-  it("fail only the inactivity job when the mail settings are missing", async () => {
+  it("fail only the inactivity job when the mail settings are missing, with no one to notify", async () => {
     vi.spyOn(console, "error").mockImplementation(() => null);
-    await addUser("quiet");
+    await addUser("learner", { activeAt: ago(DAY_MS) });
+    await addUser("gone", {
+      activeAt: ago(2 * 365 * DAY_MS + 40 * DAY_MS),
+      inactivityNoticeAt: ago(31 * DAY_MS),
+    });
 
     await runJobs(
       context({
@@ -305,7 +309,12 @@ describe("the daily jobs", () => {
         status: name === "inactive-accounts" ? "failed" : "succeeded",
       })),
     );
-    const [quiet] = await db.select().from(user).where(eq(user.id, "quiet"));
-    expect(quiet?.inactivityNoticeAt).toBeNull();
+    expect(console.error).toHaveBeenCalledWith(
+      "job inactive-accounts failed",
+      new Error(
+        "Inactivity job failed: mail settings: Mail settings missing or invalid: SCW_SECRET_KEY",
+      ),
+    );
+    expect(await db.select({ id: user.id }).from(user)).toEqual([{ id: "learner" }]);
   });
 });

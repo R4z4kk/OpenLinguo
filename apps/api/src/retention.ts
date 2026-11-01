@@ -77,8 +77,14 @@ export const inactiveAccounts: Job = {
         ),
       )
       .orderBy(user.id);
-    let mail: Outbox | null = null;
     const failures: string[] = [];
+    let mail: Outbox | null = null;
+    // At every run, so a missing setting shows before anyone is due a notice.
+    try {
+      mail = outbox();
+    } catch (error) {
+      failures.push(`mail settings: ${reason(error)}`);
+    }
     for (const { id, email, activeAt, createdAt, noticeAt } of candidates) {
       const step = inactivityStep(activeAt ?? createdAt, noticeAt, now);
       if (step === "delete") {
@@ -86,9 +92,8 @@ export const inactiveAccounts: Job = {
         const [first, ...rest] =
           (await accountDeletion(db, id, "keep-anonymous", nobody, now)) ?? [];
         if (first) await db.batch([first, ...rest]);
-      } else if (step === "notify") {
+      } else if (step === "notify" && mail !== null) {
         try {
-          mail ??= outbox();
           const deletionOn = new Date(now.getTime() + NOTICE_DAYS * DAY_MS);
           const sent = await mail.sendMail(inactivityNoticeMail(email, deletionOn, mail.appUrl));
           if (sent.ok) {
@@ -100,7 +105,7 @@ export const inactiveAccounts: Job = {
       }
     }
     if (failures.length > 0) {
-      throw new Error(`Inactivity notice not sent to ${failures.join("; ")}`);
+      throw new Error(`Inactivity job failed: ${failures.join("; ")}`);
     }
   },
 };
