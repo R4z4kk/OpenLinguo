@@ -44,7 +44,7 @@ Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one a
 - [ ] `BETTER_AUTH_URL`: `https://openlinguo.razakk.fr`.
 - [ ] Google: an OAuth client "Web application" in Google Cloud, redirect URI `https://openlinguo.razakk.fr/api/auth/callback/google`, scopes `openid email profile`; `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` (secret).
 - [ ] GitHub: an OAuth App, callback URL `https://openlinguo.razakk.fr/api/auth/callback/github`; `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (secret).
-- [ ] Scaleway Transactional Email, region `fr-par`: a checked sending domain, then an IAM API key whose policy allows only sending Transactional Email in that project; `SCW_SECRET_KEY` (secret), `SCW_PROJECT_ID`, `MAIL_FROM` (an address on the checked domain).
+- [ ] Lettermint: the sending domain `openlinguo.razakk.fr` verified (DKIM `lm1` and `lm2`, DMARC, Return-Path `lm-bounces`), then a project API token, which can only send; `LETTERMINT_API_TOKEN` (secret), `MAIL_FROM` (`no-reply@openlinguo.razakk.fr`).
 - [ ] `CONTACT_EMAIL`: the address submitters write to for a review of a moderation decision, given in each statement of reasons; the one `/legal` gives (#279).
 - [ ] `SIGNUPS_OPEN`: leave unset (closed) until #279 and #280 are merged; `true` opens them, `false` closes them, anything else is refused.
 
@@ -52,4 +52,4 @@ Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one a
 
 The daily jobs read only what the inactivity notice needs, checked at each run by `MailEnv` (`src/cron.ts`). A missing one fails `inactive-accounts` at every run, even with no one to notify, so `/api/health` answers 503 from the first run after the deploy; the other jobs still run. Enter each one once from `apps/api` with `wrangler secret put <NAME>`; a deploy keeps them.
 
-- [ ] `BETTER_AUTH_URL`, `SCW_SECRET_KEY`, `SCW_PROJECT_ID`, `MAIL_FROM`: the same values as in the Pages project.
+- [ ] `BETTER_AUTH_URL`, `LETTERMINT_API_TOKEN`, `MAIL_FROM`: the same values as in the Pages project.

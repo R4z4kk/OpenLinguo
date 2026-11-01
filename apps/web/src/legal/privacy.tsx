@@ -26,7 +26,7 @@ const checked = (language: Language): string =>
 export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
   fr: {
     title: "Confidentialité",
-    updated: "2026-10-31",
+    updated: "2026-11-01",
     sections: [
       {
         id: "summary",
@@ -175,7 +175,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             </Paragraph>
             <List
               items={[
-                "Code par e-mail : le code est envoyé par Scaleway, en France, sans pixel de suivi.",
+                "Code par e-mail : le code est envoyé par Lettermint, aux Pays-Bas, sans pixel de suivi.",
                 <>
                   Google ou GitHub : ils agissent sous leur propre responsabilité, selon leur{" "}
                   <External href={GOOGLE_PRIVACY}>politique (Google)</External> ou leur{" "}
@@ -306,7 +306,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <List
               items={[
                 "Cloudflare, Inc. héberge l’application, l’API et la base de données, pour notre compte et selon nos instructions (contrat de sous-traitance). La base est stockée et traitée dans l’Union européenne.",
-                "Scaleway SAS envoie les e-mails, pour notre compte, en France. Le contenu d’un e-mail est effacé une fois remis ; Scaleway garde l’adresse et le statut d’envoi tant que notre domaine d’envoi est actif.",
+                "Lettermint B.V. envoie les e-mails, pour notre compte, depuis l’Union européenne (Pays-Bas). Elle garde le contenu, l’adresse et les métadonnées de chaque e-mail 28 jours, et les événements de remise au plus 90 jours, sans suivi des ouvertures ni des clics.",
                 "Google Ireland ou GitHub, seulement si vous vous connectez avec eux. Google héberge aussi la boîte de contact (Gmail) : il reçoit les messages que vous y envoyez.",
                 "Les autorités, seulement sur demande écrite prévue par la loi, ou quand nous devons signaler une infraction grave.",
               ]}
@@ -370,7 +370,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
   },
   en: {
     title: "Privacy",
-    updated: "2026-10-31",
+    updated: "2026-11-01",
     sections: [
       {
         id: "summary",
@@ -510,7 +510,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             </Paragraph>
             <List
               items={[
-                "Code by email: the code is sent by Scaleway, in France, with no tracking pixel.",
+                "Code by email: the code is sent by Lettermint, in the Netherlands, with no tracking pixel.",
                 <>
                   Google or GitHub: they act under their own responsibility, under their{" "}
                   <External href={GOOGLE_PRIVACY}>policy (Google)</External> or{" "}
@@ -638,7 +638,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <List
               items={[
                 "Cloudflare, Inc. hosts the app, the API and the database, on our behalf and on our instructions (processing agreement). The database is stored and processed in the European Union.",
-                "Scaleway SAS sends the emails, on our behalf, in France. An email’s content is erased once delivered; Scaleway keeps the address and delivery status while our sending domain is active.",
+                "Lettermint B.V. sends the emails, on our behalf, from the European Union (the Netherlands). It keeps each email’s content, address and metadata for 28 days, and delivery events for at most 90 days, with no open or click tracking.",
                 "Google Ireland or GitHub, only if you sign in with them. Google also hosts the contact mailbox (Gmail): it receives the messages you send there.",
                 "Authorities, only on a written request provided for by law, or when we must report a serious offence.",
               ]}

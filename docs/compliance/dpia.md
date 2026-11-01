@@ -25,7 +25,7 @@ Law and guidance:
 - CNIL délibération [2021-131](https://www.legifrance.gouv.fr/cnil/id/CNILTEXT000045543374/) (2021-09-23): two years of inactivity "apparait proportionné"; not binding.
 - EDPB, [CEF 2025 report on the right to erasure](https://www.edpb.europa.eu/system/files/2026-02/edpb_cef-report_2025_right-to-erasure_en.pdf) (2026-02-10), issue 6: keep track of erasures and apply them on restored systems.
 
-Provider facts (Cloudflare D1 `eu` jurisdiction, DPAs, Data Privacy Framework status, Scaleway's processing in France) were re-read on their own pages on 2026-10-31 and are dated in [sub-processors](sub-processors.md) and `packages/core/src/compliance-facts.ts` (#279).
+Provider facts (Cloudflare D1 `eu` jurisdiction, DPAs, Data Privacy Framework status, Lettermint's processing in the EU) were re-read on their own pages on 2026-10-31 (Lettermint on 2026-11-01, when it replaced Scaleway) and are dated in [sub-processors](sub-processors.md) and `packages/core/src/compliance-facts.ts` (#279).
 
 ## Why a DPIA
 
@@ -44,7 +44,7 @@ M7 alone meets one criterion and no entry of the CNIL lists, so a DPIA is not ma
 OpenLinguo is a free, open-source, local-first app for learning Chinese. Everything works on the device without an account. M7 adds optional accounts, used to submit texts to a shared library moderated by the maintainer; M8 adds sync between devices and weekly leagues, both opt-in.
 
 - **Controller**: the maintainer, a natural person, non-professional publisher (LCEN art. 1-1 II). No processor of their own staff, no DPO (art. 37 not met).
-- **Processors**: Cloudflare, Inc. (Pages Functions, D1 database in the `eu` jurisdiction, cron Worker), under its DPA, part of the self-serve terms; Scaleway SAS (Transactional Email, data processed in France), under the DPA in its contract.
+- **Processors**: Cloudflare, Inc. (Pages Functions, D1 database in the `eu` jurisdiction, cron Worker), under its DPA, part of the self-serve terms; Lettermint B.V. (transactional email, email data processed in the EU), under the DPA that is part of its terms.
 - **Independent controllers** when the learner chooses them for sign-in: Google Ireland Limited for EEA users, GitHub, Inc. or GitHub B.V.
 - **Benefits**: for learners, texts graded to their level written by other learners, and later the same cards on every device; for the project, a library without any third-party content licence.
 - **Applicable frameworks**: no approved code of conduct or certification (art. 40, 42). The CNIL guidance and the platform law listed in the sources.
@@ -56,7 +56,7 @@ OpenLinguo is a free, open-source, local-first app for learning Chinese. Everyth
 | Account: email, pseudonym, Google or GitHub account id, date of the age declaration, created and updated dates | Account holders, 15 and over | The person; Google or GitHub at sign-in (provider tokens are dropped) | Maintainer, Cloudflare | Until deletion; 2 years without action, with an email 30 days before |
 | Age answer « moins de 15 ans » | Anyone who signs in | The person | None | The account is deleted at once; nothing is kept but the security events, whose account id is cleared |
 | Sessions: token, expiry, IP address, user agent | Account holders | Browser | Maintainer, Cloudflare | Until sign-out or expiry |
-| Sign-in codes (hashed) and verification tokens | People who ask for a code | Server | Scaleway (the code, in the email) | 10 minutes; purged at expiry |
+| Sign-in codes (hashed) and verification tokens | People who ask for a code | Server | Lettermint (the code, in the email) | 10 minutes; purged at expiry |
 | TOTP secret and backup codes | The admin; account holders who turn it on | Server | None | Until turned off or account deleted |
 | Security events: sign-ins, failures, codes sent, admin actions, with IP address, user agent, account id | Everyone who signs in or asks for a code; the admin | Server | Maintainer, Cloudflare | 6 months |
 | Rate-limit counters: IP address and route | Every caller of the auth routes | Server | Cloudflare | Purged after their window |
@@ -74,7 +74,7 @@ Not on the server: learning data unless sync is on, voice, journal, AI key and A
 
 **Life cycle.** A person signs in with a code by email, Google or GitHub; right after the first sign-in they answer the age step, and every route except that step and deletion answers 403 until they do. They may submit a local text; the admin reviews it in `/admin` with a TOTP-verified session, approves it or rejects it with a statement of reasons. Anyone may report a published text without an account. The person may export their data as JSON and delete their account at any time. The cron Worker purges each category daily and records each run; `/api/health` answers 503 when a job fails or is late.
 
-**Supports.** The PWA in the browser; Cloudflare Pages Functions (Hono, Better Auth, Drizzle) on `openlinguo.razakk.fr`; one D1 database, `eu` jurisdiction, with D1 Time Travel (7 days) as the only backup; the cron Worker; Scaleway's email API; the maintainer's Cloudflare and GitHub accounts and the `production` deploy environment; the maintainer's mailbox for requests.
+**Supports.** The PWA in the browser; Cloudflare Pages Functions (Hono, Better Auth, Drizzle) on `openlinguo.razakk.fr`; one D1 database, `eu` jurisdiction, with D1 Time Travel (7 days) as the only backup; the cron Worker; Lettermint's email API; the maintainer's Cloudflare and GitHub accounts and the `production` deploy environment; the maintainer's mailbox for requests.
 
 ## 2. Fundamental principles
 
@@ -98,7 +98,7 @@ Not on the server: learning data unless sync is on, voice, journal, AI key and A
 | Access and portability (art. 15, 20) | `GET /api/account/export`: account, sessions, submissions, decisions, as JSON (#277) | Planned |
 | Rectification and erasure (art. 16, 17) | Pseudonym in Profile (#272); deletion cascades at once, with the choice for published texts (#277); erasure log re-applied after a restore, as the EDPB asks; requests by email answered within one month (#290) | Planned |
 | Restriction and objection (art. 18, 21) | Objection to security events is open (legitimate interest) and stated in the notice (#279); hosting records rest on a legal obligation, so art. 21 does not apply to them | Planned |
-| Processors (art. 28) | Cloudflare and Scaleway DPAs, checked and dated in #279 ([sub-processors](sub-processors.md)) | Done |
+| Processors (art. 28) | Cloudflare and Lettermint DPAs, checked and dated in #279 and on 2026-11-01 ([sub-processors](sub-processors.md)) | Done |
 | Transfers (art. 44–49) | D1 runs and stores data in the EU; Cloudflare, Inc. is a U.S. company on the Data Privacy Framework list, its DPA falls back on the SCCs; Google and GitHub are chosen by the learner and act as independent controllers. Statuses dated with a CI check in #279 | Done |
 
 ## 3. Risks

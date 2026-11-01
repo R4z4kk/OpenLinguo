@@ -33,8 +33,7 @@ export const AuthEnv = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(1),
   GITHUB_CLIENT_ID: z.string().min(1),
   GITHUB_CLIENT_SECRET: z.string().min(1),
-  SCW_SECRET_KEY: z.string().min(1),
-  SCW_PROJECT_ID: z.uuid(),
+  LETTERMINT_API_TOKEN: z.string().min(1),
   MAIL_FROM: z.email(),
   /** Where submitters ask for a review of a decision (DSA art. 17(3)(f)). */
   CONTACT_EMAIL: z.email(),

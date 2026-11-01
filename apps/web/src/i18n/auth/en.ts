@@ -13,7 +13,7 @@ export const authEn = {
   google: "Continue with Google",
   github: "Continue with GitHub",
   redirecting: "Opening the provider’s page…",
-  mailNote: "The email is sent by Scaleway, in France, with no tracking.",
+  mailNote: "The email is sent by Lettermint, in the Netherlands, with no tracking.",
   codeIntro: "We sent a code to {{email}}. It is valid for {{minutes}} minutes.",
   code: "Code from the email",
   codeInvalid: "Enter the {{length}} digits of the code.",
