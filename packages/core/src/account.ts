@@ -8,6 +8,8 @@ export type AgeDeclaration = z.output<typeof AgeDeclaration>;
 
 /** The emailed sign-in code (ADR 0015): 6 digits, valid 10 minutes, 3 attempts. */
 export const EMAIL_CODE = { length: 6, minutes: 10, attempts: 3 } as const;
+/** Sign-in codes sent to one address, across IP addresses (DPIA risk R1, #289). */
+export const CODES_PER_EMAIL = { max: 10, hours: 24 } as const;
 /** Wrong authenticator or backup codes that lock the second factor, and for how long. */
 export const SECOND_FACTOR_LOCK = { failures: 10, minutes: 15 } as const;
 

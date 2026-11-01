@@ -5,6 +5,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { reapplyErasures } from "./account.ts";
 import { createApp } from "./app.ts";
 import {
+  codeRequest,
   account,
   DELETED_ACCOUNT,
   database,
@@ -45,6 +46,7 @@ const app = createApp([], () => (mail) => mailer.sendMail(mail));
 let ip = 0;
 beforeEach(async () => {
   for (const table of [
+    codeRequest,
     securityEvent,
     notice,
     decision,

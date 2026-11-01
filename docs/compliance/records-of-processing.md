@@ -17,7 +17,7 @@ Processing that happens only on the user's device (learning data, voice, journal
 | (d) Recipients | Maintainer; Cloudflare (processor, D1 in the `eu` jurisdiction); Lettermint (processor, sign-in emails); Google Ireland or GitHub when chosen for sign-in, as independent controllers |
 | (e) Transfers | Cloudflare, Inc. (U.S. company, DPF and SCCs) for requests its network handles outside the EU; none for Lettermint, which processes email data in the EU; the exchange with Google Ireland is not a transfer; GitHub, Inc. or GitHub B.V., DPF — see [sub-processors](sub-processors.md) |
 | (f) Erasure | At account deletion; after 2 years of inactivity with prior notice — see [retention](retention-schedule.md) |
-| (g) Security | TLS; no passwords; codes hashed, valid 10 minutes, 3 attempts; cookies `Secure; HttpOnly; SameSite=Lax`; origin check on every state-changing request; rate limits per IP address; secrets as encrypted Pages secrets; no provider token kept; TOTP mandatory for the admin (CNIL recommendation 2025-019), optional for others, asked on every new session once on; the admin role is granted outside the app |
+| (g) Security | TLS; no passwords; codes hashed, valid 10 minutes, 3 attempts; cookies `Secure; HttpOnly; SameSite=Lax`; origin check on every state-changing request; rate limits per IP address, and at most 10 sign-in codes a day per email address (#289); secrets as encrypted Pages secrets; no provider token kept; TOTP mandatory for the admin (CNIL recommendation 2025-019), optional for others, asked on every new session once on; the admin role is granted outside the app |
 
 ## P2 — Shared library submissions and moderation
 

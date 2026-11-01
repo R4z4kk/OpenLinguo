@@ -43,6 +43,8 @@ export const authEn = {
     tooMany_one: "Too many requests. Try again in {{count}} minute.",
     tooMany_other: "Too many requests. Try again in {{count}} minutes.",
     tooManyLater: "Too many requests. Try again later.",
+    codeLimit:
+      "Too many codes asked for this address today. Try again tomorrow, or sign in with Google or GitHub.",
     provider: "Signing in with the provider failed ({{code}}). Try again or use an email code.",
     unexpected: "The server did not answer as expected (error {{status}}). Try again later.",
   },

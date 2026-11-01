@@ -7,6 +7,7 @@ import { createApp } from "./app.ts";
 import type { SendMail } from "./mail.ts";
 import { NOTICE_LIMIT } from "./notices.ts";
 import {
+  codeRequest,
   database,
   decision,
   hostingRecord,
@@ -46,6 +47,7 @@ const app = createApp([], () => (mail) => sendMail(mail));
 let ip = 0;
 beforeEach(async () => {
   for (const table of [
+    codeRequest,
     securityEvent,
     notice,
     decision,

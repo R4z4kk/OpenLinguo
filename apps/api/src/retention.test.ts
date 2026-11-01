@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { JOBS, type JobContext, runJobs } from "./jobs.ts";
 import { cutoffs, inactivityStep } from "./retention.ts";
 import {
+  codeRequest,
   DELETED_ACCOUNT,
   database,
   decision,
@@ -33,6 +34,7 @@ describe("cutoffs", () => {
     expect(cutoffs(NOW)).toEqual({
       securityEvents: at("2026-05-01T03:17:00.000Z"),
       rateLimits: at("2026-11-01T03:07:00.000Z"),
+      codeRequests: at("2026-10-31T03:17:00.000Z"),
       undeclaredAccounts: at("2026-10-31T03:17:00.000Z"),
       hostingRecords: at("2025-11-01T03:17:00.000Z"),
       moderation: at("2025-11-01T03:17:00.000Z"),
@@ -80,6 +82,7 @@ beforeEach(async () => {
   mailer = memoryMailer();
   for (const table of [
     jobRun,
+    codeRequest,
     securityEvent,
     notice,
     decision,
@@ -144,6 +147,10 @@ describe("the daily jobs", () => {
     await db.insert(rateLimit).values([
       { id: "old", key: "old", count: 1, lastRequest: NOW.getTime() - 11 * MINUTE_MS },
       { id: "recent", key: "recent", count: 1, lastRequest: NOW.getTime() - 9 * MINUTE_MS },
+    ]);
+    await db.insert(codeRequest).values([
+      { id: 1, emailHash: "a".repeat(64), createdAt: ago(25 * 60 * MINUTE_MS) },
+      { id: 2, emailHash: "a".repeat(64), createdAt: ago(23 * 60 * MINUTE_MS) },
     ]);
     await db.insert(securityEvent).values([
       { id: 1, type: "sign_in", method: "email-otp", createdAt: ago(190 * DAY_MS) },
@@ -242,6 +249,7 @@ describe("the daily jobs", () => {
     expect(await ids(db.select({ id: verification.id }).from(verification))).toEqual(["valid"]);
     expect(await ids(db.select({ id: rateLimit.id }).from(rateLimit))).toEqual(["recent"]);
     expect(await ids(db.select({ id: securityEvent.id }).from(securityEvent))).toEqual([2]);
+    expect(await ids(db.select({ id: codeRequest.id }).from(codeRequest))).toEqual([2]);
     expect(await ids(db.select({ id: hostingRecord.id }).from(hostingRecord))).toEqual([2]);
     expect(
       await db

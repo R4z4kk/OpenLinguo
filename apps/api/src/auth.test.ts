@@ -5,6 +5,7 @@ import { createApp } from "./app.ts";
 import { AuthEnv } from "./auth.ts";
 import {
   account,
+  codeRequest,
   database,
   rateLimit,
   securityEvent,
@@ -37,7 +38,16 @@ let mailer = memoryMailer();
 let ip = 0;
 const clientIp = () => `203.0.113.${String(ip)}`;
 beforeEach(async () => {
-  for (const table of [securityEvent, session, account, verification, rateLimit, twoFactor, user]) {
+  for (const table of [
+    securityEvent,
+    session,
+    account,
+    verification,
+    rateLimit,
+    codeRequest,
+    twoFactor,
+    user,
+  ]) {
     await db.delete(table);
   }
   mailer = memoryMailer();
@@ -101,6 +111,46 @@ const signedIn = async (call: ReturnType<typeof appWith>, email: string) => {
   await sendCode(call, email);
   return cookiesOf(await signInWithCode(call, email, lastCode()));
 };
+
+describe("codes per email address", () => {
+  const from = (n: number) => ({ "cf-connecting-ip": `198.51.100.${String(n)}` });
+  const request = (call: ReturnType<typeof appWith>, email: string, n: number) =>
+    call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, null, from(n));
+
+  it("refuses the 11th code in 24 hours from another IP address, then accepts it after the window", async () => {
+    const call = appWith(true);
+    for (let n = 1; n <= 10; n += 1) {
+      expect((await request(call, "target@example.test", n)).status).toBe(200);
+    }
+    const refused = await request(call, "Target@Example.test", 11);
+    expect(refused.status).toBe(429);
+    expect(await refused.json()).toMatchObject({ code: "CODE_LIMIT_REACHED" });
+    expect(mailer.sent).toHaveLength(10);
+    expect((await events()).at(-1)).toEqual({
+      type: "sign_in_failed",
+      method: "email-otp",
+      reason: "CODE_LIMIT_REACHED",
+      ipAddress: "198.51.100.11",
+    });
+
+    vi.useFakeTimers({ toFake: ["Date"], now: Date.now() + 24 * 60 * 60 * 1000 + 1000 });
+    expect((await request(call, "target@example.test", 12)).status).toBe(200);
+    expect(mailer.sent).toHaveLength(11);
+  });
+
+  it("keeps a keyed hash of the address, never the address", async () => {
+    await request(appWith(true), "kept@example.test", 1);
+    const rows = await db.select().from(codeRequest);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.emailHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(rows)).not.toContain("kept");
+  });
+
+  it("counts nothing for a refused sign-up", async () => {
+    await request(appWith(false), "stranger@example.test", 1);
+    expect(await db.select().from(codeRequest)).toEqual([]);
+  });
+});
 
 describe("email code", () => {
   it("mails a 6-digit code in the request's language, signs in and records both", async () => {
