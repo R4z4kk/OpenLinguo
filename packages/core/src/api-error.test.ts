@@ -24,6 +24,7 @@ describe("ApiErrorCode", () => {
       "MAIL_FAILED",
       "TWO_FACTOR_REQUIRED",
       "TOO_MANY_ATTEMPTS",
+      "CODE_LIMIT_REACHED",
       "ADMIN_REQUIRED",
       "SUBMISSION_LIMIT",
       "SUBMISSION_NOT_PENDING",

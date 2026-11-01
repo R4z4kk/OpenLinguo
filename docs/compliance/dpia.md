@@ -109,7 +109,7 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 
 | Kind | Measure | Where |
 |---|---|---|
-| On the data | No passwords; codes hashed, 10 minutes, 3 attempts; codes capped per IP address and, planned, per email address | #270, #289 |
+| On the data | No passwords; codes hashed, 10 minutes, 3 attempts; codes capped per IP address and per email address (10 a day, counted by a keyed hash of the address) | #270, #289 |
 | | Cookies `Secure; HttpOnly; SameSite=Lax`; origin check on state-changing requests | #270 |
 | | Admin role granted by command only, TOTP mandatory on every admin route; admin actions logged | #271 |
 | | Hosting records in their own table, readable only by the jobs and the admin export for an authority; every export and direct read in an access register | #273, #277, #290 |

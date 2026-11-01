@@ -2,7 +2,7 @@ import { Submission, Submissions } from "@openlinguo/core/submission";
 import { eq } from "drizzle-orm";
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
-import { database, hostingRecord, submission, user } from "./schema.ts";
+import { codeRequest, database, hostingRecord, submission, user } from "./schema.ts";
 import { memoryMailer } from "./testing/memory-mailer.ts";
 import { migratedPlatform } from "./testing/platform.ts";
 
@@ -28,7 +28,7 @@ let mailer = memoryMailer();
 let app = createApp([], () => mailer.sendMail);
 let ip = 0;
 beforeEach(async () => {
-  for (const table of [hostingRecord, submission, user]) await db.delete(table);
+  for (const table of [codeRequest, hostingRecord, submission, user]) await db.delete(table);
   mailer = memoryMailer();
   app = createApp([], () => mailer.sendMail);
   ip += 1;

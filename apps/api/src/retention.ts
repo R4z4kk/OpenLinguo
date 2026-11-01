@@ -1,8 +1,10 @@
+import { CODES_PER_EMAIL } from "@openlinguo/core/account";
 import { and, eq, isNotNull, isNull, lt, lte, ne, sql } from "drizzle-orm";
 import { accountDeletion } from "./account.ts";
 import type { Job, Outbox } from "./jobs.ts";
 import { inactivityNoticeMail } from "./mail-templates.ts";
 import {
+  codeRequest,
   DELETED_ACCOUNT,
   decision,
   hostingRecord,
@@ -30,6 +32,7 @@ export const cutoffs = (now: Date) => ({
   securityEvents: monthsBefore(now, 6),
   /** The longest window of Better Auth's rules (auth.ts) and of the notices. */
   rateLimits: new Date(now.getTime() - 10 * MINUTE_MS),
+  codeRequests: new Date(now.getTime() - CODES_PER_EMAIL.hours * 60 * MINUTE_MS),
   undeclaredAccounts: new Date(now.getTime() - DAY_MS),
   hostingRecords: monthsBefore(now, 12),
   moderation: monthsBefore(now, 12),
@@ -127,6 +130,7 @@ export const purgeExpiredAuth: Job = {
       db.delete(session).where(lt(session.expiresAt, now)),
       db.delete(verification).where(lt(verification.expiresAt, now)),
       db.delete(rateLimit).where(lt(rateLimit.lastRequest, cutoffs(now).rateLimits.getTime())),
+      db.delete(codeRequest).where(lt(codeRequest.createdAt, cutoffs(now).codeRequests)),
     ]);
   },
 };

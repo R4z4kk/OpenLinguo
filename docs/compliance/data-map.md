@@ -45,6 +45,7 @@ In Cloudflare D1, created in the `eu` jurisdiction (ADR 0015).
 | League entries: pseudonym, predefined avatar id, weekly XP (M8) | Recomputed from synced review logs | Other league members see pseudonym, avatar and XP |
 | Security events: sign-in, failed sign-in, code sent, authenticator code passed or failed, and admin actions with the account concerned, with the method or operation, the account id when known, IP address, user agent, failure code and time; no email address | Each sign-in, failure, code sent, authenticator check and admin action | Maintainer |
 | Rate-limit counters: IP address and route, count, time of the last request | Each request to `/api/auth` | Maintainer (operations only) |
+| Sign-in codes asked per address: a keyed hash of the address (never the address) and the time, 24 hours | Each sign-in code sent | Maintainer (operations only) |
 | Rights and support requests | Email | Maintainer |
 
 ## With third parties

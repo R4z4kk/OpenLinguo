@@ -1,4 +1,9 @@
-import { EMAIL_CODE, PseudonymUpdate, SECOND_FACTOR_LOCK } from "@openlinguo/core/account";
+import {
+  CODES_PER_EMAIL,
+  EMAIL_CODE,
+  PseudonymUpdate,
+  SECOND_FACTOR_LOCK,
+} from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -6,12 +11,13 @@ import { APIError, createAuthMiddleware, getSessionFromCtx, isAPIError } from "b
 import { admin, emailOTP, twoFactor as secondFactor } from "better-auth/plugins";
 import { createAccessControl } from "better-auth/plugins/access";
 import { defaultStatements } from "better-auth/plugins/admin/access";
-import { and, count, eq, gt } from "drizzle-orm";
+import { and, count, eq, gt, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { SendMail } from "./mail.ts";
 import { localeOf, signInCodeMail } from "./mail-templates.ts";
 import {
   account,
+  codeRequest,
   type Database,
   rateLimit,
   SECURITY_EVENT_TYPES,
@@ -87,6 +93,19 @@ const targetOf = (body: unknown, query: unknown) =>
   z.object({ id: z.string() }).safeParse(query).data?.id ??
   null;
 
+const keyedHash = async (secret: string, value: string) => {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+  return [...new Uint8Array(mac)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+};
+
 export const createAuth = (db: Database, env: AuthEnv, sendMail: SendMail) => {
   const signupsOpen = env.SIGNUPS_OPEN === "true";
   // Better Auth swallows errors thrown by sendVerificationOTP: the after hook answers them.
@@ -102,6 +121,18 @@ export const createAuth = (db: Database, env: AuthEnv, sendMail: SendMail) => {
       reason,
       target,
     });
+  };
+
+  /** Counts the code in one statement, so two requests at once cannot both pass the cap. */
+  const codeAllowed = async (email: string) => {
+    const emailHash = await keyedHash(env.BETTER_AUTH_SECRET, email);
+    const now = Date.now();
+    const since = now - CODES_PER_EMAIL.hours * 60 * 60 * 1000;
+    const inserted = await db.run(sql`insert into ${codeRequest} ("email_hash", "created_at")
+      select ${emailHash}, ${now}
+      where (select count(*) from ${codeRequest}
+        where "email_hash" = ${emailHash} and "created_at" > ${since}) < ${CODES_PER_EMAIL.max}`);
+    return inserted.meta.changes > 0;
   };
 
   const secondFactorLocked = async (userId: string) => {
@@ -242,11 +273,25 @@ export const createAuth = (db: Database, env: AuthEnv, sendMail: SendMail) => {
             message: "Only sign-in codes are sent",
           });
         }
-        const known = await ctx.context.internalAdapter.findUserByEmail(
-          body.data.email.toLowerCase(),
-        );
+        const email = body.data.email.toLowerCase();
+        const known = await ctx.context.internalAdapter.findUserByEmail(email);
         if (!known && !signupsOpen) {
           throw refusal("FORBIDDEN", { code: "SIGNUPS_CLOSED", message: "Sign-ups are closed" });
+        }
+        if (!(await codeAllowed(email))) {
+          await record({
+            type: "sign_in_failed",
+            path: ctx.path,
+            provider: null,
+            headers: ctx.headers ?? null,
+            userId: known?.user.id ?? null,
+            reason: "CODE_LIMIT_REACHED",
+            target: null,
+          });
+          throw refusal("TOO_MANY_REQUESTS", {
+            code: "CODE_LIMIT_REACHED",
+            message: `At most ${String(CODES_PER_EMAIL.max)} codes a day for one address`,
+          });
         }
       }),
       after: createAuthMiddleware(async (ctx) => {

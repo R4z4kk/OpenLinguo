@@ -103,6 +103,18 @@ export const rateLimit = sqliteTable("rate_limit", {
   lastRequest: integer().notNull(),
 });
 
+/** One row per sign-in code sent, by a keyed hash of the address, for its daily cap (#289). */
+export const codeRequest = sqliteTable(
+  "code_request",
+  {
+    id: integer().primaryKey({ autoIncrement: true }),
+    /** HMAC-SHA-256 of the lowercased address with `BETTER_AUTH_SECRET`, in hex. */
+    emailHash: text().notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("code_request_email_hash").on(table.emailHash, table.createdAt)],
+);
+
 export const twoFactor = sqliteTable(
   "two_factor",
   {

@@ -46,6 +46,8 @@ export const authFr: AuthMessages = {
     tooMany_one: "Trop de demandes. Réessayez dans {{count}}\u00a0minute.",
     tooMany_other: "Trop de demandes. Réessayez dans {{count}}\u00a0minutes.",
     tooManyLater: "Trop de demandes. Réessayez plus tard.",
+    codeLimit:
+      "Trop de codes demandés pour cette adresse aujourd’hui. Réessayez demain, ou connectez-vous avec Google ou GitHub.",
     provider:
       "La connexion avec le fournisseur a échoué ({{code}}). Réessayez ou utilisez un code par e-mail.",
     unexpected: "Le serveur n’a pas répondu comme prévu (erreur {{status}}). Réessayez plus tard.",

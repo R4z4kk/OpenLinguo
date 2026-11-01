@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import type { SendMail } from "./mail.ts";
 import {
+  codeRequest,
   DELETED_ACCOUNT,
   database,
   decision,
@@ -42,7 +43,15 @@ let sendMail: SendMail = mailer.sendMail;
 const app = createApp([], () => (mail) => sendMail(mail));
 let ip = 0;
 beforeEach(async () => {
-  for (const table of [securityEvent, decision, submission, twoFactor, session, user]) {
+  for (const table of [
+    codeRequest,
+    securityEvent,
+    decision,
+    submission,
+    twoFactor,
+    session,
+    user,
+  ]) {
     await db.delete(table);
   }
   mailer = memoryMailer();
