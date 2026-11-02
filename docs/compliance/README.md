@@ -10,6 +10,7 @@ Values that can expire (Data Privacy Framework statuses, processor agreements, t
 | [Records of processing](records-of-processing.md) | GDPR art. 30(1) register |
 | [Retention schedule](retention-schedule.md) | How long each category is kept |
 | [Sub-processors](sub-processors.md) | Third parties that process personal data, and transfers |
+| [Accounts security](accounts-security.md) | Cloudflare, GitHub and Wrangler accounts that reach production, deploy token renewal, monthly audit log check |
 | [Breach procedure](breach-procedure.md) | GDPR art. 33–34 response: evidence, revocation, processors' notices, notice to the people affected, exercise |
 | [DPIA screening](dpia-screening.md) | Whether a data protection impact assessment is required |
 | [DPIA](dpia.md) | Impact assessment of accounts, the shared library, the décret 2021-1362 retention and the M8 leagues (CNIL PIA method), with its action plan |

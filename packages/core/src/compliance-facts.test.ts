@@ -1,5 +1,11 @@
 import { describe, expect, test } from "vitest";
-import { CONTACT_EMAIL, DPF_STATUS, DPIA_REVIEW, PROCESSOR_FACTS } from "./compliance-facts.ts";
+import {
+  CONTACT_EMAIL,
+  DEPLOY_TOKEN,
+  DPF_STATUS,
+  DPIA_REVIEW,
+  PROCESSOR_FACTS,
+} from "./compliance-facts.ts";
 
 const DAY = 24 * 60 * 60_000;
 
@@ -24,6 +30,14 @@ describe("compliance facts", () => {
     expect(
       Date.parse(DPIA_REVIEW.reviewBy) - Date.parse(DPIA_REVIEW.checkedOn),
     ).toBeLessThanOrEqual(366 * DAY);
+  });
+
+  test("the deploy token is renewed a month before it expires: follow docs/compliance/accounts-security.md, then move value, checkedOn and reviewBy", () => {
+    expect(Date.now()).toBeLessThan(Date.parse(DEPLOY_TOKEN.reviewBy));
+    expect(Date.parse(DEPLOY_TOKEN.reviewBy)).toBeLessThan(Date.parse(DEPLOY_TOKEN.value));
+    expect(Date.parse(DEPLOY_TOKEN.value) - Date.parse(DEPLOY_TOKEN.checkedOn)).toBeLessThanOrEqual(
+      366 * DAY,
+    );
   });
 
   test("the contact address is filled in before the legal pages ship", () => {
