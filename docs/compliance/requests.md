@@ -8,14 +8,13 @@ How the maintainer answers the requests that reach personal data outside the app
 - CNIL [recommendation 1](https://www.cnil.fr/fr/recommandation-1-encadrer-la-capacite-dagir-des-mineurs-en-ligne) (2021-06-01): parents need "une voie de recours pour demander la suppression du compte de leur enfant". It says nothing on how to check the request.
 - [LCEN art. 6](https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000045292730) V.B: not answering a request of the judicial authority for the data of V.A is punished by one year in prison and a €250,000 fine.
 
-The production database is read with `wrangler d1 execute openlinguo --remote` from `apps/api`. Every such read or write goes in the access register (section 5).
+The production database is read with `wrangler d1 execute openlinguo --remote` from `apps/api`.
 
 ## 1. Intake
 
-Every request arrives at `openlinguo@gmail.com` (`CONTACT_EMAIL`). On the day it arrives:
+Every request arrives at `openlinguo@gmail.com` (`CONTACT_EMAIL`), and its thread is its record (section 5).
 
-1. Add a line to the access register: date received, kind of request, requester, deadline (one month later).
-2. Answer within the month. If more time is needed (complex or many requests), tell the person before the month ends, with the reasons, and answer within the two further months.
+Answer within the month. If more time is needed (complex or many requests), tell the person before the month ends, with the reasons, and answer within the two further months.
 
 ## 2. Rights requests
 
@@ -56,7 +55,7 @@ Access, rectification, erasure, restriction, objection, portability (GDPR arts 1
 
 A parent asks for their child's account to be deleted, giving the account's address. No ID document is asked, and the parent's link to the child is not checked: an account under 15 should not exist, whoever reports it. From 15, the account holder decides alone (art. 45), so they are asked first.
 
-1. Register line; the deadline is 14 days later.
+1. The deadline is 14 days after the request.
 2. Write to the account's address (template below).
 3. Answer the parent without saying whether an account exists (template below).
 4. After 14 days:
@@ -100,16 +99,17 @@ For the data of `hosting_record` and `sealed_identity` (LCEN art. 6 V.A, décret
 1. **Only a written requisition** from a judicial authority (a magistrate, or an officer of the judicial police acting on a requisition), or from another authority that cites the law giving it access. Nothing on a phone call or an email without a requisition, however urgent it sounds.
 2. **Check it**: the legal basis it cites, that it names the data and the account or the text concerned, and its origin. Call the service back on its official number, never on one given in the message.
 3. **Export only what is asked**, for the period asked, with the queries of section 2 filtered on the account or the text and the dates. Save the output to an encrypted file and send it by the channel the authority gives. Delete the local copy once it is received.
-4. Record it in the access register: date, authority, reference of the requisition, legal basis, data given, date sent.
+4. Keep the requisition and the answer in the mailbox. If either went through another channel, mail yourself a note: date, authority, reference of the requisition, legal basis, data given, date sent.
 5. Removal orders (24 hours, 1 hour for terrorist content) follow the [moderation runbook](moderation.md), section 4.
 
-## 5. Access register
+## 5. Proof
 
-Kept outside this repository, in the maintainer's private notes, because it names real people. One line per:
+No separate register: what proves a request was handled is already kept.
 
-- request received (section 1);
-- export from `hosting_record` or `sealed_identity`;
-- direct read or write of the production database: D1 console, `wrangler d1 execute --remote`, for an incident, a rights request, a requisition, a removal order ([moderation runbook](moderation.md)) or [the admin's account](../../apps/api/README.md#admin);
-- account deleted from Moderation › Comptes.
+| What | Where | Kept |
+|---|---|---|
+| A request, its answer, their dates, and the data given | Its thread in the mailbox | 5 years for a rights request ([retention](retention-schedule.md)) |
+| A requisition and its answer | The mailbox (section 4) | As for a rights request |
+| An account deleted from Moderation › Comptes | `security_event`, written by the app | 6 months |
 
-Columns: date, reason, requester, reference, data given or query run, outcome. Lines about a rights request are kept 5 years as proof, like the request itself; the moderation register of the [moderation runbook](moderation.md) (section 5) is kept in the same place.
+A direct read that answers no request leaves no record here. Whether the Cloudflare audit log shows it is for the exercise of the [breach procedure](breach-procedure.md) to establish.
