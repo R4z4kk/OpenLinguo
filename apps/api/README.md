@@ -10,7 +10,13 @@ The server of [ADR 0015](../../docs/adr/0015-backend-and-shared-library.md): a H
 
 ## Admin
 
-The app never grants the admin role: no route sets it. The maintainer signs in once, answers the age step, then runs from `apps/api`, with their address in both places:
+The app never grants the admin role: no route sets it. While sign-ups are closed it creates no account either, so the maintainer first runs from `apps/api`, with their address in lowercase:
+
+```bash
+wrangler d1 execute openlinguo --remote --command "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES (lower(hex(randomblob(16))), '', 'me@example.org', 0, unixepoch() * 1000, unixepoch() * 1000)"
+```
+
+They sign in by code, since Google and GitHub answer `account_not_linked` until a code has verified the address. They answer the age step within 24 hours, or the daily job `purge-undeclared-accounts` deletes the account. Then they run, with their address in both places:
 
 ```bash
 wrangler d1 execute openlinguo --remote --command "UPDATE user SET role = 'admin' WHERE email = 'me@example.org'; INSERT INTO security_event (type, method, target, created_at) SELECT 'admin_action', 'grant-admin', id, unixepoch() * 1000 FROM user WHERE email = 'me@example.org'"
