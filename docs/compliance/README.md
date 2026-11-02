@@ -10,7 +10,7 @@ Values that can expire (Data Privacy Framework statuses, processor agreements, t
 | [Records of processing](records-of-processing.md) | GDPR art. 30(1) register |
 | [Retention schedule](retention-schedule.md) | How long each category is kept |
 | [Sub-processors](sub-processors.md) | Third parties that process personal data, and transfers |
-| [Breach procedure](breach-procedure.md) | GDPR art. 33–34 response and internal register |
+| [Breach procedure](breach-procedure.md) | GDPR art. 33–34 response: evidence, revocation, processors' notices, notice to the people affected, exercise |
 | [DPIA screening](dpia-screening.md) | Whether a data protection impact assessment is required |
 | [DPIA](dpia.md) | Impact assessment of accounts, the shared library, the décret 2021-1362 retention and the M8 leagues (CNIL PIA method), with its action plan |
 | [AI features](ai.md) | Roles, AI Act art. 50 per output, gap analysis against the code of practice, provenance specification |
