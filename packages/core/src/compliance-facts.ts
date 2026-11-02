@@ -56,6 +56,14 @@ export const PROCESSOR_FACTS = {
   },
 } as const satisfies Readonly<Record<string, DatedFact>>;
 
+/** TTL end of `CLOUDFLARE_API_TOKEN`, renewed as docs/compliance/accounts-security.md says (#291). */
+export const DEPLOY_TOKEN = {
+  value: "2027-10-31",
+  source: "Cloudflare dashboard, API Tokens",
+  checkedOn: "2026-11-02",
+  reviewBy: "2027-10-01",
+} as const satisfies DatedFact;
+
 /** GDPR art. 35(11) review of docs/compliance/dpia.md, section 4.3 (#294). */
 export const DPIA_REVIEW = {
   value: "docs/compliance/dpia.md",

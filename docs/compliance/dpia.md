@@ -115,11 +115,11 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 | | Hosting records in their own table, readable only by the jobs and the admin export for an authority; every export and direct read in an access register | #273, #277, #290 |
 | | Plain-text submissions, 20,000 characters, 5 pending per account; every text approved before publication | #273, #274 |
 | On the system | TLS, HSTS, strict CSP, API on the PWA's own origin; D1 in the `eu` jurisdiction; secrets as encrypted Pages secrets | #268, #269 |
-| | Deploy only from `main` with the maintainer's approval; Cloudflare token scoped to Pages and D1; no preview deployment sharing the database | #269 |
+| | Deploy only from `main` with the maintainer's approval; Cloudflare token scoped to Pages, D1 and Workers Scripts, given to the deploy steps only; no preview deployment sharing the database | #269 |
 | | Daily purges recorded, `/api/health` 503 on failure, Uptime Kuma alert | #278 |
 | | D1 Time Travel, 7 days; erasure log re-applied after a restore | #269, #277 |
 | Organisation | Sign-ups closed by default (`SIGNUPS_OPEN=false`) until the measures below are merged | #281 |
-| | Cloudflare and GitHub accounts secured, direct database reads only for a recorded reason | #291 |
+| | [Cloudflare and GitHub accounts secured](accounts-security.md), direct database reads only for a recorded reason | #291 |
 | | Breach procedure covering the server, notice template for teenagers | #293 |
 | | [Requests runbook](requests.md) for rights, parents' (account holder told, deleted after 14 days unless 15 or over) and authorities' requests; moderation runbook | #290, #279 |
 

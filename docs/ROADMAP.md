@@ -180,7 +180,7 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 
 Infrastructure specifics (hosts, ports, credentials) live in the maintainer's private infrastructure docs, not in this repo.
 
-- **API**: Pages Functions on the PWA's origin (`/api/*`), deployed with the PWA by `deploy.yml` (promotion merged into `main` or manual, GitHub environment `production` with approval, Cloudflare token scoped to Pages and D1). No preview deployments. See [ADR 0015](adr/0015-backend-and-shared-library.md).
+- **API**: Pages Functions on the PWA's origin (`/api/*`), deployed with the PWA by `deploy.yml` (promotion merged into `main` or manual, GitHub environment `production` with approval, Cloudflare token scoped to Pages, D1 and Workers Scripts). No preview deployments. See [ADR 0015](adr/0015-backend-and-shared-library.md).
 - **Database**: one D1 database created with jurisdiction `eu`; migrations applied by `deploy.yml` before the deploy; backups are D1 Time Travel (7 days). A cron Worker bound to it runs the retention jobs; `/api/health` answers 503 when one failed or is late, polled by the maintainer's Uptime Kuma.
 - **PWA**: Cloudflare Pages with custom domain `openlinguo.razakk.fr` (Pages is the only Cloudflare product that accepts a domain whose DNS stays at OVH). Same origin as the API → `SameSite=Lax` first-party cookies, no CORS. `*.pages.dev` is not used for users.
 - **Headers**: the PWA's own `_headers` set `microphone=(self)`, a strict CSP and HSTS; API responses add Hono's `secureHeaders`.
