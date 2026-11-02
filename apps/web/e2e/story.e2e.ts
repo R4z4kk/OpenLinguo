@@ -230,7 +230,7 @@ test("writes a story from the learning steps with Groq, stores it with its prove
   });
 
   // The library lists it, with the badge and its share of known words.
-  await press(page, main.getByRole("link", { name: en.reader.back }));
+  await press(page, main.getByRole("link", { name: en.reader.back, exact: true }));
   const row = main.getByRole("listitem").filter({ hasText: story.title });
   await expect(row).toContainText(en.library.source.ai);
   await expect(row.getByText(fill(en.aiNotice.badge, { model: MODEL }))).toBeVisible();

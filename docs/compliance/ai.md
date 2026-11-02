@@ -71,7 +71,7 @@ OpenLinguo, too, decides which data goes into each prompt, and the EDPB counts "
 - **Art. 50(2): marking.** Outputs must be "marked in a machine-readable format and detectable as artificially generated or manipulated". This does not apply where the system performs "an assistive function for standard editing" or does "not substantially alter the input data".
 - **Art. 50(1): disclosure.** People must be "informed that they are interacting with an AI system". A "single prompt followed with a single reply" counts as an interaction (guidelines para 30).
 - **Art. 50(5): when and how.** The information is due "at the latest at the time of the first interaction or exposure", and it must meet accessibility requirements.
-- **Art. 50(3) and 50(4) do not apply.** 50(3) covers emotion recognition and biometric categorisation. 50(4) covers deep fakes and text published to inform the public. OpenLinguo produces no image, audio or video and publishes nothing.
+- **Art. 50(3) and 50(4) do not apply.** 50(3) covers emotion recognition and biometric categorisation. 50(4) covers deep fakes and text published to inform the public. OpenLinguo produces no image, audio or video, and the only AI text it publishes is a story in the shared library, which is outside 50(4) (section 3.2).
 
 | Output | Art. 50(2) | Why |
 |---|---|---|
@@ -115,7 +115,7 @@ In M5, the only outputs within art. 50(2) are the explanations of changes, each 
 | 4.1 Compliance process | Documented, proportionate for SMEs | This document and the pull request checklist (« AI output is labeled and stored with its provenance ») | None |
 | 4.2 Testing | Before release and regularly | Unit tests on the provenance schema and the backup round trip (#182). E2E tests on recorded responses (#190) | No detection benchmark, as none exists for metadata |
 | 4.3 Training | Proportionate training of personnel | One maintainer, no staff. This document | None |
-| 4.4 Cooperation with authorities | Provide documentation on request | This document is public. The contact is the repository until the legal notice ships (M7) | The French authority is not designated yet (section 5) |
+| 4.4 Cooperation with authorities | Provide documentation on request | This document is public. The contact is the one address of `/legal` (`CONTACT_EMAIL`) | The French authority is not designated yet (section 5) |
 
 ### 3.1 Generated stories (M6)
 
@@ -134,6 +134,16 @@ Decided by the maintainer in [ADR 0014](../adr/0014-graded-reader.md). Sources r
 | Local | The learner's own server: OpenLinguo cannot know whether it marks its text | — |
 
 **Dated values.** `MARKING_FACTS` and `UPSTREAM_WATERMARK` in `packages/core/src/ai-marking.ts` hold the 200-token threshold, the code's version and the three statuses above, each with its source. The code's version is its publication date, 10 June 2026, as the PDF carries no version number. The review date is 2027-04-20, and 2026-12-03 for Mistral, the day after its announced date. From each review date a unit test fails until the value is read again on its source and this section updated.
+
+### 3.2 Stories published in the shared library (M7)
+
+Decided in [ADR 0015](../adr/0015-backend-and-shared-library.md). Sources read on 2026-10-31: the [AI Act](https://eur-lex.europa.eu/eli/reg/2024/1689/oj) in the Official Journal (art. 50(4) unchanged by the Digital Omnibus on AI, Regulation (EU) 2026/1744, which replaced only art. 50(7)), and the guidelines.
+
+- **Art. 50(4) does not apply.** Its second subparagraph covers "text which is published with the purpose of informing the public on matters of public interest". A graded story written to practise reading informs no one on such matters, and the guidelines list "AI-generated fantasy novels" among texts "falling outside the scope of Article 50(4)" (para 131). The library publishes no deep fake: it holds text only.
+- **The guidelines are a draft.** The Communication of 20.7.2026 approves their content and says they will be formally adopted at a later date, and apply from then. Section 5 tracks it; nothing in this reading depends on a part likely to change.
+- **Art. 50(2) still applies.** A published story keeps its badge and its `provenance` member (section 4): the submit form fixes the origin, the moderation queue shows it, and `GET /api/library` returns it with each item, so a copy imported on another device carries the same field. No watermark is added (section 3.1).
+- **Licence: CC0 1.0.** Purely AI-generated text is most likely not protected by copyright (CJEU C-5/08 Infopaq, C-145/10 Painer: originality is the author's "own intellectual creation"), so a CC BY-SA licence on it would be empty. The submitter attests that the story was generated in OpenLinguo and contains no third-party text. CC0 waives any right that might exist "overtly, fully, permanently, irrevocably and unconditionally" (§2), with a fallback licence where a waiver is not valid (§3) ([legal code](https://creativecommons.org/publicdomain/zero/1.0/legalcode.en)).
+- **Who publishes.** The maintainer approves every story before publication and is its publication director (loi 82-652 art. 93-2: "Lorsque le service est fourni par une personne physique, le directeur de la publication est cette personne physique"). The submitter is not a deployer: they use the app "in the course of a personal non-professional activity" (art. 3(4)).
 
 ## 4. Provenance: the public detection specification
 
@@ -179,3 +189,4 @@ State on 2026-10-19:
 | French authority supervising art. 50 | Not designated in law yet. The government plan gives art. 50(1) and (2) to the DGCCRF and Arcom. The bill that would do so has been at the Assemblée nationale (text n° 2518) since 20 February 2026. The Senate adopted it on 18 February 2026, as text n° 63, arts 24 quinquies and 24 terdecies | [DGE, 9 September 2025](https://www.entreprises.gouv.fr/priorites-et-actions/transition-numerique/soutenir-le-developpement-de-lia-au-service-de-0), [Senate file](https://www.senat.fr/dossier-legislatif/pjl25-118.html) |
 | A CNIL, EDPB or CJEU position on bring-your-own-key apps | None found | Section 1.2 |
 | Watermarking of generated stories | Decided on 2026-10-20 (ADR 0014): none by OpenLinguo, each provider's watermark followed | Section 3.1 |
+| Formal adoption of the art. 50 guidelines | Approved as a draft on 20.7.2026, to be adopted later; whether it has been adopted since was not verified on 2026-10-31 | [Guidelines page](https://digital-strategy.ec.europa.eu/en/library/guidelines-transparency-obligations-providers-and-deployers-ai-systems) |

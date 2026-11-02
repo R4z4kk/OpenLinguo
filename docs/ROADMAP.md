@@ -174,13 +174,13 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
 - **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
-- **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Scaleway Transactional Email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening, privacy policy, legal notices.
+- **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Lettermint transactional email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening and DPIA (#280), privacy policy, legal notices.
 
 ## Deployment
 
 Infrastructure specifics (hosts, ports, credentials) live in the maintainer's private infrastructure docs, not in this repo.
 
-- **API**: Pages Functions on the PWA's origin (`/api/*`), deployed with the PWA by `deploy.yml` (promotion merged into `main` or manual, GitHub environment `production` with approval, Cloudflare token scoped to Pages and D1). No preview deployments. See [ADR 0015](adr/0015-backend-and-shared-library.md).
+- **API**: Pages Functions on the PWA's origin (`/api/*`), deployed with the PWA by `deploy.yml` (promotion merged into `main` or manual, GitHub environment `production` with approval, Cloudflare token scoped to Pages, D1 and Workers Scripts). No preview deployments. See [ADR 0015](adr/0015-backend-and-shared-library.md).
 - **Database**: one D1 database created with jurisdiction `eu`; migrations applied by `deploy.yml` before the deploy; backups are D1 Time Travel (7 days). A cron Worker bound to it runs the retention jobs; `/api/health` answers 503 when one failed or is late, polled by the maintainer's Uptime Kuma.
 - **PWA**: Cloudflare Pages with custom domain `openlinguo.razakk.fr` (Pages is the only Cloudflare product that accepts a domain whose DNS stays at OVH). Same origin as the API → `SameSite=Lax` first-party cookies, no CORS. `*.pages.dev` is not used for users.
 - **Headers**: the PWA's own `_headers` set `microphone=(self)`, a strict CSP and HSTS; API responses add Hono's `secureHeaders`.
@@ -240,7 +240,7 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 6. BYOK CORS differs by provider → cloud presets checked from our origin, CSP `connect-src` lists them plus local servers (ADR 0012); Safari cannot reach a local server from the HTTPS app.
 7. User submissions copyright → attestation, moderation, takedown.
 8. Cloudflare free-plan limits (10 ms CPU per request, D1 quotas) and terms → no passwords, no server-side text processing, Workers Paid as the way out (ADR 0015).
-9. SMTP provider decided in M7: Scaleway Transactional Email (ADR 0015). Audio hosting decided in #113 and speech-model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
+9. SMTP provider decided in M7: Scaleway Transactional Email (ADR 0015), replaced by Lettermint on 2026-11-01 (its amendment). Audio hosting decided in #113 and speech-model hosting in #119: GitHub release assets served by Pages, files above 20 MiB cut into parts (ADR 0007).
 10. Legal basis verified on primary texts, but not legal advice; watch items re-checked at M10.
 11. Visual-only widgets (pitch curve, decomposition tree, heatmap) need text alternatives (numeric score, tone label, list view).
 

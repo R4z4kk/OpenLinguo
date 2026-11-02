@@ -26,6 +26,15 @@ describe("GET /api/health", () => {
     expect(await response.json()).toEqual({ status: "ok" });
   });
 
+  it("ignores cookies other than the session's, even without auth settings", async () => {
+    const response = await createApp([]).request(
+      "/api/health",
+      { headers: { cookie: "theme=dark" } },
+      platform.env,
+    );
+    expect(response.status).toBe(200);
+  });
+
   it("answers 200 when every job last succeeded within 26 hours", async () => {
     await recordRun("purge-sessions", "failed", 30);
     await recordRun("purge-sessions", "succeeded", 25);

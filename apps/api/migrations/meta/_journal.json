@@ -15,6 +15,55 @@
       "when": 1793446575434,
       "tag": "0001_auth",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793455174202,
+      "tag": "0002_admin_two_factor",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1793456220916,
+      "tag": "0003_submissions",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1793457751230,
+      "tag": "0004_moderation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793481371882,
+      "tag": "0005_notices",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793484640900,
+      "tag": "0006_account_deletion",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1793524783990,
+      "tag": "0007_inactivity",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793529691337,
+      "tag": "0008_code_requests",
+      "breakpoints": true
     }
   ]
 }

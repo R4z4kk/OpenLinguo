@@ -9,6 +9,7 @@ import {
   type ReplayError,
   type Result,
 } from "@openlinguo/core";
+import { LICENCES, Licence } from "@openlinguo/core/submission";
 import { z } from "zod";
 import { languages } from "@/i18n/language";
 import { themePreferences } from "@/theme";
@@ -67,10 +68,28 @@ const TextFields = z.object({
   readingChoices: z.record(z.string().regex(/^\d+$/u), z.string().min(1)),
 });
 
-/** A story has its provenance, any other text none. The size limit is not checked: it may be lowered. */
+const LibraryCopy = z.object({
+  licence: Licence,
+  attribution: z.string().min(1).nullable(),
+  publishedAt: z.iso.datetime(),
+});
+
+/**
+ * A story has its provenance, a text of one's own none; a library copy's licence follows its origin.
+ * The size limit is not checked: it may be lowered.
+ */
 const Text = z.discriminatedUnion("source", [
   TextFields.extend({ source: z.enum(["paste", "file"]), provenance: z.null() }),
   TextFields.extend({ source: z.literal("ai"), provenance: AiProvenance }),
+  TextFields.extend({
+    source: z.literal("library"),
+    provenance: AiProvenance.nullable(),
+    library: LibraryCopy,
+  }).refine(
+    ({ provenance, library }) =>
+      library.licence === (provenance === null ? LICENCES.human : LICENCES.ai),
+    { path: ["library", "licence"], message: "The licence follows the origin" },
+  ),
 ]);
 
 const DeckId = z.union([z.literal(MY_WORDS), z.uuid()]);

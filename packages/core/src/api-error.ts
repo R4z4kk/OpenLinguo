@@ -9,6 +9,15 @@ export const ApiErrorCode = z.enum([
   "AGE_DECLARATION_REQUIRED",
   "SIGNUPS_CLOSED",
   "MAIL_FAILED",
+  "TWO_FACTOR_REQUIRED",
+  "TOO_MANY_ATTEMPTS",
+  "CODE_LIMIT_REACHED",
+  "ADMIN_REQUIRED",
+  "SUBMISSION_LIMIT",
+  "SUBMISSION_NOT_PENDING",
+  "SUBMISSION_NOT_APPROVED",
+  "NOTICE_DECIDED",
+  "USE_ACCOUNT_DELETION",
 ]);
 export type ApiErrorCode = z.output<typeof ApiErrorCode>;
 

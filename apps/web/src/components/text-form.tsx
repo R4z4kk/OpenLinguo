@@ -19,7 +19,7 @@ import { formatSize } from "@/lib/format-size";
 
 const ANNOUNCE_AFTER_MS = 1000;
 
-const failureMessage = (t: TFunction, failure: TextFailure): string => {
+export const failureMessage = (t: TFunction, failure: TextFailure): string => {
   switch (failure.kind) {
     case "empty":
       return t("library.saveFailed.empty");

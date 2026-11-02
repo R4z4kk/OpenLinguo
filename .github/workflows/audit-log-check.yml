@@ -1,0 +1,29 @@
+name: audit-log-check
+
+# Monthly reminder of the check in docs/compliance/accounts-security.md (#291).
+on:
+  schedule:
+    - cron: "23 6 1 * *"
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open the check as an issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          {
+            echo "Read the Cloudflare audit log for the last month, then close this issue. See [accounts-security.md](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/develop/docs/compliance/accounts-security.md#audit-log)."
+            echo
+            echo "Write nothing about the findings here: this repository is public."
+          } > "$RUNNER_TEMP/body.md"
+          gh issue create --title "Cloudflare audit log check $(date -u +%Y-%m)" --label area:compliance --body-file "$RUNNER_TEMP/body.md"

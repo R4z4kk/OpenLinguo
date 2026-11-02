@@ -1,19 +1,31 @@
 # Sub-processors and transfers
 
-None of these is used before M7. Before each goes live, verify its status on the official Data Privacy Framework list at [dataprivacyframework.gov](https://www.dataprivacyframework.gov/) (participants re-certify every year) and sign or accept its data processing agreement. If a US provider is not active on the list, rely on the Standard Contractual Clauses in its agreement.
+Checked on 2026-10-31 on each provider's own pages (Lettermint on 2026-11-01, when it replaced Scaleway, which asks for a payment card even on its free plan) and on the [official Data Privacy Framework list](https://www.dataprivacyframework.gov/list), read through the participant records the list page loads. The statuses and agreements are dated values in `packages/core/src/compliance-facts.ts` (`DPF_STATUS`, `PROCESSOR_FACTS`): from each `reviewBy`, a unit test fails until the value is read again on its source and this page updated. DPF participants re-certify every year; the EU adequacy decision for the DPF, [Decision (EU) 2023/1795](https://eur-lex.europa.eu/eli/dec_impl/2023/1795/oj), is in force: the General Court dismissed Latombe (T-553/23) on 2025-09-03, and the appeal C-703/25 P is pending on [Curia](https://curia.europa.eu/juris/liste.jsf?num=C-703/25) on 2026-10-31.
 
-| Provider | Role | Data | Location | Transfer safeguard | Status |
+## Processors
+
+| Provider | Role | Data | Location | Agreement | Transfer safeguard |
 |---|---|---|---|---|---|
-| Cloudflare, Inc. (Pages) | Processor — serves the PWA | IP address, request metadata | Global CDN, US company | DPF (reported active, secondary sources) or SCCs | Verify in M7 |
-| Google LLC (OAuth) | Independent controller for its sign-in | Sign-in exchange, only if chosen by the user | US | DPF (reported active, secondary sources) | Verify in M7 |
-| GitHub, Inc. (OAuth) | Independent controller for its sign-in | Sign-in exchange, only if chosen by the user | US | Own DPF certification (Microsoft list, last updated 2024-09) | Verify in M7 |
-| Scaleway SAS (Transactional Email) | Processor — service emails: sign-in codes (#270), inactivity notice | Email address, message content; no open or click tracking | France ("stored and processed in France", [data privacy](https://www.scaleway.com/en/docs/transactional-email/reference-content/data-privacy/)) | None needed (EU) | Chosen in ADR 0015; accept its DPA, part of the contract, before go-live |
+| Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA (Pages, Pages Functions, D1, Workers cron) | Processor: serves the PWA, runs the API and the daily jobs, stores the database | IP address and request metadata of every request; everything in D1: accounts, sessions, submissions, decisions, notices, hosting records, security events | D1 created with jurisdiction `eu`: databases "only run and store data within a region" ([data location](https://developers.cloudflare.com/d1/configuration/data-location/), updated 2026-10-02). The CDN and the Functions run in Cloudflare's global network | [Customer DPA](https://www.cloudflare.com/cloudflare-customer-dpa/) version 6.4, effective 2026-04-03, which "forms part of the Main Agreement", the [Self-Serve Subscription Agreement](https://www.cloudflare.com/terms/) included; breach notice "without undue delay" (§3.1(e)); its own sub-processors on [cloudflare.com/gdpr/subprocessors](https://www.cloudflare.com/gdpr/subprocessors/) | DPF: Cloudflare, Inc. active for the EU-U.S. DPF, the UK extension and the Swiss DPF, non-HR data covered, next certification due 2027-09-15. The DPA also applies the EU SCCs (§6.2(a)) |
+| Lettermint B.V., Willemsvaart 16 B, 8019 AB Zwolle, the Netherlands, KvK 99337711 (transactional email) | Processor: service emails (sign-in codes, statements of reasons, notice receipts and decisions, inactivity notice) | Email address, message content; open and click tracking turned off on each mail, no link rewriting | Email data hosting and processing "shall take place within the European Union" ([DPA](https://lettermint.co/dpa) §8.1). Its sub-processors with email data: UpCloud (Netherlands), OVH Cloud (Germany, encrypted backups), Postmastery (Netherlands) ([list](https://lettermint.co/subprocessors), updated 2026-10-29) | [Data Processing Agreement](https://lettermint.co/dpa), version of 2026-10-09, which "forms part of the Terms and Conditions"; breach notice within 24 hours (§10.1); 30 days' notice before a new sub-processor (§7.2) | None needed: no transfer outside the EU |
 
-Not sub-processors:
+Retention at the processors: Cloudflare does not store Pages Functions logs ([logging](https://developers.cloudflare.com/pages/functions/debugging-and-logging/)); Lettermint keeps a mail's content, recipient addresses, metadata and events for 28 days after the message is created, and delivery events used for analytics for at most 90 days (DPA §3.1).
 
-- **The self-hosted API and database server** is operated by the controller itself.
+## Independent controllers chosen by the learner
+
+Not processors: the learner chooses Google or GitHub to sign in, and each acts under its own privacy policy. OpenLinguo receives the account id and the email, and drops the name, the picture and the provider tokens (#270).
+
+| Provider | Controller for EEA users | Transfer |
+|---|---|---|
+| Google | "Google Ireland Limited for users of Google services based in the European Economic Area or Switzerland" ([privacy policy](https://policies.google.com/privacy), effective 2026-10-16) | None by OpenLinguo: the exchange is with an EU company. Google LLC, its U.S. parent, is active on the DPF list, due 2027-09-13 |
+| GitHub | "GitHub, Inc. or GitHub B.V." ([privacy statement](https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement), effective 2026-04-27); the statement does not say which one serves EEA users | Possibly to the U.S.: GitHub's own entry on the DPF list is active for non-HR data, due 2027-08-03; GitHub also relies on the SCCs |
+
+## Not sub-processors
+
 - **The learner's AI provider** (see below).
+- **Wikidata** (see below).
 - **GitHub (repository hosting)** holds source code, not user data.
+- **The contact mailbox**, `openlinguo@gmail.com` (`CONTACT_EMAIL` in `compliance-facts.ts`), for rights, support, parents' and authorities' requests: a consumer Gmail account, provided by Google Ireland Limited to EEA users under Google's own terms and [privacy policy](https://policies.google.com/privacy); Google LLC, active on the DPF list (`DPF_STATUS.google`), may process the mail in the U.S.
 
 ## AI providers chosen by the learner
 

@@ -1,15 +1,33 @@
-import { createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import {
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+} from "@tanstack/react-router";
 import { AboutPage } from "@/pages/about";
+import { AccountPage } from "@/pages/account";
 import { AnkiImportPage } from "@/pages/anki-import";
 import { ChallengePage, ChallengesPage } from "@/pages/challenges";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
 import { JournalEntryPage, JournalPage } from "@/pages/journal";
 import { LearnPage } from "@/pages/learn";
+import { LegalNoticePage, PrivacyPage, TermsPage } from "@/pages/legal";
 import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
-import { ReadNewPage, ReadPage, ReadStoryPage, ReadTextPage, ReadUnknownPage } from "@/pages/read";
+import { ReportPage, validateReportSearch } from "@/pages/report";
+import {
+  ReadLibraryItemPage,
+  ReadLibraryPage,
+  ReadNewPage,
+  ReadPage,
+  ReadStoryPage,
+  ReadSubmitPage,
+  ReadTextPage,
+  ReadUnknownPage,
+} from "@/pages/read";
 import { ReviewPage } from "@/pages/review";
+import { SignInPage, validateSignInSearch } from "@/pages/sign-in";
 import { TodayPage } from "@/pages/today";
 import { TypingDrillPage } from "@/pages/typing-drill";
 import { WordPage } from "@/pages/word";
@@ -108,6 +126,18 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({
     getParentRoute,
+    path: "/read/library",
+    component: ReadLibraryPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/read/library/$id",
+    component: ReadLibraryItemPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
     path: "/read/$id",
     component: ReadTextPage,
     errorComponent: ModuleError,
@@ -120,6 +150,12 @@ const routeTree = rootRoute.addChildren([
   }),
   createRoute({
     getParentRoute,
+    path: "/read/$id/submit",
+    component: ReadSubmitPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
     path: "/profile",
     component: ProfilePage,
     errorComponent: ModuleError,
@@ -128,6 +164,74 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/profile/about",
     component: AboutPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/profile/account",
+    component: AccountPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/account/sign-in",
+    component: SignInPage,
+    validateSearch: validateSignInSearch,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminQueuePage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin/notices",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminNoticesPage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin/notices/$id",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminNoticePage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin/accounts",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminAccountsPage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/admin/$id",
+    component: lazyRouteComponent(() => import("@/pages/admin"), "AdminReviewPage"),
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/legal",
+    component: LegalNoticePage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/privacy",
+    component: PrivacyPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/terms",
+    component: TermsPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/report",
+    component: ReportPage,
+    validateSearch: validateReportSearch,
     errorComponent: ModuleError,
   }),
 ]);

@@ -1,7 +1,7 @@
 import type { LanguagePack, Result } from "@openlinguo/core";
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { TFunction } from "i18next";
-import { FileText, PenLine, Sparkles, Trash2 } from "lucide-react";
+import { FileText, Globe, PenLine, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { AiBadge } from "@/components/ai-badge";
@@ -24,7 +24,7 @@ import { clearStagedFile, stageFile, takeSaved } from "@/data/text-handoff";
 import { deleteText, listTexts } from "@/data/texts";
 import { formatSize } from "@/lib/format-size";
 
-type Stats =
+export type Stats =
   | { readonly status: "ready"; readonly measure: Measure }
   | { readonly status: "failed"; readonly reason: string };
 
@@ -85,7 +85,7 @@ const useStats = (
   return stats;
 };
 
-const CoverageLine = ({ stats }: { readonly stats: Stats | null }) => {
+export const CoverageLine = ({ stats }: { readonly stats: Stats | null }) => {
   const { t, i18n } = useTranslation();
   if (stats === null) return <p className="text-muted">{t("library.measuring")}</p>;
   if (stats.status === "failed")
@@ -268,6 +268,12 @@ export const TextLibrary = ({ pack }: { readonly pack: LanguagePack | null }) =>
           }}
         />
       </div>
+      <p className="mt-4">
+        <Link to="/read/library" className="inline-flex min-h-11 items-center gap-2 underline">
+          <Globe aria-hidden="true" className="size-5" />
+          {t("globalLibrary.link")}
+        </Link>
+      </p>
       {pack?.prompts != null && connection?.ok === true && connection.value === null && (
         <p id={storyHint} className="mt-3 text-muted">
           {t("story.noProvider")}{" "}

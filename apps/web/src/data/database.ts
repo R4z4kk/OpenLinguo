@@ -8,6 +8,7 @@ import type {
   Subject,
   WordKey,
 } from "@openlinguo/core";
+import type { Licence } from "@openlinguo/core/submission";
 import { Dexie, type EntityTable, type Table } from "dexie";
 import type { AiSettings } from "./ai-settings.ts";
 import type { Corrections } from "./correction.ts";
@@ -204,11 +205,27 @@ type StoredTextFields = {
   readonly readingChoices: ReadingChoices;
 };
 
-/** A text to read, kept on the device and in the backup; a story carries its provenance (ADR 0014). */
+/** What the licence of a text imported from the global library asks to keep (ADR 0015). */
+export type LibraryCopy = {
+  readonly licence: Licence;
+  /** The pseudonym, `null` for anonymous. */
+  readonly attribution: string | null;
+  readonly publishedAt: string;
+};
+
+/**
+ * A text to read, kept on the device and in the backup; a story carries its provenance (ADR 0014).
+ * A library copy keeps the library's id.
+ */
 export type StoredText = StoredTextFields &
   (
     | { readonly source: "paste" | "file"; readonly provenance: null }
     | { readonly source: "ai"; readonly provenance: AiProvenance }
+    | {
+        readonly source: "library";
+        readonly provenance: AiProvenance | null;
+        readonly library: LibraryCopy;
+      }
   );
 
 /** A reading marked « Je connais »: known without a card. */

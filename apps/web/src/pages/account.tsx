@@ -1,0 +1,87 @@
+import { Link } from "@tanstack/react-router";
+import { ChevronLeft } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { AccountData } from "@/components/account-data";
+import { AccountGate, SessionFailure, useSession } from "@/components/account-gate";
+import { AccountPseudonym } from "@/components/account-pseudonym";
+import { AccountSignInMethod } from "@/components/account-sign-in-method";
+import { AccountSubmissions } from "@/components/account-submissions";
+import { AccountTwoFactor } from "@/components/account-two-factor";
+import { DEFAULT_RETURN } from "@/data/account";
+
+/** Profile › Compte (`/profile/account`): one section component per subject. */
+export const AccountPage = () => {
+  const { t } = useTranslation("auth");
+  const { state, reload } = useSession();
+  const [signedOutNow, setSignedOutNow] = useState(false);
+  const [deleted, setDeleted] = useState(false);
+  const deletedHeading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (deleted) deletedHeading.current?.focus();
+  }, [deleted]);
+  return (
+    <section className="max-w-2xl">
+      <Link to="/profile" className="-mt-3 mb-1 flex min-h-11 w-fit items-center gap-1">
+        <ChevronLeft aria-hidden="true" className="size-5" />
+        {t("profile")}
+      </Link>
+      <h1 className="text-title">{t("account")}</h1>
+      {state.status === "loading" && (
+        <p role="status" className="mt-4 text-muted">
+          {t("loading")}
+        </p>
+      )}
+      {state.status === "failed" && <SessionFailure failure={state.failure} onRetry={reload} />}
+      {deleted && (
+        <>
+          <h2 ref={deletedHeading} tabIndex={-1} className="mt-6 text-subtitle">
+            {t("deletion.doneTitle")}
+          </h2>
+          <p className="mt-2">{t("deletion.doneBody")}</p>
+        </>
+      )}
+      {!deleted && state.status === "loaded" && state.session === null && (
+        <>
+          <p role="status" className="mt-4">
+            {signedOutNow ? t("signedOutNow") : t("signedOut")}
+          </p>
+          <p className="mt-2">{t("intro")}</p>
+          <p className="mt-4">
+            <Link
+              to="/account/sign-in"
+              search={{ return: DEFAULT_RETURN }}
+              className="inline-flex min-h-11 items-center underline"
+            >
+              {t("signIn")}
+            </Link>
+          </p>
+        </>
+      )}
+      {state.status === "loaded" && state.session !== null && (
+        <AccountGate session={state.session} onChange={reload}>
+          {(session) => (
+            <>
+              <AccountSignInMethod
+                session={session}
+                onSignedOut={() => {
+                  setSignedOutNow(true);
+                  reload();
+                }}
+              />
+              <AccountPseudonym session={session} onSaved={reload} />
+              <AccountTwoFactor session={session} onEnabled={reload} />
+              <AccountSubmissions />
+              <AccountData
+                onDeleted={() => {
+                  setDeleted(true);
+                  reload();
+                }}
+              />
+            </>
+          )}
+        </AccountGate>
+      )}
+    </section>
+  );
+};

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { CREDITS, CreditList, type CreditId } from "@/components/credits";
+import { LegalLinks } from "@/legal/legal-page";
 
 const REPOSITORY = "https://github.com/R4z4kk/OpenLinguo";
 /** Written by the build (`NOTICES_FILE` in src/build/third-party-notices.ts). */
@@ -27,6 +28,8 @@ export const AboutPage = () => {
           {t("about.noticesLink")}
         </a>
       </p>
+      <h2 className="mt-8 text-subtitle">{t("links", { ns: "legal" })}</h2>
+      <LegalLinks />
       <h2 className="mt-8 text-subtitle">{t("about.credits")}</h2>
       <p className="mt-2 text-small text-muted">{t("about.shareAlike")}</p>
       <p className="mt-2 text-small text-muted">{t("about.notAffiliated")}</p>

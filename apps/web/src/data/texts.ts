@@ -1,13 +1,10 @@
 import { err, ok, type Result } from "@openlinguo/core";
+import { characterCount, MAX_TEXT_CHARACTERS, TITLE_MAX } from "@openlinguo/core/submission";
 import type { Database, StoredText } from "./database.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
-/** Confirmed by the reader benchmark on 2026-10-22 (ADR 0014, update). */
-export const MAX_TEXT_CHARACTERS = 20_000;
-export const TITLE_MAX = 100;
+export { characterCount, MAX_TEXT_CHARACTERS, TITLE_MAX };
 const DEFAULT_TITLE_CHARACTERS = 12;
-
-export const characterCount = (text: string): number => Array.from(text).length;
 
 /** The first characters of the first line that has any. */
 export const defaultTitle = (body: string): string => {

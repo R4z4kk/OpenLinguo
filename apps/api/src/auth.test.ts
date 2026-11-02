@@ -5,15 +5,18 @@ import { createApp } from "./app.ts";
 import { AuthEnv } from "./auth.ts";
 import {
   account,
+  codeRequest,
   database,
   rateLimit,
   securityEvent,
   session,
+  twoFactor,
   user,
   verification,
 } from "./schema.ts";
 import { memoryMailer } from "./testing/memory-mailer.ts";
 import { migratedPlatform } from "./testing/platform.ts";
+import { totp } from "./testing/totp.ts";
 
 const ORIGIN = "https://openlinguo.example.test";
 const platform = await migratedPlatform();
@@ -25,9 +28,9 @@ const settings = {
   GOOGLE_CLIENT_SECRET: "google-secret",
   GITHUB_CLIENT_ID: "github-id",
   GITHUB_CLIENT_SECRET: "github-secret",
-  SCW_SECRET_KEY: "scw-key",
-  SCW_PROJECT_ID: "11111111-1111-4111-8111-111111111111",
+  LETTERMINT_API_TOKEN: "lm_test_token",
   MAIL_FROM: "no-reply@example.test",
+  CONTACT_EMAIL: "contact@example.test",
 };
 afterAll(() => platform.dispose());
 
@@ -35,7 +38,16 @@ let mailer = memoryMailer();
 let ip = 0;
 const clientIp = () => `203.0.113.${String(ip)}`;
 beforeEach(async () => {
-  for (const table of [securityEvent, session, account, verification, rateLimit, user]) {
+  for (const table of [
+    securityEvent,
+    session,
+    account,
+    verification,
+    rateLimit,
+    codeRequest,
+    twoFactor,
+    user,
+  ]) {
     await db.delete(table);
   }
   mailer = memoryMailer();
@@ -99,6 +111,46 @@ const signedIn = async (call: ReturnType<typeof appWith>, email: string) => {
   await sendCode(call, email);
   return cookiesOf(await signInWithCode(call, email, lastCode()));
 };
+
+describe("codes per email address", () => {
+  const from = (n: number) => ({ "cf-connecting-ip": `198.51.100.${String(n)}` });
+  const request = (call: ReturnType<typeof appWith>, email: string, n: number) =>
+    call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" }, null, from(n));
+
+  it("refuses the 11th code in 24 hours from another IP address, then accepts it after the window", async () => {
+    const call = appWith(true);
+    for (let n = 1; n <= 10; n += 1) {
+      expect((await request(call, "target@example.test", n)).status).toBe(200);
+    }
+    const refused = await request(call, "Target@Example.test", 11);
+    expect(refused.status).toBe(429);
+    expect(await refused.json()).toMatchObject({ code: "CODE_LIMIT_REACHED" });
+    expect(mailer.sent).toHaveLength(10);
+    expect((await events()).at(-1)).toEqual({
+      type: "sign_in_failed",
+      method: "email-otp",
+      reason: "CODE_LIMIT_REACHED",
+      ipAddress: "198.51.100.11",
+    });
+
+    vi.useFakeTimers({ toFake: ["Date"], now: Date.now() + 24 * 60 * 60 * 1000 + 1000 });
+    expect((await request(call, "target@example.test", 12)).status).toBe(200);
+    expect(mailer.sent).toHaveLength(11);
+  });
+
+  it("keeps a keyed hash of the address, never the address", async () => {
+    await request(appWith(true), "kept@example.test", 1);
+    const rows = await db.select().from(codeRequest);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.emailHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(rows)).not.toContain("kept");
+  });
+
+  it("counts nothing for a refused sign-up", async () => {
+    await request(appWith(false), "stranger@example.test", 1);
+    expect(await db.select().from(codeRequest)).toEqual([]);
+  });
+});
 
 describe("email code", () => {
   it("mails a 6-digit code in the request's language, signs in and records both", async () => {
@@ -266,6 +318,27 @@ describe("age step", () => {
   });
 });
 
+describe("pseudonym", () => {
+  it("changes only a plain-text pseudonym of at most 40 characters", async () => {
+    const call = appWith(true);
+    const cookie = await declared(call, "named@example.test");
+    for (const body of [
+      { name: "x".repeat(41) },
+      { name: "two\nlines" },
+      { name: " " },
+      { name: "Lin", image: "https://photos.example.test/1" },
+      {},
+    ]) {
+      const refused = await call("/api/auth/update-user", body, cookie);
+      expect(refused.status).toBe(400);
+      expect(await refused.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    }
+    expect((await call("/api/auth/update-user", { name: "Lin" }, cookie)).status).toBe(200);
+    const [named] = await db.select().from(user);
+    expect(named).toMatchObject({ name: "Lin", image: null });
+  });
+});
+
 const base64url = (value: object) => Buffer.from(JSON.stringify(value)).toString("base64url");
 
 const stubProviders = () => {
@@ -401,5 +474,178 @@ describe("AuthEnv", () => {
     expect(valid("https://openlinguo.razakk.fr")).toBe(true);
     expect(valid("http://localhost:8788")).toBe(true);
     expect(valid("http://openlinguo.razakk.fr")).toBe(false);
+  });
+});
+
+const otherCode = (code: string) => String((Number(code) + 500_000) % 1_000_000).padStart(6, "0");
+
+const declared = async (call: ReturnType<typeof appWith>, email: string) => {
+  const cookie = await signedIn(call, email);
+  expect((await call("/api/account/age", { answer: "15-or-over" }, cookie)).status).toBe(204);
+  return cookie;
+};
+
+const grantAdmin = (email: string) =>
+  db.update(user).set({ role: "admin" }).where(eq(user.email, email));
+
+const withTotp = async (call: ReturnType<typeof appWith>, cookie: string) => {
+  const enabled = await call("/api/auth/two-factor/enable", {}, cookie);
+  expect(enabled.status).toBe(200);
+  const { totpURI, backupCodes } = await enabled.json<{
+    totpURI: string;
+    backupCodes: string[];
+  }>();
+  expect(new URL(totpURI).pathname).toContain("OpenLinguo");
+  const verified = await call("/api/auth/two-factor/verify-totp", { code: totp(totpURI) }, cookie);
+  expect(verified.status).toBe(200);
+  return { cookie: cookiesOf(verified), totpURI, backupCodes };
+};
+
+const verifyTotp = (
+  call: ReturnType<typeof appWith>,
+  code: string,
+  cookie: string,
+  headers: Record<string, string> = {},
+) => call("/api/auth/two-factor/verify-totp", { code }, cookie, headers);
+
+describe("second factor and admin", () => {
+  it("refuses admin routes without a session, and to an admin without a second factor", async () => {
+    const call = appWith(true);
+    const anonymous = await call("/api/admin/queue");
+    expect(anonymous.status).toBe(401);
+    expect(await anonymous.json()).toMatchObject({ code: "UNAUTHORIZED" });
+
+    const cookie = await declared(call, "admin@example.test");
+    await grantAdmin("admin@example.test");
+    for (const path of ["/api/auth/admin/list-users", "/api/admin/queue"]) {
+      const refused = await call(path, null, cookie);
+      expect(refused.status).toBe(403);
+      expect(await refused.json()).toMatchObject({ code: "TWO_FACTOR_REQUIRED" });
+    }
+  });
+
+  it("accepts an admin after a TOTP code computed here, and records each action", async () => {
+    const call = appWith(true);
+    const first = await declared(call, "admin@example.test");
+    await grantAdmin("admin@example.test");
+    const { cookie } = await withTotp(call, first);
+    const [admin] = await db.select().from(user);
+    const adminId = admin?.id ?? "";
+
+    expect((await call("/api/auth/admin/list-users", null, cookie)).status).toBe(200);
+    expect((await call(`/api/auth/admin/get-user?id=${adminId}`, null, cookie)).status).toBe(200);
+    expect((await call("/api/admin/queue", null, cookie)).status).toBe(200);
+
+    const logged = await db.select().from(securityEvent).orderBy(securityEvent.id);
+    expect(
+      logged
+        .filter(({ type }) => type !== "code_sent" && type !== "sign_in")
+        .map(({ type, method, userId, target }) => ({ type, method, userId, target })),
+    ).toEqual([
+      { type: "second_factor", method: "totp", userId: adminId, target: null },
+      { type: "admin_action", method: "admin/list-users", userId: adminId, target: null },
+      { type: "admin_action", method: "admin/get-user", userId: adminId, target: adminId },
+    ]);
+  });
+
+  it("asks every new session of an account with TOTP for the code first", async () => {
+    const call = appWith(true);
+    const { totpURI } = await withTotp(call, await declared(call, "careful@example.test"));
+    const cookie = await signedIn(call, "careful@example.test");
+
+    const gated = await call("/api/health", null, cookie);
+    expect(gated.status).toBe(403);
+    expect(await gated.json()).toEqual({
+      code: "TWO_FACTOR_REQUIRED",
+      message: "Enter your authenticator code first",
+    });
+    expect((await call("/api/auth/two-factor/disable", {}, cookie)).status).toBe(403);
+    expect((await call("/api/auth/delete-user", {}, cookie)).status).toBe(403);
+    expect((await call("/api/account/age", { answer: "under-15" }, cookie)).status).toBe(403);
+    expect((await call("/api/auth/get-session", null, cookie)).status).toBe(200);
+
+    expect((await verifyTotp(call, otherCode(totp(totpURI)), cookie)).status).toBe(401);
+    expect((await verifyTotp(call, totp(totpURI), cookie)).status).toBe(200);
+    expect((await call("/api/health", null, cookie)).status).toBe(200);
+    expect((await events()).filter(({ type }) => type.startsWith("second_factor"))).toEqual([
+      { type: "second_factor", method: "totp", reason: null, ipAddress: clientIp() },
+      {
+        type: "second_factor_failed",
+        method: "totp",
+        reason: "INVALID_CODE",
+        ipAddress: clientIp(),
+      },
+      { type: "second_factor", method: "totp", reason: null, ipAddress: clientIp() },
+    ]);
+  });
+
+  it("accepts a backup code once", async () => {
+    const call = appWith(true);
+    const { backupCodes } = await withTotp(call, await declared(call, "lost@example.test"));
+    const code = backupCodes[0] ?? "";
+    const cookie = await signedIn(call, "lost@example.test");
+    const used = await call("/api/auth/two-factor/verify-backup-code", { code }, cookie);
+    expect(used.status).toBe(200);
+    expect((await call("/api/health", null, cookie)).status).toBe(200);
+
+    const again = await signedIn(call, "lost@example.test");
+    const reused = await call("/api/auth/two-factor/verify-backup-code", { code }, again);
+    expect(reused.status).toBe(401);
+  });
+
+  it("locks the second factor after 10 wrong codes in 15 minutes, from any IP", async () => {
+    const call = appWith(true);
+    const { totpURI } = await withTotp(call, await declared(call, "target@example.test"));
+    const cookie = await signedIn(call, "target@example.test");
+    const wrong = otherCode(totp(totpURI));
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      const from = { "cf-connecting-ip": `198.51.100.${String(attempt)}` };
+      expect((await verifyTotp(call, wrong, cookie, from)).status).toBe(401);
+    }
+    const from = { "cf-connecting-ip": "198.51.100.200" };
+    const locked = await verifyTotp(call, totp(totpURI), cookie, from);
+    expect(locked.status).toBe(429);
+    expect(await locked.json()).toMatchObject({ code: "TOO_MANY_ATTEMPTS" });
+  });
+
+  it("limits code checks to 5 per 10 minutes per IP", async () => {
+    const call = appWith(true);
+    const { totpURI } = await withTotp(call, await declared(call, "slow@example.test"));
+    const cookie = await signedIn(call, "slow@example.test");
+    const wrong = otherCode(totp(totpURI));
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      expect((await verifyTotp(call, wrong, cookie)).status).toBe(401);
+    }
+    expect((await verifyTotp(call, wrong, cookie)).status).toBe(429);
+  });
+
+  it("refuses admin routes to other accounts, even with TOTP", async () => {
+    const call = appWith(true);
+    const { cookie } = await withTotp(call, await declared(call, "learner@example.test"));
+    const refused = await call("/api/auth/admin/list-users", null, cookie);
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: "ADMIN_REQUIRED" });
+  });
+
+  it("never grants a role, creates, impersonates or deletes through the API", async () => {
+    const call = appWith(true);
+    await declared(call, "learner@example.test");
+    const first = await declared(call, "admin@example.test");
+    await grantAdmin("admin@example.test");
+    const { cookie } = await withTotp(call, first);
+    const [learner] = await db.select().from(user).where(eq(user.email, "learner@example.test"));
+    const userId = learner?.id ?? "";
+
+    for (const [path, body] of [
+      ["/api/auth/admin/set-role", { userId, role: "admin" }],
+      ["/api/auth/admin/update-user", { userId, data: { role: "admin" } }],
+      ["/api/auth/admin/create-user", { email: "new@example.test", name: "", role: "admin" }],
+      ["/api/auth/admin/impersonate-user", { userId }],
+      ["/api/auth/admin/remove-user", { userId }],
+    ] as const) {
+      expect((await call(path, body, cookie)).status).toBe(403);
+    }
+    const [unchanged] = await db.select().from(user).where(eq(user.id, userId));
+    expect(unchanged?.role).not.toBe("admin");
   });
 });

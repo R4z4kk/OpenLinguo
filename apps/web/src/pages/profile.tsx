@@ -78,6 +78,11 @@ export const ProfilePage = () => {
       />
       <RecordingsControls />
       <p className="mt-8">
+        <Link to="/profile/account" className="inline-flex min-h-11 items-center underline">
+          {t("account.link")}
+        </Link>
+      </p>
+      <p>
         <Link to="/profile/about" className="inline-flex min-h-11 items-center underline">
           {t("about.title")}
         </Link>

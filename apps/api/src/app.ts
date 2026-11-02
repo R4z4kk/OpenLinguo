@@ -1,33 +1,40 @@
 import { AgeDeclaration } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
+import { getSessionCookie } from "better-auth/cookies";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { secureHeaders } from "hono/secure-headers";
+import { accountRoutes } from "./account.ts";
 import { type Auth, AuthEnv, createAuth } from "./auth.ts";
 import { unhealthyJobs } from "./health.ts";
 import { JOBS } from "./jobs.ts";
+import { libraryRoutes } from "./library.ts";
 import type { SendMail } from "./mail.ts";
-import { scalewayMailer } from "./scaleway-mailer.ts";
+import { moderationRoutes } from "./moderation.ts";
+import { noticeRoutes } from "./notices.ts";
+import { lettermintMailer } from "./lettermint-mailer.ts";
 import { database, user } from "./schema.ts";
+import { submissionRoutes } from "./submissions.ts";
 
 export type Mailer = (env: AuthEnv) => SendMail;
 
-const scaleway: Mailer = (env) =>
-  scalewayMailer({
-    secretKey: env.SCW_SECRET_KEY,
-    projectId: env.SCW_PROJECT_ID,
-    from: env.MAIL_FROM,
-  });
+const lettermint: Mailer = (env) =>
+  lettermintMailer({ token: env.LETTERMINT_API_TOKEN, from: env.MAIL_FROM });
 
+const ALWAYS_OPEN = new Set(["/api/auth/get-session", "/api/auth/sign-out"]);
 /** Reachable before the age step is answered (ADR 0015). */
-const BEFORE_AGE_STEP = new Set([
-  "/api/account/age",
-  "/api/auth/delete-user",
-  "/api/auth/get-session",
-  "/api/auth/sign-out",
+const BEFORE_AGE_STEP = new Set(["/api/account/age", "/api/auth/delete-user"]);
+/** Reachable before the second factor of an account that turned it on is verified. */
+const BEFORE_SECOND_FACTOR = new Set([
+  "/api/auth/two-factor/verify-totp",
+  "/api/auth/two-factor/verify-backup-code",
 ]);
+const isAdminPath = (path: string) =>
+  path.startsWith("/api/admin/") || path.startsWith("/api/auth/admin/");
 
-export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) => {
+const refused = (code: ApiError["code"], message: string): ApiError => ({ code, message });
+
+export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
   // Pages applies apps/web/public/_headers to static files only. HSTS matches it.
@@ -38,24 +45,44 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
     }),
   );
 
-  const authOf = (env: Env): Auth => {
+  const settingsOf = (env: Env): AuthEnv => {
     const settings = AuthEnv.safeParse(env);
     if (!settings.success) {
       const names = settings.error.issues.map(({ path }) => path.join(".")).join(", ");
       throw new Error(`Auth settings missing or invalid: ${names}`);
     }
-    return createAuth(database(env.DB), settings.data, mailer(settings.data));
+    return settings.data;
+  };
+  const authOf = (env: Env): Auth => {
+    const settings = settingsOf(env);
+    return createAuth(database(env.DB), settings, mailer(settings));
   };
 
   app.use(async (c, next) => {
-    if (!c.req.header("cookie") || BEFORE_AGE_STEP.has(c.req.path)) return next();
-    const current = await authOf(c.env).api.getSession({ headers: c.req.raw.headers });
-    if (current && !current.user.ageDeclaredAt) {
-      const body = {
-        code: "AGE_DECLARATION_REQUIRED",
-        message: "Answer the age step first",
-      } satisfies ApiError;
-      return c.json(body, 403);
+    const path = c.req.path;
+    const admin = isAdminPath(path);
+    if (ALWAYS_OPEN.has(path)) return next();
+    const current = getSessionCookie(c.req.raw)
+      ? await authOf(c.env).api.getSession({ headers: c.req.raw.headers })
+      : null;
+    if (!current) return admin ? c.json(refused("UNAUTHORIZED", "Sign in first"), 401) : next();
+    // Once the age step is answered, deletion seals what the décret keeps: only our route does it.
+    if (path === "/api/auth/delete-user" && current.user.ageDeclaredAt) {
+      return c.json(refused("USE_ACCOUNT_DELETION", "Delete the account in Compte"), 403);
+    }
+    if (!current.user.ageDeclaredAt && !BEFORE_AGE_STEP.has(path)) {
+      return c.json(refused("AGE_DECLARATION_REQUIRED", "Answer the age step first"), 403);
+    }
+    const secondFactorPending =
+      current.user.twoFactorEnabled === true && !current.session.twoFactorVerifiedAt;
+    if (secondFactorPending && !BEFORE_SECOND_FACTOR.has(path)) {
+      return c.json(refused("TWO_FACTOR_REQUIRED", "Enter your authenticator code first"), 403);
+    }
+    if (admin && current.user.role !== "admin") {
+      return c.json(refused("ADMIN_REQUIRED", "Reserved to the admin"), 403);
+    }
+    if (admin && current.user.twoFactorEnabled !== true) {
+      return c.json(refused("TWO_FACTOR_REQUIRED", "Turn on an authenticator code first"), 403);
     }
     return next();
   });
@@ -84,6 +111,17 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = scaleway) =>
     await db.update(user).set({ ageDeclaredAt: new Date() }).where(eq(user.id, current.user.id));
     return c.body(null, 204);
   });
+
+  const moderationOf = (env: Env) => {
+    const settings = settingsOf(env);
+    return { sendMail: mailer(settings), contact: settings.CONTACT_EMAIL };
+  };
+
+  app.route("/account", accountRoutes(authOf));
+  app.route("/submissions", submissionRoutes(authOf));
+  app.route("/library", libraryRoutes());
+  app.route("/notices", noticeRoutes(moderationOf));
+  app.route("/admin", moderationRoutes(authOf, moderationOf));
 
   app.get("/health", async (c) => {
     const unhealthy = await unhealthyJobs(database(c.env.DB), jobs, new Date());
