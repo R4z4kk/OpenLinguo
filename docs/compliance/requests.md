@@ -109,7 +109,7 @@ Kept outside this repository, in the maintainer's private notes, because it name
 
 - request received (section 1);
 - export from `hosting_record` or `sealed_identity`;
-- direct read or write of the production database: D1 console, `wrangler d1 execute --remote`, for an incident, a rights request, a requisition or a removal order ([moderation runbook](moderation.md));
+- direct read or write of the production database: D1 console, `wrangler d1 execute --remote`, for an incident, a rights request, a requisition, a removal order ([moderation runbook](moderation.md)) or [the admin's account](../../apps/api/README.md#admin);
 - account deleted from Moderation › Comptes.
 
 Columns: date, reason, requester, reference, data given or query run, outcome. Lines about a rights request are kept 5 years as proof, like the request itself; the moderation register of the [moderation runbook](moderation.md) (section 5) is kept in the same place.
