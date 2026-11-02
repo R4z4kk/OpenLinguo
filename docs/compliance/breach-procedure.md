@@ -6,7 +6,7 @@ Applies to any breach of security leading to the accidental or unlawful destruct
 - CNIL, [« Les violations de données personnelles »](https://www.cnil.fr/fr/les-violations-de-donnees-personnelles) and its [notification service](https://www.cnil.fr/fr/services-en-ligne/notifier-une-violation-de-donnees-personnelles).
 - EDPB [Guidelines 9/2022](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-92022-personal-data-breach-notification-under_en), version 2.0: a controller is aware with "a reasonable degree of certainty" (para 31), in principle "once the processor has informed it" (para 44); notices go in dedicated messages, not with other information (para 89).
 
-Commands run from `apps/api`; `wrangler` stands for `pnpm exec wrangler`. Every read or write of the production database goes in the access register of the [requests runbook](requests.md) (section 5).
+Commands run from `apps/api`; `wrangler` stands for `pnpm exec wrangler`.
 
 ## Steps
 
@@ -68,7 +68,7 @@ A changed Pages secret only applies to the next deployment, so renew the deploy 
 | `hosting_record` | Each creation, edit or deletion of a text, with IP address | 1 year | `wrangler d1 execute openlinguo --remote --json --command "SELECT operation, user_id, submission_id, ip_address, datetime(created_at / 1000, 'unixepoch') AS at FROM hosting_record WHERE created_at >= unixepoch('2026-11-01') * 1000 ORDER BY created_at"` |
 | `session` | Live sessions, with IP address and browser | Until expiry | In the export of step 1 |
 | `job_run` | Each daily job's outcome: a purge that failed or stopped | Not purged | `wrangler d1 execute openlinguo --remote --json --command "SELECT job, status, datetime(started_at / 1000, 'unixepoch') AS at FROM job_run ORDER BY started_at DESC LIMIT 50"` |
-| Access register | Direct reads and writes of the database that have a reason. A read missing from it is a lead | 5 years for rights requests | The maintainer's private notes |
+| Mailbox | Requests answered and the data they needed ([requests runbook](requests.md), section 5). A read no request explains is a lead | 5 years for rights requests | `openlinguo@gmail.com` |
 | Cloudflare audit log | Account actions, and API calls with the token's name | [18 months](https://developers.cloudflare.com/fundamentals/account/account-security/audit-logs/); the dashboard shows 90 days and hides `view` actions, the API has the rest | Audit Logs page, or the API. Its page does not list D1, so whether a D1 console read appears is for the exercise to establish |
 | GitHub security log, `deploy` runs | Sign-ins, tokens, secrets; who approved what | [90 days](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/reviewing-your-security-log) for the log | Settings › Archives › Security log; `gh run list --workflow deploy` |
 | Lettermint | Messages sent: addresses, content, events | 28 days; delivery events and totals 90 days at most ([DPA](https://lettermint.co/dpa) §3.1) | Lettermint dashboard |
@@ -194,7 +194,7 @@ One mail per person, so no one sees another address, through Lettermint with tra
 
 ## Register
 
-Kept outside this repository, with the access register in the maintainer's private notes: a breach not yet fixed has no place in a public file, and the CNIL can ask to see the register. No names in it. It has no legal end date (EDPB, para 124), and without personal data it is simply kept.
+Kept outside this repository, in the maintainer's private notes: a breach not yet fixed has no place in a public file, and the CNIL can ask to see the register. No names in it. It has no legal end date (EDPB, para 124), and without personal data it is simply kept.
 
 Columns: date found, date aware, nature, people and records concerned, likely consequences, measures taken, why the CNIL or the people were not told if so, CNIL notified (date, reference), people informed (date).
 

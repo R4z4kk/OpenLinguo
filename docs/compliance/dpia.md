@@ -112,7 +112,7 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 | On the data | No passwords; codes hashed, 10 minutes, 3 attempts; codes capped per IP address and per email address (10 a day, counted by a keyed hash of the address) | #270, #289 |
 | | Cookies `Secure; HttpOnly; SameSite=Lax`; origin check on state-changing requests | #270 |
 | | Admin role granted by command only, TOTP mandatory on every admin route; admin actions logged | #271 |
-| | Hosting records in their own table, readable only by the jobs and the admin export for an authority; every export and direct read in an access register | #273, #277, #290 |
+| | Hosting records in their own table, readable only by the jobs and the admin export for an authority; every export kept with its request in the mailbox. A direct read that answers no request leaves no record, unless the Cloudflare audit log shows it (exercise of #293) | #273, #277, #290 |
 | | Plain-text submissions, 20,000 characters, 5 pending per account; every text approved before publication | #273, #274 |
 | On the system | TLS, HSTS, strict CSP, API on the PWA's own origin; D1 in the `eu` jurisdiction; secrets as encrypted Pages secrets | #268, #269 |
 | | Deploy only from `main` with the maintainer's approval; Cloudflare token scoped to Pages, D1 and Workers Scripts, given to the deploy steps only; no preview deployment sharing the database | #269 |
@@ -175,7 +175,7 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 
 **R8. Data that outlives the deletion of an account.** Décret 2021-1362 keeps, for an account that submitted, its email for 5 years, its pseudonym and the connection records for 1 year. A person may believe everything is gone.
 
-- Severity 2 if those data leak. Likelihood 1: a separate table, no reading path in the app, every export registered (#290), only accounts that submitted, only data already collected.
+- Severity 2 if those data leak. Likelihood 1: a separate table, no reading path in the app, every export kept with its request (#290), only accounts that submitted, only data already collected.
 - Measures: the deletion screen and the notice say what is kept, why and how long (#277, #279).
 - **Residual: severity 2, likelihood 1. Acceptable.**
 
@@ -199,7 +199,7 @@ Owner of every measure: the maintainer. Cost: S is a day or less, M a few days.
 | Measure | Issue | Cost | Deadline |
 |---|---|---|---|
 | Sign-in codes capped per email address | #289 | S | Before sign-ups open |
-| Runbook for rights, parents' and authorities' requests, with the access register | #290 | S | Before sign-ups open |
+| Runbook for rights, parents' and authorities' requests | #290 | S | Before sign-ups open |
 | Cloudflare and GitHub accounts secured | #291 | S | Before sign-ups open |
 | Anonymous attribution by default, identity warning, checklist line | #292 | S | Before sign-ups open |
 | Breach procedure for the server, notice for teenagers | #293 | S | Before sign-ups open |
