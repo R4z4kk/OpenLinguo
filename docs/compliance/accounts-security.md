@@ -41,7 +41,7 @@ Only for an incident, a rights request, a requisition, a removal order or [the a
 
 Once a month and after any alert: `audit-log-check.yml` opens an issue on the 1st, and closing it is the record. The repository is public, so nothing about the findings goes in the issue.
 
-On the Audit Logs page, last month: a sign-in you do not recognise, a member or a token created or changed, a setting changed, a call by a token that is not the deploy token, a deploy-token call outside a `deploy` run. The page hides `view` actions and shows 90 days; the API has the rest for 18 months. Anything unexplained opens the [breach procedure](breach-procedure.md).
+On the Audit Logs page, last month: a sign-in you do not recognise, a member or a token created or changed, a setting changed, a call by a token that is not the deploy token, a deploy-token call outside a `deploy` run, a D1 `database.raw`, `database.query` or `database.export` that no incident, request or `deploy` run explains. The page hides `view` actions and shows 90 days; the API has the rest for 18 months. Anything unexplained opens the [breach procedure](breach-procedure.md).
 
 ## Other accounts of the service
 

@@ -112,4 +112,4 @@ No separate register: what proves a request was handled is already kept.
 | A requisition and its answer | The mailbox (section 4) | As for a rights request |
 | An account deleted from Moderation › Comptes | `security_event`, written by the app | 6 months |
 
-A direct read that answers no request leaves no record here. Whether the Cloudflare audit log shows it is for the exercise of the [breach procedure](breach-procedure.md) to establish.
+A direct read that answers no request leaves no record here, but it appears in the Cloudflare audit log, without the SQL ([breach procedure](breach-procedure.md), Evidence).
