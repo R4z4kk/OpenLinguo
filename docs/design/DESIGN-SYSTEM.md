@@ -156,6 +156,19 @@ Mocked up for issue #267 from [ADR 0015](../adr/0015-backend-and-shared-library.
 - **Focus order**: skip link, navigation, then reading order. On arrival, focus goes to the first field of a form, to the alert after an error, and to the heading of a result page (sign-ups closed, age step, account deleted, receipt). In a modal, focus starts on « Annuler ».
 - **Measured** (Playwright, Chromium, each board at its own width, 2026-10-31): no horizontal overflow on the 104 boards and no target under 24 px; checkboxes and radios are 24 px with their label as part of the target. Every one of the 2,354 text elements outside a modal's dimmed backdrop is at least 6.12:1. Links under 44 px sit only inside a sentence or the date-and-licence line of a card.
 
+## Sync (M8)
+
+Mocked up for issue #329 from [ADR 0016](../adr/0016-sync.md): the off, on, failure, confirmation and other-account states of one section of Profile › Compte, on a phone (390 px) and a desktop (1280 px), light and dark. The copy is French and plain enough for teenagers; the English is in `apps/web/src/i18n/auth/en.ts`.
+
+- **Where it lives**: « Synchronisation » is a section of Compte, between « Mes textes envoyés » and « Mes données ». Its heading takes focus after turning sync on or off, because the button that was pressed is gone.
+- **Off**: the intro, then three blocks (« Ce qui part sur le serveur », « Ce qui reste sur cet appareil », « Ce qu'il faut savoir »), then « Activer la synchronisation ». Activation is a button after the explanation, not a switch (decision 2026-11-03): it has consequences, so it reads as an action. The last block says the data merges, that the administrator could read it, that turning off deletes it, and what French law makes us keep (the IP of each upload 1 year; after deletion, the email 5 years and the pseudonym 1 year).
+- **On**: a `role="status"` line (« Activée. Dernière synchronisation aujourd'hui à 18:42. », « hier », or the date), the space used as text and as a bar, a closed `details` « Ce qui est synchronisé » holding the same three blocks from the same strings, then « Synchroniser maintenant » (outline, ignores the 5-minute limit) and « Désactiver et supprimer du serveur » (`danger`). The bar is an 8 px `sunken` track with an `ink` fill, `role="img"` with « 12 % de l'espace utilisé »; it is absent until a sync has reported the usage, and rounds up so a used space never reads empty. A running sync replaces the status with « Synchronisation en cours… ».
+- **Failures**: one `role="alert"` line in `danger` under the status, one sentence per kind, twelve in all: offline, account space full, server full, too many uploads, unexpected answer, unreadable chunk, newer version, turned off elsewhere, item too big, invalid item, browser, storage. The last success is not hidden by a failure. Another tab syncing shows nothing. A failure stays until a sync succeeds, and is forgotten when sync is turned off. « Désactivée ailleurs » adds « Activer la synchronisation », which uploads everything again.
+- **Turn off**: a native modal, first focus on « Annuler », saying the data is deleted for every device, stays on this one, that the other devices will say so, and that the record of each upload stays 1 year. A refusal is an alert inside the modal and sync stays on.
+- **Other account**: with sync set up for another account, the section says it is cut and repeats the merge warning, with « Activer pour ce compte ».
+- **Account deletion** gets one more line in its « Ce que la loi nous oblige à garder » aside, always shown: a device cannot know whether an account ever synced (decision 2026-11-03).
+- **Focus order**: heading, status, alert, details, « Synchroniser maintenant », « Désactiver et supprimer du serveur ». In the modal, « Annuler » then the confirmation.
+
 ## Accessibility rules
 
 - `lang="zh-Hans"` on Chinese text and `lang="zh-Latn-pinyin"` on pinyin.

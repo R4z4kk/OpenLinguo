@@ -7,6 +7,7 @@ import { AccountGate, SessionFailure, useSession } from "@/components/account-ga
 import { AccountPseudonym } from "@/components/account-pseudonym";
 import { AccountSignInMethod } from "@/components/account-sign-in-method";
 import { AccountSubmissions } from "@/components/account-submissions";
+import { AccountSync } from "@/components/account-sync";
 import { AccountTwoFactor } from "@/components/account-two-factor";
 import { DEFAULT_RETURN } from "@/data/account";
 
@@ -72,6 +73,7 @@ export const AccountPage = () => {
               <AccountPseudonym session={session} onSaved={reload} />
               <AccountTwoFactor session={session} onEnabled={reload} />
               <AccountSubmissions />
+              <AccountSync session={session} />
               <AccountData
                 onDeleted={() => {
                   setDeleted(true);

@@ -6,7 +6,9 @@ import {
   PseudonymUpdate,
 } from "@openlinguo/core/account";
 import { LICENCES, type Submission } from "@openlinguo/core/submission";
+import { SYNC_HEADERS } from "@openlinguo/core/sync";
 import { expect, type Page, type Route } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { authEn } from "../src/i18n/auth/en.ts";
 import { en } from "../src/i18n/en.ts";
@@ -212,6 +214,9 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
         await json(route, 200, exported);
         return;
       }
+      case "/api/sync/chunks/next":
+        await route.fulfill({ status: 204, headers: { [SYNC_HEADERS.used]: "0" } });
+        return;
       case "/api/account/delete":
         if (current === null) {
           await refuse(route, 401, "UNAUTHORIZED");
@@ -484,11 +489,16 @@ test("downloads the account data, then deletes the account and keeps its texts",
   await expect(main.getByRole("heading", { name: authEn.data.title })).toBeVisible({
     timeout: 90_000,
   });
+  await expect(main.getByRole("heading", { name: authEn.sync.title })).toBeVisible();
+  await expect(main.getByRole("button", { name: authEn.sync.activate })).toBeVisible();
   const saved = page.waitForEvent("download");
   await press(page, authEn.data.download);
-  expect((await saved).suggestedFilename()).toMatch(
-    /^openlinguo-account-\d{4}-\d{2}-\d{2}\.json$/u,
-  );
+  const download = await saved;
+  expect(download.suggestedFilename()).toMatch(/^openlinguo-account-\d{4}-\d{2}-\d{2}\.json$/u);
+  const file = z
+    .object({ synced: z.array(z.unknown()) })
+    .parse(JSON.parse(await readFile(await download.path(), "utf8")));
+  expect(file.synced).toEqual([]);
   await expect(main.getByRole("status").getByText(/^File saved: /u)).toBeVisible();
   await noViolations(page);
 

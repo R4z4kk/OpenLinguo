@@ -23,6 +23,7 @@ export type SyncFailure =
   | { readonly kind: "other-account" }
   | { readonly kind: "entity-too-large"; readonly entityId: string }
   | { readonly kind: "unavailable" }
+  | { readonly kind: "invalid-row"; readonly entityId: string }
   | { readonly kind: "storage"; readonly message: string }
   /** Another tab holds the lock: it is syncing, so nothing is done here. */
   | { readonly kind: "busy" };
@@ -136,7 +137,7 @@ const validated = (items: readonly Item[]): Result<SyncChunk, SyncFailure> => {
       ? items.filter(({ row: { table } }) => (table === "reviews") === (list === "reviews"))[index]
           ?.row
       : null;
-  return err(storage(`Invalid sync row ${row?.id ?? "of a chunk"}`));
+  return err({ kind: "invalid-row", entityId: row?.id ?? "" });
 };
 
 type Planned = { readonly items: readonly Item[]; readonly bytes: Uint8Array };
