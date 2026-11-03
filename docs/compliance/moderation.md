@@ -43,7 +43,7 @@ A rejection or a removal records a statement of reasons (DSA art. 17(3)): the me
 | A text or a notice reveals an offence of LCEN art. 6 IV.A | [PHAROS](https://www.internet-signalement.gouv.fr), the Interior Ministry's portal, "promptement"; then remove the text | LCEN art. 6 IV.A: hosts "informent promptement les autorités compétentes de toutes les activités illicites" |
 | Information that makes you suspect an offence threatening someone's life or safety (threats, a suicide plan, abuse of a child) | Police: 17 or 112 when the threat is imminent, otherwise PHAROS, with all the information available | DSA art. 18(1): "promptly inform the law enforcement or judicial authorities" |
 
-Keep the text, the notice and the report reference until the authority answers, even after removal; record them in the register (section 5).
+Keep the text, the notice and the report reference until the authority answers, even after removal (section 5).
 
 ## 4. Orders
 
@@ -57,13 +57,12 @@ Keep the text, the notice and the report reference until the authority answers, 
    wrangler d1 execute openlinguo --remote --command "UPDATE submission SET status = 'removed' WHERE id = '<submission id>'"
    ```
 
-   Record that direct write in the access register ([requests runbook](requests.md), section 5).
 2. Preserve the text and the related data for six months from the removal (art. 6(2)), longer only at the authority's or a court's request: export the submission and its hosting records to an encrypted file outside the app before the daily jobs could purge them.
 3. Reply to the authority with the time of removal.
 4. An order from another Member State may be contested by "a reasoned request" to the French authority "within 48 hours" (art. 4(4)), while still removing within the hour (4(2)).
 
 **Judicial orders and requisitions** for the data of `hosting_record`: only a written requisition whose legal basis is checked, as the [requests runbook](requests.md) says (section 4).
 
-## 5. Register
+## 5. Proof
 
-One line per notice decided, report made or order received, kept with the access register of the [requests runbook](requests.md): date and time received, origin (notice id, authority, reference), text concerned, action and time of action, report reference, preservation end date. The notices and statements of reasons themselves are deleted 1 year after the decision ([retention](retention-schedule.md)).
+No separate register. The app keeps each notice and decision with its times and statement of reasons, and deletes them 1 year after the decision ([retention](retention-schedule.md)). An order received or a report made stays in the mailbox with the answer, as in the [requests runbook](requests.md) (section 5): its origin and reference, the text concerned, the time of action, and the preservation end date if there is one.
