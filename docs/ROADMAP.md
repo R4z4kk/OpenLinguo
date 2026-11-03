@@ -2,7 +2,7 @@
 
 ## Context
 
-OpenLinguo is an open-source (AGPL-3.0) language-learning app. Mandarin first, English second (to validate the multi-language abstraction), more languages later.
+OpenLinguo is an open-source (AGPL-3.0) app to learn Mandarin. English as a language to learn was dropped on 2026-11-03; the LanguagePack interface stays, so another language can be added as a package ([ADR 0003](adr/0003-languagepack-capabilities.md)).
 
 Pedagogy combines two models:
 
@@ -17,7 +17,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 |---|---|
 | Platform | Web PWA (React + Vite + TS) first, Capacitor wrapper post-v1. Flutter excluded (TS-only rule) |
 | User data | Local-first (IndexedDB via Dexie), optional account; append-only review log enables sync later |
-| v1 scope | Core (dictionary, HSK, decomposer, FSRS) + tones/pronunciation + writing + AI mobilization + graded reader + backend library + full gamification + `en` core. OCR post-v1 |
+| v1 scope | Core (dictionary, HSK, decomposer, FSRS) + tones/pronunciation + writing + AI mobilization + graded reader + backend library + full gamification. OCR post-v1 |
 | UI / glosses | i18n FR + EN from day one. Glosses: EN (CC-CEDICT), FR (CFDICT if license verified) |
 | HSK | HSK 3.0, two referentials: **2025 exam syllabus** (新版HSK考试大纲, CLEC, Nov 2025, `hsk-2025`, default) and the free **GF0025-2021** national standard (`gf0025-2021`), selectable |
 | Script | Simplified only (traditional stored, toggle later) |
@@ -27,7 +27,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | Reader content | AI-generated + coverage check, user import, in-app "submit to global library" → admin moderation |
 | Backend | TS API: Hono + Drizzle + Better Auth (email code + Google + GitHub, no passwords) on Cloudflare D1 ([ADR 0015](adr/0015-backend-and-shared-library.md)) |
 | Hosting | Cloudflare free plan: PWA on Pages at `openlinguo.razakk.fr` (custom domain, OVH CNAME), API as Pages Functions on the same origin (`/api/*`), D1 in the `eu` jurisdiction, a cron Worker for retention jobs. A third-party host keeps the maintainer anonymous (LCEN art. 1-1 II) |
-| Multi-language | Capability-based LanguagePack; `lang-zh` full, `lang-en` core (generic modules only) |
+| Multi-language | Capability-based LanguagePack; `lang-zh` full, `lang-en` a minimal fixture of the contract tests |
 | Gamification | XP, levels, streaks, daily goal, achievements, all local. Leagues dropped on 2026-11-03 ([ADR 0016](adr/0016-sync.md)) |
 | Team | Solo for v1, contributors after v1 → automated PR security gates + mandatory human review |
 | License | AGPL-3.0 (code). Data keeps its own licenses (CC BY-SA, LGPL, Arphic…) |
@@ -50,7 +50,7 @@ packages/
   core/           Result type, domain model, LanguagePack interface + contract tests,
                   FSRS wrapper (ts-fsrs), session composer, XP/achievement rules, shared zod schemas
   lang-zh/        pinyin, tones/sandhi, segmentation, decomposition, IME candidates, zh prompts
-  lang-en/        tokenization, IPA, CEFR levels, en prompts
+  lang-en/        minimal pack, fixture of the contract tests
 tools/
   data-pipeline/  TS scripts: download (pinned URL + sha256) → parse → build shards → manifest
 data/
@@ -81,7 +81,7 @@ interface LanguagePack {
 }
 ```
 
-Each module declares the features it requires; the module registry hides unsupported modules. Contract tests run against `lang-zh` and `lang-en` from M1 (minimal `lang-en` fixture stub first, full content in M9). Capabilities are added with the milestone that first uses them: `ime` (M4), `phonetics` (M3), `prompts` (M5).
+Each module declares the features it requires; the module registry hides unsupported modules. Contract tests run against `lang-zh` and a minimal `lang-en` fixture. Capabilities are added with the milestone that first uses them: `ime` (M4), `phonetics` (M3), `prompts` (M5).
 
 ### Code standards
 
@@ -97,7 +97,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **Strokes**: self-hosted `hanzi-writer-data` subset (HSK chars) imported into IndexedDB with the dictionary; stroke order drawn by in-house SVG (outlines clipping the medians, Web Animations API), never autoplayed, stepped without motion under reduced motion (Hanzi Writer rejected for the word page, decision 2026-10-10: no reduced-motion support, no static "first k strokes" view). The writing quiz is in-house too, on the same SVG, with Hanzi Writer's stroke matcher ported under its MIT license (decision 2026-10-16, [ADR 0011](adr/0011-writing-and-typing.md)).
 - **Input method**: in-house pinyin IME in `lang-zh` (the `ime` capability): syllable splitting, candidates from CC-CEDICT readings ranked by wordfreq, digits typed as tones, partial commits; no new dataset or dependency (pinyin-ime tested and rejected, [ADR 0011](adr/0011-writing-and-typing.md)).
 - **Pitch**: `pitchy` (MIT) F0 → semitones normalized to speaker mean → time-normalized comparison vs reference contour. Same code extracts reference contours in the pipeline and user contours in the browser.
-- **TTS**: Kokoro rejected for Mandarin (all zh voices graded D); used for English (af_bella A-). Mandarin (bake-off #112, ADR 0007): MOSS-TTS v1.5 for syllables, words and sentences, cloning a synthetic voice designed by MOSS-VoiceGenerator; a pinyin chart syllable missing in one tone is the same syllable recorded in another tone, re-pitched by the WORLD vocoder (#105). Engines run as Docker containers on a Radeon through WSL2 (ROCm), the TS pipeline calls their HTTP API.
+- **TTS**: Kokoro rejected for Mandarin (all zh voices graded D). Mandarin (bake-off #112, ADR 0007): MOSS-TTS v1.5 for syllables, words and sentences, cloning a synthetic voice designed by MOSS-VoiceGenerator; a pinyin chart syllable missing in one tone is the same syllable recorded in another tone, re-pitched by the WORLD vocoder (#105). Engines run as Docker containers on a Radeon through WSL2 (ROCm), the TS pipeline calls their HTTP API.
 - **STT**: Paraformer-small run by sherpa-onnx WebAssembly in a Web Worker (replaced transformers.js Whisper, too slow on phones, #119); opencc-js t→s conversion kept. STT checks intelligibility only; tone accuracy comes from the pitch module (CER hides same-character tone errors).
 - **AI (BYOK)**: in-house OpenAI-compatible client in `core` (`fetch` + zod, no dependency; `openai` and the Vercel AI SDK tested and rejected, [ADR 0012](adr/0012-ai-mobilization-byok.md)): strict JSON-schema output, `json_object` fallback with the schema in the prompt, zod validation, two retries on 429/5xx (providers hide `Retry-After` from scripts), typed errors parsed per provider shape. CSP `connect-src` lists the cloud presets and `localhost`/`127.0.0.1`. Key in IndexedDB or memory only, never in backups, sync or our API. Prompts versioned per language pack.
 - **Comprehensible input**: target ≥98% known-word coverage (Hu & Nation 2000), configurable.
@@ -195,10 +195,9 @@ All sources were verified on primary sources; the full table, obligations and at
 | CFDICT | CC BY-SA 3.0 |
 | HSK 2025 exam syllabus (official CTI PDF is copy-protected: pinned harukicoder/hsk30 transcription, permission requested; exam launch 2026-12-13) | Factual level mapping, attributed |
 | Make Me a Hanzi / hanzi-writer-data | LGPL-3.0+ / Arphic PL |
-| Wiktionary (kaikki.org), wordfreq, Octanove C1/C2 | CC BY-SA 4.0 |
-| CEFR-J 1.6 | Free with citation; redistribution not addressed (accepted risk) |
+| Wiktionary (kaikki.org), wordfreq | CC BY-SA 4.0 |
 | Tatoeba sentences (text only) | CC BY 2.0 FR |
-| Kokoro-82M / MOSS-TTS v1.5 + MOSS-VoiceGenerator | Apache-2.0 / Apache-2.0 |
+| MOSS-TTS v1.5 + MOSS-VoiceGenerator | Apache-2.0 |
 
 Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI job fails when an entry is expired, a monthly workflow pushes a refresh branch and opens an issue with diff stats; the maintainer opens and reviews the PR, never auto-merged. Commercial graded readers are never ingested; Tatoeba audio not used (mixed NC licenses).
 
@@ -224,11 +223,11 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M8 — Sync.** Opt-in sync between devices: gzip chunks stored opaquely in D1, reviews merged by id, last-writer-wins with deletions for the rest, on-device merge. No leagues, no server XP. See [ADR 0016](adr/0016-sync.md). *Exit: two devices converge, deletions included.*
 
-**M9 — lang-en core.** Wiktionary (kaikki) EN glosses + FR translations, IPA, CEFR-J levels, wordfreq, Kokoro audio, en prompts. Generic modules work for en; zh-only modules hidden. *Exit: contract tests green for both packs, full learning loop in en.*
+**M9 — dropped.** The English pack will not be built: the project focuses on Mandarin (2026-11-03, [ADR 0003](adr/0003-languagepack-capabilities.md)).
 
 **M10 — v1.0 hardening.** Manual accessibility audit (keyboard, NVDA, VoiceOver) + published accessibility statement, GDPR review of docs vs implementation, performance (dataset load time, bundle), FSRS parameter optimization (optional), CONTRIBUTING, contributor PR gates (fork-run approval, OpenSSF Scorecard, CODEOWNERS on workflows/pipeline/lockfile), docs, release v1.0.0.
 
-**Post-v1.** Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle, more languages.
+**Post-v1.** Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle. Other languages only as contributed packages.
 
 ## Risks
 

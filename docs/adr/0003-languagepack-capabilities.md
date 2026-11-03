@@ -1,7 +1,7 @@
 # 0003 — LanguagePack with capabilities
 
 - Status: Accepted
-- Date: 2026-10-09
+- Date: 2026-10-09; English pack dropped 2026-11-03 (see the amendment)
 
 ## Context
 
@@ -18,3 +18,11 @@ Mandarin is first, other languages follow. An abstraction designed against a sin
 
 - The abstraction is validated by two real, very different languages.
 - No lowest-common-denominator UI: language-specific modules stay rich.
+
+## Amendment (2026-11-03): Mandarin only
+
+The maintainer dropped English as a language to learn: M9 will not be built, and the project focuses on Mandarin. English stays as an interface language and for glosses.
+
+- `LanguagePack`, the module registry and the contract tests stay, so another language can be added as a package.
+- `lang-en` stays as the minimal fixture of those tests, with no content planned.
+- The abstraction is now checked by that fixture, not by a second real language, so it may still hold Mandarin assumptions. `apps/web` calls `lang-zh` directly: a new language would have to wire its pack through the app as well.
