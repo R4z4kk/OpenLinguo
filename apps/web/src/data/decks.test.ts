@@ -432,6 +432,13 @@ describe("nextNewReadings", () => {
     expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, note, NI, HAO, XING]));
   });
 
+  it("skips a note whose content is not on the device", async () => {
+    const note = { note: "n" };
+    await fileNote(MY_WORDS, note);
+    await seedLearning(db, () => db.notes.delete(note.note));
+    expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, NI, HAO, XING]));
+  });
+
   it("stops at the limit", async () => {
     expect(await nextNewReadings(db, "hsk-2025", 3)).toEqual(ok([HANG, E, NI]));
   });

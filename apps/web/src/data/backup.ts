@@ -94,6 +94,32 @@ const Text = z.discriminatedUnion("source", [
 
 const DeckId = z.union([z.literal(MY_WORDS), z.uuid()]);
 
+export const DeckRow = z.object({
+  id: z.uuid(),
+  name: z.string().trim().min(1).max(DECK_NAME_MAX),
+});
+
+export const DeckWordRow = z.union([
+  z.object({ deckId: DeckId, headword: z.string().min(1), readingKey: z.string().min(1) }),
+  z.object({ deckId: DeckId, note: z.string().min(1) }),
+]);
+
+export const NoteRow = z.object({
+  id: z.string().min(1),
+  characters: z.string().min(1),
+  pinyin: z.string(),
+  meaning: z.string().min(1),
+  updatedAt: z.number().int().nonnegative(),
+  // Backups made before M5 have no AI notes.
+  provenance: AiProvenance.nullable().default(null),
+});
+
+export const KnownMarkRow = z.object({
+  headword: z.string().min(1),
+  readingKey: z.string().min(1),
+  markedAt: z.number().int().nonnegative(),
+});
+
 /** Learning data and settings, without dictionary data; card states are replayed from the log. */
 export const Backup = z
   .object({
@@ -108,26 +134,9 @@ export const Backup = z
         wordDone: Review.shape.wordDone.default(null),
       }),
     ),
-    decks: z.array(z.object({ id: z.uuid(), name: z.string().trim().min(1).max(DECK_NAME_MAX) })),
-    deckWords: z.array(
-      z.union([
-        z.object({ deckId: DeckId, headword: z.string().min(1), readingKey: z.string().min(1) }),
-        z.object({ deckId: DeckId, note: z.string().min(1) }),
-      ]),
-    ),
-    notes: z
-      .array(
-        z.object({
-          id: z.string().min(1),
-          characters: z.string().min(1),
-          pinyin: z.string(),
-          meaning: z.string().min(1),
-          updatedAt: z.number().int().nonnegative(),
-          // Backups made before M5 have no AI notes.
-          provenance: AiProvenance.nullable().default(null),
-        }),
-      )
-      .default([]),
+    decks: z.array(DeckRow),
+    deckWords: z.array(DeckWordRow),
+    notes: z.array(NoteRow).default([]),
     // Backups made before M5 have no challenges.
     challenges: z
       .array(
@@ -172,15 +181,7 @@ export const Backup = z
       .default([]),
     // Backups made before the library have no texts and no known marks.
     texts: z.array(Text).default([]),
-    knownMarks: z
-      .array(
-        z.object({
-          headword: z.string().min(1),
-          readingKey: z.string().min(1),
-          markedAt: z.number().int().nonnegative(),
-        }),
-      )
-      .default([]),
+    knownMarks: z.array(KnownMarkRow).default([]),
     // Backups made before the unknown-words panel have no personal lexicon and no kept answers.
     lexicon: z.array(LexiconEntry).default([]),
     resolutions: z.array(Resolution).default([]),
@@ -207,12 +208,11 @@ export const Backup = z
       if (reviewIds.has(id)) issue(["reviews", index, "id"], "Duplicate review id");
       reviewIds.add(id);
     });
-    decks.forEach((deck, index) => {
-      const earlier = decks.slice(0, index);
-      if (earlier.some((other) => other.id === deck.id))
-        issue(["decks", index, "id"], "Duplicate deck id");
-      else if (earlier.some((other) => sameDeckName(other.name, deck.name)))
-        issue(["decks", index, "name"], "Another deck has this name");
+    // Two decks may share a name: sync keeps both (ADR 0016).
+    const deckRowIds = new Set<string>();
+    decks.forEach(({ id }, index) => {
+      if (deckRowIds.has(id)) issue(["decks", index, "id"], "Duplicate deck id");
+      deckRowIds.add(id);
     });
     const noteIds = new Set<string>();
     notes.forEach(({ id }, index) => {

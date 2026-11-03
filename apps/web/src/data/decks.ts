@@ -403,15 +403,24 @@ export const nextNewReadings = (
     );
     const words = [...personal.values()].filter(isWord);
     const entries = await db.entries.bulkGet(words.map(entryId));
+    // A filing can arrive before its note (ADR 0016): nothing to show yet.
+    const noteIds = [...personal.values()].flatMap((subject) =>
+      "note" in subject ? [subject.note] : [],
+    );
+    const contents = new Set(
+      (await db.notes.bulkGet(noteIds)).flatMap((note) => (note == null ? [] : [note.id])),
+    );
     const queue: Candidate[] = [
       ...words.map((word, index) => ({
         ...word,
         level: entries[index]?.[field] ?? null,
         frequency: entries[index]?.frequency ?? null,
       })),
-      ...[...personal.values()]
-        .filter((subject) => "note" in subject)
-        .map((note) => ({ ...note, level: null, frequency: null })),
+      ...[...personal.values()].flatMap((subject) =>
+        "note" in subject && contents.has(subject.note)
+          ? [{ ...subject, level: null, frequency: null }]
+          : [],
+      ),
     ].sort(byPriority);
     const levels = proficiencyFrameworks[referential].length;
     for (let level = 1; level <= levels && queue.length < limit; level += 1) {

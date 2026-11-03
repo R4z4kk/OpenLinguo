@@ -245,8 +245,6 @@ export type SyncState = {
   /** Id of the account's oldest chunk when last seen, `null` before the first one. */
   oldest: number | null;
   lastSyncAt: number | null;
-  /** Deck ids merged into a local deck of the same name, by received id. */
-  deckAliases: Readonly<Record<string, string>>;
 };
 
 export type Database = Dexie & {

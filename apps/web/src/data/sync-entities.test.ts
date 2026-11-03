@@ -118,6 +118,31 @@ describe("recordChanges", () => {
     },
   );
 
+  it("a local write passes the time the device has seen, whatever its clock", async () => {
+    await scoped(WRITES.notes.add);
+    await db.syncEntities.update(`notes:${NOTE.id}`, { changedAt: NOW + 500, pending: 0 });
+    await scoped(() => db.notes.put({ ...NOTE, meaning: "hi" }));
+    expect(await db.syncEntities.get(`notes:${NOTE.id}`)).toMatchObject({
+      changedAt: NOW + 501,
+      pending: 1,
+    });
+    await scoped(() => db.notes.delete(NOTE.id));
+    expect(await db.syncEntities.get(`notes:${NOTE.id}`)).toMatchObject({
+      changedAt: NOW + 502,
+      deleted: true,
+    });
+  });
+
+  it("refuses the write when its record cannot be stored", async () => {
+    vi.spyOn(db.Table.prototype, "put").mockImplementation(() =>
+      Dexie.Promise.reject(new Error("disk full")),
+    );
+    await expect(scoped(WRITES.notes.add)).rejects.toThrow(/abort/i);
+    vi.restoreAllMocks();
+    expect(await db.notes.count()).toBe(0);
+    expect(await db.syncEntities.count()).toBe(0);
+  });
+
   it("records a review, not its card's state", async () => {
     await scoped(() => db.cards.add(CARD));
     await clearEntities(db);

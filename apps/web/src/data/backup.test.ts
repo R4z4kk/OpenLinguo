@@ -617,13 +617,34 @@ describe("parseBackup", () => {
     });
   });
 
-  it("refuses duplicate ids, deck names taken and words filed in a missing deck", () => {
+  it("restores two decks of one name, as sync can leave them, with their words", async () => {
+    const twin = { id: uuid(101), name: "animals" };
+    const parsed = parseBackup(
+      JSON.stringify(
+        backup({
+          decks: [ANIMALS, twin],
+          deckWords: [
+            { deckId: ANIMALS.id, headword: "猫", readingKey: "mao1" },
+            { deckId: twin.id, headword: "好", readingKey: "hao3" },
+          ],
+        }),
+      ),
+    );
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    expect((await importBackup(db, parsed.value)).ok).toBe(true);
+    expect(await db.decks.count()).toBe(2);
+    expect((await db.deckWords.toArray()).map(({ deckId }) => deckId).sort()).toEqual(
+      [ANIMALS.id, twin.id].sort(),
+    );
+  });
+
+  it("refuses duplicate ids and words filed in a missing deck", () => {
     const first = review(1, RECALL.id, start, "good");
     const parsed = parseBackup(
       JSON.stringify(
         backup({
           reviews: [first, first],
-          decks: [ANIMALS, { id: uuid(101), name: " animals " }],
+          decks: [ANIMALS, ANIMALS],
           deckWords: [{ deckId: uuid(102), headword: "猫", readingKey: "mao1" }],
           notes: [NOTE, NOTE],
           aiGlosses: [GLOSS, GLOSS],
@@ -636,7 +657,7 @@ describe("parseBackup", () => {
         kind: "invalid",
         issues: [
           { path: "reviews.1.id" },
-          { path: "decks.1.name" },
+          { path: "decks.1.id" },
           { path: "notes.1.id" },
           { path: "aiGlosses.1" },
           { path: "deckWords.0.deckId" },
