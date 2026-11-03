@@ -9,7 +9,7 @@ import {
 import { LICENCES, SUBMISSION_STATUSES, type Submission } from "@openlinguo/core/submission";
 import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
-import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { check, customType, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /** One row per run of a daily job, read by `GET /api/health`. */
 export const jobRun = sqliteTable(
@@ -321,6 +321,29 @@ export const erasure = sqliteTable(
       sql`${table.published} in ('keep-named', 'keep-anonymous', 'remove')`,
     ),
   ],
+);
+
+/** D1 hands a blob back as `number[]`, the local test platform as bytes. */
+const bytes = customType<{ data: Uint8Array<ArrayBuffer>; driverData: Uint8Array | number[] }>({
+  dataType: () => "blob",
+  toDriver: (value) => value,
+  fromDriver: (value) => Uint8Array.from(value),
+});
+
+/** A gzip chunk of a learner's synced data (ADR 0016), opaque to the server. */
+export const syncChunk = sqliteTable(
+  "sync_chunk",
+  {
+    /** Also the cursor a device reads from. */
+    id: integer().primaryKey({ autoIncrement: true }),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    bytes: bytes().notNull(),
+    size: integer().notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => [index("sync_chunk_user").on(table.userId, table.id)],
 );
 
 export const database = (d1: D1Database) => drizzle(d1, { casing: "snake_case" });

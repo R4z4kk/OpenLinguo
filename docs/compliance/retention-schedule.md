@@ -11,7 +11,7 @@ Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md), enforc
 | Sessions | Until sign-out or expiry: 7 days, extended by a day of use (Better Auth defaults, #270) | Strictly necessary |
 | Authenticator (TOTP secret, backup codes) | Until turned off or the account is deleted; a backup code is deleted once used | Purpose ends |
 | Sign-in codes and verification tokens | Valid 10 minutes; deleted when used or refused, otherwise at expiry | Strictly necessary |
-| Rate-limit counters (IP address and route) | Needed for 10 minutes at most; Better Auth never deletes them, so the daily jobs purge older rows | Security |
+| Rate-limit counters (IP address and route) | Needed for 1 hour at most; Better Auth never deletes them, so the daily jobs purge older rows | Security |
 | Sign-in codes asked per address (a keyed hash of the address, never the address, and the time) | 24 hours, for the cap of 10 codes a day per address (#289); purged by the daily jobs | Security |
 | Pending or rejected library submissions | Deleted with the account; a pending text can be withdrawn at any time | Purpose ends |
 | Published library texts | Kept while published, under their licence (CC BY-SA 4.0, or CC0 1.0 for a story); at account deletion the person chooses: keep with their name, keep as anonymous (default) or remove | Licence terms |

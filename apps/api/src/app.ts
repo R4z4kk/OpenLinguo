@@ -1,5 +1,6 @@
 import { AgeDeclaration } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
+import { SYNC_LIMITS } from "@openlinguo/core/sync";
 import { getSessionCookie } from "better-auth/cookies";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -15,6 +16,7 @@ import { noticeRoutes } from "./notices.ts";
 import { lettermintMailer } from "./lettermint-mailer.ts";
 import { database, user } from "./schema.ts";
 import { submissionRoutes } from "./submissions.ts";
+import { type SyncLimits, syncRoutes } from "./sync.ts";
 
 export type Mailer = (env: AuthEnv) => SendMail;
 
@@ -34,7 +36,11 @@ const isAdminPath = (path: string) =>
 
 const refused = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 
-export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) => {
+export const createApp = (
+  jobs: readonly string[],
+  mailer: Mailer = lettermint,
+  syncLimits: SyncLimits = SYNC_LIMITS,
+) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
   // Pages applies apps/web/public/_headers to static files only. HSTS matches it.
@@ -119,6 +125,7 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) 
 
   app.route("/account", accountRoutes(authOf));
   app.route("/submissions", submissionRoutes(authOf));
+  app.route("/sync", syncRoutes(authOf, syncLimits));
   app.route("/library", libraryRoutes());
   app.route("/notices", noticeRoutes(moderationOf));
   app.route("/admin", moderationRoutes(authOf, moderationOf));
