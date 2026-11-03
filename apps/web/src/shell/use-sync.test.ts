@@ -102,6 +102,36 @@ describe("requestSync", () => {
     expect(network.calls).toHaveLength(4);
   });
 
+  it("holds across a reload: a fresh hook reads the last success from the device", async () => {
+    const first = await load();
+    await turnedOn();
+    await first.requestSync();
+    expect(network.calls).toHaveLength(2);
+
+    const reloaded = await load();
+    now += 1_000;
+    await reloaded.requestSync();
+    expect(network.calls).toHaveLength(2);
+    now += 299_000;
+    await reloaded.requestSync();
+    expect(network.calls).toHaveLength(4);
+  });
+
+  it("a state synced a second ago waits, and force ignores the limit", async () => {
+    const { requestSync } = await load();
+    await db.syncState.put({
+      id: "state",
+      accountId: "user-1",
+      cursor: 0,
+      oldest: null,
+      lastSyncAt: now - 1_000,
+    });
+    await requestSync();
+    expect(network.calls).toEqual([]);
+    await requestSync(true);
+    expect(network.calls).toHaveLength(2);
+  });
+
   it("offline shows the failure, does not count, and the next success clears it", async () => {
     const { requestSync, currentSyncView } = await load();
     await turnedOn();
@@ -115,12 +145,12 @@ describe("requestSync", () => {
     expect(currentSyncView().usage).not.toBeNull();
   });
 
-  it("another account's state stays visible as a failure and is retried only later", async () => {
+  it("another account's state stays visible as a failure and is retried at the next trigger", async () => {
     const { requestSync, currentSyncView } = await load();
     await turnedOn("someone-else");
     await requestSync();
     expect(currentSyncView().failure).toEqual({ kind: "other-account" });
     await requestSync();
-    expect(network.calls).toEqual(["/api/auth/get-session"]);
+    expect(network.calls).toHaveLength(2);
   });
 });

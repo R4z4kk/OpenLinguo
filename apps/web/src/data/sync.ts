@@ -61,39 +61,32 @@ const exclusive = async <T>(
 /** A waiting row with the value it sends: nothing for a deletion. */
 type Item = { readonly row: SyncEntity; readonly value: unknown };
 
-/** What a row sends, `null` when it has no value to send. */
-const valueOf = async (
-  db: Database,
-  { table, key }: SyncEntity,
-): Promise<{ value: unknown } | null> => {
+/** What a row sends: `null` when it has none, which validation refuses for a live row. */
+const valueOf = async (db: Database, { table, key }: SyncEntity): Promise<unknown> => {
   switch (table) {
     case "reviews": {
-      const review = await db.reviews.get(key);
-      return review == null ? null : { value: review };
+      return (await db.reviews.get(key)) ?? null;
     }
     // Cards and deck words are their key: a word gone with its deck still has one.
     case "cards": {
       const parts = cardKey(key);
-      return { value: parts === null ? null : { ...parts, id: key } };
+      return parts === null ? null : { ...parts, id: key };
     }
     case "deckWords": {
       const parts = parseDeckWordId(key);
-      return { value: parts === null ? null : { deckId: parts.deckId, ...parts.subject } };
+      return parts === null ? null : { deckId: parts.deckId, ...parts.subject };
     }
     case "decks": {
-      const deck = await db.decks.get(key);
-      return deck == null ? null : { value: deck };
+      return (await db.decks.get(key)) ?? null;
     }
     case "notes": {
-      const note = await db.notes.get(key);
-      return note == null ? null : { value: note };
+      return (await db.notes.get(key)) ?? null;
     }
     case "knownMarks": {
       try {
-        const mark = await db.knownMarks.get(parseKnownMarkKey(key));
-        return mark == null ? null : { value: mark };
+        return (await db.knownMarks.get(parseKnownMarkKey(key))) ?? null;
       } catch {
-        return { value: null };
+        return null;
       }
     }
   }
@@ -102,14 +95,8 @@ const valueOf = async (
 /** A deck word goes no later than a note: the merge refuses a note's deletion while a word files it. */
 const rank = ({ table }: SyncEntity): number => (table === "deckWords" ? 0 : 1);
 
-type Waiting = { readonly items: readonly Item[]; readonly empty: readonly SyncEntity[] };
-
-/**
- * The waiting rows with their current values, in one read. A live row with no stored value is
- * kept apart and sends nothing: a card and a deck word are their key, so never in that case, and
- * the other tables delete through their hooks, so none is expected (a review is never deleted).
- */
-const waiting = (db: Database): Promise<Waiting> =>
+/** The waiting rows with their current values, in one read. */
+const waiting = (db: Database): Promise<Item[]> =>
   db.transaction(
     "r",
     [db.syncEntities, db.reviews, db.decks, db.notes, db.knownMarks],
@@ -118,17 +105,9 @@ const waiting = (db: Database): Promise<Waiting> =>
         (a, b) => rank(a) - rank(b),
       );
       const items: Item[] = [];
-      const empty: SyncEntity[] = [];
-      for (const row of rows) {
-        if (row.deleted) {
-          items.push({ row, value: null });
-          continue;
-        }
-        const found = await valueOf(db, row);
-        if (found === null) empty.push(row);
-        else items.push({ row, value: found.value });
-      }
-      return { items, empty };
+      for (const row of rows)
+        items.push({ row, value: row.deleted ? null : await valueOf(db, row) });
+      return items;
     },
   );
 
@@ -252,16 +231,17 @@ const run = async (db: Database, accountId: string): Promise<Result<SyncUsage, S
     cursor = id;
   }
 
-  const { items, empty } = await waiting(db);
-  const planned = await plan(items);
+  const planned = await plan(await waiting(db));
   if (!planned.ok) return planned;
-  await markSent(db, empty, null);
   let usage: SyncUsage = { used, limit: SYNC_LIMITS.accountBytes, oldest };
   for (const { items: batch, bytes } of planned.value) {
-    const stored = await pushChunk(bytes);
-    if (!stored.ok) return err(apiFailure(stored.error));
-    if (oldest !== null && stored.value.oldest !== oldest)
-      return err({ kind: "turned-off-elsewhere" });
+    const stored = await pushChunk(bytes, oldest);
+    if (!stored.ok)
+      return err(
+        stored.error.kind === "refused" && stored.error.code === "SYNC_STORE_CHANGED"
+          ? { kind: "turned-off-elsewhere" }
+          : apiFailure(stored.error),
+      );
     oldest = stored.value.oldest;
     usage = { used: stored.value.used, limit: stored.value.limit, oldest };
     await markSent(

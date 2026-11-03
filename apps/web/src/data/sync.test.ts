@@ -65,6 +65,8 @@ type Store = {
   /** Chunks stored whose answer is lost on the way back. */
   lostAnswers: number;
   calls: string[];
+  /** The expected-oldest header of each push, `null` when absent. */
+  expected: (string | null)[];
 };
 
 const newStore = (): Store => ({
@@ -74,6 +76,7 @@ const newStore = (): Store => ({
   offline: false,
   lostAnswers: 0,
   calls: [],
+  expected: [],
 });
 
 const refuse = (status: number, code: string): Response =>
@@ -96,6 +99,10 @@ const serve = (store: Store) => (input: string, init: RequestInit) => {
       return Promise.resolve(refuse(413, "SYNC_CHUNK_TOO_LARGE"));
     if (bytes[0] !== 0x1f || bytes[1] !== 0x8b)
       return Promise.resolve(refuse(400, "INVALID_REQUEST"));
+    const header = new Headers(init.headers).get(SYNC_HEADERS.expectedOldest);
+    store.expected.push(header);
+    if (header !== null && usageOf(store).oldest !== Number(header))
+      return Promise.resolve(refuse(409, "SYNC_STORE_CHANGED"));
     if (usageOf(store).used + bytes.length > store.quota)
       return Promise.resolve(refuse(409, "SYNC_QUOTA"));
     const id = store.nextId;
@@ -462,6 +469,39 @@ describe("syncNow", () => {
     expect(await waitingCount(a)).toBe(3);
   });
 
+  it.each([
+    [
+      "a review",
+      "reviews",
+      `reviews:00000000-0000-4000-8000-0000000000ff`,
+      "00000000-0000-4000-8000-0000000000ff",
+    ],
+    ["a deck", "decks", "decks:gone", "gone"],
+    ["a note", "notes", "notes:gone", "gone"],
+    [
+      "a known mark",
+      "knownMarks",
+      `knownMarks:${JSON.stringify(["猫", "mao1"])}`,
+      JSON.stringify(["猫", "mao1"]),
+    ],
+  ] as const)(
+    "%s waiting live with no stored value stops the send, and nothing is marked sent",
+    async (_name, table, id, key) => {
+      const a = await device();
+      await seed(a, 100, () => a.notes.add(NOTE));
+      await a.syncEntities.put({ id, table, key, changedAt: 1, deleted: false, pending: 1 });
+
+      const result = await syncNow(a, ACCOUNT);
+
+      expect(result).toEqual({
+        ok: false,
+        error: { kind: "storage", message: `Invalid sync row ${id}` },
+      });
+      expect(store.calls).not.toContain("POST");
+      expect(await waitingCount(a)).toBe(2);
+    },
+  );
+
   it("an unreadable chunk stops there, cursor unmoved, sending not attempted", async () => {
     const a = await device();
     await seed(a, 100, () => a.notes.add(NOTE));
@@ -565,6 +605,38 @@ describe("syncNow", () => {
     expect(await tables(c)).toEqual(await tables(a));
     expect(await c.reviews.count()).toBe(1);
     expect(await waitingCount(a)).toBe(0);
+  });
+
+  it("a store deleted between the pull and the push stops with turned-off-elsewhere, leaving nothing on the server", async () => {
+    const a = await device();
+    await learn(a, 100);
+    await sync(a);
+    await seed(a, 300, () => a.knownMarks.add({ ...GOOD, markedAt: 2 }));
+    const base = serve(store);
+    vi.stubGlobal("fetch", (input: string, init: RequestInit) => {
+      if (init.method === "POST") store.chunks = [];
+      return base(input, init);
+    });
+
+    const result = await syncNow(a, ACCOUNT);
+
+    expect(result).toEqual({ ok: false, error: { kind: "turned-off-elsewhere" } });
+    expect(store.chunks).toEqual([]);
+    expect(await waitingCount(a)).toBe(1);
+  });
+
+  it("sends the oldest chunk it remembers with every push but the first upload's", async () => {
+    const a = await device();
+    await seed(a, 100, () =>
+      a.notes.bulkAdd(["a", "b", "c", "d", "e", "f", "g", "h"].map((id) => bigNote(id, 100_000))),
+    );
+    await sync(a);
+    expect(store.expected[0]).toBeNull();
+    expect(store.expected.length).toBeGreaterThan(1);
+    expect(store.expected.slice(1).every((header) => header === "1")).toBe(true);
+    await seed(a, 200, () => a.notes.put({ ...NOTE, meaning: "again" }));
+    await sync(a);
+    expect(store.expected.at(-1)).toBe("1");
   });
 
   it("another account's state stops with other-account", async () => {

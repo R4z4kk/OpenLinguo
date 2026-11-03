@@ -1,7 +1,7 @@
 import type { SyncUsage } from "@openlinguo/core/sync";
 import { useEffect, useSyncExternalStore } from "react";
 import { loadSession, stepOf } from "@/data/account";
-import { database } from "@/data/database";
+import { database, type SyncState } from "@/data/database";
 import { clearWhenOff, SYNC_MIN_INTERVAL_MS, syncNow, type SyncFailure } from "@/data/sync";
 
 /** What the sync section reads: the last failure stays until a sync succeeds. */
@@ -14,7 +14,6 @@ export type SyncView = {
 let view: SyncView = { running: false, usage: null, failure: null };
 const listeners = new Set<() => void>();
 let inFlight = false;
-let lastAttemptAt = Number.NEGATIVE_INFINITY;
 
 const publish = (next: SyncView): void => {
   view = next;
@@ -32,32 +31,28 @@ const fail = (failure: SyncFailure): void => {
   publish({ ...view, running: false, failure });
 };
 
-/** Offline does not count as an attempt: coming back online syncs at once. */
-const attempted = (failure: SyncFailure): void => {
-  if (!(failure.kind === "api" && failure.failure.kind === "offline")) lastAttemptAt = Date.now();
-};
-
-const once = async (): Promise<void> => {
-  let on: boolean;
+/** The limit is the last success, kept on the device: a failure retries at the next trigger. */
+const once = async (force: boolean): Promise<void> => {
+  let state: SyncState | null;
   try {
-    on = (await database.syncState.get("state")) != null;
+    state = (await database.syncState.get("state")) ?? null;
   } catch (error) {
     fail({ kind: "storage", message: String(error) });
     return;
   }
-  if (!on) return;
+  if (state === null) return;
+  // A clock set back leaves `lastSyncAt` in the future: the limit then no longer holds.
+  const age = state.lastSyncAt === null ? -1 : Date.now() - state.lastSyncAt;
+  if (!force && age >= 0 && age < SYNC_MIN_INTERVAL_MS) return;
   const session = await loadSession();
   if (!session.ok) {
-    const failure: SyncFailure = { kind: "api", failure: session.error };
-    fail(failure);
-    attempted(failure);
+    fail({ kind: "api", failure: session.error });
     return;
   }
   if (session.value === null || stepOf(session.value) !== "ready") return;
   publish({ ...view, running: true });
   const result = await syncNow(database, session.value.user.id);
   if (result.ok) {
-    lastAttemptAt = Date.now();
     publish({ running: false, usage: result.value, failure: null });
     return;
   }
@@ -67,25 +62,27 @@ const once = async (): Promise<void> => {
     return;
   }
   fail(error);
-  attempted(error);
 };
 
-const attempt = async (): Promise<void> => {
-  if (inFlight || Date.now() - lastAttemptAt < SYNC_MIN_INTERVAL_MS) return;
+const attempt = async (force: boolean): Promise<void> => {
+  if (inFlight) return;
   inFlight = true;
   try {
-    await once();
+    await once(force);
   } finally {
     inFlight = false;
   }
 };
 
-/** Syncs unless it ran within `SYNC_MIN_INTERVAL_MS`, sync is off or nobody is signed in. */
-export const requestSync = (): Promise<void> => attempt();
+/**
+ * Syncs unless the last success is under `SYNC_MIN_INTERVAL_MS` old, sync is off or nobody is
+ * signed in; `force` is for « Sync now ».
+ */
+export const requestSync = (force = false): Promise<void> => attempt(force);
 
 const start = async (): Promise<void> => {
   const cleared = await clearWhenOff(database);
-  if (cleared.ok) await attempt();
+  if (cleared.ok) await attempt(false);
   else fail(cleared.error);
 };
 

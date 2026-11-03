@@ -11,6 +11,8 @@ export const SYNC_HEADERS = {
   id: "x-sync-chunk-id",
   oldest: "x-sync-oldest",
   used: "x-sync-used",
+  /** On a push: the oldest chunk the device remembers, refused if the store no longer starts there. */
+  expectedOldest: "x-sync-expected-oldest",
 } as const;
 
 /** What an account stores: `oldest` is its first chunk's id, `null` when it has none. */

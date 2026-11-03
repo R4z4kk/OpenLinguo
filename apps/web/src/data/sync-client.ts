@@ -25,11 +25,18 @@ const count = (response: Response, name: string): number | null => {
 const refused = async (response: Response): Promise<ApiFailure> =>
   refusedWith(response, await response.json().catch(() => null));
 
-export const pushChunk = async (bytes: Uint8Array): Promise<Result<StoredChunk, ApiFailure>> => {
+/** `expectedOldest`: the oldest chunk the device remembers; the server refuses if it changed. */
+export const pushChunk = async (
+  bytes: Uint8Array,
+  expectedOldest: number | null,
+): Promise<Result<StoredChunk, ApiFailure>> => {
   const answer = await request(PATH, {
     method: "POST",
     body: new Uint8Array(bytes),
-    headers: { "content-type": "application/gzip" },
+    headers: {
+      "content-type": "application/gzip",
+      ...(expectedOldest === null ? {} : { [SYNC_HEADERS.expectedOldest]: String(expectedOldest) }),
+    },
   });
   if (!answer.ok) return answer;
   const response = answer.value;
