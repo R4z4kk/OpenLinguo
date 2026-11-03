@@ -10,7 +10,7 @@ Tone training needs reference audio with an analyzable pitch contour. Browser sp
 ## Decision
 
 - Reference audio is pre-generated with open neural TTS and served as static files; F0 contours are extracted offline by the pipeline.
-- English: Kokoro-82M (Apache-2.0). Kokoro is rejected for Mandarin (all zh voices graded D).
+- Kokoro-82M (Apache-2.0) is rejected for Mandarin (all zh voices graded D). It was planned for English, dropped on 2026-11-03 (ADR 0003).
 - Mandarin: **MOSS-TTS v1.5** (OpenMOSS, 8B, Apache-2.0) for every recording: syllables, words and sentences.
   - Isolated words are sent with a final 。: without it MOSS-TTS often does not stop (its maintainers' advice for end-of-utterance problems, OpenMOSS/MOSS-TTS#19). Its server caps the length at about 2 s per syllable.
   - It clones `tools/tts/voices/designed-zh-female.wav`, a synthetic voice made by MOSS-VoiceGenerator (Apache-2.0) from a text description: the third of three candidates, as the first spoke too fast for learners and the second too slow. No real person's voice is reproduced, so we read the audio as no deep fake in the sense of the AI Act (art. 3(60): content that "resembles existing persons"; art. 50(4) unchanged by Regulation (EU) 2026/1744). Generated audio is still labelled « synthetic voice » in the app (#113).
