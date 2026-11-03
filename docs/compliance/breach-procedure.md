@@ -6,7 +6,7 @@ Applies to any breach of security leading to the accidental or unlawful destruct
 - CNIL, [« Les violations de données personnelles »](https://www.cnil.fr/fr/les-violations-de-donnees-personnelles) and its [notification service](https://www.cnil.fr/fr/services-en-ligne/notifier-une-violation-de-donnees-personnelles).
 - EDPB [Guidelines 9/2022](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/guidelines-92022-personal-data-breach-notification-under_en), version 2.0: a controller is aware with "a reasonable degree of certainty" (para 31), in principle "once the processor has informed it" (para 44); notices go in dedicated messages, not with other information (para 89).
 
-Commands run from `apps/api`; `wrangler` stands for `pnpm exec wrangler`.
+Commands run from `apps/api`, in Git Bash on Windows; `wrangler` stands for `pnpm exec wrangler`.
 
 ## Steps
 
@@ -15,7 +15,7 @@ The 72 hours run from step 1: note the time you became aware.
 1. **Preserve.** Containing destroys evidence (`DELETE FROM session` removes IP addresses and browsers), so this comes first, in minutes.
    - Note the current bookmark: `wrangler d1 time-travel info openlinguo`. It is the point to restore to, for 7 days.
    - If an attack is under way, take the API offline first (below): it touches no data.
-   - Export the database: `wrangler d1 export openlinguo --remote --output=incident.sql`. An export blocks other requests while it runs. Keep the file encrypted, outside the repository, and delete it when the case closes ([retention](retention-schedule.md)). The daily jobs keep purging, which makes this copy the only one of what reaches its end date meanwhile.
+   - Export the database: `wrangler d1 export openlinguo --remote --output="$HOME/incident.sql"`. An export blocks other requests while it runs. Encrypt the file (`gpg -c ~/incident.sql`, then delete the clear copy), keep it outside the repository, and delete it when the case closes ([retention](retention-schedule.md)). The daily jobs keep purging, which makes this copy the only one of what reaches its end date meanwhile.
 2. **Contain.** Revoke what is exposed (below) and block the path used. Local-first means learners keep working offline.
 3. **Assess.** What data, how many people, what likely consequences, is there a risk to their rights and freedoms? Is the risk high? Read the evidence (below).
    - The people are teenagers: treat an email linked to a pseudonym, a sealed identity or IP addresses read by someone else as high risk (DPIA, R1).
@@ -69,7 +69,7 @@ A changed Pages secret only applies to the next deployment, so renew the deploy 
 | `session` | Live sessions, with IP address and browser | Until expiry | In the export of step 1 |
 | `job_run` | Each daily job's outcome: a purge that failed or stopped | Not purged | `wrangler d1 execute openlinguo --remote --json --command "SELECT job, status, datetime(started_at / 1000, 'unixepoch') AS at FROM job_run ORDER BY started_at DESC LIMIT 50"` |
 | Mailbox | Requests answered and the data they needed ([requests runbook](requests.md), section 5). A read no request explains is a lead | 5 years for rights requests | `openlinguo@gmail.com` |
-| Cloudflare audit log | Account actions, and API calls with the token's name | [18 months](https://developers.cloudflare.com/fundamentals/account/account-security/audit-logs/); the dashboard shows 90 days and hides `view` actions, the API has the rest | Audit Logs page, or the API. Its page does not list D1, so whether a D1 console read appears is for the exercise to establish |
+| Cloudflare audit log | Account actions, and API calls with the token's name. For D1, seen in the exercise of 2026-11-03: `database.raw` for a query in the console, `database.query` for the API (`wrangler d1 execute`, migrations), `database.export`, with who, the IP address and the time, never the SQL. So it shows that someone queried, not what they read or changed | [18 months](https://developers.cloudflare.com/fundamentals/account/account-security/audit-logs/); the dashboard shows 90 days and hides `view` actions, the API has the rest | Audit Logs page. API, with a temporary token holding Account Settings Read: `curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CLOUDFLARE_ACCOUNT_ID/logs/audit?since=2026-11-01&before=2026-11-04"` (`read -rs CF_TOKEN` first, and delete the token after) |
 | GitHub security log, `deploy` runs | Sign-ins, tokens, secrets; who approved what | [90 days](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/reviewing-your-security-log) for the log | Settings › Archives › Security log; `gh run list --workflow deploy` |
 | Lettermint | Messages sent: addresses, content, events | 28 days; delivery events and totals 90 days at most ([DPA](https://lettermint.co/dpa) §3.1) | Lettermint dashboard |
 
@@ -206,9 +206,9 @@ Scenario: on a Friday evening, Lettermint writes that the sending token was used
 
 1. Find the Lettermint and Cloudflare contact addresses: is each one read every day?
 2. Preserve: bookmark and export. Does the file open? Encrypt it.
-3. Take the API offline, check `/api/health` and the app, come back with `deploy`.
-4. Revoke: every session, and the Lettermint token in both places.
-5. Run a query in the D1 console, then look for it in the audit log, `view` actions included. Whichever way it goes, write the answer in the Evidence table.
+3. Take the API offline, check `/api/health` and the app. Stay offline.
+4. Revoke: every session, and the Lettermint token in both places. Come back with one run of `deploy`, which also gives the Pages project the new token, then sign in by code.
+5. Run a query in the D1 console, then find it in the audit log (`database.raw`). If it is missing, correct the Evidence table, the [DPIA](dpia.md) and the [requests runbook](requests.md).
 6. Assess, on the scenario: CNIL or not, people or not, and fill in the CNIL form without sending it.
-7. Send the notice to your own address only.
-8. Delete the files of the exercise.
+7. Send the notice to your own address only, with `addresses.json` holding `[{"results":[{"email":"you@example.org"}]}]` and a temporary Lettermint token, so production's stays untouched.
+8. Delete the files and the temporary tokens of the exercise.
