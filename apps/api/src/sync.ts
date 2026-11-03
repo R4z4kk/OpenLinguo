@@ -5,7 +5,8 @@ import { Hono } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { z } from "zod";
 import type { Auth } from "./auth.ts";
-import { type Database, database, hostingRecord, rateLimit, syncChunk } from "./schema.ts";
+import { withinLimit } from "./rate-limit.ts";
+import { database, hostingRecord, syncChunk } from "./schema.ts";
 import { type Connection, connectionOf, hostingRow } from "./submissions.ts";
 
 export type SyncLimits = { readonly [Name in keyof typeof SYNC_LIMITS]: number };
@@ -14,25 +15,6 @@ const HOUR_MS = 60 * 60_000;
 
 const refusal = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 const tooLarge = refusal("SYNC_CHUNK_TOO_LARGE", "A chunk is at most 256 KiB");
-
-/** Counts in Better Auth's `rate_limit` table, where `lastRequest` holds the window's start here. */
-const withinLimit = async (db: Database, userId: string, max: number, now: number) => {
-  const key = `sync:${userId}`;
-  const [row] = await db.select().from(rateLimit).where(eq(rateLimit.key, key));
-  if (!row || now - row.lastRequest >= HOUR_MS) {
-    await db
-      .insert(rateLimit)
-      .values({ id: key, key, count: 1, lastRequest: now })
-      .onConflictDoUpdate({ target: rateLimit.key, set: { count: 1, lastRequest: now } });
-    return true;
-  }
-  if (row.count >= max) return false;
-  await db
-    .update(rateLimit)
-    .set({ count: row.count + 1 })
-    .where(eq(rateLimit.key, key));
-  return true;
-};
 
 const UsageRow = z.object({
   used: z.number().int().nonnegative(),
@@ -79,7 +61,8 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
         }
         const { userId } = c.var;
         const db = database(c.env.DB);
-        if (!(await withinLimit(db, userId, limits.chunksPerHour, Date.now()))) {
+        const window = { max: limits.chunksPerHour, windowMs: HOUR_MS };
+        if (!(await withinLimit(db, `sync:${userId}`, window, Date.now()))) {
           return c.json(refusal("TOO_MANY_ATTEMPTS", "Too many chunks, try again later"), 429);
         }
         const usage = await usageOf(c.env.DB, userId);
