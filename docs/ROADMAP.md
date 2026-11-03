@@ -28,7 +28,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | Backend | TS API: Hono + Drizzle + Better Auth (email code + Google + GitHub, no passwords) on Cloudflare D1 ([ADR 0015](adr/0015-backend-and-shared-library.md)) |
 | Hosting | Cloudflare free plan: PWA on Pages at `openlinguo.razakk.fr` (custom domain, OVH CNAME), API as Pages Functions on the same origin (`/api/*`), D1 in the `eu` jurisdiction, a cron Worker for retention jobs. A third-party host keeps the maintainer anonymous (LCEN art. 1-1 II) |
 | Multi-language | Capability-based LanguagePack; `lang-zh` full, `lang-en` core (generic modules only) |
-| Gamification | Full: XP, levels, streaks, daily goal, achievements (local) + weekly leagues (server) |
+| Gamification | XP, levels, streaks, daily goal, achievements, all local. Leagues dropped on 2026-11-03 ([ADR 0016](adr/0016-sync.md)) |
 | Team | Solo for v1, contributors after v1 → automated PR security gates + mandatory human review |
 | License | AGPL-3.0 (code). Data keeps its own licenses (CC BY-SA, LGPL, Arphic…) |
 | Visual direction | Calm editorial base (direction A) with discreet gamification |
@@ -222,7 +222,7 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M7 — Backend & shared library.** Hono API, Drizzle migrations, Better Auth (email code + Google + GitHub, TOTP for the admin), submissions with CC BY-SA 4.0 (or CC0 for AI stories) attestation, level estimate at moderation, admin moderation UI with statements of reasons, public library endpoints (AI badge + origin), notice and action (DSA), age gate 15+, account export/delete, retention jobs (logs 6 months, inactive accounts 2 years, décret 2021-1362 records), privacy policy + legal notices + terms + records of processing + DPIA, Cloudflare deploy (see Deployment), PWA on Cloudflare Pages custom domain. See [ADR 0015](adr/0015-backend-and-shared-library.md). *Exit: submit → admin approve → visible to another device; export/delete verified end to end.*
 
-**M8 — Sync + leagues.** Append-only review-log sync + LWW card content sync, server recomputes XP from logs, weekly leagues opt-in (pseudonyms, predefined avatars, no messaging), plausibility caps (local-first cannot fully prevent cheating — documented). *Exit: two devices converge, league table from server-computed XP.*
+**M8 — Sync.** Opt-in sync between devices: gzip chunks stored opaquely in D1, reviews merged by id, last-writer-wins with deletions for the rest, on-device merge. No leagues, no server XP. See [ADR 0016](adr/0016-sync.md). *Exit: two devices converge, deletions included.*
 
 **M9 — lang-en core.** Wiktionary (kaikki) EN glosses + FR translations, IPA, CEFR-J levels, wordfreq, Kokoro audio, en prompts. Generic modules work for en; zh-only modules hidden. *Exit: contract tests green for both packs, full learning loop in en.*
 
