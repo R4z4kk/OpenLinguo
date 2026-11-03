@@ -1,3 +1,4 @@
+import type { WordKey } from "@openlinguo/core";
 import { Dexie, type Table, type Transaction } from "dexie";
 import type { Database } from "./database.ts";
 
@@ -25,6 +26,9 @@ export type SyncEntity = {
   pending: 0 | 1;
 };
 
+export const knownMarkKey = ({ headword, readingKey }: WordKey): string =>
+  JSON.stringify([headword, readingKey]);
+
 /** Transactions whose writes are applied from another device, so not recorded. */
 const silenced = new WeakSet<Transaction>();
 
@@ -32,15 +36,24 @@ const record = (table: SyncedTable, key: string, deleted: boolean, tx: Transacti
   if (silenced.has(tx) || tx.idbtrans.mode === "versionchange") return;
   if (!tx.storeNames.includes("syncEntities"))
     throw new Error(`Write to ${table} outside a sync-aware transaction`);
-  const entity: SyncEntity = {
-    id: `${table}:${key}`,
-    table,
-    key,
-    changedAt: Date.now(),
-    deleted,
-    pending: 1,
-  };
-  void tx.table<SyncEntity, string>("syncEntities").put(entity);
+  const id = `${table}:${key}`;
+  const entities = tx.table<SyncEntity, string>("syncEntities");
+  // Past what the device has seen: a clock behind would otherwise lose everywhere but here.
+  void entities
+    .get(id)
+    .then((previous) =>
+      entities.put({
+        id,
+        table,
+        key,
+        changedAt: Math.max(Date.now(), (previous?.changedAt ?? -1) + 1),
+        deleted,
+        pending: 1,
+      }),
+    )
+    .catch(() => {
+      tx.abort();
+    });
 };
 
 type Tracker = {
@@ -104,10 +117,7 @@ const trackers = (db: Database): readonly Tracker[] => [
     { updating: true, deleting: true },
     (row) => row.updatedAt,
   ),
-  tracker("knownMarks", db.knownMarks, (row) => JSON.stringify([row.headword, row.readingKey]), {
-    updating: true,
-    deleting: true,
-  }),
+  tracker("knownMarks", db.knownMarks, knownMarkKey, { updating: true, deleting: true }),
 ];
 
 /**
