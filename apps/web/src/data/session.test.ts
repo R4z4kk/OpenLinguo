@@ -152,6 +152,10 @@ describe("loadSession", () => {
         db.deckWords.add({ ...subject, id: deckWordId(MY_WORDS, subject), deckId: MY_WORDS }),
       );
     await seedLearning(db, () => putCards(db, [note, lost]));
+    // Started: a new note with no content is not queued at all.
+    await seedLearning(db, () =>
+      db.cards.update(idOf(lost, "recognition"), { phase: "review", due: NOON.at }),
+    );
     const content = { characters: "不存在", pinyin: "bù cún zài", meaning: "made up" };
     await seedLearning(db, () =>
       db.notes.add({ ...content, id: note.note, updatedAt: 0, provenance: null }),

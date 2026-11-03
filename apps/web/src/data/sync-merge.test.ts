@@ -12,7 +12,7 @@ import {
 } from "@openlinguo/core";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredNote } from "./database.ts";
-import { deleteDeck, fileWord, introduceWord } from "./decks.ts";
+import { deleteDeck, fileWord, introduceWord, nextNewReadings, putCards } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
 import { decodeChunk, encodeChunk, SYNC_FORMAT, SYNC_VERSION, SyncChunk } from "./sync-chunk.ts";
 import { SYNCED_TABLES, type SyncEntity } from "./sync-entities.ts";
@@ -733,6 +733,174 @@ describe("applyChunk", () => {
         expect(await db.cards.get(recall(CAT).id)).toBeDefined();
       }
       expect(await tables(a)).toEqual(await tables(b));
+    });
+  });
+
+  describe("a note filed in decks across devices", () => {
+    const KEY = { note: NOTE.id };
+    const FILING = deckWordId(LARGE, KEY);
+    const queue = (db: Database) => nextNewReadings(db, REFERENTIAL, 10);
+
+    /** As an Anki import does: one note, keyed by its guid, filed in a deck of each device. */
+    const importNote = (db: Database, deckId: string, name: string, time: number) =>
+      seed(db, time, async () => {
+        await db.decks.add({ id: deckId, name });
+        await db.notes.put(NOTE);
+        await db.deckWords.put({ ...KEY, id: deckWordId(deckId, KEY), deckId });
+        await putCards(db, [KEY]);
+      });
+
+    /** A imports into its deck, B into its own, and A deletes its deck before hearing of B's. */
+    const deletedElsewhere = async () => {
+      const a = await device();
+      const b = await device();
+      await importNote(a, SMALL, "Package", 100);
+      const chunkImport = await send(a);
+      await importNote(b, LARGE, "Package", 110);
+      const chunkB = await send(b);
+      at(200);
+      expect((await deleteDeck(a, SMALL, REFERENTIAL)).ok).toBe(true);
+      const deletion = await send(a);
+      return { a, b, chunksA: [chunkImport, deletion], chunkB };
+    };
+
+    const expectKept = async (a: Database, b: Database): Promise<void> => {
+      for (const db of [a, b]) {
+        expect(await db.notes.toArray()).toEqual([NOTE]);
+        expect((await db.deckWords.toArray()).map(({ id }) => id)).toEqual([FILING]);
+        expect((await db.decks.toArray()).map(({ id }) => id)).toEqual([LARGE]);
+        expect(await queue(db)).toEqual({ ok: true, value: [KEY] });
+      }
+      expect(await snapshot(a)).toEqual(await snapshot(b));
+    };
+
+    it.each([
+      ["the device holding the filing hears first", [0, 1, 2]],
+      ["the other device hears first", [1, 0, 2]],
+      ["the note comes back before its filing", [0, 2, 1]],
+    ] as const)("a note deleted while filed elsewhere comes back: %s", async (_name, steps) => {
+      const { a, b, chunksA, chunkB } = await deletedElsewhere();
+      // 0: B hears of the deletion and sends again. 1: A hears of B's deck. 2: A hears B's answer.
+      let answer: SyncChunk | null = null;
+      for (const step of steps) {
+        if (step === 0) {
+          await deliver(b, chunksA);
+          expect(await b.syncEntities.get(`notes:${NOTE.id}`)).toMatchObject({
+            changedAt: 201,
+            deleted: false,
+            pending: 1,
+          });
+          answer = await send(b);
+        } else if (step === 1) {
+          await deliver(a, [chunkB]);
+        } else if (answer !== null) {
+          await deliver(a, [answer]);
+        }
+      }
+      await expectKept(a, b);
+    });
+
+    it("a filing whose note has not come back queues no ghost", async () => {
+      const { a, chunkB } = await deletedElsewhere();
+      await deliver(a, [chunkB]);
+      expect((await a.deckWords.toArray()).map(({ id }) => id)).toEqual([FILING]);
+      expect(await a.notes.count()).toBe(0);
+      expect(await queue(a)).toEqual({ ok: true, value: [] });
+    });
+
+    it("every device holding the filing sends the note again, and they agree", async () => {
+      const { a, b, chunksA, chunkB } = await deletedElsewhere();
+      const third = await device();
+      await deliver(third, [chunkB, ...chunksA]);
+      await deliver(b, chunksA);
+      const fromThird = await send(third);
+      const fromB = await send(b);
+      await deliver(a, [chunkB, fromThird, fromB]);
+      await deliver(b, [fromThird]);
+      await deliver(third, [fromB]);
+      await expectKept(a, b);
+      expect(await snapshot(third)).toEqual(await snapshot(a));
+      expect(await third.syncEntities.where("pending").equals(1).count()).toBe(0);
+    });
+
+    it("a later real deletion by the device holding the filing deletes it everywhere", async () => {
+      const { a, b, chunksA, chunkB } = await deletedElsewhere();
+      await deliver(b, chunksA);
+      await deliver(a, [chunkB, await send(b)]);
+      at(300);
+      expect((await deleteDeck(b, LARGE, REFERENTIAL)).ok).toBe(true);
+      await deliver(a, [await send(b)]);
+      for (const db of [a, b]) {
+        expect(await db.notes.count()).toBe(0);
+        expect(await db.deckWords.count()).toBe(0);
+        expect(await db.syncEntities.where("pending").equals(1).count()).toBe(0);
+      }
+      expect(await snapshot(a)).toEqual(await snapshot(b));
+    });
+
+    it("a deletion split with the note first leaves one unfiled note, the same on both", async () => {
+      const { a, b, chunksA, chunkB } = await deletedElsewhere();
+      await deliver(b, chunksA);
+      await deliver(a, [chunkB, await send(b)]);
+      at(300);
+      expect((await deleteDeck(b, LARGE, REFERENTIAL)).ok).toBe(true);
+      const chunk = await send(b);
+      const notes = { ...chunk, entities: chunk.entities.filter((e) => e.table === "notes") };
+      const others = { ...chunk, entities: chunk.entities.filter((e) => e.table !== "notes") };
+      await deliver(a, [notes, others]);
+      await deliver(b, [await send(a)]);
+      for (const db of [a, b]) {
+        expect(await db.notes.count()).toBe(1);
+        expect(await db.deckWords.count()).toBe(0);
+        expect(await queue(db)).toEqual({ ok: true, value: [] });
+      }
+      expect(await snapshot(a)).toEqual(await snapshot(b));
+    });
+
+    it("a note with no live filing is deleted everywhere", async () => {
+      const a = await device();
+      const b = await device();
+      await importNote(a, SMALL, "Package", 100);
+      await deliver(b, [await send(a)]);
+      at(200);
+      expect((await deleteDeck(a, SMALL, REFERENTIAL)).ok).toBe(true);
+      await deliver(b, [await send(a)]);
+      for (const db of [a, b]) {
+        expect(await db.notes.count()).toBe(0);
+        expect(await db.deckWords.count()).toBe(0);
+      }
+      expect(await b.syncEntities.get(`notes:${NOTE.id}`)).toMatchObject({
+        changedAt: 200,
+        deleted: true,
+        pending: 0,
+      });
+      expect(await snapshot(a)).toEqual(await snapshot(b));
+    });
+
+    it("a filing with no note to send lets the deletion stand", async () => {
+      const db = await device();
+      await deliver(db, [
+        {
+          format: SYNC_FORMAT,
+          version: SYNC_VERSION,
+          reviews: [],
+          entities: [
+            {
+              table: "deckWords",
+              key: deckWordId(MY_WORDS, KEY),
+              changedAt: 100,
+              deleted: false,
+              value: { deckId: MY_WORDS, ...KEY },
+            },
+            { table: "notes", key: NOTE.id, changedAt: 200, deleted: true, value: null },
+          ],
+        },
+      ]);
+      expect(await db.syncEntities.get(`notes:${NOTE.id}`)).toMatchObject({
+        changedAt: 200,
+        deleted: true,
+        pending: 0,
+      });
     });
   });
 

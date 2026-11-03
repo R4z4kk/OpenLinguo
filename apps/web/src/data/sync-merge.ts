@@ -88,8 +88,22 @@ const applyCard = async (
   }
 };
 
+/** Whether this device still files a note it holds: a deletion made elsewhere did not know. */
+const keepsNote = async (db: Database, id: string): Promise<boolean> =>
+  (await db.deckWords.where("note").equals(id).count()) > 0 && (await db.notes.get(id)) != null;
+
 const applyNote = async (db: Database, incoming: Row<"notes">): Promise<void> => {
   if (!(await decide(db, incoming))) return;
+  if (incoming.value === null && (await keepsNote(db, incoming.key))) {
+    // A note cannot be rebuilt from the log: it is kept and sent again, past the deletion.
+    await db.syncEntities.put({
+      ...applied(incoming),
+      changedAt: incoming.changedAt + 1,
+      deleted: false,
+      pending: 1,
+    });
+    return;
+  }
   await db.syncEntities.put(applied(incoming));
   if (incoming.value === null) await db.notes.delete(incoming.key);
   else await db.notes.put(incoming.value);
@@ -182,8 +196,10 @@ const replayCards = async (db: Database, replays: ReadonlySet<string>): Promise<
 
 /**
  * Merges a chunk from another device, or reads back one of this device's, in one transaction with
- * the cursor. Reviews merge by id; other entities keep the latest change. Each row follows from
- * what is known of it alone, so nothing local and no order of chunks can part devices (ADR 0016).
+ * the cursor. Reviews merge by id; other entities keep the latest change, but for a deletion of a
+ * note this device still files. Each row follows from what is known of it, so no order of chunks
+ * can part devices. One exception: a restored backup that brings back a deck deleted elsewhere
+ * leaves that deck's contents different until a word next changes (ADR 0016).
  */
 export const applyChunk = async (
   db: Database,
