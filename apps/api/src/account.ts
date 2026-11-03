@@ -19,6 +19,7 @@ import {
   securityEvent,
   session,
   submission,
+  syncChunk,
   user,
   verification,
 } from "./schema.ts";
@@ -59,6 +60,11 @@ export const accountDeletion = async (
     .select({ total: count() })
     .from(hostingRecord)
     .where(eq(hostingRecord.userId, userId));
+  const [chunks] = await db
+    .select({ total: count() })
+    .from(syncChunk)
+    .where(eq(syncChunk.userId, userId));
+  const synced = (chunks?.total ?? 0) > 0;
   const kept = published === "remove" ? [] : texts.filter(({ status }) => status === "approved");
   const keptIds = kept.map(({ id }) => id);
   const deleted = texts.filter(({ id }) => !keptIds.includes(id));
@@ -84,6 +90,7 @@ export const accountDeletion = async (
   }
   const operations = [
     ...deleted.map(({ id }) => hostingRow(userId, id, "delete", connection)),
+    ...(synced ? [hostingRow(userId, "sync:all", "delete", connection)] : []),
     ...(published === "keep-anonymous"
       ? kept
           .filter(({ attribution }) => attribution !== null)
@@ -91,7 +98,7 @@ export const accountDeletion = async (
       : []),
   ];
   if (operations.length > 0) writes.push(db.insert(hostingRecord).values(operations));
-  if (texts.length > 0 || (recorded?.total ?? 0) > 0) {
+  if (texts.length > 0 || synced || (recorded?.total ?? 0) > 0) {
     const sealed = {
       email: found.email,
       emailUntil: new Date(now.getTime() + SEALED_EMAIL_DAYS * DAY_MS),

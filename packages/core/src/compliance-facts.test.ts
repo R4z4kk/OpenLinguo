@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
   CONTACT_EMAIL,
+  D1_FREE_DATABASE_SIZE,
   DEPLOY_TOKEN,
   DPF_STATUS,
   DPIA_REVIEW,
@@ -38,6 +39,13 @@ describe("compliance facts", () => {
     expect(Date.parse(DEPLOY_TOKEN.value) - Date.parse(DEPLOY_TOKEN.checkedOn)).toBeLessThanOrEqual(
       366 * DAY,
     );
+  });
+
+  test("the D1 size limit is read again within a year: check the D1 limits page, then move checkedOn and reviewBy", () => {
+    expect(Date.now()).toBeLessThan(Date.parse(D1_FREE_DATABASE_SIZE.reviewBy));
+    expect(
+      Date.parse(D1_FREE_DATABASE_SIZE.reviewBy) - Date.parse(D1_FREE_DATABASE_SIZE.checkedOn),
+    ).toBeLessThanOrEqual(366 * DAY);
   });
 
   test("the contact address is filled in before the legal pages ship", () => {

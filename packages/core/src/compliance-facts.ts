@@ -71,3 +71,11 @@ export const DPIA_REVIEW = {
   checkedOn: "2026-10-31",
   reviewBy: "2027-10-31",
 } as const satisfies DatedFact;
+
+/** The D1 database size the sync store stays under (ADR 0016); `SYNC_LIMITS.databaseBytes` keeps a margin. */
+export const D1_FREE_DATABASE_SIZE = {
+  value: "500 MB",
+  source: "https://developers.cloudflare.com/d1/platform/limits/",
+  checkedOn: "2026-11-03",
+  reviewBy: "2027-11-03",
+} as const satisfies DatedFact;
