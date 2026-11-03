@@ -308,6 +308,7 @@ const learningTables = (db: Database) => [
   db.knownMarks,
   db.lexicon,
   db.resolutions,
+  db.syncEntities,
 ];
 
 export const exportBackup = (

@@ -23,6 +23,7 @@ import { fileWord, putCards, type LocalTime } from "./decks.ts";
 import { todayActivity } from "./daily-goal.ts";
 import type { Practice } from "./practice.ts";
 import { gradeItem, loadSession, type ReviewItem } from "./session.ts";
+import { seedLearning } from "./test-support.ts";
 
 const entry = (simplified: string, readingKey: string, hsk2025: number): StoredEntry => ({
   id: `${simplified}\t${readingKey}`,
@@ -147,10 +148,14 @@ describe("loadSession", () => {
     const lost = { note: "lost" };
     await fileWord(db, MY_WORDS, TIAN, true, "hsk-2025");
     for (const subject of [note, lost])
-      await db.deckWords.add({ ...subject, id: deckWordId(MY_WORDS, subject), deckId: MY_WORDS });
-    await putCards(db, [note, lost]);
+      await seedLearning(db, () =>
+        db.deckWords.add({ ...subject, id: deckWordId(MY_WORDS, subject), deckId: MY_WORDS }),
+      );
+    await seedLearning(db, () => putCards(db, [note, lost]));
     const content = { characters: "不存在", pinyin: "bù cún zài", meaning: "made up" };
-    await db.notes.add({ ...content, id: note.note, updatedAt: 0, provenance: null });
+    await seedLearning(db, () =>
+      db.notes.add({ ...content, id: note.note, updatedAt: 0, provenance: null }),
+    );
     const audio = deckWordId(MY_WORDS, note);
     await db.audio.add({ id: audio, type: "audio/mpeg", data: new ArrayBuffer(4) });
 
@@ -200,8 +205,14 @@ describe("tone cards", () => {
     lastReviewDay: "2026-10-15",
   });
   const startCards = async (word: WordKey, types: readonly CardType[], due: number) => {
-    await db.cards.bulkPut(
-      newCards("zh", word, types).map((card) => ({ ...card, ...NEW_CARD_STATE, ...started(due) })),
+    await seedLearning(db, () =>
+      db.cards.bulkPut(
+        newCards("zh", word, types).map((card) => ({
+          ...card,
+          ...NEW_CARD_STATE,
+          ...started(due),
+        })),
+      ),
     );
   };
 
@@ -277,15 +288,17 @@ describe("writing and typing cards", () => {
     medians: [[[0, 0]]],
   });
   const start = async (word: WordKey, types: readonly CardType[], due: number) => {
-    await db.cards.bulkPut(
-      newCards("zh", word, types).map((card) => ({
-        ...card,
-        ...NEW_CARD_STATE,
-        phase: "review" as const,
-        due,
-        firstReviewDay: "2026-10-15",
-        lastReviewDay: "2026-10-15",
-      })),
+    await seedLearning(db, () =>
+      db.cards.bulkPut(
+        newCards("zh", word, types).map((card) => ({
+          ...card,
+          ...NEW_CARD_STATE,
+          phase: "review" as const,
+          due,
+          firstReviewDay: "2026-10-15",
+          lastReviewDay: "2026-10-15",
+        })),
+      ),
     );
   };
 

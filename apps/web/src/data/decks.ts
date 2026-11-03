@@ -109,13 +109,17 @@ export const createDeck = (
   name: string,
 ): Promise<Result<StoredDeck, DeckNameFailure>> =>
   guarded(() =>
-    db.transaction("rw", db.decks, async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
-      const checked = await checkName(db, name, null);
-      if (!checked.ok) return checked;
-      const deck = { id: crypto.randomUUID(), name: checked.value };
-      await db.decks.add(deck);
-      return ok(deck);
-    }),
+    db.transaction(
+      "rw",
+      [db.decks, db.syncEntities],
+      async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
+        const checked = await checkName(db, name, null);
+        if (!checked.ok) return checked;
+        const deck = { id: crypto.randomUUID(), name: checked.value };
+        await db.decks.add(deck);
+        return ok(deck);
+      },
+    ),
   );
 
 export const renameDeck = (
@@ -124,15 +128,19 @@ export const renameDeck = (
   name: string,
 ): Promise<Result<StoredDeck, DeckNameFailure>> =>
   guarded(() =>
-    db.transaction("rw", db.decks, async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
-      const deck = await db.decks.get(deckId);
-      if (deck == null) return err({ kind: "unknown-deck", deckId });
-      const checked = await checkName(db, name, deckId);
-      if (!checked.ok) return checked;
-      const renamed = { ...deck, name: checked.value };
-      await db.decks.put(renamed);
-      return ok(renamed);
-    }),
+    db.transaction(
+      "rw",
+      [db.decks, db.syncEntities],
+      async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
+        const deck = await db.decks.get(deckId);
+        if (deck == null) return err({ kind: "unknown-deck", deckId });
+        const checked = await checkName(db, name, deckId);
+        if (!checked.ok) return checked;
+        const renamed = { ...deck, name: checked.value };
+        await db.decks.put(renamed);
+        return ok(renamed);
+      },
+    ),
   );
 
 /**
@@ -202,7 +210,7 @@ export const introduceWord = (
   types: readonly CardType[] = PAIRED_TYPES,
 ): Promise<Result<null, ReviewLogFailure>> =>
   guarded(() =>
-    db.transaction("rw", [db.cards, db.reviews], async () => {
+    db.transaction("rw", [db.cards, db.reviews, db.syncEntities], async () => {
       const stored = await putCards(db, [subject], [], types);
       return stored.ok ? ok(null) : stored;
     }),
@@ -222,7 +230,7 @@ export const fileWord = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews, db.entries, db.audio],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.entries, db.audio, db.syncEntities],
       async (): Promise<Result<null, DeckFailure>> => {
         if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
           return err({ kind: "unknown-deck", deckId });
@@ -250,7 +258,7 @@ export const fileWords = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.syncEntities],
       async (): Promise<Result<null, DeckFailure>> => {
         if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
           return err({ kind: "unknown-deck", deckId });
@@ -276,7 +284,7 @@ export const deleteDeck = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.entries, db.audio, db.notes],
+      [db.decks, db.deckWords, db.cards, db.entries, db.audio, db.notes, db.syncEntities],
       async (): Promise<Result<null, DeckFailure>> => {
         if ((await db.decks.get(deckId)) == null) return err({ kind: "unknown-deck", deckId });
         const words = await db.deckWords.where("deckId").equals(deckId).toArray();

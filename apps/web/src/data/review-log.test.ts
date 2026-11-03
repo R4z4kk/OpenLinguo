@@ -15,6 +15,7 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase, type Database, type StoredCard } from "./database.ts";
 import { recordReview } from "./review-log.ts";
+import { seedLearning } from "./test-support.ts";
 
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
@@ -53,7 +54,7 @@ let counter = 0;
 beforeEach(async () => {
   counter += 1;
   db = openDatabase(`review-log-test-${String(counter)}`);
-  await db.cards.bulkAdd([RECOGNITION, RECALL]);
+  await seedLearning(db, () => db.cards.bulkAdd([RECOGNITION, RECALL]));
 });
 
 describe("recordReview", () => {

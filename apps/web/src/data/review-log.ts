@@ -38,7 +38,7 @@ export const recordReview = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.cards, db.reviews],
+      [db.cards, db.reviews, db.syncEntities],
       async (): Promise<Result<CardState, ReviewLogFailure>> => {
         const card = await db.cards.get(review.cardId);
         if (card == null) return err({ kind: "unknown-card", cardId: review.cardId });
