@@ -22,7 +22,7 @@ const Host = ({ country }: { readonly country: string }) => (
 export const LEGAL_NOTICE: Readonly<Record<Language, LegalDocument>> = {
   fr: {
     title: "Mentions légales",
-    updated: "2026-10-31",
+    updated: "2026-11-04",
     sections: [
       {
         id: "publisher",
@@ -52,8 +52,8 @@ export const LEGAL_NOTICE: Readonly<Record<Language, LegalDocument>> = {
           <>
             <Host country="États-Unis" />
             <Paragraph>
-              La base de données des comptes et de la bibliothèque est stockée et traitée dans
-              l’Union européenne.
+              La base de données des comptes, de la bibliothèque et de la synchronisation est
+              stockée et traitée dans l’Union européenne.
             </Paragraph>
           </>
         ),
@@ -117,7 +117,7 @@ export const LEGAL_NOTICE: Readonly<Record<Language, LegalDocument>> = {
   },
   en: {
     title: "Legal notice",
-    updated: "2026-10-31",
+    updated: "2026-11-04",
     sections: [
       {
         id: "publisher",
@@ -144,8 +144,8 @@ export const LEGAL_NOTICE: Readonly<Record<Language, LegalDocument>> = {
           <>
             <Host country="United States" />
             <Paragraph>
-              The database of accounts and of the library is stored and processed in the European
-              Union.
+              The database of accounts, of the library and of sync is stored and processed in the
+              European Union.
             </Paragraph>
           </>
         ),

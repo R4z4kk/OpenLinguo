@@ -1,6 +1,6 @@
-# DPIA: accounts, shared library and leagues
+# DPIA: accounts, shared library and sync
 
-Data protection impact assessment (GDPR art. 35) of the server added in M7 ([ADR 0015](../adr/0015-backend-and-shared-library.md), #280) and of the weekly leagues planned for M8. It follows the CNIL PIA method: context, fundamental principles, risks, validation. Every source below was read on its official site on 2026-10-31. This is not legal advice. When a change touches accounts, the library, the hosting records or the leagues, update this document in the same pull request.
+Data protection impact assessment (GDPR art. 35) of the server added in M7 ([ADR 0015](../adr/0015-backend-and-shared-library.md), #280) and of sync between devices, added in M8 ([ADR 0016](../adr/0016-sync.md), #36, #296). It follows the CNIL PIA method: context, fundamental principles, risks, validation. Every source below was read on its official site on 2026-10-31, unless it gives a later date. This is not legal advice. When a change touches accounts, the library, the hosting records or sync, update this document in the same pull request.
 
 ## Sources
 
@@ -8,15 +8,15 @@ Method:
 
 - CNIL, [PIA, la méthode](https://www.cnil.fr/sites/default/files/atoms/files/cnil-pia-1-fr-methode.pdf), [les modèles](https://www.cnil.fr/sites/default/files/atoms/files/cnil-pia-2-fr-modeles.pdf) and [les bases de connaissances](https://www.cnil.fr/sites/default/files/atoms/files/cnil-pia-3-fr-basesdeconnaissances.pdf), February 2018 edition: the four steps, the three feared events, the severity and likelihood scales (section 1.4 and 1.5 of the knowledge base).
 - CNIL, [Ce qu'il faut savoir sur l'AIPD](https://www.cnil.fr/fr/ce-quil-faut-savoir-sur-lanalyse-dimpact-relative-la-protection-des-donnees-aipd) (2017-10-18): "au moins deux des neuf critères"; send the DPIA to the CNIL when the residual risk stays high.
-- WP29, [Guidelines on DPIA](https://ec.europa.eu/newsroom/just/document.cfm?doc_id=47711), WP248 rev.01 (revised 2017-10-04, endorsed by the [EDPB](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/data-protection-impact-assessments-high-risk-processing_en) on 2018-05-25): the nine criteria; "a processing meeting two criteria would require a DPIA" in most cases; publishing a summary is good practice.
+- WP29, [Guidelines on DPIA](https://ec.europa.eu/newsroom/just/document.cfm?doc_id=47711), WP248 rev.01 (revised 2017-10-04, endorsed by the [EDPB](https://www.edpb.europa.eu/our-work-tools/our-documents/guidelines/data-protection-impact-assessments-high-risk-processing_en) on 2018-05-25), read again on 2026-11-04: the nine criteria; "a processing meeting two criteria would require a DPIA" in most cases; a DPIA "is carried out nonetheless" when it is not clear; publishing a summary is good practice. Quoted in the [screening](dpia-screening.md).
 - Not used: the EDPB [Template for DPIA](https://www.edpb.europa.eu/system/files/2026-05/edpb_dpia_template_explainer_2026_v1_en.pdf), version 1.0 of 2026-03-10, adopted "for public consultation", not final.
 
 Law and guidance:
 
 - [GDPR](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32016R0679): art. 35(1) "prior to the processing", 35(7) minimum content, 35(9) views of data subjects, 35(11) review "at least when there is a change of the risk", 36(1) prior consultation; art. 8(1) applies "Where point (a) of Article 6(1) applies"; recitals 38 (children "merit specific protection") and 75.
-- CNIL délibérations [2018-327](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000037559521) (2018-10-11, list of processing that requires a DPIA, "caractère non-exhaustif") and [2019-118](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000039248939) (2019-09-12, list of exempted processing): no entry matches.
-- [Décret 2021-1362](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000044228912) (text last updated 2021-10-21, in force on 2026-10-31): art. 2, 3, 5, 7, 8.
-- [LCEN art. 6](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000801164) (version in force since 2026-08-26): V.A "détiennent et conservent" the data identifying "quiconque a contribué" to a content; V.B, one year and €250,000.
+- CNIL délibérations [2018-327](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000037559521) (2018-10-11, list of processing that requires a DPIA, "caractère non-exhaustif") and [2019-118](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000039248939) (2019-09-12, list of exempted processing), read again on 2026-11-04: no entry matches.
+- [Décret 2021-1362](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000044228912) (text last updated 2021-10-21, read again on 2026-11-04, shown in force on 2026-11-03): art. 2, 3, 5, 6, 7, 8. Art. 6 data (the content's id, the nature, date and time of the operation, the author's identifier) are kept "en cas d'injonction du Premier ministre": the current one is [décret 2026-920](https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054945173), for one year. Its title speaks of a "contenu mis en ligne", and nothing in it says whether private storage is covered.
+- [LCEN art. 6](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000801164) (version in force since 2026-08-26, read again on 2026-11-04): I.2, a host is a provider of the services of DSA art. 3(g)(iii); V.A "détiennent et conservent" the data identifying "quiconque a contribué" to a content; V.B, one year and €250,000.
 - CNIL recommendations on minors: [1](https://www.cnil.fr/fr/recommandation-1-encadrer-la-capacite-dagir-des-mineurs-en-ligne) (2021-06-01, marked "en cours de mise à jour"), [6](https://www.cnil.fr/fr/recommandation-6-renforcer-linformation-et-les-droits-des-mineurs-par-le-design) (2021-06-09), [7](https://www.cnil.fr/fr/recommandation-7-verifier-lage-de-lenfant-et-laccord-des-parents-dans-le-respect-de-sa-vie-privee) (2021-06-01), [8](https://www.cnil.fr/fr/recommandation-8-prevoir-des-garanties-specifiques-pour-proteger-linteret-de-lenfant) (2021-06-09).
 - [Code civil art. 1148](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000032041055) (version of 2016-10-01): a person unable to contract may still conclude "les actes courants autorisés par la loi ou l'usage".
 - [Loi 2023-566 art. 7](https://www.legifrance.gouv.fr/jorf/article_jo/JORFARTI000047799540): in force "à une date fixée par décret", none published; [décision 2026-911 DC](https://www.legifrance.gouv.fr/cons/id/CONSTEXT000054952977) (2026-08-14) struck down art. 1 of loi 2026-813. No French age threshold for online services is in force.
@@ -29,19 +29,20 @@ Provider facts (Cloudflare D1 `eu` jurisdiction, DPAs, Data Privacy Framework st
 
 ## Why a DPIA
 
-| WP248 criterion | M7 (accounts, library) | M8 (leagues) |
+| WP248 criterion | M7 (accounts, library) | M8 (sync) |
 |---|---|---|
-| 1. Evaluation or scoring | No: the level estimate scores texts, not people | **Yes**: learners ranked by XP |
+| 3. Systematic monitoring | No | No, the closest call: hosting records are systematic, but nothing uses them to observe anyone |
+| 4. Sensitive or highly personal data | No | **Treated as yes**: typed notes and deck names, and review times with their time zone, which the maintainer could read |
 | 7. Vulnerable data subjects | **Yes**: accounts from 15 | **Yes** |
 | Others | No ([screening](dpia-screening.md)) | No |
 
-M7 alone meets one criterion and no entry of the CNIL lists, so a DPIA is not mandatory for it. The M8 leagues meet two: a DPIA is required before they process any data. M8 reuses the M7 accounts, so one assessment covers both, written now as WP248 asks ("as early as is practicable"), and completed with the real M8 design before leagues open (#296).
+M7 alone meets one criterion and no entry of the CNIL lists, so a DPIA is not mandatory for it. Sync is treated as meeting two, because WP248 asks for a DPIA when it is not clear: one is required before sync processes any data. M8 reuses the M7 accounts, so one assessment covers both. It was first written in M7 for the weekly leagues then planned, which ranked learners; leagues were dropped on 2026-11-03 ([ADR 0016](../adr/0016-sync.md)), and this version assesses sync as built.
 
 ## 1. Context
 
 ### 1.1 Overview
 
-OpenLinguo is a free, open-source, local-first app for learning Chinese. Everything works on the device without an account. M7 adds optional accounts, used to submit texts to a shared library moderated by the maintainer; M8 adds sync between devices and weekly leagues, both opt-in.
+OpenLinguo is a free, open-source, local-first app for learning Chinese. Everything works on the device without an account. M7 adds optional accounts, used to submit texts to a shared library moderated by the maintainer; M8 adds sync between devices, opt-in and only with an account.
 
 - **Controller**: the maintainer, a natural person, non-professional publisher (LCEN art. 1-1 II). No processor of their own staff, no DPO (art. 37 not met).
 - **Processors**: Cloudflare, Inc. (Pages Functions, D1 database in the `eu` jurisdiction, cron Worker), under its DPA, part of the self-serve terms; Lettermint B.V. (transactional email, email data processed in the EU), under the DPA that is part of its terms.
@@ -59,20 +60,21 @@ OpenLinguo is a free, open-source, local-first app for learning Chinese. Everyth
 | Sign-in codes (hashed) and verification tokens | People who ask for a code | Server | Lettermint (the code, in the email) | 10 minutes; purged at expiry |
 | TOTP secret and backup codes | The admin; account holders who turn it on | Server | None | Until turned off or account deleted |
 | Security events: sign-ins, failures, codes sent, admin actions, with IP address, user agent, account id | Everyone who signs in or asks for a code; the admin | Server | Maintainer, Cloudflare | 6 months |
-| Rate-limit counters: IP address and route | Every caller of the auth routes | Server | Cloudflare | Purged after their window |
+| Rate-limit counters: IP address and route for the auth routes, IP address for notices, account id for sync uploads | Every caller of the auth routes, whoever sends a notice, learners who sync | Server | Cloudflare | Purged by the daily job once older than 1 hour |
 | Submissions: title, text, origin, licence, attribution (pseudonym or anonymous), attestation version and time, status, estimated band | Submitters | The person; the admin's estimate | Maintainer; the public once approved (text, attribution) | Pending and rejected: deleted with the account. Published: kept under their licence; at deletion the person chooses name, anonymous (default) or removal |
 | Decisions: statements of reasons (DSA art. 17) | Submitters | Admin | Submitter by email | 1 year after the decision |
 | Notices: text concerned, reasons, name and email (optional for child sexual abuse material) | Anyone, with no account | The person | Maintainer; the submitter gets the statement of reasons, not the notice | 1 year after the decision |
-| Hosting records (décret 2021-1362): per creation, edit or deletion of a submission, account id, submission id, operation, IP address, source port when Cloudflare passes it, time | Submitters | Server | Readable by the daily jobs and by the admin export for an authority only | 1 year |
-| Sealed identity (décret 2021-1362) when an account that submitted is deleted: email, pseudonym | Former submitters | Account | As hosting records | Email 5 years, pseudonym 1 year |
+| Hosting records (décret 2021-1362): per creation, edit or deletion of a submission, per sync upload and per deletion of synced data, account id, submission id (`sync:<chunk id>` or `sync:all` for sync), operation, IP address, HTTP and TLS versions, source port when Cloudflare passes it, time. Reading a chunk writes none | Submitters, learners who sync | Server | Readable by the daily jobs and by the maintainer's query for a request only | 1 year |
+| Sealed identity (décret 2021-1362) when an account that holds a text, a sync chunk or a hosting record is deleted: email, pseudonym | Former submitters, former learners who synced | Account | As hosting records | Email 5 years, pseudonym 1 year |
 | Erasure log: ids of what was erased, time | Deleted accounts | Server | None | 8 days, re-applied after a Time Travel restore |
-| M8: synced cards and append-only review log | Learners who turn sync on | Device | Maintainer (operations only), Cloudflare | Until sync is turned off and the data deleted, or the account deleted |
-| M8: league name, predefined avatar, weekly XP, league placement | Learners who join leagues | Server, from the synced log | Members of the same league | 12 weeks; deleted when leaving |
+| Sync chunks, gzip, not end-to-end encrypted: reviews (card, grade, date, time and time zone offset, scheduler version, daily goal, whether the word was done for the day), cards, personal decks and their words, notes, « Je connais » marks, deletions of these; account id, size, date | Learners who turn sync on | Device | The account's own devices, Cloudflare. The maintainer could decode them, and does so only for an incident or an official request | Until sync is turned off on any device or the account deleted. A value edited or deleted on a device stays in its older chunk until then |
 | Rights and support requests | People who write | The person | Maintainer | Until answered, then a minimal proof for 5 years |
 
-Not on the server: learning data unless sync is on, voice, journal, AI key and AI requests, Wikidata lookups ([data map](data-map.md)).
+Not on the server: learning data unless sync is on and, even then, voice, audio, journal, challenges, texts, settings, AI key and AI requests, Wikidata lookups ([data map](data-map.md)).
 
 **Life cycle.** A person signs in with a code by email, Google or GitHub; right after the first sign-in they answer the age step, and every route except that step and deletion answers 403 until they do. They may submit a local text; the admin reviews it in `/admin` with a TOTP-verified session, approves it or rejects it with a statement of reasons. Anyone may report a published text without an account. The person may export their data as JSON and delete their account at any time. The cron Worker purges each category daily and records each run; `/api/health` answers 503 when a job fails or is late.
+
+A person with an account may turn sync on in Profile › Account, after an explanation of what goes to the server, who could read it and what is kept. It is never prompted after a session and sends no notification. The device then sends what changed as gzip chunks, at app start, at the end of a session and when the network comes back, at most every 5 minutes, and on « Sync now »; each upload writes a hosting record. Another device of the account reads the chunks and merges them on the device. Turning off, from any device, deletes the chunks for all of them, writes one hosting record and keeps the devices' data. Signing out stops sync on that device and deletes nothing from the server.
 
 **Supports.** The PWA in the browser; Cloudflare Pages Functions (Hono, Better Auth, Drizzle) on `openlinguo.razakk.fr`; one D1 database, `eu` jurisdiction, with D1 Time Travel (7 days) as the only backup; the cron Worker; Lettermint's email API; the maintainer's Cloudflare and GitHub accounts and the `production` deploy environment; the maintainer's mailbox for requests.
 
@@ -82,9 +84,9 @@ Not on the server: learning data unless sync is on, voice, journal, AI key and A
 
 | Requirement | Measure | Assessment |
 |---|---|---|
-| Purposes (art. 5(1)(b)) | Accounts to submit and moderate library texts, to sync and to join leagues; security; legal retention of hosts; answering requests. No advertising, profiling, analytics or resale | Adequate |
-| Legal basis (art. 6) | Contract, art. 6(1)(b): account, library, sync, leagues. Legitimate interest, 6(1)(f): security events, rate limits. Legal obligation, 6(1)(c): hosting records and sealed identity (LCEN art. 6 V.A, décret 2021-1362), rights requests. No processing rests on consent, so art. 8 GDPR and art. 45 Loi Informatique et Libertés do not apply; what counts is a minor's capacity to contract (Code civil art. 1148), which the CNIL accepts from 15 under four conditions (recommendation 1, see 2.2) | Adequate |
-| Minimisation (art. 5(1)(c)) | No password, no birth date, no real name, no photo, no free-text profile; the account name and image from Google or GitHub are blanked at creation, provider tokens dropped; the age step keeps only the date of the declaration; hosting records keep only what is already collected ("dans la mesure où elles sont collectées", décret art. 8); a notice needs no account; leagues show a name, an avatar and weekly XP, never times | Adequate; #292 adds anonymous attribution by default, #295 a league name separate from the library pseudonym |
+| Purposes (art. 5(1)(b)) | Accounts to submit and moderate library texts and to sync; security; legal retention of hosts; answering requests. No advertising, profiling, analytics or resale | Adequate |
+| Legal basis (art. 6) | Contract, art. 6(1)(b): account, library, sync. Legitimate interest, 6(1)(f): security events, rate limits. Legal obligation, 6(1)(c): hosting records and sealed identity (LCEN art. 6 V.A, décret 2021-1362), rights requests. For sync this rests on a strict reading: whether private storage falls under the décret is not settled by its text, and the maintainer chose on 2026-11-03 to apply it, as the penalty is criminal and personal, and removing records later is possible where adding them after the fact is not. If legal advice ever says it is out of scope, the obligation falls away and these records and identities are purged ([ADR 0016](../adr/0016-sync.md)). No processing rests on consent, so art. 8 GDPR and art. 45 Loi Informatique et Libertés do not apply; what counts is a minor's capacity to contract (Code civil art. 1148), which the CNIL accepts from 15 under four conditions (recommendation 1, see 2.2) | Adequate, on that reading for sync's records |
+| Minimisation (art. 5(1)(c)) | No password, no birth date, no real name, no photo, no free-text profile; the account name and image from Google or GitHub are blanked at creation, provider tokens dropped; the age step keeps only the date of the declaration; hosting records keep only what is already collected ("dans la mesure où elles sont collectées", décret art. 8); a notice needs no account; sync leaves the journal, challenges, texts, settings, audio, voice and AI key on the device, stores no device id and writes no record when reading. Against it: chunks are readable by the maintainer, and with no compaction a value edited or deleted stays in its older chunk until the store is deleted (R9, R10) | Adequate; #292 adds anonymous attribution by default |
 | Accuracy (art. 5(1)(d)) | Email verified by the code or the provider; pseudonym editable (#272); a published text's attribution follows the person's choice | Adequate |
 | Storage limitation (art. 5(1)(e)) | The retention column above, enforced by the daily jobs (#278), each run recorded and a failure turning `/api/health` to 503; security events at the low end of the CNIL range; inactivity at the CNIL reference of 2 years | Adequate |
 
@@ -92,12 +94,12 @@ Not on the server: learning data unless sync is on, voice, journal, AI key and A
 
 | Requirement | Measure | Assessment |
 |---|---|---|
-| Information (art. 12, 13) | Privacy notice and terms in French and English written for a 15-year-old reader, with the essentials shown at sign-up and at the moment they matter (#279, CNIL recommendation 6); the deletion screen says what is kept and why (#277); the league explainer before joining (#295) | Planned |
+| Information (art. 12, 13) | Privacy notice and terms in French and English written for a 15-year-old reader, with the essentials shown at sign-up and at the moment they matter (#279, CNIL recommendation 6); the deletion screen says what is kept and why (#277); the sync section explains what goes, who could read it and what is kept before it is turned on (#296) | Done |
 | Consent (art. 7, 8) | Not used. Emails carry no tracking pixel, so none is needed for them | Not applicable |
-| Minors | The four conditions of CNIL recommendation 1: a service adapted to minors (no messaging, ads, profiling, uploaded images or public profile; leagues opt-in); strict data protection (this assessment); clear information (#279); a way for parents to ask for their child's account to be deleted (#279 in the notice, #290 for the procedure). Age by self-declaration in neutral words, nothing preselected (recommendations 6 and 7), see risk R7 | Planned |
-| Access and portability (art. 15, 20) | `GET /api/account/export`: account, sessions, submissions, decisions, as JSON (#277) | Planned |
-| Rectification and erasure (art. 16, 17) | Pseudonym in Profile (#272); deletion cascades at once, with the choice for published texts (#277); erasure log re-applied after a restore, as the EDPB asks; requests by email answered within one month (#290) | Planned |
-| Restriction and objection (art. 18, 21) | Objection to security events is open (legitimate interest) and stated in the notice (#279); hosting records rest on a legal obligation, so art. 21 does not apply to them | Planned |
+| Minors | The four conditions of CNIL recommendation 1: a service adapted to minors (no messaging, ads, profiling, uploaded images or public profile; sync is opt-in, never prompted after a session, sends no notification and shows nothing to anyone else, which keeps out the pressure and the link to a public name that a ranking would have brought); strict data protection (this assessment); clear information (#279); a way for parents to ask for their child's account to be deleted (#279 in the notice, #290 for the procedure). Age by self-declaration in neutral words, nothing preselected (recommendations 6 and 7), see risk R7 | Done |
+| Access and portability (art. 15, 20) | `GET /api/account/export`: account, sessions, submissions, decisions, security events, as JSON (#277). The file also holds the sync chunks, decoded on the device. Hosting records and sealed identities are given by email ([requests runbook](requests.md)) | Done |
+| Rectification and erasure (art. 16, 17) | Pseudonym in Profile (#272); deletion cascades at once, chunks included, with the choice for published texts (#277); turning sync off deletes the chunks at once; a chunk cannot be corrected, so a learner corrects on a device, and the older value goes when the store is deleted (R10); erasure log re-applied after a restore, as the EDPB asks, and a restore deletes every chunk, as a turn-off is not in that log ([breach procedure](breach-procedure.md)); requests by email answered within one month (#290) | Done |
+| Restriction and objection (art. 18, 21) | Objection to security events is open (legitimate interest) and stated in the notice (#279); hosting records rest on a legal obligation, so art. 21 does not apply to them. Sync is stopped by turning it off | Done |
 | Processors (art. 28) | Cloudflare and Lettermint DPAs, checked and dated in #279 and on 2026-11-01 ([sub-processors](sub-processors.md)) | Done |
 | Transfers (art. 44–49) | D1 runs and stores data in the EU; Cloudflare, Inc. is a U.S. company on the Data Privacy Framework list, its DPA falls back on the SCCs; Google and GitHub are chosen by the learner and act as independent controllers. Statuses dated with a CI check in #279 | Done |
 
@@ -112,14 +114,15 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 | On the data | No passwords; codes hashed, 10 minutes, 3 attempts; codes capped per IP address and per email address (10 a day, counted by a keyed hash of the address) | #270, #289 |
 | | Cookies `Secure; HttpOnly; SameSite=Lax`; origin check on state-changing requests | #270 |
 | | Admin role granted by command only, TOTP mandatory on every admin route; admin actions logged | #271 |
-| | Hosting records in their own table, readable only by the jobs and the admin export for an authority; every export kept with its request in the mailbox. A direct read that answers no request appears in the Cloudflare audit log with who and when, without the SQL (exercise of #293), and the monthly check looks for it | #273, #277, #290, #291 |
+| | Hosting records in their own table, readable only by the jobs and the maintainer's query for a request; every export kept with its request in the mailbox. A direct read that answers no request appears in the Cloudflare audit log with who and when, without the SQL (exercise of #293), and the monthly check looks for it | #273, #277, #290, #291 |
 | | Plain-text submissions, 20,000 characters, 5 pending per account; every text approved before publication | #273, #274 |
+| | Sync routes behind the session, each account reading only its own chunks, which the routes do not decode; each device validates a chunk before applying it; 256 KiB per chunk, 10 MiB per account, 120 chunks an hour per account, no new chunk past 400 MB of database | #36 |
 | On the system | TLS, HSTS, strict CSP, API on the PWA's own origin; D1 in the `eu` jurisdiction; secrets as encrypted Pages secrets | #268, #269 |
 | | Deploy only from `main` with the maintainer's approval; Cloudflare token scoped to Pages, D1 and Workers Scripts, given to the deploy steps only; no preview deployment sharing the database | #269 |
 | | Daily purges recorded, `/api/health` 503 on failure, Uptime Kuma alert | #278 |
 | | D1 Time Travel, 7 days; erasure log re-applied after a restore | #269, #277 |
 | Organisation | Sign-ups closed by default (`SIGNUPS_OPEN=false`) until the measures below are merged | #281 |
-| | [Cloudflare and GitHub accounts secured](accounts-security.md), direct database reads only for a recorded reason | #291 |
+| | [Cloudflare and GitHub accounts secured](accounts-security.md), direct database reads, `sync_chunk` included, only for a recorded reason | #291, #296 |
 | | Breach procedure covering the server, notice template for teenagers | #293 |
 | | [Requests runbook](requests.md) for rights, parents' (account holder told, deleted after 14 days unless 15 or over) and authorities' requests; moderation runbook | #290, #279 |
 
@@ -127,24 +130,24 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 
 **R1. Illegitimate access to data.**
 
-- Impacts: a teenager's email linked to their pseudonym and published texts; unwanted messages or phishing aimed at them; an approximate location from IP addresses; sealed data of former accounts exposed.
+- Impacts: a teenager's email linked to their pseudonym and published texts; unwanted messages or phishing aimed at them; an approximate location from IP addresses; sealed data of former accounts exposed. With sync, also their review times and time zone, deck names and notes, and an IP address per upload for a year (R9).
 - Threats and sources: guessing sign-in codes from many IP addresses (external attacker); takeover of the maintainer's Cloudflare or GitHub account, whose D1 console reads every table without the app's TOTP; a flaw in the API or a dependency; theft of the admin session; misuse by the maintainer; a processor.
-- Severity 2: no special category, no financial data, but minors, which raises it from 1.
+- Severity 2: no special category expected, no financial data, but minors, which raises it from 1. Re-assessed with sync: it adds a routine and rough places over time, and free text that could hold anything, but not the journal, texts or voice. Still 2, at the top of that level.
 - Likelihood 2 before the new measures: no password to steal, TOTP for the admin, but codes capped per IP address only and the dashboard as a path around the TOTP. With #289, #290 and #291: 1.
 - **Residual: severity 2, likelihood 1. Acceptable.**
 
 **R2. Unwanted modification of data.**
 
-- Impacts: a text published under someone else's pseudonym; a pseudonym changed or an account deleted by an intruder; decisions altered; in M8, league XP falsified.
+- Impacts: a text published under someone else's pseudonym; a pseudonym changed or an account deleted by an intruder; decisions altered; with sync, an intruder adding chunks that change a learner's decks, notes and progress on every device, or deleting the store.
 - Threats and sources: takeover of a learner's mailbox (outside the service) or of the admin account; a flaw in the API.
-- Severity 2. Likelihood 1: every text is approved before it is published, admin routes need TOTP, XP is recomputed by the server from the log with plausibility caps (M8).
+- Severity 2. Likelihood 1: every text is approved before it is published, admin routes need TOTP; a sync chunk reaches only its own account, each device validates it, and nothing else depends on it. A chunk that is valid but false is not detected: the server cannot check what it stores.
 - **Residual: severity 2, likelihood 1. Acceptable.**
 
 **R3. Loss of data.**
 
-- Impacts: an account to create again; library texts gone from the server, while imported copies stay on devices; hosting records lost, which is a legal failure of the controller rather than a harm to the person; the erasure log lost, which could bring back erased data after a restore.
+- Impacts: an account to create again; library texts gone from the server, while imported copies stay on devices; hosting records lost, which is a legal failure of the controller rather than a harm to the person; the erasure log lost, which could bring back erased data after a restore; sync chunks gone, which matters to a learner who has lost their other device.
 - Threats and sources: a failed migration, a deletion by mistake, loss of the Cloudflare account, an outage.
-- Severity 1: learning data lives on the device, an account holds little. Likelihood 2: Time Travel keeps only 7 days and there is no other copy, a choice of ADR 0015.
+- Severity 1: learning data lives on the device, an account holds little, and a device that still holds its data sends it again once sync is turned on; the terms say sync does not replace a backup file. Likelihood 2: Time Travel keeps only 7 days and there is no other copy, a choice of ADR 0015.
 - **Residual: severity 1, likelihood 2. Accepted.** #291 lowers the account-loss path.
 
 ### 3.3 Other risks to rights and freedoms
@@ -155,29 +158,33 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 - Measures: attribution anonymous by default and a warning next to the pseudonym (#292); a checklist line for the submitter's own data, then rejection with reasons (#292, #274); notice and action for what slips through (#276).
 - **Residual: severity 3, likelihood 1. Acceptable.**
 
-**R5. Leagues: comparison and pressure (M8).** A ranking can push a teenager to overuse the app or discourage them; a table that showed activity would reveal routines.
-
-- Severity 2. Likelihood 3 without measures: a ranking is an engagement feature by nature.
-- Measures (#295): off by default, joined after a plain explainer, never prompted; no notification about rank; weekly XP only, never times or streaks; the league can be hidden; leaving deletes the entries; caps never exclude anyone automatically.
-- **Residual: severity 2, likelihood 2. Acceptable, to be re-assessed with the real design (#296).**
-
-**R6. Linking a league to the library (M8).** If the league shows the library pseudonym, other members can link a teenager's activity to their public texts, or recognise a classmate.
-
-- Severity 2. Likelihood 2. Measure: a league name separate from the library attribution, random by default (#295).
-- **Residual: severity 2, likelihood 1. Acceptable.**
+R5 and R6 assessed the leagues, dropped on 2026-11-03 ([ADR 0016](../adr/0016-sync.md)). Their numbers are not reused. What they taught is kept for sync: off by default, never prompted, no notification, and nothing shown to anyone else, so it creates no pressure and no link to the library pseudonym.
 
 **R7. A child under 15 gets through the age step.** The CNIL notes that declarative checks are "trop aisément contournés" (recommendation 7), and the Commission does not count self-declaration as age assurance under art. 28 DSA (para 52), which does not bind a micro platform (para 8).
 
-- Severity 2: the service has no messaging, ads, profiling or public profile; the person can at worst publish a moderated text or, in M8, appear under a random name in a league.
+- Severity 2: the service has no messaging, ads, profiling or public profile; the person can at worst publish a moderated text or store their own learning data with sync, which then keeps their email for 5 years after deletion (R8).
 - Likelihood 3.
 - Measures: neutral wording with nothing preselected; « moins de 15 ans » deletes the account at once; a channel for parents to have an account deleted (#279, #290). A stronger check (an ID document, a face estimate) would collect more data than the whole account, which recommendation 7 ("strictement nécessaire") and the minimisation principle rule out for a service of this risk; the Conseil constitutionnel also struck down a general age requirement with no safeguards for the checks it implied (2026-911 DC).
 - **Residual: severity 2, likelihood 3. Acceptable.**
 
-**R8. Data that outlives the deletion of an account.** Décret 2021-1362 keeps, for an account that submitted, its email for 5 years, its pseudonym and the connection records for 1 year. A person may believe everything is gone.
+**R8. Data that outlives the deletion of an account.** Décret 2021-1362 keeps, for an account that submitted, its email for 5 years, its pseudonym and the connection records for 1 year. The strict reading extends this to sync: an account that holds a sync chunk or a hosting record when it is deleted keeps its identity too, even if it never published anything and only turned sync on once in the past year. A person may believe everything is gone. The synced data itself is deleted, whichever reading applies.
 
-- Severity 2 if those data leak. Likelihood 1: a separate table, no reading path in the app, every export kept with its request (#290), only accounts that submitted, only data already collected.
-- Measures: the deletion screen and the notice say what is kept, why and how long (#277, #279).
+- Severity 2 if those data leak. Likelihood 1: a separate table, no reading path in the app, every export kept with its request (#290), only data already collected. Re-assessed with sync: many more people are concerned than submitters, which raises what a leak of that table would reach, not how likely it is.
+- If legal advice says private storage is out of scope, keeping these identities has no legal obligation behind it. The maintainer accepted that on 2026-11-03: they can be purged later, while a record not made cannot be added.
+- Measures: the sync section, the deletion screen and the notice say what is kept, why and how long (#277, #279, #296); the notice says the décret does not settle the point.
 - **Residual: severity 2, likelihood 1. Acceptable.**
+
+**R9. Sync keeps a record of a learner's routine.** Review times with their time zone, for as long as sync stays on, and an IP address per upload for a year, show when a teenager studies and roughly where from. Chunks are not end-to-end encrypted: that needs a passphrase a learner can lose, in an app with no passwords. So the maintainer, or anyone who reaches the database (R1), could read them.
+
+- Severity 2: a routine and rough places, not precise location or special categories, but of minors. Likelihood 1.
+- Measures: opt-in after a plain explanation; the routes do not decode chunks and the app has no path to read them; reading writes no record and the server stores no device id; direct reads only for an incident or an official request, with the monthly audit log check, which shows that a query ran, not what it read (#291). This control is organisational: nothing technical stops the maintainer from reading a chunk.
+- **Residual: severity 2, likelihood 1. Acceptable.**
+
+**R10. More on the server than the learner thinks.** With no compaction, a note, a deck name or a mark edited or deleted on a device stays in its older chunk, and in the export, until the store is deleted. A Time Travel restore can bring back a store that was turned off. Turning sync on for another account on the same device sends what came from the previous account too.
+
+- Severity 1: the learner's own learning data, reachable by their account and under R9. Likelihood 3: every edit does it, by design.
+- Measures: the notice says so; turning off deletes everything at once; the screen warns before another account takes a device's data; a restore deletes every chunk ([breach procedure](breach-procedure.md)).
+- **Residual: severity 1, likelihood 3. Accepted.**
 
 ## 4. Validation
 
@@ -187,8 +194,8 @@ Scales of the CNIL knowledge base, 1 to 4. Severity: 1 negligible, 2 limited, 3 
 |---|---|---|---|---|
 | 4 maximum | | | | |
 | 3 significant | R4 | | | |
-| 2 limited | R1, R2, R6, R8 | R5 | R7 | |
-| 1 negligible | | R3 | | |
+| 2 limited | R1, R2, R8, R9 | | R7 | |
+| 1 negligible | | R3 | R10 | |
 
 No residual risk is high. Prior consultation of the CNIL (art. 36(1)) is not needed.
 
@@ -204,8 +211,7 @@ Owner of every measure: the maintainer. Cost: S is a day or less, M a few days.
 | Anonymous attribution by default, identity warning, checklist line | #292 | S | Before sign-ups open |
 | Breach procedure for the server, notice for teenagers | #293 | S | Before sign-ups open |
 | DPIA review date checked in CI | #294 | S | With #279 |
-| Leagues private by default | #295 | M | Before leagues open |
-| DPIA completed with the M8 design | #296 | S | Before leagues open |
+| Compliance documents, notice and terms updated for sync | #296 | S | Before the promotion that ships sync |
 
 Already tracked: age step, security events and sign-ups flag (#270), admin TOTP (#271), hosting records (#273), moderation and statements of reasons (#274), notice and action (#276), export, deletion and erasure log (#277), retention jobs (#278), legal pages, notice and compliance documents (#279). #281 opens sign-ups only once #279, #280 and #289 to #293 are merged.
 
@@ -214,11 +220,13 @@ Already tracked: age step, security events and sign-ups flag (#270), admin TOTP 
 ### 4.3 Decision and review
 
 - **Accounts and library (M7): validated**, on condition that #289 to #293 are merged before sign-ups open, which #281 enforces.
-- **Leagues (M8): not yet validated.** The measures of #295 are required; leagues stay off in production until #296 completes this assessment with the real design.
+- **Sync (M8):** merging the pull request of #296 records the maintainer's validation of this assessment of sync. It must be merged before the promotion that ships sync, so the assessment comes before the processing (art. 35(1)).
+- **Leagues:** dropped on 2026-11-03 ([ADR 0016](../adr/0016-sync.md)), so never validated and never processed.
 - The maintainer's validation is recorded by merging the pull request that adds or changes this document.
 - **Review by 2027-10-31** (`DPIA_REVIEW` in `packages/core/src/compliance-facts.ts`: a unit test fails from that date, #294), or earlier when:
   - the risk changes (art. 35(11)): a new category of data, a new recipient, a change of host or of retention;
-  - leagues or sync are designed (#296);
+  - what sync stores or who can read it changes, such as new synced data, compaction, encryption or another use of review times;
+  - legal advice or a text settles whether private storage falls under décret 2021-1362;
   - the CNIL publishes the update of its recommendations on minors (recommendation 1 is "en cours de mise à jour");
   - a French age threshold for online services enters into force (loi 2023-566 or a new law);
   - accounts grow enough to reconsider "large scale" (WP248 criterion 5).

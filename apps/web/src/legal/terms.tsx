@@ -1,4 +1,5 @@
 import { TERMS_CLAUSES } from "@openlinguo/core/moderation";
+import { SYNC_LIMITS } from "@openlinguo/core/sync";
 import type { ReactNode } from "react";
 import type { Language } from "@/i18n/language";
 import { Contact, External, List, Paragraph, type LegalDocument } from "./legal-page";
@@ -7,6 +8,7 @@ const BY_SA = "https://creativecommons.org/licenses/by-sa/4.0/deed.fr";
 const BY_SA_EN = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.en";
 const CC0 = "https://creativecommons.org/publicdomain/zero/1.0/deed.fr";
 const CC0_EN = "https://creativecommons.org/publicdomain/zero/1.0/legalcode.en";
+const SYNC_SPACE_MB = SYNC_LIMITS.accountBytes / (1024 * 1024);
 
 /** Rule 3.1 has no entry in `TERMS_CLAUSES`: a statement cites the law itself. */
 const Rule = ({
@@ -29,7 +31,7 @@ const Rule = ({
 export const TERMS: Readonly<Record<Language, LegalDocument>> = {
   fr: {
     title: "Conditions d’utilisation",
-    updated: "2026-10-31",
+    updated: "2026-11-04",
     sections: [
       {
         id: "service",
@@ -38,8 +40,8 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
           <Paragraph>
             OpenLinguo est une application gratuite et libre pour apprendre le chinois. Elle
             fonctionne entièrement sans compte. Un compte, facultatif, sert à envoyer des textes à
-            la bibliothèque partagée, que tout le monde peut lire et importer. Il faut avoir 15 ans
-            ou plus pour avoir un compte.
+            la bibliothèque partagée, que tout le monde peut lire et importer, et à synchroniser vos
+            appareils. Il faut avoir 15 ans ou plus pour avoir un compte.
           </Paragraph>
         ),
       },
@@ -53,6 +55,21 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "Un compte est personnel. Protégez l’accès à votre boîte e-mail : elle donne accès au compte.",
               "Vous pouvez supprimer votre compte à tout moment dans Profil › Compte.",
               "Si un compte envoie plusieurs fois des contenus illégaux (règle 3.1), nous pouvons le suspendre, avec les raisons par e-mail.",
+            ]}
+          />
+        ),
+      },
+      {
+        id: "sync",
+        heading: "Synchronisation",
+        body: (
+          <List
+            items={[
+              "Elle est facultative et demande un compte. Sans elle, tout continue de marcher sur votre appareil.",
+              "Le serveur garde vos données synchronisées pour vos autres appareils, jusqu’à ce que vous désactiviez la synchronisation ou que le compte soit supprimé. La page Confidentialité dit ce qui part, qui pourrait le lire et ce que la loi nous fait garder.",
+              "« Désactiver et supprimer du serveur » les supprime pour tous vos appareils. Elles restent sur vos appareils.",
+              `Votre espace est de ${String(SYNC_SPACE_MB)} Mo, avec un nombre d’envois limité par heure. Si l’espace ou le serveur est plein, vos nouveaux changements ne partent plus, mais rien n’est perdu sur votre appareil.`,
+              "Elle ne remplace pas un fichier de sauvegarde : si le serveur perd vos données, seuls vos appareils les ont encore.",
             ]}
           />
         ),
@@ -215,7 +232,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
   },
   en: {
     title: "Terms of use",
-    updated: "2026-10-31",
+    updated: "2026-11-04",
     sections: [
       {
         id: "service",
@@ -224,7 +241,8 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
           <Paragraph>
             OpenLinguo is a free, open-source app for learning Chinese. It works entirely without an
             account. An optional account is for sending texts to the shared library, which anyone
-            can read and import. You must be 15 or older to have an account.
+            can read and import, and for syncing your devices. You must be 15 or older to have an
+            account.
           </Paragraph>
         ),
       },
@@ -238,6 +256,21 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "An account is personal. Protect access to your mailbox: it gives access to the account.",
               "You can delete your account at any time in Profile › Account.",
               "If an account sends illegal content several times (rule 3.1), we may suspend it, with the reasons by email.",
+            ]}
+          />
+        ),
+      },
+      {
+        id: "sync",
+        heading: "Sync",
+        body: (
+          <List
+            items={[
+              "It is optional and needs an account. Without it, everything keeps working on your device.",
+              "The server keeps your synced data for your other devices, until you turn sync off or the account is deleted. The Privacy page says what goes, who could read it and what the law makes us keep.",
+              "« Turn off and delete from the server » deletes it for all your devices. It stays on your devices.",
+              `Your space is ${String(SYNC_SPACE_MB)} MB, with a limited number of uploads per hour. If the space or the server is full, your new changes no longer go, but nothing is lost on your device.`,
+              "It does not replace a backup file: if the server loses your data, only your devices still have it.",
             ]}
           />
         ),

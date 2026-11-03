@@ -68,7 +68,7 @@ export const DEPLOY_TOKEN = {
 export const DPIA_REVIEW = {
   value: "docs/compliance/dpia.md",
   source: "docs/compliance/dpia.md#43-decision-and-review",
-  checkedOn: "2026-10-31",
+  checkedOn: "2026-11-04",
   reviewBy: "2027-10-31",
 } as const satisfies DatedFact;
 

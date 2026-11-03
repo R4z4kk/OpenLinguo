@@ -79,7 +79,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 
 - Mobile: bottom tabs Today / Learn / Read / Profile. From 1024 px: sidebar.
 - **Today** runs the composed session from one button: reviews → new words → tone drill → 5-sentence challenge.
-- Gamification stays quiet: streak and XP chips in the Today header, league line under the session. No loss messages, streak freeze, notifications opt-in only. Leagues use pseudonyms and predefined avatars.
+- Gamification stays quiet: streak and XP chips in the Today header. No loss messages, streak freeze, notifications opt-in only.
 
 ## Screen patterns
 
@@ -89,7 +89,7 @@ All fonts are self-hosted; no third-party font CDN at runtime (GDPR). The CJK fo
 - **Pronunciation studio**: reference (dashed) and user (solid) pitch curves, per-syllable text result, sandhi hint, on-device processing notice, "Je ne peux pas parler maintenant".
 - **Writing studio**: five contexts, AI correction shown as a labeled proposal ("Généré par IA") with inserted characters underlined, accept or keep, optional card creation.
 - **Reader**: unknown words dotted-underlined, tapped word outlined, word sheet at the bottom; see [Reader (M6)](#reader-m6).
-- **Profile**: streak, retention, words learned, time; league table with the user's row highlighted; settings for AI provider, display, data and privacy (export, delete).
+- **Profile**: streak, retention, words learned, time; settings for AI provider, display, data and privacy (export, delete).
 - **Stats heatmap**: 12 weeks of learning days in three shades, `sunken` (no review), `border-strong` (reviews) and `ink` (daily goal met), each ≥ 3:1 from its neighbour in both themes (checked in CI). The same numbers follow as a table in a disclosure (WCAG 1.4.11 lets a graph rely on "a table that follows the graph").
 
 ## Writing and typing (M4)

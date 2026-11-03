@@ -107,7 +107,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 
 ### Principles
 - "Ink and tone": calm, clean, modern; monochrome ink interface, color reserved for the tones, generous whitespace, flat surfaces, hanzi as the visual hero. Full spec in [`docs/design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md).
-- Gamification present but quiet: XP, streak, league badge in a slim header; no confetti walls, no guilt copy, streak freeze, opt-in notifications only. No dark patterns.
+- Gamification present but quiet: XP and streak in a slim header; no confetti walls, no guilt copy, streak freeze, opt-in notifications only. No dark patterns.
 - Mobile-first: bottom tabs on mobile, sidebar from 1024px. One primary action per screen.
 - Copy FR/EN, sentence case, encouraging, never shaming.
 
@@ -121,11 +121,11 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **Today**: one "Start" button runs the composed session (due reviews → new cards → tone drill → 5-sentence task), progress bar, daily goal.
 - **Learn**: free access to decks, dictionary, pronunciation studio, writing studio, typing.
 - **Read**: library (personal, AI, global), reader.
-- **Profile**: stats, achievements, league, settings (AI provider, audio, display, privacy, data export/delete).
+- **Profile**: stats, achievements, settings (AI provider, audio, display, privacy, data export/delete).
 - Onboarding without account: target language → level (self-assessment or short placement) → daily goal → optional interests (personal vocabulary).
 
 ### Key screens to mock up before UI code
-Today, review card (recognition / recall / listening / tone / writing variants), word page (decomposition tree), pronunciation studio (pitch overlay), writing studio (5 sentences + correction diff), reader with popup, profile/league.
+Today, review card (recognition / recall / listening / tone / writing variants), word page (decomposition tree), pronunciation studio (pitch overlay), writing studio (5 sentences + correction diff), reader with popup, profile.
 
 ## Accessibility (WCAG 2.2 AA)
 
@@ -135,7 +135,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
   - Tone information never by color only (SC 1.4.1).
   - Stroke writing is a path-based drag gesture → single-pointer, keyboard-operable alternative: write on paper, reveal the stroke order, self-grade (SC 2.5.1, 2.5.7, 2.1.1).
   - Every mic exercise has a non-speech alternative ("can't speak now") and stays skippable without penalty.
-  - No mandatory time limits: timed typing/league challenges adjustable or disableable (SC 2.2.1).
+  - No mandatory time limits: timed typing challenges adjustable or disableable (SC 2.2.1).
   - Targets ≥ 24×24 px (SC 2.5.8), visible unobscured focus (SC 2.4.7 / 2.4.11), reflow at 320 px and 200% text.
   - All audio has a text equivalent; animations respect reduced motion.
 - Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), manual keyboard + NVDA + VoiceOver checklist per milestone.
@@ -147,7 +147,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 
 | Obligation | Source | Applies to us | Implementation |
 |---|---|---|---|
-| Lawful basis: contract / legitimate interest | GDPR art. 6(1)(b), 6(1)(f) (CNIL official text) | Yes | Account, sync, leagues = contract; security logs = legitimate interest |
+| Lawful basis: contract / legitimate interest | GDPR art. 6(1)(b), 6(1)(f) (CNIL official text) | Yes | Account, sync = contract; security logs = legitimate interest |
 | Minor's consent: 16 by default, member states down to 13; France 15, below 15 joint consent with a parent | GDPR art. 8(1); Loi Informatique et Libertés art. 45 (Légifrance, in force 2019-06-01) | Only for consent-based processing (none in v1) | Accounts 15+ by design choice, self-declared (CNIL recommendations 1 and 7), parents can ask for deletion, information written in plain language. No French "digital majority" is in force: loi 2023-566 has no decree, art. 1 of loi 2026-813 was struck down (décision 2026-911 DC); checked 2026-10-31 |
 | Records of processing; <250-employee exemption does not apply to non-occasional processing | GDPR art. 30(5) | Yes | `docs/compliance/records-of-processing.md` |
 | Breach notification to CNIL within 72 h | GDPR art. 33(1) | Yes | `docs/compliance/breach-procedure.md` |
@@ -156,7 +156,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 | Inactive accounts: 2 years after last user action as the reference | CNIL guidance (commercial-activities reference, non-binding) | Yes (analogy) | Notice email, then deletion at 2 years of inactivity |
 | Legal notices: natural person → name, address, phone; publication director; host name/address/phone; a non-professional publisher may give only the host's details (II) | LCEN art. 1-1 (created by SREN law 2024-449, in force 2024-05-23) | Yes | `/legal` page: anonymous non-professional publisher, Cloudflare named as host (ADR 0015) |
 | Hosting service: notice and action, statements of reasons, terms, points of contact | DSA arts 11, 12, 14, 16, 17, 18 (micro regime); LCEN art. 6 | Yes, for the shared library (checked 2026-10-31) | Report form, statement of reasons for every rejection or removal, `/terms`, moderation runbook (ADR 0015) |
-| Host's identification data of contributors | LCEN art. 6 V, décret 2021-1362 | Yes, as far as collected | IP and time of each submission operation 1 year; email 5 years and pseudonym 1 year after an account that submitted is deleted (ADR 0015) |
+| Host's identification data of contributors | LCEN art. 6 V, décret 2021-1362 | Yes, as far as collected | IP and time of each submission operation, sync upload and deletion of synced data 1 year; email 5 years and pseudonym 1 year after an account that submitted or synced is deleted (ADR 0015, ADR 0016) |
 | AI interaction disclosure (providers) | AI Act art. 50(1), applies from 2026-08-02 (art. 113) | Yes, we build the AI-integrated system | Visible "AI" label on every AI feature and output |
 | Machine-readable marking of synthetic text (providers); standard-editing assistance exempt | AI Act art. 50(2); Commission guidelines C(2026) 5054 (2026-07-20) | Yes for generated stories (M6); corrections and translations exempt as standard editing, single words outside (checked 2026-10-19, ADR 0012) | `origin: "ai"` + provider, model, prompt version, date stored and exposed in exports and library API; gap analysis against the code of practice |
 | AI-generated public-interest text disclosure (deployers) | AI Act art. 50(4) | Unlikely (learning content), human-reviewed library anyway | Badge kept on library items |
@@ -166,13 +166,13 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 
 ### Measures
 
-- **Data map**: on-device only → cards, review logs, recordings, journal, AI key (never reaches our servers). Server → account (email, pseudonym, OAuth ids, age declaration; no password), sessions, submissions (text + attribution + license attestation), host records of submissions (IP, décret 2021-1362), notices and statements of reasons, synced logs, league XP, security events (IP).
-- **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
+- **Data map**: on-device only → recordings, journal, AI key (never reaches our servers); cards, review logs, decks, notes and « Je connais » marks too, unless the learner turns on sync. Server → account (email, pseudonym, OAuth ids, age declaration; no password), sessions, submissions (text + attribution + license attestation), host records of submissions and sync uploads (IP, décret 2021-1362), notices and statements of reasons, sync chunks, security events (IP).
+- **Legal bases**: contract (account, sync opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
 - **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, the speech-recognition model and its WebAssembly runtime served from our own origin (decided in #119, ADR 0007).
 - **BYOK AI**: notice at setup naming the provider, its privacy policy and training opt-out; one notice before the first AI call of any kind saying what each AI button sends (#207); data flows device → provider on the learner's click, never through us. OpenLinguo is most likely not a controller of these transmissions (ADR 0012).
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
-- **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
+- **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). No messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
 - **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Lettermint transactional email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening and DPIA (#280), privacy policy, legal notices.
 

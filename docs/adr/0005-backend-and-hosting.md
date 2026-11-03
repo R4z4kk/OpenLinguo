@@ -5,7 +5,7 @@
 
 ## Context
 
-A server is needed for the shared library (user submissions, admin moderation), and later for sync and leagues. The project must stay self-hostable and TypeScript-only.
+A server is needed for the shared library (user submissions, admin moderation), and later for sync and leagues (leagues dropped on 2026-11-03 ([ADR 0016](0016-sync.md))). The project must stay self-hostable and TypeScript-only.
 
 ## Decision
 
