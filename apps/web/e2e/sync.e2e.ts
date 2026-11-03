@@ -21,7 +21,7 @@ const USER = {
 
 type Chunk = { readonly id: number; readonly bytes: Buffer };
 
-// `vite preview` has no Functions: one store answers both devices, as the sync routes would.
+// `vite preview` has no Functions: one store answers both devices, following `apps/api/src/sync.ts`.
 type FakeApi = { readonly chunks: Chunk[]; nextId: number; reads: number };
 
 const json = (route: Route, status: number, body: unknown, headers: Record<string, string> = {}) =>
@@ -161,6 +161,7 @@ const lastSyncToday = new RegExp(
 );
 
 const openSync = async (page: Page): Promise<void> => {
+  await page.bringToFront();
   await page.goto("/profile/account");
   await expect(syncOf(page).getByRole("heading", { name: authEn.sync.title })).toBeVisible({
     timeout: 90_000,
@@ -186,6 +187,7 @@ const syncNow = async (page: Page, api: FakeApi): Promise<void> => {
   await press(syncOf(page).getByRole("button", { name: authEn.sync.syncNow }));
   await expect.poll(() => api.reads).toBeGreaterThan(before);
   await expect(status).toHaveText(lastSyncToday);
+  await expect(syncOf(page).getByRole("alert")).toHaveCount(0);
   await noViolations(page);
 };
 
@@ -193,6 +195,7 @@ const myWords = (page: Page): Locator =>
   mainOf(page).getByRole("checkbox", { name: en.decks.myWords });
 
 const openWord = async (page: Page): Promise<Locator> => {
+  await page.bringToFront();
   await page.goto("/learn/dictionary/你好");
   const checkbox = myWords(page);
   await expect(checkbox).toBeEnabled({ timeout: 90_000 });
