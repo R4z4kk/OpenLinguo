@@ -17,12 +17,9 @@ Code is AGPL-3.0. Datasets keep their own licenses. Share-alike datasets combine
 | Make Me a Hanzi `dictionary.txt` | zh character decomposition, radicals, etymology hints | LGPL-3.0-or-later | [skishore/makemeahanzi](https://github.com/skishore/makemeahanzi/blob/master/COPYING) | Verified — imported from commit `bddc96d` (9,574 characters), see note below |
 | hanzi-writer-data 2.0.1 | zh stroke order (derived from Make Me a Hanzi `graphics.txt`) | Arphic Public License | [chanind/hanzi-writer-data](https://github.com/chanind/hanzi-writer-data) (`ARPHICPL.TXT`, `APL/`) | Verified — npm tarball 2.0.1, HSK 2025 + GF0025-2021 subset (3,143 characters), `ARPHICPL.TXT` shipped with the data, see note below |
 | French Wiktionary, Chinese entries (`wiktionary-fr-zh`) | zh dictionary, extra FR glosses | CC BY-SA 4.0 (fr.wiktionary footer checked 2026-10-09) | [kaikki.org](https://kaikki.org/frwiktionary/Chinois/index.html) | Verified — extraction 2026-10-02 from the 2026-10-01 dump, 33,650 entries, see note below |
-| English Wiktionary, Chinese entries (`wiktionary-zh`) | zh extended lexicon: unknown sequences in the reader (M6), downloaded on demand | CC BY-SA 4.0 (same license check as the Wiktionary extracts below) | [kaikki.org](https://kaikki.org/dictionary/Chinese/index.html) | Verified — extraction 2026-10-03 from the 2026-09-02 dump, 61,459 words absent from CC-CEDICT (10,865 names), see note below |
+| English Wiktionary, Chinese entries (`wiktionary-zh`) | zh extended lexicon: unknown sequences in the reader (M6), downloaded on demand | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/Chinese/index.html) | Verified — extraction 2026-10-03 from the 2026-09-02 dump, 61,459 words absent from CC-CEDICT (10,865 names), see note below |
 | jieba `dict.txt` (`jieba-names`) | zh proper-name signal: unknown sequences in the reader (M6), downloaded on demand | MIT (`LICENSE` "Copyright (c) 2013 Sun Junyi" and README checked at the pinned commit 2026-10-12) | [fxsjy/jieba](https://github.com/fxsjy/jieba) | Verified — last commit `67fa2e3` (2020-02-15, frozen), 89,004 name-tagged words absent from every shipped lexicon, MIT text shipped with the data, see note below |
-| Wiktionary extracts | en dictionary, FR translations, IPA (M9) | CC BY-SA 4.0 (Wiktionary is dual CC BY-SA 4.0 / GFDL; we use CC BY-SA 4.0) | [kaikki.org](https://kaikki.org/dictionary/rawdata.html) | Verified — latest extraction 2026-10-03 from the 2026-09-02 dump |
-| wordfreq data | en/zh frequency ranking | CC BY-SA 4.0 (code Apache-2.0) | [rspeer/wordfreq](https://github.com/rspeer/wordfreq) | Verified — frozen project (see `SUNSET.md`), treated as a frozen dataset; Chinese list imported from commit `912caf6` (88,668 of 130,507 dictionary headwords have a frequency), see note below |
-| CEFR-J Wordlist 1.6 | en levels A1–B2 (M9) | Free for research and commercial use **with citation**; redistribution not addressed | [cefr-j.org](https://www.cefr-j.org/download.html) | Verified with accepted risk — see note below |
-| Octanove Vocabulary Profile C1/C2 | en levels C1–C2 (M9) | CC BY-SA 4.0 | [olp-en-cefrj](https://github.com/openlanguageprofiles/olp-en-cefrj) | Verified |
+| wordfreq data | zh frequency ranking | CC BY-SA 4.0 (code Apache-2.0) | [rspeer/wordfreq](https://github.com/rspeer/wordfreq) | Verified — frozen project (see `SUNSET.md`), treated as a frozen dataset; Chinese list imported from commit `912caf6` (88,668 of 130,507 dictionary headwords have a frequency), see note below |
 | Tatoeba sentences (text only) | example sentences | CC BY 2.0 FR (part also CC0 1.0) | [tatoeba.org/downloads](https://tatoeba.org/en/downloads) | Verified — audio excluded (per-contributor licenses, empty license = no reuse) |
 
 ## Fonts
@@ -57,7 +54,6 @@ All OFL-1.1. Atkinson Hyperlegible Next, Noto Sans SC and LXGW WenKai GB have no
 
 | Model | Language | License | Status |
 |---|---|---|---|
-| Kokoro-82M | en | Apache-2.0 | Verified — zh voices rejected (graded D) |
 | [MOSS-TTS v1.5](https://huggingface.co/OpenMOSS-Team/MOSS-TTS-v1.5) and [MOSS-Audio-Tokenizer](https://huggingface.co/OpenMOSS-Team/MOSS-Audio-Tokenizer) (OpenMOSS) | zh syllables, words and sentences | Apache-2.0 (model cards; code [OpenMOSS/MOSS-TTS](https://github.com/OpenMOSS/MOSS-TTS) Apache-2.0) | Verified 2026-10-13 — revisions `cdd3b91` and `3cd226b`, chosen in the bake-off #112 |
 | [MOSS-VoiceGenerator](https://huggingface.co/OpenMOSS-Team/MOSS-VoiceGenerator) (OpenMOSS) | the synthetic reference voice `tools/tts/voices/designed-zh-female.wav`, designed from a text description (no real speaker) | Apache-2.0 (model card) | Verified 2026-10-13 — revision `97521ec` |
 | [Qwen3-ASR-1.7B](https://huggingface.co/Qwen/Qwen3-ASR-1.7B) (Qwen) | checks every generated zh recording for added or missing words; not shipped | Apache-2.0 (model card; package `qwen-asr` 0.0.6 Apache-2.0) | Verified 2026-10-14 — revision `7278e1e`, chosen over Whisper large-v3 and FireRedASR2-AED (ADR 0007) |
@@ -107,11 +103,6 @@ Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots
 - The OCR is verified exactly against the standard: 500 / 772 / 973 / 1,000 / 1,071 / 1,140 / 5,636 words (11,092 entries, 10,954 headwords once variants and homographs are merged), 3,000 recognition characters (6 × 300 + 1,200), 1,200 handwriting characters (300 / 400 / 500), contiguous numbering. One OCR-misread index (1856 for 1836) is repaired and listed in `data/gf0025-2021-words/repairs.tsv`.
 - The list has no pinyin: 404 polyphones get the level on every reading and are listed in `issues.tsv`.
 - It is not the exam list: only 58.5% of the words shared with the 2025 syllabus keep the same level.
-
-### CEFR-J
-
-- The terms grant free research and commercial use, and modification, "with a proper acknowledgement of the source". Citation is therefore mandatory and is kept.
-- Redistribution inside an open-source app is not addressed. The maintainer accepts this residual risk (decision 2026-10-09). Fallback if challenged: frequency-derived A1–B2 levels + Octanove C1/C2.
 
 ### CFDICT
 
@@ -166,8 +157,6 @@ Rejected after listening in the bake-off (#112, ADR 0007): MeloTTS-Chinese, dots
 - Wiktionary contributors (English and French Wiktionary) via Wiktextract (Tatu Ylonen, LREC 2022) and kaikki.org, CC BY-SA 4.0
 - jieba — Sun Junyi, MIT (proper-name tags)
 - wordfreq — Robyn Speer, CC BY-SA 4.0; Chinese list from Wikipedia, OpenSubtitles 2018, SUBTLEX-CH (Cai and Brysbaert, 2010), NewsCrawl, GlobalVoices, Google Books Ngrams, OSCAR, Twitter and the Jieba word list
-- CEFR-J Wordlist Version 1.6 — compiled by Yukio Tono, Tokyo University of Foreign Studies
-- Octanove Vocabulary Profile — CC BY-SA 4.0
 - Tatoeba sentences — tatoeba.org contributors, CC BY 2.0 FR
 - Paraformer-small — Tongyi Lab (Alibaba), Apache-2.0 (speech recognition, downloaded on request); ONNX export from sherpa-onnx (k2-fsa), run by sherpa-onnx and ONNX Runtime
 
