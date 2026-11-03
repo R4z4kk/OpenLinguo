@@ -32,6 +32,7 @@ afterEach(() => {
 const session = {
   session: { twoFactorVerifiedAt: null },
   user: {
+    id: "user-1",
     email: "lin@example.test",
     name: "",
     role: null,

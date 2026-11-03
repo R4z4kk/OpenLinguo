@@ -23,31 +23,39 @@ const retryAfter = (response: Response): number | null => {
   return Number.isFinite(seconds) && seconds >= 0 ? seconds : null;
 };
 
+/** A refused answer, read by the code of its body. */
+export const refusedWith = (response: Response, body: unknown): ApiFailure => {
+  const refusal = parseWith(Refusal, body);
+  if (refusal.ok) return { kind: "refused", code: refusal.value.code };
+  return response.status === 429
+    ? { kind: "rate-limited", retryAfterSeconds: retryAfter(response) }
+    : { kind: "unexpected", status: response.status };
+};
+
+/** The answer to a request, `offline` when there is none. */
+export const request = async (
+  path: string,
+  init: RequestInit,
+): Promise<Result<Response, ApiFailure>> => {
+  try {
+    return ok(await fetch(path, { ...init, credentials: "same-origin" }));
+  } catch {
+    return err({ kind: "offline" });
+  }
+};
+
 /** Every answer is checked: a refusal by its code, a success by `read`, anything else is unexpected. */
 export const call = async <T>(
   path: string,
   init: RequestInit,
   read: (body: unknown) => Result<T, unknown>,
 ): Promise<Result<T, ApiFailure>> => {
-  let response: Response;
-  try {
-    response = await fetch(path, {
-      ...init,
-      credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-    });
-  } catch {
-    return err({ kind: "offline" });
-  }
+  const answer = await request(path, { ...init, headers: { "content-type": "application/json" } });
+  if (!answer.ok) return answer;
+  const response = answer.value;
   const body: unknown =
     response.status === 204 ? null : await response.json().catch(() => NOT_JSON);
-  if (!response.ok) {
-    const refusal = parseWith(Refusal, body);
-    if (refusal.ok) return err({ kind: "refused", code: refusal.value.code });
-    return response.status === 429
-      ? err({ kind: "rate-limited", retryAfterSeconds: retryAfter(response) })
-      : err({ kind: "unexpected", status: response.status });
-  }
+  if (!response.ok) return err(refusedWith(response, body));
   if (body === NOT_JSON) return err({ kind: "unexpected", status: response.status });
   const parsed = read(body);
   return parsed.ok ? ok(parsed.value) : err({ kind: "unexpected", status: response.status });

@@ -3,6 +3,7 @@ import { BookOpen, BookText, CalendarCheck, CircleUser } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ImportGate } from "./import-gate.tsx";
 import { UpdatePrompt } from "./update-prompt.tsx";
+import { useSync } from "./use-sync.ts";
 
 const modules = [
   { to: "/", label: "nav.today", icon: CalendarCheck },
@@ -14,6 +15,7 @@ const modules = [
 /** Bottom tabs on mobile, sidebar from 1024px. */
 export const AppShell = () => {
   const { t } = useTranslation();
+  useSync();
   return (
     <div className="min-h-dvh lg:flex">
       <a

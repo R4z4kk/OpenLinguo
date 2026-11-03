@@ -21,6 +21,7 @@ export type PseudonymUpdate = z.output<typeof PseudonymUpdate>;
 export const SessionAnswer = z
   .object({
     user: z.object({
+      id: z.string().min(1),
       email: z.string(),
       name: z.string(),
       role: z.string().nullish(),
