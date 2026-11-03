@@ -30,8 +30,8 @@ const monthsBefore = (now: Date, months: number) => {
 /** ADR 0015's periods (docs/compliance/retention-schedule.md): rows older than these go. */
 export const cutoffs = (now: Date) => ({
   securityEvents: monthsBefore(now, 6),
-  /** The longest window of Better Auth's rules (auth.ts) and of the notices. */
-  rateLimits: new Date(now.getTime() - 10 * MINUTE_MS),
+  /** The longest window of Better Auth's rules (auth.ts), of the notices and of sync (1 hour). */
+  rateLimits: new Date(now.getTime() - 60 * MINUTE_MS),
   codeRequests: new Date(now.getTime() - CODES_PER_EMAIL.hours * 60 * MINUTE_MS),
   undeclaredAccounts: new Date(now.getTime() - DAY_MS),
   hostingRecords: monthsBefore(now, 12),
