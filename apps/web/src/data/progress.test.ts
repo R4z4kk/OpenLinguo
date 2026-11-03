@@ -3,6 +3,7 @@ import { cardId, CURRENT_SCHEDULER, err, type Review } from "@openlinguo/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { openDatabase, type Database } from "./database.ts";
 import { loadProgress, loadStats } from "./progress.ts";
+import { seedLearning } from "./test-support.ts";
 
 const PARIS = 120;
 // 2026-10-21 12:00 in Paris.
@@ -36,7 +37,9 @@ beforeEach(() => {
 
 describe("loadProgress", () => {
   it("computes the progress of the whole stored log", async () => {
-    await db.reviews.bulkAdd([review(1, RECOGNITION), review(2, RECOGNITION)]);
+    await seedLearning(db, () =>
+      db.reviews.bulkAdd([review(1, RECOGNITION), review(2, RECOGNITION)]),
+    );
     const result = await loadProgress(db, { at: NOON + 3_600_000, utcOffsetMinutes: PARIS });
     expect(result).toMatchObject({
       ok: true,
@@ -51,7 +54,7 @@ describe("loadProgress", () => {
 
   it("passes a log error on", async () => {
     const broken = review(1, "not a card id");
-    await db.reviews.add(broken);
+    await seedLearning(db, () => db.reviews.add(broken));
     expect(await loadProgress(db, { at: NOON, utcOffsetMinutes: PARIS })).toEqual(
       err({ kind: "invalid-card-id", reviewId: broken.id }),
     );
@@ -67,7 +70,9 @@ describe("loadProgress", () => {
 
 describe("loadStats", () => {
   it("computes the stats of the whole stored log", async () => {
-    await db.reviews.bulkAdd([review(1, RECOGNITION), review(2, RECOGNITION)]);
+    await seedLearning(db, () =>
+      db.reviews.bulkAdd([review(1, RECOGNITION), review(2, RECOGNITION)]),
+    );
     const result = await loadStats(db, { at: NOON + 3_600_000, utcOffsetMinutes: PARIS });
     if (!result.ok) throw new Error(result.error.kind);
     expect(result.value).toMatchObject({
@@ -85,7 +90,7 @@ describe("loadStats", () => {
 
   it("passes a log error on", async () => {
     const broken = review(1, "not a card id");
-    await db.reviews.add(broken);
+    await seedLearning(db, () => db.reviews.add(broken));
     expect(await loadStats(db, { at: NOON, utcOffsetMinutes: PARIS })).toEqual(
       err({ kind: "invalid-card-id", reviewId: broken.id }),
     );

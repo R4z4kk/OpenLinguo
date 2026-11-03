@@ -11,6 +11,7 @@ import {
 } from "./daily-goal.ts";
 import { openDatabase } from "./database.ts";
 import { SHOW_PROGRESS } from "./progress.ts";
+import { seedLearning } from "./test-support.ts";
 
 const memory = (): Pick<Storage, "getItem" | "setItem"> => {
   const values = new Map<string, string>();
@@ -81,16 +82,18 @@ describe("todayActivity", () => {
     const db = openDatabase("daily-goal-test");
     const PARIS = 120;
     const NEW_YORK = -240;
-    await db.reviews.bulkAdd([
-      // 2026-10-21 04:00 in Paris.
-      review(1, Date.UTC(2026, 9, 21, 2), PARIS),
-      // 2026-10-21 03:59 in Paris: still the 20th.
-      review(2, Date.UTC(2026, 9, 21, 1, 59), PARIS),
-      // 2026-10-20 23:30 in New York, 05:30 the next day in Paris.
-      review(3, Date.UTC(2026, 9, 21, 3, 30), NEW_YORK),
-      // 2026-10-21 20:00 in New York.
-      review(4, Date.UTC(2026, 9, 22), NEW_YORK),
-    ]);
+    await seedLearning(db, () =>
+      db.reviews.bulkAdd([
+        // 2026-10-21 04:00 in Paris.
+        review(1, Date.UTC(2026, 9, 21, 2), PARIS),
+        // 2026-10-21 03:59 in Paris: still the 20th.
+        review(2, Date.UTC(2026, 9, 21, 1, 59), PARIS),
+        // 2026-10-20 23:30 in New York, 05:30 the next day in Paris.
+        review(3, Date.UTC(2026, 9, 21, 3, 30), NEW_YORK),
+        // 2026-10-21 20:00 in New York.
+        review(4, Date.UTC(2026, 9, 22), NEW_YORK),
+      ]),
+    );
     // 2026-10-22 03:30 in Paris: still the 21st.
     const now = { at: Date.UTC(2026, 9, 22, 1, 30), utcOffsetMinutes: PARIS };
     expect(await todayActivity(db, now)).toEqual({

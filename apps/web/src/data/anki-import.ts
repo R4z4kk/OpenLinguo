@@ -648,7 +648,7 @@ export const importPlan = async (
   return guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews, db.audio, db.notes],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.audio, db.notes, db.syncEntities],
       async (): Promise<Result<ImportedDeck, AnkiImportFailure>> => {
         const checked = await checkName(db, name, null);
         if (!checked.ok) return checked;

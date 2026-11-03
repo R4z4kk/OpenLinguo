@@ -11,6 +11,7 @@ import {
   NO_INTERESTS,
   saveInterests,
 } from "./interests.ts";
+import { seedLearning } from "./test-support.ts";
 
 const entry = (
   simplified: string,
@@ -107,7 +108,7 @@ describe("checkSuggestions", () => {
   };
 
   it("counts as started a card past new, not one only filed in a deck", async () => {
-    await db.cards.bulkAdd([card(LUCHA, "review"), card(CHAGUAN, "new")]);
+    await seedLearning(db, () => db.cards.bulkAdd([card(LUCHA, "review"), card(CHAGUAN, "new")]));
     expect(await checkSuggestions(db, ["绿茶", "茶馆", "不是词"], "hsk-2025")).toEqual(
       ok({ words: kept(CHAGUAN), dropped: 2 }),
     );

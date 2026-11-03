@@ -21,6 +21,7 @@ import {
   measureText,
   wordsToLearn,
 } from "./text-coverage.ts";
+import { seedLearning } from "./test-support.ts";
 
 const DAY = 24 * 60 * 60_000;
 
@@ -79,12 +80,16 @@ beforeEach(() => {
 
 describe("loadKnownWords", () => {
   it("knows readings in review or relearning, marked readings, and calls a card in its steps learning", async () => {
-    await db.cards.bulkAdd([
-      card("去", "qu4", after(["good", "good"])),
-      card("学校", "xue2 xiao4", after(["good"])),
-      card("我们", "wo3 men5", NEW_CARD_STATE),
-    ]);
-    await db.knownMarks.add({ headword: "行", readingKey: "hang2", markedAt: 1 });
+    await seedLearning(db, () =>
+      db.cards.bulkAdd([
+        card("去", "qu4", after(["good", "good"])),
+        card("学校", "xue2 xiao4", after(["good"])),
+        card("我们", "wo3 men5", NEW_CARD_STATE),
+      ]),
+    );
+    await seedLearning(db, () =>
+      db.knownMarks.add({ headword: "行", readingKey: "hang2", markedAt: 1 }),
+    );
     const known = await loadKnownWords(db, "zh");
     expect(known.ok && [...known.value.words]).toEqual(
       expect.arrayContaining([
@@ -158,7 +163,7 @@ describe("the personal lexicon", () => {
 
 describe("measureText", () => {
   it("counts known words over the words of the text, and the words still to learn", async () => {
-    await db.cards.add(card("去", "qu4", after(["good", "good"])));
+    await seedLearning(db, () => db.cards.add(card("去", "qu4", after(["good", "good"]))));
     const known = await loadKnownWords(db, "zh");
     if (!known.ok) throw new Error(known.error.kind);
     const measured = await measureText(reading, known.value, {
@@ -169,7 +174,9 @@ describe("measureText", () => {
   });
 
   it("reads a polyphone as its first reading unless the learner chose another", async () => {
-    await db.knownMarks.add({ headword: "行", readingKey: "hang2", markedAt: 1 });
+    await seedLearning(db, () =>
+      db.knownMarks.add({ headword: "行", readingKey: "hang2", markedAt: 1 }),
+    );
     const known = await loadKnownWords(db, "zh");
     if (!known.ok) throw new Error(known.error.kind);
     const body = "行。";

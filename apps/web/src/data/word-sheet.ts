@@ -32,11 +32,13 @@ export const setKnownMark = (
   known: boolean,
   at: number,
 ): Promise<Result<null, ReviewLogFailure>> =>
-  guarded(async () => {
-    if (known) await db.knownMarks.put({ headword, readingKey, markedAt: at });
-    else await db.knownMarks.delete([headword, readingKey]);
-    return ok(null);
-  });
+  guarded(() =>
+    db.transaction("rw", [db.knownMarks, db.syncEntities], async () => {
+      if (known) await db.knownMarks.put({ headword, readingKey, markedAt: at });
+      else await db.knownMarks.delete([headword, readingKey]);
+      return ok(null);
+    }),
+  );
 
 export const isMarked = (
   db: Database,

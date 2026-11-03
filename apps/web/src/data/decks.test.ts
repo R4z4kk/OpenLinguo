@@ -37,6 +37,7 @@ import {
   type LocalTime,
 } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
+import { seedLearning } from "./test-support.ts";
 
 const entry = (
   simplified: string,
@@ -134,16 +135,18 @@ const unknown = (deckId: string) => ({ ok: false, error: { kind: "unknown-deck",
 
 /** Files a note with its cards and content, as the Anki import does. */
 const fileNote = async (deckId: string, note: NoteKey): Promise<void> => {
-  await db.deckWords.put({ ...note, id: deckWordId(deckId, note), deckId });
-  await putCards(db, [note]);
-  await db.notes.put({
-    id: note.note,
-    characters: "字",
-    pinyin: "",
-    meaning: "m",
-    updatedAt: 0,
-    provenance: null,
-  });
+  await seedLearning(db, () => db.deckWords.put({ ...note, id: deckWordId(deckId, note), deckId }));
+  await seedLearning(db, () => putCards(db, [note]));
+  await seedLearning(db, () =>
+    db.notes.put({
+      id: note.note,
+      characters: "字",
+      pinyin: "",
+      meaning: "m",
+      updatedAt: 0,
+      provenance: null,
+    }),
+  );
 };
 
 describe("named decks", () => {
@@ -248,9 +251,9 @@ describe("fileWord", () => {
   });
 
   it("writes nothing when the log cannot be replayed or the cards cannot be stored", async () => {
-    await db
-      .table("reviews")
-      .add({ ...review(idOf(HAO, "recall"), "good"), scheduler: "fsrs7-v1" });
+    await seedLearning(db, () =>
+      db.table("reviews").add({ ...review(idOf(HAO, "recall"), "good"), scheduler: "fsrs7-v1" }),
+    );
     expect(await file(MY_WORDS, HAO)).toMatchObject({
       ok: false,
       error: { kind: "scheduler-failure" },
@@ -349,14 +352,16 @@ describe("deckCounts", () => {
   });
 
   it("counts started cards due before the next 4:00 rollover, and the words a deletion drops", async () => {
-    await db.cards.bulkAdd([
-      stored(HAO, "recognition", "review", NEXT_ROLLOVER - 1),
-      stored(HAO, "recall", "new", null),
-      stored(E, "recognition", "learning", NOW.at + HOUR / 6),
-      stored(E, "recall", "review", NEXT_ROLLOVER),
-      stored(NI, "recognition", "relearning", NOW.at - HOUR),
-      stored(NI, "recall", "new", null),
-    ]);
+    await seedLearning(db, () =>
+      db.cards.bulkAdd([
+        stored(HAO, "recognition", "review", NEXT_ROLLOVER - 1),
+        stored(HAO, "recall", "new", null),
+        stored(E, "recognition", "learning", NOW.at + HOUR / 6),
+        stored(E, "recall", "review", NEXT_ROLLOVER),
+        stored(NI, "recognition", "relearning", NOW.at - HOUR),
+        stored(NI, "recall", "new", null),
+      ]),
+    );
     const animals = await deckOf("Animals");
     await file(MY_WORDS, HAO);
     await file(MY_WORDS, E);
@@ -408,10 +413,12 @@ describe("nextNewReadings", () => {
     await file(MY_WORDS, E);
     await file(MY_WORDS, HANG);
     await file(zoo, HANG);
-    await db.cards.bulkAdd([
-      stored(TIAN, "recognition", "review", NOW.at),
-      stored(TIAN, "recall", "new", null),
-    ]);
+    await seedLearning(db, () =>
+      db.cards.bulkAdd([
+        stored(TIAN, "recognition", "review", NOW.at),
+        stored(TIAN, "recall", "new", null),
+      ]),
+    );
     await file(zoo, TIAN);
   });
 

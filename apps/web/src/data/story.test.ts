@@ -15,6 +15,7 @@ import { openDatabase, type Database } from "./database.ts";
 import { fromCache } from "./unknown-words.ts";
 import { learningWords, saveStory, STORY_WORDS_MAX } from "./story.ts";
 import { TITLE_MAX } from "./texts.ts";
+import { seedLearning } from "./test-support.ts";
 
 const HOUR = 60 * 60_000;
 const AT = Date.UTC(2026, 9, 24, 10);
@@ -68,18 +69,20 @@ const seed = async (cards: readonly Seeded[]): Promise<void> => {
     for (const type of types) {
       const key: CardKey = { language: "zh", headword, readingKey, type };
       const id = cardId(key);
-      await db.cards.add({ ...key, id, ...state(phase) });
-      await db.reviews.bulkAdd(
-        reviews.map((hours) => ({
-          id: crypto.randomUUID(),
-          cardId: id,
-          grade: "good" as const,
-          reviewedAt: AT + hours * HOUR,
-          utcOffsetMinutes: 0,
-          scheduler: CURRENT_SCHEDULER,
-          dailyGoal: 10,
-          wordDone: false,
-        })),
+      await seedLearning(db, () => db.cards.add({ ...key, id, ...state(phase) }));
+      await seedLearning(db, () =>
+        db.reviews.bulkAdd(
+          reviews.map((hours) => ({
+            id: crypto.randomUUID(),
+            cardId: id,
+            grade: "good" as const,
+            reviewedAt: AT + hours * HOUR,
+            utcOffsetMinutes: 0,
+            scheduler: CURRENT_SCHEDULER,
+            dailyGoal: 10,
+            wordDone: false,
+          })),
+        ),
       );
     }
   }
@@ -122,25 +125,29 @@ describe("learningWords", () => {
       word("照片", "review", [3], { readingKey: "x", types: ["recall"] }),
       word("礼物", "learning", [4]),
     ]);
-    await db.knownMarks.add({ headword: "礼物", readingKey: "x", markedAt: AT });
+    await seedLearning(db, () =>
+      db.knownMarks.add({ headword: "礼物", readingKey: "x", markedAt: AT }),
+    );
     expect(await learningWords(db, "zh")).toEqual(ok(["旅游"]));
   });
 
   it("leaves out notes and the cards of another language", async () => {
-    await db.cards.add({
-      id: "note-card",
-      language: "zh",
-      type: "recognition",
-      note: "n1",
-      ...state("learning"),
-    });
+    await seedLearning(db, () =>
+      db.cards.add({
+        id: "note-card",
+        language: "zh",
+        type: "recognition",
+        note: "n1",
+        ...state("learning"),
+      }),
+    );
     const key: CardKey = {
       language: "en",
       headword: "river",
       readingKey: "x",
       type: "recognition",
     };
-    await db.cards.add({ ...key, id: cardId(key), ...state("learning") });
+    await seedLearning(db, () => db.cards.add({ ...key, id: cardId(key), ...state("learning") }));
     expect(await learningWords(db, "zh")).toEqual(ok([]));
   });
 

@@ -3,6 +3,7 @@ import { cardId, NEW_CARD_STATE, type CardKey, type CardType } from "@openlinguo
 import { Dexie } from "dexie";
 import { describe, expect, it } from "vitest";
 import { MY_WORDS, openDatabase } from "./database.ts";
+import { seedLearning } from "./test-support.ts";
 
 describe("openDatabase", () => {
   it("imports the data again when upgrading a database without search keys", async () => {
@@ -139,10 +140,12 @@ describe("openDatabase", () => {
     expect(await db.journal.toArray()).toEqual([entry]);
     expect(await db.texts.count()).toBe(0);
     expect(await db.knownMarks.count()).toBe(0);
-    await db.knownMarks.bulkAdd([
-      { headword: "行", readingKey: "xing2", markedAt: 1 },
-      { headword: "行", readingKey: "hang2", markedAt: 2 },
-    ]);
+    await seedLearning(db, () =>
+      db.knownMarks.bulkAdd([
+        { headword: "行", readingKey: "xing2", markedAt: 1 },
+        { headword: "行", readingKey: "hang2", markedAt: 2 },
+      ]),
+    );
     expect(await db.knownMarks.get(["行", "hang2"])).toEqual({
       headword: "行",
       readingKey: "hang2",
