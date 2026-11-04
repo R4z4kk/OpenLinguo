@@ -8,7 +8,7 @@ Include the affected component, steps to reproduce, and the impact you observed.
 
 ## Supported versions
 
-OpenLinguo has no release yet. Only the `main` branch receives security fixes.
+Only the latest release (a `v*` tag, such as `v1.0.0`) and the `main` branch, which runs in production, receive security fixes. The other releases (`audio-zh-*`, `whisper-*`, `paraformer-*`) hold datasets, not versions of the app.
 
 ## Scope
 

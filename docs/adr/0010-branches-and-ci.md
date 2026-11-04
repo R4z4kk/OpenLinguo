@@ -38,6 +38,7 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
   - Its job runs in the GitHub environment `production`, which waits for the maintainer's approval and accepts `main` only. The environment holds `CLOUDFLARE_API_TOKEN`, scoped to Pages, D1 and Workers Scripts on the one account, and `CLOUDFLARE_ACCOUNT_ID`.
   - It builds, applies the D1 migrations (`wrangler d1 migrations apply --remote`), deploys the PWA and the Functions (`wrangler pages deploy --branch=main`), then the cron Worker (`wrangler deploy`). A failed step stops the next ones.
   - The Pages project has no Git integration and every deploy names the production branch, so there is no preview deployment: it would share the production database.
+- A release of the app is a `v<major>.<minor>.<patch>` tag on the promotion merge commit, with a GitHub release and hand-written notes. The maintainer makes it after the deploy of that commit ran and was checked. A tag deploys nothing: `deploy.yml` runs on pushes to `main` only, and `production` accepts `main` only. The other tags and releases (`audio-zh-N`, `whisper-N`, `paraformer-N`) hold datasets that the app downloads by tag (ADR 0007), so the one GitHub marks Latest is only the last created, and no code reads `releases/latest`. The `package.json` versions stay `0.0.0`: the packages are private and the tag is the version.
 
 ## Consequences
 
