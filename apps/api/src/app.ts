@@ -34,6 +34,8 @@ const BEFORE_SECOND_FACTOR = new Set([
 const isAdminPath = (path: string) =>
   path.startsWith("/api/admin/") || path.startsWith("/api/auth/admin/");
 
+const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 const refused = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 
 export const createApp = (
@@ -63,6 +65,15 @@ export const createApp = (
     const settings = settingsOf(env);
     return createAuth(database(env.DB), settings, mailer(settings));
   };
+
+  // SameSite=Lax lets a sibling subdomain post text/plain with the session, without a preflight.
+  app.use(async (c, next) => {
+    if (READ_METHODS.has(c.req.method) || !getSessionCookie(c.req.raw)) return next();
+    if (c.req.header("origin") !== new URL(settingsOf(c.env).BETTER_AUTH_URL).origin) {
+      return c.json(refused("INVALID_REQUEST", "Expected a request from the app"), 403);
+    }
+    return next();
+  });
 
   app.use(async (c, next) => {
     const path = c.req.path;

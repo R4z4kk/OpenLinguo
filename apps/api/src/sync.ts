@@ -21,14 +21,13 @@ const UsageRow = z.object({
   oldest: z.number().int().positive().nullable(),
 });
 
-/**
- * The account's stored bytes and first chunk, and the database size D1 reports after the read. The
- * sum reads every chunk row of the account: it answers a write or the end of a read, not each chunk.
- */
+/** The account's stored bytes and first chunk, and the database size D1 reports after the read. */
 const usageOf = async (d1: D1Database, userId: string) => {
   const result = await d1
     .prepare(
-      "SELECT coalesce(sum(size), 0) AS used, min(id) AS oldest FROM sync_chunk WHERE user_id = ?",
+      `SELECT
+        coalesce((SELECT used_after FROM sync_chunk WHERE user_id = ?1 ORDER BY id DESC LIMIT 1), 0) AS used,
+        (SELECT min(id) FROM sync_chunk WHERE user_id = ?1) AS oldest`,
     )
     .bind(userId)
     .all();
@@ -105,8 +104,13 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
         const [inserted] = await db.batch([
           db
             .insert(syncChunk)
-            .values({ userId, bytes: body, size: body.length })
-            .returning({ id: syncChunk.id }),
+            .values({
+              userId,
+              bytes: body,
+              size: body.length,
+              usedAfter: sql`coalesce((SELECT used_after FROM sync_chunk WHERE user_id = ${userId} ORDER BY id DESC LIMIT 1), 0) + ${body.length}`,
+            })
+            .returning({ id: syncChunk.id, used: syncChunk.usedAfter }),
           db.insert(hostingRecord).values({
             userId,
             operation: "create",
@@ -118,7 +122,7 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
         if (!row) throw new Error("sync chunk stored without an id");
         const stored: StoredChunk = {
           id: row.id,
-          used: usage.used + body.length,
+          used: row.used,
           limit: limits.accountBytes,
           oldest: usage.oldest ?? row.id,
         };
