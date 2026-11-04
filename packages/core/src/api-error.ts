@@ -21,6 +21,7 @@ export const ApiErrorCode = z.enum([
   "SYNC_CHUNK_TOO_LARGE",
   "SYNC_QUOTA",
   "SYNC_STORE_FULL",
+  "SYNC_STORE_CHANGED",
 ]);
 export type ApiErrorCode = z.output<typeof ApiErrorCode>;
 

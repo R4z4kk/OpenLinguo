@@ -260,6 +260,26 @@ describe("markAllWaiting", () => {
     expect(all.find(({ id }) => id === "decks:deck-2")?.deleted).toBe(true);
   });
 
+  it("never lowers a register, a re-asserted note's included", async () => {
+    await scoped(async () => {
+      await WRITES.decks.add();
+      await WRITES.notes.add();
+    });
+    await db.syncEntities.update("decks:deck-1", { changedAt: 5_000, pending: 0 });
+    await db.syncEntities.update(`notes:${NOTE.id}`, { changedAt: NOTE.updatedAt + 1, pending: 0 });
+
+    await markAllWaiting(db, 500);
+
+    expect(await db.syncEntities.get("decks:deck-1")).toMatchObject({
+      changedAt: 5_001,
+      pending: 1,
+    });
+    expect(await db.syncEntities.get(`notes:${NOTE.id}`)).toMatchObject({
+      changedAt: NOTE.updatedAt + 2,
+      pending: 1,
+    });
+  });
+
   it("is undone by clearEntities", async () => {
     await scoped(WRITES.notes.add);
     await clearEntities(db);

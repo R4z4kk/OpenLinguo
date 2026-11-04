@@ -27,6 +27,7 @@ describe("SessionAnswer", () => {
     const answer = parseWith(SessionAnswer, {
       session: { token: "t", twoFactorVerifiedAt: null },
       user: {
+        id: "user-1",
         email: "lin@example.test",
         name: "",
         role: null,

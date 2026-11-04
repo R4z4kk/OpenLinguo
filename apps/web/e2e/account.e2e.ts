@@ -20,6 +20,7 @@ const TOTP_URI =
   "otpauth://totp/OpenLinguo:lin%40example.test?secret=JBSWY3DPEHPK3PXP&issuer=OpenLinguo";
 
 type User = {
+  id: string;
   email: string;
   name: string;
   role: "admin" | null;
@@ -41,6 +42,7 @@ type FakeApi = {
 };
 
 const user = (email: string, rest: Partial<User>): User => ({
+  id: `user-${email}`,
   email,
   name: "",
   role: null,

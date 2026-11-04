@@ -32,6 +32,8 @@ const usageOf = async (d1: D1Database, userId: string) => {
   return { ...UsageRow.parse(result.results[0]), databaseBytes: result.meta.size_after };
 };
 
+const Expected = z.string().regex(/^\d+$/u).transform(Number).pipe(z.number().int().positive());
+
 const After = z.string().regex(/^\d+$/u).transform(Number).pipe(z.number().int());
 
 type Routes = {
@@ -66,6 +68,16 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
           return c.json(refusal("TOO_MANY_ATTEMPTS", "Too many chunks, try again later"), 429);
         }
         const usage = await usageOf(c.env.DB, userId);
+        const header = c.req.header(SYNC_HEADERS.expectedOldest) ?? null;
+        if (header !== null) {
+          const expected = Expected.safeParse(header);
+          if (!expected.success) {
+            return c.json(refusal("INVALID_REQUEST", "Expected the id of the oldest chunk"), 400);
+          }
+          if (usage.oldest !== expected.data) {
+            return c.json(refusal("SYNC_STORE_CHANGED", "The sync store was deleted"), 409);
+          }
+        }
         if (usage.used + body.length > limits.accountBytes) {
           return c.json(refusal("SYNC_QUOTA", "The sync store of this account is full"), 409);
         }

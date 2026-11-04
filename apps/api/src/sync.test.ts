@@ -95,12 +95,21 @@ const signedIn = async (email: string) => {
   return cookie;
 };
 
-const post = (cookie: string | null, body: Uint8Array, target: typeof app = app) =>
+const post = (
+  cookie: string | null,
+  body: Uint8Array,
+  target: typeof app = app,
+  expectedOldest: string | null = null,
+) =>
   call(
     "/api/sync/chunks",
     {
       method: "POST",
-      headers: { "content-type": "application/gzip", ...headersOf(cookie) },
+      headers: {
+        "content-type": "application/gzip",
+        ...headersOf(cookie),
+        ...(expectedOldest === null ? {} : { [SYNC_HEADERS.expectedOldest]: expectedOldest }),
+      },
       body,
     },
     target,
@@ -207,6 +216,64 @@ describe("POST /api/sync/chunks", () => {
     expect(await response.json()).toMatchObject({ code: "SYNC_STORE_FULL" });
     expect(await db.select().from(syncChunk)).toEqual([]);
     expect(await records()).toEqual([]);
+  });
+});
+
+describe("POST /api/sync/chunks with the oldest chunk the device remembers", () => {
+  it("accepts a match and no header", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const first = await stored(await post(cookie, gzipped("one")));
+    const matched = await post(cookie, gzipped("two"), app, String(first.id));
+    expect(matched.status).toBe(201);
+    expect((await stored(matched)).oldest).toBe(first.id);
+    expect((await post(cookie, gzipped("three"))).status).toBe(201);
+    expect(await db.select().from(syncChunk)).toHaveLength(3);
+  });
+
+  it("refuses a differing oldest and writes nothing", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const first = await stored(await post(cookie, gzipped("one")));
+    const chunks = await db.select().from(syncChunk);
+    const written = await records();
+
+    const response = await post(cookie, gzipped("two"), app, String(first.id + 1));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "SYNC_STORE_CHANGED" });
+    expect(await db.select().from(syncChunk)).toEqual(chunks);
+    expect(await records()).toEqual(written);
+  });
+
+  it("refuses an empty store and writes nothing", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const first = await stored(await post(cookie, gzipped("one")));
+    expect((await clear(cookie)).status).toBe(204);
+    const written = await records();
+
+    const response = await post(cookie, gzipped("two"), app, String(first.id));
+
+    expect(response.status).toBe(409);
+    expect(await response.json()).toMatchObject({ code: "SYNC_STORE_CHANGED" });
+    expect(await db.select().from(syncChunk)).toEqual([]);
+    expect(await records()).toEqual(written);
+  });
+
+  it("refuses a header that is not a chunk id", async () => {
+    const cookie = await signedIn("lin@example.test");
+    for (const header of ["abc", "0", "-1", "1.5"]) {
+      const response = await post(cookie, gzipped(), app, header);
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    }
+    expect(await db.select().from(syncChunk)).toEqual([]);
+  });
+
+  it("compares with the caller's own store", async () => {
+    const lin = await signedIn("lin@example.test");
+    const first = await stored(await post(lin, gzipped("one")));
+    const ming = await signedIn("ming@example.test");
+    const response = await post(ming, gzipped("two"), app, String(first.id));
+    expect(response.status).toBe(409);
   });
 });
 

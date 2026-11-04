@@ -140,12 +140,21 @@ export const silently = async <T>(db: Database, run: () => Promise<T>): Promise<
   }
 };
 
-/** Marks every entity, deletions included, as waiting to be sent: the first upload holds everything. */
+/**
+ * Marks every entity, deletions included, as waiting to be sent: the first upload holds everything.
+ * A register never goes down: a row's time stays past what the device has seen of it.
+ */
 export const markAllWaiting = (db: Database, now: number): Promise<void> =>
   db.transaction("rw", ["syncEntities", ...SYNCED_TABLES], async () => {
     await db.syncEntities.toCollection().modify({ pending: 1 });
-    const live = await Promise.all(trackers(db).map(({ entities }) => entities(now)));
-    await db.syncEntities.bulkPut(live.flat());
+    const live = (await Promise.all(trackers(db).map(({ entities }) => entities(now)))).flat();
+    const previous = await db.syncEntities.bulkGet(live.map(({ id }) => id));
+    await db.syncEntities.bulkPut(
+      live.map((entity, index) => ({
+        ...entity,
+        changedAt: Math.max(entity.changedAt, (previous[index]?.changedAt ?? -1) + 1),
+      })),
+    );
   });
 
 export const clearEntities = (db: Database): Promise<void> => db.syncEntities.clear();
