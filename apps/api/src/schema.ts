@@ -256,7 +256,8 @@ export const HOSTING_OPERATIONS = ["create", "edit", "delete"] as const;
 
 /**
  * Décret 2021-1362 arts 5 to 7 (read on Légifrance 2026-10-31): kept 1 year, read only by the jobs
- * and the admin export for an authority. No foreign key: it outlives the text and the account.
+ * and the maintainer's query for an authority's request. No foreign key: it outlives the text and
+ * the account.
  */
 export const hostingRecord = sqliteTable(
   "hosting_record",
@@ -266,8 +267,6 @@ export const hostingRecord = sqliteTable(
     submissionId: text().notNull(),
     operation: text({ enum: HOSTING_OPERATIONS }).notNull(),
     ipAddress: text(),
-    /** Cloudflare does not pass the source port to Functions (request.cf, docs of 2026-10-18). */
-    port: integer(),
     /** Art. 5 2° b: HTTP version and TLS version, such as `HTTP/2 TLSv1.3`. */
     protocol: text(),
     createdAt: createdAt(),

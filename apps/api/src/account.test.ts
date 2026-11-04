@@ -209,10 +209,13 @@ describe("POST /api/account/delete", () => {
     const [sealed] = await db.select().from(sealedIdentity);
     expect(sealed).toMatchObject({ userId, email: EMAIL });
     expect(sealed?.pseudonyms?.toSorted()).toEqual(["Lin", "小林"]);
-    const years = (until: Date | null) =>
-      Math.round(((until?.getTime() ?? 0) - Date.now()) / (365 * 24 * 60 * 60 * 1000));
-    expect(years(sealed?.emailUntil ?? null)).toBe(5);
-    expect(years(sealed?.pseudonymsUntil ?? null)).toBe(1);
+    const afterYears = (years: number) => {
+      const date = new Date();
+      date.setUTCFullYear(date.getUTCFullYear() + years);
+      return date.getTime();
+    };
+    expect(Math.abs((sealed?.emailUntil.getTime() ?? 0) - afterYears(5))).toBeLessThan(60_000);
+    expect(Math.abs((sealed?.pseudonymsUntil.getTime() ?? 0) - afterYears(1))).toBeLessThan(60_000);
     expect(await db.select({ published: erasure.published }).from(erasure)).toEqual([
       { published: "remove" },
     ]);
