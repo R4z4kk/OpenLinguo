@@ -109,7 +109,7 @@ export const authFr: AuthMessages = {
     syncNow: "Synchroniser maintenant",
     turnOff: "Désactiver et supprimer du serveur",
     schedule:
-      "La synchronisation se fait à l’ouverture de l’app, quand vous y revenez, en fin de séance et au retour du réseau. Elle ne vous envoie jamais de notification.",
+      "La synchronisation se fait à l’ouverture de l’app, quand vous y revenez, quand vous la quittez avec des changements à envoyer, en fin de séance et au retour du réseau. Elle ne vous envoie jamais de notification.",
     offTitle: "Désactiver la synchronisation ?",
     offBody:
       "Vos données seront supprimées du serveur, pour tous vos appareils. Elles restent sur cet appareil. Vos autres appareils arrêteront de se synchroniser et vous le diront.",

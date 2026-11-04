@@ -98,19 +98,34 @@ const start = async (): Promise<void> => {
   else fail(cleared.error);
 };
 
-/** Syncs when the network or the learner comes back to a running app; answers how to stop. */
+/** Leaving with changes: a session left midway does not wait for the next opening. */
+const sendWaiting = async (): Promise<void> => {
+  let waiting: number;
+  try {
+    waiting = await database.syncEntities.where("pending").equals(1).count();
+  } catch (error) {
+    fail({ kind: "storage", message: String(error) });
+    return;
+  }
+  if (waiting > 0) await attempt(true);
+};
+
+/**
+ * Syncs when the network or the learner comes back, and when the learner leaves with changes;
+ * answers how to stop.
+ */
 export const listenForSync = (): (() => void) => {
   const online = (): void => {
     void requestSync();
   };
-  const visible = (): void => {
-    if (document.visibilityState === "visible") void requestSync();
+  const visibility = (): void => {
+    void (document.visibilityState === "visible" ? requestSync() : sendWaiting());
   };
   window.addEventListener("online", online);
-  document.addEventListener("visibilitychange", visible);
+  document.addEventListener("visibilitychange", visibility);
   return () => {
     window.removeEventListener("online", online);
-    document.removeEventListener("visibilitychange", visible);
+    document.removeEventListener("visibilitychange", visibility);
   };
 };
 

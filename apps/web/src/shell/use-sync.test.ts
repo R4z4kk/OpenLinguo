@@ -1,4 +1,5 @@
 import "fake-indexeddb/auto";
+import { cardId } from "@openlinguo/core";
 import { SYNC_HEADERS, SYNC_LIMITS } from "@openlinguo/core/sync";
 import { Dexie } from "dexie";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -44,9 +45,15 @@ beforeEach(() => {
     userAgent: "node",
     locks: { request: (_n: string, _o: object, run: (lock: object) => unknown) => run({}) },
   });
-  vi.stubGlobal("fetch", (input: string) => {
+  vi.stubGlobal("fetch", (input: string, init: RequestInit = {}) => {
     network.calls.push(new URL(input, "http://localhost").pathname);
     if (network.offline) return Promise.reject(new TypeError("offline"));
+    if (init.method === "POST")
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({ id: 1, used: 10, limit: SYNC_LIMITS.accountBytes, oldest: 1 }),
+        ),
+      );
     if (input.startsWith("/api/auth/get-session"))
       return Promise.resolve(new Response(JSON.stringify(network.session)));
     const after = Number(new URL(input, "http://localhost").searchParams.get("after"));
@@ -254,7 +261,53 @@ describe("listenForSync", () => {
     return { page, online };
   };
 
-  it("coming back to the app syncs, within the limit, and hiding it does not", async () => {
+  const changeWaits = (): Promise<unknown> => {
+    const key = cardId({ language: "zh", headword: "好", readingKey: "hao3", type: "recall" });
+    return db.syncEntities.put({
+      id: `cards:${key}`,
+      table: "cards",
+      key,
+      changedAt: 1,
+      deleted: true,
+      pending: 1,
+    });
+  };
+
+  it("hiding the app sends what waits at once, inside the limit", async () => {
+    const { listenForSync, requestSync } = await load();
+    await turnedOn();
+    await requestSync();
+    const { page } = pageGlobals();
+    const stop = listenForSync();
+    await changeWaits();
+    network.calls = [];
+
+    page.visibilityState = "hidden";
+    page.dispatchEvent(new Event("visibilitychange"));
+
+    await vi.waitFor(async () => {
+      expect(await db.syncEntities.where("pending").equals(1).count()).toBe(0);
+    });
+    expect(network.calls).toContain("/api/sync/chunks");
+    await settle();
+    stop();
+  });
+
+  it("hiding the app with sync off asks the server nothing", async () => {
+    const { listenForSync } = await load();
+    const { page } = pageGlobals();
+    const stop = listenForSync();
+    await changeWaits();
+
+    page.visibilityState = "hidden";
+    page.dispatchEvent(new Event("visibilitychange"));
+    await settle();
+
+    expect(network.calls).toEqual([]);
+    stop();
+  });
+
+  it("coming back to the app syncs, within the limit, and hiding it with nothing waiting does not", async () => {
     const { listenForSync } = await load();
     await turnedOn();
     const { page } = pageGlobals();

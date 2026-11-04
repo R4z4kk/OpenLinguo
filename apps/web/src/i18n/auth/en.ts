@@ -103,7 +103,7 @@ export const authEn = {
     syncNow: "Sync now",
     turnOff: "Turn off and delete from the server",
     schedule:
-      "Sync runs when the app opens, when you come back to it, at the end of a session and when the network comes back. It never sends you a notification.",
+      "Sync runs when the app opens, when you come back to it, when you leave it with changes to send, at the end of a session and when the network comes back. It never sends you a notification.",
     offTitle: "Turn off sync?",
     offBody:
       "Your data will be deleted from the server, for all your devices. It stays on this device. Your other devices will stop syncing and tell you so.",
