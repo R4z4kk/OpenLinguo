@@ -7,10 +7,10 @@ Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md) and [AD
 | Data | Retention | Basis |
 |---|---|---|
 | Account data | Until deletion by the user; after 2 years without any user action, notice by email, then deletion 30 days later. A failed notice stops that deletion and fails the job | CNIL délibération [2021-131](https://www.legifrance.gouv.fr/cnil/id/CNILTEXT000045543374/): 2 years "apparait proportionné", not binding |
-| Accounts with no answer to the age step | 24 hours after creation | Purpose ends |
-| Sessions | Until sign-out or expiry: 7 days, extended by a day of use (Better Auth defaults, #270) | Strictly necessary |
+| Accounts with no answer to the age step | 24 hours after creation, removed by the next daily run (up to a day later) | Purpose ends |
+| Sessions | Until sign-out or expiry: 7 days, extended by a day of use (Better Auth defaults, #270); an expired row is removed by the next daily run, up to a day later | Strictly necessary |
 | Authenticator (TOTP secret, backup codes) | Until turned off or the account is deleted; a backup code is deleted once used | Purpose ends |
-| Sign-in codes and verification tokens | Valid 10 minutes; deleted when used or refused, otherwise at expiry | Strictly necessary |
+| Sign-in codes and verification tokens | Valid 10 minutes; deleted when used or refused, otherwise by the next daily run after expiry (up to a day later) | Strictly necessary |
 | Rate-limit counters (IP address and route for `/api/auth`, IP address for notices, account id for sync uploads) | Needed for 1 hour at most; Better Auth never deletes them, so the daily jobs purge rows older than 1 hour, which can stay up to a day longer | Security |
 | Sign-in codes asked per address (a keyed hash of the address, never the address, and the time) | 24 hours, for the cap of 10 codes a day per address (#289); purged by the daily jobs | Security |
 | Pending or rejected library submissions | Deleted with the account; a pending text can be withdrawn at any time | Purpose ends |
@@ -22,7 +22,7 @@ Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md) and [AD
 | Sealed email of the same accounts | 5 years after the deletion | Décret 2021-1362 art. 2: "cinq ans à compter de la fin de validité du contrat" |
 | Text removed on a removal order for terrorist content, with the related data | 6 months after the removal, longer only at the request of the authority or a court | [Regulation 2021/784](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32021R0784) art. 6(2); kept by hand, see the [moderation runbook](moderation.md) |
 | Security events | 6 months | CNIL [« Tracer les opérations »](https://www.cnil.fr/fr/securite-tracer-les-operations): "entre six mois et un an" |
-| Erasure log (ids of what was erased, time) | 8 days, so that erasures are applied again after a Time Travel restore | EDPB CEF 2025 report on the right to erasure; longer than the 7 days of Time Travel |
+| Erasure log (id of the deleted account, choice for its published texts, IP address and HTTP and TLS versions of the deletion, time) | 8 days, so that erasures are applied again after a Time Travel restore | EDPB CEF 2025 report on the right to erasure; longer than the 7 days of Time Travel |
 | Job runs (`job_run`: job, start, end, outcome; no personal data) | Not personal data | — |
 | Database backups (D1 Time Travel) | 7 days on the Workers Free plan; deleted data disappears from them within 7 days | [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/), `PROCESSOR_FACTS.d1TimeTravelDays` |
 | Sync chunks: reviews, cards, personal decks and their words, notes, « Je connais » marks | Until sync is turned off on any device or the account is deleted, by the learner, a request or the 2 years of inactivity. No compaction: a value edited or deleted on a device stays in its older chunk until then | Purpose ends |
