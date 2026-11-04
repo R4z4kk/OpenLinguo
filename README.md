@@ -33,7 +33,7 @@ pnpm --filter @openlinguo/web dev
 pnpm test
 ```
 
-More in the [web app](apps/web/README.md) and [API](apps/api/README.md) READMEs.
+More in the [web app](apps/web/README.md) and [API](apps/api/README.md) READMEs. To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
