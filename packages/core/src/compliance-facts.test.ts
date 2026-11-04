@@ -54,7 +54,7 @@ describe("compliance facts", () => {
   });
 
   test.each(Object.entries(LEGAL_WATCH))(
-    "%s is read again on its source in the last six months: re-read it, update docs/ROADMAP.md (Privacy & compliance, accessibility) and the statement in docs/compliance/accessibility-statement-template.md, then move value, checkedOn and reviewBy",
+    "%s is read again on its source in the last six months: re-read it, update docs/ROADMAP.md (Privacy & compliance, accessibility) and the statement in apps/web/src/legal/accessibility.tsx, then move value, checkedOn and reviewBy",
     (_, fact) => {
       expect(Date.now()).toBeLessThan(Date.parse(fact.reviewBy));
       expect(Date.parse(fact.reviewBy) - Date.parse(fact.checkedOn)).toBeLessThanOrEqual(184 * DAY);

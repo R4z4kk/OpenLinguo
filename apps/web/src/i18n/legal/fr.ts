@@ -10,6 +10,7 @@ export const legalFr: LegalMessages = {
   notice: "Mentions légales",
   privacy: "Confidentialité",
   terms: "Conditions d’utilisation",
+  accessibility: "Accessibilité",
   signInLinks:
     "En vous connectant, vous acceptez les conditions d’utilisation. Lisez comment nous traitons vos données.",
 };

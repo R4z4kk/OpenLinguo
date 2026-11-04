@@ -127,6 +127,7 @@ export const ROUTE_VISITS: Readonly<Record<string, Visit>> = {
   "/legal": { url: "/legal?lang=en", ready: title("Legal notice") },
   "/privacy": { url: "/privacy?lang=en", ready: title("Privacy") },
   "/terms": { url: "/terms?lang=en", ready: title("Terms of use") },
+  "/accessibility": { url: "/accessibility?lang=en", ready: title("Accessibility") },
 };
 
 export const NOT_FOUND_VISIT: Visit = { url: "/missing", ready: title(en.notFound.title) };
