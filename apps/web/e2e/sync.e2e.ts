@@ -163,7 +163,7 @@ const noViolations = async (page: Page) => {
 };
 
 const lastSyncToday = new RegExp(
-  `^${authEn.sync.lastToday.slice(0, authEn.sync.lastToday.indexOf("{{")).replace(/\./gu, "\\.")}`,
+  `^${authEn.sync.lastToday.slice(0, authEn.sync.lastToday.indexOf("{{")).replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")}`,
   "u",
 );
 
