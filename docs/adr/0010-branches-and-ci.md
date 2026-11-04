@@ -17,10 +17,11 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
 
 | Job | PR to `develop` or another branch | PR to `main` | Nightly and manual |
 | --- | --- | --- | --- |
-| `quick`: typecheck, lint, format, unit tests with coverage, build, data checks | runs, required | runs, required | runs |
+| `quick`: typecheck, lint, format, unit tests with coverage, build, size budgets, data checks | runs, required | runs, required | runs |
 | `e2e-shard`: Chromium in 2 shards, WebKit in 4 | skipped | runs | runs |
 | `e2e`: fails unless every shard passed | skipped | runs, required | runs |
 
+- Performance budgets (#349) live in `apps/web/src/build/budgets.ts`, dated. `quick` checks the sizes of the build (`pnpm budgets`: JavaScript and CSS gzip, service worker precache, first-visit data). The times (first and next visit at 4x CPU) need a browser, so `e2e/performance.e2e.ts` checks them in the Chromium shards.
 - Nothing but the deploy runs on push: the pull request already tested the merge result. A nightly run (02:37 UTC) and a manual run (`workflow_dispatch`) test `develop` in full. Only pull request runs cancel the run they replace on the same branch.
 - Playwright runs with `fullyParallel`, so shards split by test rather than by file.
 - Rulesets:

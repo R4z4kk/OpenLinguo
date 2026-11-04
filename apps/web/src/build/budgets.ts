@@ -1,0 +1,64 @@
+/**
+ * Performance budgets (#349). Measured 2026-11-04 on develop (6b09e37): Chromium, Playwright CPU
+ * throttling 4x, local network, i7-13700KF. Each size limit is the measure plus 14-20 %; the
+ * times are provisional (see below). Raising one is a decision: say why in the pull request.
+ * The sizes are checked after `pnpm build` (`pnpm budgets`), the times in e2e/performance.e2e.ts.
+ */
+export const BUDGETS_DATED = "2026-11-04";
+
+export type SizeBudget = {
+  readonly id: "js" | "css" | "precache" | "import";
+  readonly label: string;
+  readonly measured: number;
+  readonly limit: number;
+  readonly fix: string;
+};
+
+export const SIZE_BUDGETS: readonly SizeBudget[] = [
+  {
+    id: "js",
+    label: "JavaScript of dist/assets, gzip",
+    measured: 493_500,
+    limit: 600_000,
+    fix: "Every route loads the entry chunk. Find what grew and load it with lazyRouteComponent or import().",
+  },
+  {
+    id: "css",
+    label: "CSS of dist/assets, gzip",
+    measured: 127_983,
+    limit: 150_000,
+    fix: "The font-face declarations are most of it: check a new font package or a new font subset.",
+  },
+  {
+    id: "precache",
+    label: "Service worker precache, raw",
+    measured: 2_157_958,
+    limit: 2_500_000,
+    fix: "The precache is downloaded on every install: leave the new file out of globPatterns in vite.config.ts, or load it on demand.",
+  },
+  {
+    id: "import",
+    label: "First-visit offline data (data/index.json files), raw",
+    measured: 29_798_783,
+    limit: 34_000_000,
+    fix: "The import time grows with these bytes (18 s of CPU at 4x): shrink the packed rows in scripts/pack-data.ts or move a dataset to the on-demand ones.",
+  },
+];
+
+export type TimingBudgets = {
+  /** Playwright CPU throttling, about a mid-range phone (Lighthouse's mobile profile). */
+  readonly cpuSlowdown: number;
+  /**
+   * First visit, import included, until the Today page shows its content: 22-24 s locally.
+   * Provisional until a CI run is measured; the budget is then 1.5x that run.
+   */
+  readonly coldUsableMs: number;
+  /** Median of 3 next visits, data already in IndexedDB: 1.3-1.7 s locally, provisional as above. */
+  readonly warmUsableMs: number;
+};
+
+export const TIMING_BUDGETS: TimingBudgets = {
+  cpuSlowdown: 4,
+  coldUsableMs: 30_000,
+  warmUsableMs: 3_000,
+};
