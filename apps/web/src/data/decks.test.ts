@@ -12,7 +12,7 @@ import {
   type Subject,
   type WordKey,
 } from "@openlinguo/core";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deckWordId,
   MY_WORDS,
@@ -29,9 +29,11 @@ import {
   fileWord,
   fileWords,
   introduceWord,
+  localNow,
   nextNewReadings,
   putCards,
   renameDeck,
+  utcOffsetOf,
   wordDecks,
   type DeckNameProblem,
   type LocalTime,
@@ -445,5 +447,22 @@ describe("nextNewReadings", () => {
 
   it("orders by the chosen referential", async () => {
     expect(await nextNewReadings(db, "gf0025-2021", 10)).toEqual(ok([E, HANG, NI, HAO, XING]));
+  });
+});
+
+describe("the UTC offset", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("is a positive zero in UTC, which JSON would otherwise change", () => {
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(0);
+    expect(Object.is(utcOffsetOf(new Date()), 0)).toBe(true);
+    expect(Object.is(localNow().utcOffsetMinutes, 0)).toBe(true);
+  });
+
+  it("is local time minus UTC", () => {
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(-120);
+    expect(localNow().utcOffsetMinutes).toBe(120);
   });
 });

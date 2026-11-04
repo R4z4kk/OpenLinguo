@@ -10,12 +10,13 @@ import {
   subjectOf,
   type WordKey,
 } from "@openlinguo/core";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ankiGrade,
   audioBytes,
   audioType,
   cardHistory,
+  deviceOffset,
   fieldText,
   freeSpace,
   guessCards,
@@ -827,5 +828,16 @@ describe("free space", () => {
     expect(isQuotaShort(plan, bytes - 1)).toBe(true);
     expect(isQuotaShort(plan, bytes)).toBe(false);
     expect(isQuotaShort(plan, null)).toBe(false);
+  });
+});
+
+describe("deviceOffset", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("is a positive zero in UTC", () => {
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(0);
+    expect(Object.is(deviceOffset(Date.UTC(2026, 9, 1)), 0)).toBe(true);
   });
 });
