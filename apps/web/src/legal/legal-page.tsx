@@ -39,6 +39,8 @@ export const List = ({ items }: { readonly items: readonly ReactNode[] }) => (
   </ul>
 );
 
+export const REPOSITORY = "https://github.com/R4z4kk/OpenLinguo";
+
 export const External = ({
   href,
   children,
