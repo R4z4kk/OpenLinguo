@@ -18,14 +18,16 @@ export type SyncMode =
   | { readonly kind: "other-account" }
   | { readonly kind: "on"; readonly lastSyncAt: number | null };
 
-const modeOf = (state: SyncState | null, accountId: string): SyncMode => {
+const modeOf = (state: SyncState | null, accountId: string | null): SyncMode => {
   if (state === null) return { kind: "off" };
   if (state.accountId !== accountId) return { kind: "other-account" };
   return { kind: "on", lastSyncAt: state.lastSyncAt };
 };
 
 /** The sync state of the device, followed live so another tab's change shows here. */
-const useSyncMode = (accountId: string): { readonly mode: SyncMode; readonly readAt: number } => {
+const useSyncMode = (
+  accountId: string | null,
+): { readonly mode: SyncMode; readonly readAt: number } => {
   const [read, setRead] = useState<{ readonly mode: SyncMode; readonly readAt: number }>({
     mode: { kind: "loading" },
     readAt: 0,
@@ -202,11 +204,30 @@ export const SyncPanel = ({
       )}
       {mode.kind === "off" && <div className="mt-4">{activate(t("sync.activate"))}</div>}
       {mode.kind === "other-account" && (
-        <div className="mt-4">{activate(t("sync.activateHere"))}</div>
+        <div className="mt-4 flex flex-col gap-4">
+          <Explanation />
+          <div>{activate(t("sync.activateHere"))}</div>
+        </div>
       )}
     </section>
   );
 };
+
+/** Signed out, any state on the device reads as another account's: sync waits for a sign-in. */
+export const SyncPausedNotice = ({ mode }: { readonly mode: SyncMode }) => {
+  const { t } = useTranslation("auth");
+  const text = useSyncText();
+  if (mode.kind === "unreadable")
+    return (
+      <p role="alert" className="mt-4 text-danger">
+        {text.message(mode.failure)}
+      </p>
+    );
+  return mode.kind === "other-account" ? <p className="mt-4">{t("sync.paused")}</p> : null;
+};
+
+/** A session that ended stops sync: the signed-out page says so rather than leave it silent. */
+export const SyncPaused = () => <SyncPausedNotice mode={useSyncMode(null).mode} />;
 
 /** The confirmation of the mockups: first focus on « Annuler », the deletion said in full. */
 export const TurnOffDialog = ({
@@ -273,6 +294,11 @@ export const AccountSync = ({ session }: { readonly session: Session }) => {
   const [offProblem, setOffProblem] = useState<string | null>(null);
 
   const describe = (error: SyncFailure): string => text.message(toShown(error));
+
+  // A sign-in lands here without an app start.
+  useEffect(() => {
+    void requestSync();
+  }, [session.user.id]);
 
   const activate = async () => {
     if (activating) return;

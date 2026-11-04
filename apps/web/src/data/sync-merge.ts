@@ -231,6 +231,12 @@ export const applyChunk = async (
             const logged = await db.reviews.bulkGet(chunk.reviews.map(({ id }) => id));
             const reviews = chunk.reviews.filter((_, index) => logged[index] == null);
             await db.reviews.bulkAdd(reviews);
+            // The store holds them now: a waiting row would only send them again.
+            await db.syncEntities.bulkDelete(
+              chunk.reviews
+                .filter((_, index) => logged[index] != null)
+                .map(({ id }) => entityId("reviews", id)),
+            );
             const replays = new Set(reviews.map(({ cardId }) => cardId));
             for (const table of APPLY_ORDER)
               for (const entity of chunk.entities)

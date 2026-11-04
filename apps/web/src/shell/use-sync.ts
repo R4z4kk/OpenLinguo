@@ -1,5 +1,5 @@
 import type { SyncUsage } from "@openlinguo/core/sync";
-import { useEffect, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { loadSession, stepOf } from "@/data/account";
 import { database, type SyncState } from "@/data/database";
 import { clearWhenOff, SYNC_MIN_INTERVAL_MS, syncNow, type SyncFailure } from "@/data/sync";
@@ -9,9 +9,11 @@ export type SyncView = {
   readonly running: boolean;
   readonly usage: SyncUsage | null;
   readonly failure: SyncFailure | null;
+  /** Moves when a run moved the cursor: what a screen read may have changed. */
+  readonly revision: number;
 };
 
-let view: SyncView = { running: false, usage: null, failure: null };
+let view: SyncView = { running: false, usage: null, failure: null, revision: 0 };
 const listeners = new Set<() => void>();
 let inFlight = false;
 
@@ -36,6 +38,16 @@ const fail = (failure: SyncFailure): void => {
   publish({ ...view, running: false, failure });
 };
 
+/** Whether a run moved the cursor, a failed one included. Not known counts as moved. */
+const cursorMoved = async (before: number): Promise<boolean> => {
+  try {
+    const state = await database.syncState.get("state");
+    return state != null && state.cursor !== before;
+  } catch {
+    return true;
+  }
+};
+
 /** The limit is the last success, kept on the device: a failure retries at the next trigger. */
 const once = async (force: boolean): Promise<void> => {
   let state: SyncState | null;
@@ -57,16 +69,11 @@ const once = async (force: boolean): Promise<void> => {
   if (session.value === null || stepOf(session.value) !== "ready") return;
   publish({ ...view, running: true });
   const result = await syncNow(database, session.value.user.id);
-  if (result.ok) {
-    publish({ running: false, usage: result.value, failure: null });
-    return;
-  }
-  const { error } = result;
-  if (error.kind === "busy") {
-    publish({ ...view, running: false });
-    return;
-  }
-  fail(error);
+  const moved = await cursorMoved(state.cursor);
+  const done = { ...view, running: false, revision: view.revision + (moved ? 1 : 0) };
+  if (result.ok) publish({ ...done, usage: result.value, failure: null });
+  else if (result.error.kind === "busy") publish(done);
+  else publish({ ...done, failure: result.error });
 };
 
 const attempt = async (force: boolean): Promise<void> => {
@@ -81,7 +88,7 @@ const attempt = async (force: boolean): Promise<void> => {
 
 /**
  * Syncs unless the last success is under `SYNC_MIN_INTERVAL_MS` old, sync is off or nobody is
- * signed in; `force` is for « Sync now ».
+ * signed in; `force` is for « Sync now » and the end of a session.
  */
 export const requestSync = (force = false): Promise<void> => attempt(force);
 
@@ -91,20 +98,41 @@ const start = async (): Promise<void> => {
   else fail(cleared.error);
 };
 
-/** Syncs at app start and when the network comes back, and clears rows recorded while sync is off. */
+/** Syncs when the network or the learner comes back to a running app; answers how to stop. */
+export const listenForSync = (): (() => void) => {
+  const online = (): void => {
+    void requestSync();
+  };
+  const visible = (): void => {
+    if (document.visibilityState === "visible") void requestSync();
+  };
+  window.addEventListener("online", online);
+  document.addEventListener("visibilitychange", visible);
+  return () => {
+    window.removeEventListener("online", online);
+    document.removeEventListener("visibilitychange", visible);
+  };
+};
+
+/** Syncs at app start and on the triggers above, and clears rows recorded while sync is off. */
 export const useSync = (): void => {
   useEffect(() => {
     void start();
-    const online = (): void => {
-      void requestSync();
-    };
-    window.addEventListener("online", online);
-    return () => {
-      window.removeEventListener("online", online);
-    };
+    return listenForSync();
   }, []);
 };
 
 export const currentSyncView = (): SyncView => view;
 
 export const useSyncView = (): SyncView => useSyncExternalStore(subscribe, currentSyncView);
+
+/** Calls `refresh` after a sync moved the revision, not when the screen opens. */
+export const useAfterMerge = (refresh: () => void): void => {
+  const { revision } = useSyncView();
+  const seen = useRef(revision);
+  useEffect(() => {
+    if (seen.current === revision) return;
+    seen.current = revision;
+    refresh();
+  }, [revision, refresh]);
+};

@@ -81,7 +81,7 @@ export const authFr: AuthMessages = {
     intro:
       "Retrouvez vos cartes et votre progression sur vos autres appareils. C’est facultatif : sans elle, tout continue de marcher sur cet appareil.",
     sentTitle: "Ce qui part sur le serveur",
-    sent: "Vos révisions avec leur date et leur heure, vos cartes, vos paquets et leurs mots, vos notes, vos mots marqués « Je connais ».",
+    sent: "Vos révisions avec votre réponse, leur date, leur heure et votre fuseau horaire, vos cartes, vos paquets et leurs mots, vos notes, vos mots marqués « Je connais ».",
     stayedTitle: "Ce qui reste sur cet appareil",
     stayed:
       "Votre journal, vos défis, vos textes, vos réglages, l’audio, votre voix et votre clé IA.",
@@ -93,7 +93,7 @@ export const authFr: AuthMessages = {
       off: "Si vous désactivez la synchronisation, elles sont supprimées du serveur.",
       edited:
         "Une note modifiée ou supprimée reste sur le serveur jusqu’à ce que vous désactiviez la synchronisation.",
-      law: "La loi française nous fait garder des traces : l’adresse IP de chaque envoi pendant 1 an et, après la suppression du compte, votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an.",
+      law: "La loi française nous fait garder des traces : l’adresse IP de chaque envoi et de chaque désactivation pendant 1 an et, après la suppression du compte, votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an.",
     },
     activate: "Activer la synchronisation",
     activating: "Activation de la synchronisation…",
@@ -109,16 +109,18 @@ export const authFr: AuthMessages = {
     syncNow: "Synchroniser maintenant",
     turnOff: "Désactiver et supprimer du serveur",
     schedule:
-      "La synchronisation se fait à l’ouverture de l’app, en fin de séance et au retour du réseau. Elle ne vous envoie jamais de notification.",
+      "La synchronisation se fait à l’ouverture de l’app, quand vous y revenez, en fin de séance et au retour du réseau. Elle ne vous envoie jamais de notification.",
     offTitle: "Désactiver la synchronisation ?",
     offBody:
       "Vos données seront supprimées du serveur, pour tous vos appareils. Elles restent sur cet appareil. Vos autres appareils arrêteront de se synchroniser et vous le diront.",
-    offLaw: "La trace de chaque envoi reste gardée 1 an, comme la loi française nous le demande.",
+    offLaw:
+      "La loi française nous demande de garder 1 an la trace de chaque envoi et de cette désactivation.",
     offCancel: "Annuler",
     offConfirm: "Désactiver et supprimer",
     offWorking: "Suppression sur le serveur…",
     offFailed:
       "La synchronisation n’a pas pu être désactivée et reste activée. Réessayez plus tard.",
+    paused: "La synchronisation est en pause : connectez-vous pour la reprendre.",
     otherAccount:
       "Cet appareil était synchronisé avec un autre compte : la synchronisation est coupée. Si vous l’activez ici, tout ce qui se trouve sur cet appareil, y compris ce qui vient de l’autre compte, rejoindra ce compte.",
     activateHere: "Activer pour ce compte",

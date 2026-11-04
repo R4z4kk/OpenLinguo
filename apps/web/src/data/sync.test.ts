@@ -9,13 +9,14 @@ import {
   type WordKey,
 } from "@openlinguo/core";
 import { SYNC_HEADERS, SYNC_LIMITS } from "@openlinguo/core/sync";
+import type { Table } from "dexie";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredNote } from "./database.ts";
 import { deleteDeck, fileWord, putCards } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
 import { decodeChunk, SYNC_FORMAT, SYNC_VERSION } from "./sync-chunk.ts";
 import { SYNCED_TABLES } from "./sync-entities.ts";
-import { clearWhenOff, syncNow, turnOff, turnOn } from "./sync.ts";
+import { clearWhenOff, forgetSync, syncNow, turnOff, turnOn } from "./sync.ts";
 import { seedLearning } from "./test-support.ts";
 
 const REFERENTIAL = "hsk-2025";
@@ -94,6 +95,8 @@ const serve = (store: Store) => (input: string, init: RequestInit) => {
   if (store.offline) return Promise.reject(new TypeError("offline"));
   if (method === "POST") {
     if (!(init.body instanceof Uint8Array)) throw new Error("expected bytes");
+    if (new Headers(init.headers).get("content-type") !== "application/gzip")
+      return Promise.resolve(refuse(415, "INVALID_REQUEST"));
     const bytes = new Uint8Array(init.body);
     if (bytes.length > SYNC_LIMITS.chunkBytes)
       return Promise.resolve(refuse(413, "SYNC_CHUNK_TOO_LARGE"));
@@ -128,10 +131,13 @@ const serve = (store: Store) => (input: string, init: RequestInit) => {
   }
   const after = Number(url.searchParams.get("after"));
   const usage = usageOf(store);
-  const headers = new Headers({ [SYNC_HEADERS.used]: String(usage.used) });
+  const headers = new Headers();
   if (usage.oldest !== null) headers.set(SYNC_HEADERS.oldest, String(usage.oldest));
   const next = store.chunks.find(({ id }) => id > after) ?? null;
-  if (next === null) return Promise.resolve(new Response(null, { status: 204, headers }));
+  if (next === null) {
+    headers.set(SYNC_HEADERS.used, String(usage.used));
+    return Promise.resolve(new Response(null, { status: 204, headers }));
+  }
   headers.set(SYNC_HEADERS.id, String(next.id));
   return Promise.resolve(new Response(new Uint8Array(next.bytes), { status: 200, headers }));
 };
@@ -276,6 +282,57 @@ const learn = async (db: Database, time: number): Promise<void> => {
 };
 
 describe("syncNow", () => {
+  it("takes the usage from the answer with no chunk, not from a chunk", async () => {
+    const a = await device();
+    await learn(a, 100);
+    await sync(a);
+    const b = await device();
+
+    expect(await sync(b)).toEqual({
+      used: usageOf(store).used,
+      limit: SYNC_LIMITS.accountBytes,
+      oldest: 1,
+    });
+  });
+
+  it("reads what it sends table by table, not row by row", async () => {
+    const a = await device();
+    await learn(a, 100);
+    const gets = [a.reviews, a.decks, a.notes, a.knownMarks].map((table) =>
+      vi.spyOn(table as Table<object, unknown>, "get"),
+    );
+
+    await sync(a);
+
+    for (const get of gets) expect(get).not.toHaveBeenCalled();
+    const [chunk] = await posted();
+    expect(chunk?.reviews).toHaveLength(1);
+    expect(chunk?.entities.map(({ table }) => table).sort()).toEqual([
+      "cards",
+      "cards",
+      "deckWords",
+      "decks",
+      "knownMarks",
+      "notes",
+    ]);
+  });
+
+  it("turned on again, it does not send a review the store already holds", async () => {
+    const a = await device();
+    await learn(a, 100);
+    await sync(a);
+    const b = await device();
+    await sync(b);
+    const before = store.chunks.length;
+
+    expect((await turnOn(b, ACCOUNT, 500)).ok).toBe(true);
+    expect((await b.syncEntities.toArray()).some(({ table }) => table === "reviews")).toBe(true);
+    await sync(b);
+
+    expect((await b.syncEntities.toArray()).some(({ table }) => table === "reviews")).toBe(false);
+    expect((await posted()).slice(before).flatMap(({ reviews }) => reviews)).toEqual([]);
+  });
+
   it("receives before it sends", async () => {
     const a = await device();
     await learn(a, 100);
@@ -779,6 +836,36 @@ describe("turnOff", () => {
     expect(result).toEqual({ ok: false, error: { kind: "api", failure: { kind: "offline" } } });
     expect(await a.syncState.get("state")).toBeDefined();
     expect(await a.syncEntities.count()).toBe(rows);
+  });
+});
+
+describe("forgetSync", () => {
+  it("clears what sync remembers, and the learning data stays", async () => {
+    const a = await device();
+    await learn(a, 100);
+    const before = await tables(a);
+
+    expect(await forgetSync(a)).toEqual({ ok: true, value: null });
+
+    expect(await a.syncState.count()).toBe(0);
+    expect(await a.syncEntities.count()).toBe(0);
+    expect(await tables(a)).toEqual(before);
+  });
+
+  it("works where sync is unavailable, with nothing to clear", async () => {
+    await without("CompressionStream", async () => {
+      const a = fresh();
+      expect(await forgetSync(a)).toEqual({ ok: true, value: null });
+    });
+  });
+
+  it("says when the device cannot clear it", async () => {
+    const a = await device();
+    vi.spyOn(a.syncState, "delete").mockRejectedValue(new Error("disk full"));
+    expect(await forgetSync(a)).toEqual({
+      ok: false,
+      error: { kind: "storage", message: expect.stringContaining("disk full") as string },
+    });
   });
 });
 
