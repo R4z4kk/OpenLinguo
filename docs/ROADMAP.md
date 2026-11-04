@@ -162,7 +162,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 | AI-generated public-interest text disclosure (deployers) | AI Act art. 50(4) | Unlikely (learning content), human-reviewed library anyway | Badge kept on library items |
 | Accessibility of services (EAA) | Directive 2019/882 → Code de la consommation L.412-13, D.412-49 et seq., décret 2023-931; microenterprises providing services (<10 staff, ≤€2M) exempt | No (non-commercial individual, below thresholds) | WCAG 2.2 AA as a voluntary target + accessibility statement |
 
-Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301 549 v4.1.1 Official Journal citation (expected Nov–Dec 2026); review both at M10. Not legal advice.
+Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301 549 v4.1.1 Official Journal citation (expected Nov–Dec 2026), both dated in `LEGAL_WATCH` (`packages/core/src/compliance-facts.ts`): a unit test fails from their `reviewBy`. Not legal advice.
 
 ### Measures
 

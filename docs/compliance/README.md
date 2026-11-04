@@ -2,7 +2,7 @@
 
 Baseline written in M0 (issue #10) so privacy and accessibility are designed in, not retrofitted. These are working documents, not legal advice. The legal basis behind them is in the roadmap's compliance table and [ADR 0009](../adr/0009-privacy-and-compliance.md).
 
-Values that can expire (Data Privacy Framework statuses, processor agreements, the DPIA review, the D1 size limit, the code of practice facts) are dated in `packages/core/src/compliance-facts.ts` and `ai-marking.ts`, with `checkedOn`, `reviewBy` and their source; a unit test fails from each `reviewBy`.
+Values that can expire (Data Privacy Framework statuses, processor agreements, the DPIA review, the D1 size limit, the accessibility texts watched, the code of practice facts) are dated in `packages/core/src/compliance-facts.ts` and `ai-marking.ts`, with `checkedOn`, `reviewBy` and their source; a unit test fails from each `reviewBy`.
 
 | Document | Purpose |
 |---|---|
