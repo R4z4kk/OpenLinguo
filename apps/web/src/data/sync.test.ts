@@ -463,7 +463,7 @@ describe("syncNow", () => {
 
     expect(result).toEqual({
       ok: false,
-      error: { kind: "storage", message: "Invalid sync row knownMarks:broken" },
+      error: { kind: "invalid-row", entityId: "knownMarks:broken" },
     });
     expect(store.calls).not.toContain("POST");
     expect(await waitingCount(a)).toBe(3);
@@ -495,7 +495,7 @@ describe("syncNow", () => {
 
       expect(result).toEqual({
         ok: false,
-        error: { kind: "storage", message: `Invalid sync row ${id}` },
+        error: { kind: "invalid-row", entityId: id },
       });
       expect(store.calls).not.toContain("POST");
       expect(await waitingCount(a)).toBe(2);

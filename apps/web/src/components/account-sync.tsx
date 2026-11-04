@@ -1,0 +1,336 @@
+import { SYNC_LIMITS } from "@openlinguo/core/sync";
+import { liveQuery } from "dexie";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
+import { isShown, toShown, useSyncText, type ShownFailure } from "@/components/sync-text";
+import type { Session } from "@/data/account";
+import { database, type SyncState } from "@/data/database";
+import { turnOff, turnOn, type SyncFailure } from "@/data/sync";
+import { requestSync, resetSyncView, useSyncView, type SyncView } from "@/shell/use-sync";
+
+/** What the device remembers: nothing, another account's sync, or this account's. */
+export type SyncMode =
+  | { readonly kind: "loading" }
+  | { readonly kind: "unreadable"; readonly failure: ShownFailure }
+  | { readonly kind: "off" }
+  | { readonly kind: "other-account" }
+  | { readonly kind: "on"; readonly lastSyncAt: number | null };
+
+const modeOf = (state: SyncState | null, accountId: string): SyncMode => {
+  if (state === null) return { kind: "off" };
+  if (state.accountId !== accountId) return { kind: "other-account" };
+  return { kind: "on", lastSyncAt: state.lastSyncAt };
+};
+
+/** The sync state of the device, followed live so another tab's change shows here. */
+const useSyncMode = (accountId: string): { readonly mode: SyncMode; readonly readAt: number } => {
+  const [read, setRead] = useState<{ readonly mode: SyncMode; readonly readAt: number }>({
+    mode: { kind: "loading" },
+    readAt: 0,
+  });
+  useEffect(() => {
+    const subscription = liveQuery(() => database.syncState.get("state")).subscribe({
+      next: (state) => {
+        setRead({ mode: modeOf(state ?? null, accountId), readAt: Date.now() });
+      },
+      error: (error: unknown) => {
+        setRead({
+          mode: { kind: "unreadable", failure: { kind: "storage", message: String(error) } },
+          readAt: Date.now(),
+        });
+      },
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [accountId]);
+  return read;
+};
+
+/** The three blocks shown before turning sync on and kept under « Ce qui est synchronisé ». */
+const Explanation = () => {
+  const { t } = useTranslation("auth");
+  return (
+    <>
+      <div>
+        <h3 className="font-semibold">{t("sync.sentTitle")}</h3>
+        <p className="mt-1">{t("sync.sent")}</p>
+      </div>
+      <div>
+        <h3 className="font-semibold">{t("sync.stayedTitle")}</h3>
+        <p className="mt-1">{t("sync.stayed")}</p>
+      </div>
+      <div>
+        <h3 className="font-semibold">{t("sync.knowTitle")}</h3>
+        <ul className="mt-1 flex list-disc flex-col gap-2 pl-5">
+          <li>{t("sync.know.merge")}</li>
+          <li>{t("sync.know.readable")}</li>
+          <li>{t("sync.know.off")}</li>
+          <li>{t("sync.know.law")}</li>
+        </ul>
+      </div>
+    </>
+  );
+};
+
+const Usage = ({ used }: { readonly used: number }) => {
+  const { t } = useTranslation("auth");
+  const text = useSyncText();
+  const percent = Math.min(100, Math.ceil((used / SYNC_LIMITS.accountBytes) * 100));
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-small text-muted">
+        {t("sync.usage", {
+          used: text.megabytes(used),
+          limit: text.megabytes(SYNC_LIMITS.accountBytes),
+        })}
+      </p>
+      <div
+        role="img"
+        aria-label={t("sync.usageLabel", { ratio: percent / 100 })}
+        className="h-2 overflow-hidden rounded-full bg-sunken"
+      >
+        <div className="h-2 bg-ink" style={{ width: `${String(percent)}%` }} />
+      </div>
+    </div>
+  );
+};
+
+/** Profile › Compte › « Synchronisation » (ADR 0016), the part that only depends on what it is given. */
+export const SyncPanel = ({
+  mode,
+  view,
+  now,
+  headingRef,
+  activating,
+  problem,
+  onActivate,
+  onSyncNow,
+  onTurnOff,
+}: {
+  readonly mode: SyncMode;
+  readonly view: SyncView;
+  readonly now: number;
+  readonly headingRef: RefObject<HTMLHeadingElement | null>;
+  readonly activating: boolean;
+  readonly problem: string | null;
+  readonly onActivate: () => void;
+  readonly onSyncNow: () => void;
+  readonly onTurnOff: () => void;
+}) => {
+  const { t } = useTranslation("auth");
+  const text = useSyncText();
+  const failure = view.failure !== null && isShown(view.failure) ? view.failure : null;
+
+  const status = (): string => {
+    switch (mode.kind) {
+      case "loading":
+      case "unreadable":
+        return "";
+      case "off":
+        return activating ? t("sync.activating") : "";
+      case "other-account":
+        return t("sync.otherAccount");
+      case "on":
+        if (view.running) return t("sync.running");
+        return mode.lastSyncAt === null ? t("sync.never") : text.lastSync(mode.lastSyncAt, now);
+    }
+  };
+
+  const activate = (label: string) => (
+    <Button aria-disabled={activating} onClick={onActivate}>
+      {label}
+    </Button>
+  );
+
+  return (
+    <section aria-labelledby="account-sync" className="mt-8">
+      <h2 id="account-sync" ref={headingRef} tabIndex={-1} className="text-subtitle">
+        {t("sync.title")}
+      </h2>
+      {mode.kind === "off" && (
+        <div className="mt-2 flex flex-col gap-4">
+          <p>{t("sync.intro")}</p>
+          <Explanation />
+        </div>
+      )}
+      <p role="status" className="mt-2">
+        {status()}
+      </p>
+      {mode.kind === "unreadable" && (
+        <p role="alert" className="mt-2 text-danger">
+          {text.message(mode.failure)}
+        </p>
+      )}
+      {mode.kind === "on" && failure !== null && (
+        <p role="alert" className="mt-2 text-danger">
+          {text.message(failure)}
+        </p>
+      )}
+      {problem !== null && (
+        <p role="alert" className="mt-2 text-danger">
+          {problem}
+        </p>
+      )}
+      {mode.kind === "on" && view.usage !== null && (
+        <div className="mt-4">
+          <Usage used={view.usage.used} />
+        </div>
+      )}
+      {mode.kind === "on" && (
+        <>
+          <details className="mt-4 rounded-card border border-hairline bg-surface p-3">
+            <summary className="min-h-6 cursor-pointer font-semibold">{t("sync.details")}</summary>
+            <div className="mt-3 flex flex-col gap-4">
+              <Explanation />
+            </div>
+          </details>
+          <div className="mt-4 flex flex-wrap items-start gap-3">
+            {failure?.kind === "turned-off-elsewhere" && activate(t("sync.activate"))}
+            <Button variant="outline" aria-disabled={view.running} onClick={onSyncNow}>
+              {t("sync.syncNow")}
+            </Button>
+            <Button variant="danger" onClick={onTurnOff}>
+              {t("sync.turnOff")}
+            </Button>
+          </div>
+          <p className="mt-4 text-small text-muted">{t("sync.schedule")}</p>
+        </>
+      )}
+      {mode.kind === "off" && <div className="mt-4">{activate(t("sync.activate"))}</div>}
+      {mode.kind === "other-account" && (
+        <div className="mt-4">{activate(t("sync.activateHere"))}</div>
+      )}
+    </section>
+  );
+};
+
+/** The confirmation of the mockups: first focus on « Annuler », the deletion said in full. */
+export const TurnOffDialog = ({
+  working,
+  problem,
+  onClose,
+  onConfirm,
+}: {
+  readonly working: boolean;
+  readonly problem: string | null;
+  readonly onClose: () => void;
+  readonly onConfirm: (close: () => void) => void;
+}) => {
+  const { t } = useTranslation("auth");
+  return (
+    <Dialog
+      title={t("sync.offTitle")}
+      description={t("sync.offBody")}
+      sheet={null}
+      onClose={onClose}
+    >
+      {(close) => (
+        <>
+          <p className="mt-3">{t("sync.offLaw")}</p>
+          {problem !== null && (
+            <p role="alert" className="mt-4 text-danger">
+              {problem}
+            </p>
+          )}
+          <div className="mt-6 flex flex-wrap justify-end gap-3">
+            <Button variant="outline" data-autofocus onClick={close}>
+              {t("sync.offCancel")}
+            </Button>
+            <Button
+              variant="danger"
+              aria-disabled={working}
+              onClick={() => {
+                onConfirm(close);
+              }}
+            >
+              {t("sync.offConfirm")}
+            </Button>
+          </div>
+          <p role="status" className="mt-3 text-small">
+            {working ? t("sync.offWorking") : ""}
+          </p>
+        </>
+      )}
+    </Dialog>
+  );
+};
+
+/** Profile › Compte › « Synchronisation »: turn it on, sync now, turn it off. */
+export const AccountSync = ({ session }: { readonly session: Session }) => {
+  const { t } = useTranslation("auth");
+  const text = useSyncText();
+  const { mode, readAt } = useSyncMode(session.user.id);
+  const view = useSyncView();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [activating, setActivating] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [offProblem, setOffProblem] = useState<string | null>(null);
+
+  const describe = (error: SyncFailure): string => text.message(toShown(error));
+
+  const activate = async () => {
+    if (activating) return;
+    setActivating(true);
+    setProblem(null);
+    const result = await turnOn(database, session.user.id, Date.now());
+    setActivating(false);
+    if (!result.ok) {
+      setProblem(describe(result.error));
+      return;
+    }
+    resetSyncView();
+    heading.current?.focus();
+    void requestSync(true);
+  };
+
+  const deactivate = async (close: () => void) => {
+    if (deleting) return;
+    setDeleting(true);
+    setOffProblem(null);
+    const result = await turnOff(database);
+    setDeleting(false);
+    if (!result.ok) {
+      setOffProblem(result.error.kind === "api" ? t("sync.offFailed") : describe(result.error));
+      return;
+    }
+    resetSyncView();
+    close();
+    heading.current?.focus();
+  };
+
+  return (
+    <>
+      <SyncPanel
+        mode={mode}
+        view={view}
+        now={readAt}
+        headingRef={heading}
+        activating={activating}
+        problem={problem}
+        onActivate={() => void activate()}
+        onSyncNow={() => {
+          if (!view.running) void requestSync(true);
+        }}
+        onTurnOff={() => {
+          setOffProblem(null);
+          setAsking(true);
+        }}
+      />
+      {asking && (
+        <TurnOffDialog
+          working={deleting}
+          problem={offProblem}
+          onClose={() => {
+            setAsking(false);
+          }}
+          onConfirm={(close) => void deactivate(close)}
+        />
+      )}
+    </>
+  );
+};

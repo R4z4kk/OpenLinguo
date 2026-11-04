@@ -29,7 +29,7 @@ import {
   type StoredAudio,
   type StoredEntry,
 } from "./database.ts";
-import { checkName, putCards, type DeckNameFailure } from "./decks.ts";
+import { checkName, putCards, utcOffsetOf, type DeckNameFailure } from "./decks.ts";
 import { guarded, type ReviewLogFailure } from "./review-log.ts";
 
 export const ROLES = ["characters", "pinyin", "meaning", "audio"] as const;
@@ -565,7 +565,7 @@ export const reviewId = (at: number, cardHash: Uint8Array): string => {
 };
 
 /** Local time minus UTC at a time, in this device's time zone. */
-export const deviceOffset = (at: number): number => -new Date(at).getTimezoneOffset();
+export const deviceOffset = (at: number): number => utcOffsetOf(new Date(at));
 
 /**
  * The answers as review log entries. Anki does not record the time zone of an answer: it is dated

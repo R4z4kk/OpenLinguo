@@ -29,9 +29,12 @@ import { describeFailure, guarded, type ReviewLogFailure } from "./review-log.ts
 /** A time with the local offset it was read in, as reviews store it. */
 export type LocalTime = { readonly at: number; readonly utcOffsetMinutes: number };
 
+/** Local time minus UTC at a date: `0 -` keeps UTC at `0`, where a unary minus gives `-0`. */
+export const utcOffsetOf = (date: Date): number => 0 - date.getTimezoneOffset();
+
 export const localNow = (): LocalTime => {
   const now = new Date();
-  return { at: now.getTime(), utcOffsetMinutes: -now.getTimezoneOffset() };
+  return { at: now.getTime(), utcOffsetMinutes: utcOffsetOf(now) };
 };
 
 export type DeckCounts = { readonly new: number; readonly learning: number; readonly due: number };

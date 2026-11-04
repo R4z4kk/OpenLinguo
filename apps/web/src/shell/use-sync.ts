@@ -27,6 +27,11 @@ const subscribe = (listener: () => void): (() => void) => {
   };
 };
 
+/** After turning sync off or on: nothing of the previous state may stay shown. */
+export const resetSyncView = (): void => {
+  publish({ ...view, usage: null, failure: null });
+};
+
 const fail = (failure: SyncFailure): void => {
   publish({ ...view, running: false, failure });
 };

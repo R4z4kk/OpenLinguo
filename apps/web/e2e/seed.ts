@@ -27,7 +27,10 @@ export const put = (page: Page, store: Store, row: object): Promise<void> =>
   );
 
 /** Every row of a store, as the app stored it. */
-export const all = (page: Page, store: Store | "resolutions"): Promise<unknown[]> =>
+export const all = (
+  page: Page,
+  store: Store | "resolutions" | "cards" | "deckWords",
+): Promise<unknown[]> =>
   page.evaluate(
     (name) =>
       new Promise<unknown[]>((resolve, reject) => {

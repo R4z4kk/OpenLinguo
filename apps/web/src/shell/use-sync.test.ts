@@ -154,3 +154,28 @@ describe("requestSync", () => {
     expect(network.calls).toHaveLength(2);
   });
 });
+
+describe("resetSyncView", () => {
+  it("forgets the failure and the usage, as after turning sync off", async () => {
+    const { requestSync, resetSyncView, currentSyncView } = await load();
+    await turnedOn();
+    network.offline = true;
+    await requestSync();
+    expect(currentSyncView().failure).not.toBeNull();
+
+    resetSyncView();
+
+    expect(currentSyncView()).toEqual({ running: false, usage: null, failure: null });
+  });
+
+  it("forgets the usage of the last success", async () => {
+    const { requestSync, resetSyncView, currentSyncView } = await load();
+    await turnedOn();
+    await requestSync();
+    expect(currentSyncView().usage).not.toBeNull();
+
+    resetSyncView();
+
+    expect(currentSyncView().usage).toBeNull();
+  });
+});
