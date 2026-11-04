@@ -49,40 +49,27 @@ Processing that happens only on the user's device (learning data, voice, journal
 
 | Item | Content |
 |---|---|
-| (b) Purposes | Keep the data that identifies whoever created, edited or deleted hosted content, for a judicial or administrative request (LCEN art. 6 V, décret 2021-1362 arts 5 to 8) |
+| (b) Purposes | Keep the data that identifies whoever created, edited or deleted hosted content, for a judicial or administrative request (LCEN art. 6 V, décret 2021-1362 arts 5 to 8). For sync chunks, on the strict reading of [ADR 0016](../adr/0016-sync.md): the text does not settle whether private storage falls under it |
 | Legal basis | Legal obligation (art. 6(1)(c)) |
-| (c) Data subjects | Registered users who submit or withdraw texts |
-| (c) Data | Account id, submission id, operation, IP address, HTTP and TLS versions, time; when an account that submitted is deleted, its email and pseudonym, sealed; only what is already collected (art. 8: "dans la mesure où elles sont collectées") |
+| (c) Data subjects | Registered users who submit or withdraw texts, or who sync |
+| (c) Data | Account id, submission id (for sync, `sync:<chunk id>` for an upload and `sync:all` for a deletion), operation, IP address, HTTP and TLS versions, time; when an account that holds a text, a sync chunk or a hosting record is deleted, its email and pseudonym, sealed; only what is already collected (art. 8: "dans la mesure où elles sont collectées") |
 | (d) Recipients | Maintainer, only to answer an authority |
 | (e) Transfers | None |
 | (f) Erasure | Connection records 1 year after the operation (art. 5), kept when the text or the account is deleted; sealed pseudonym 1 year (art. 3) and sealed email 5 years (art. 2) after the account is deleted; by the daily jobs (#278) |
-| (g) Security | In D1 (`eu` jurisdiction), no foreign key to the account, read only by the jobs and the admin export |
+| (g) Security | In D1 (`eu` jurisdiction), no foreign key to the account, read only by the jobs and the maintainer's query for a request ([requests runbook](requests.md)) |
 
 ## P3 — Sync (M8)
 
 | Item | Content |
 |---|---|
-| (b) Purposes | Keep cards and review history consistent across the user's devices |
+| (b) Purposes | Keep cards, review history, personal decks, notes and « Je connais » marks consistent across the user's devices ([ADR 0016](../adr/0016-sync.md)) |
 | Legal basis | Contract (art. 6(1)(b)), opt-in feature |
 | (c) Data subjects | Users who enable sync |
-| (c) Data | Card content, append-only review log |
-| (d) Recipients | Maintainer (operations only) |
-| (e) Transfers | None |
-| (f) Erasure | At account deletion or when sync is disabled and data deleted by the user |
-| (g) Security | As P1 |
-
-## P4 — Leagues (M8)
-
-| Item | Content |
-|---|---|
-| (b) Purposes | Weekly opt-in leagues ranking learners by XP |
-| Legal basis | Contract (art. 6(1)(b)), opt-in feature |
-| (c) Data subjects | Users who join leagues |
-| (c) Data | Pseudonym, predefined avatar id, weekly XP recomputed from synced review logs, league placement |
-| (d) Recipients | Maintainer; other members of the same league (pseudonym, avatar, XP) |
-| (e) Transfers | None |
-| (f) Erasure | Weekly results kept 12 weeks; all entries deleted when the user leaves leagues or deletes the account |
-| (g) Security | As P1; no messaging, no free-text profile, no uploaded avatars |
+| (c) Data | Reviews (card, grade, date, time and time zone offset, scheduler version, daily goal, whether the word was done for the day), cards, personal decks and their words, notes (characters, pinyin, meaning, AI provenance), « Je connais » marks, deletions of these; as gzip chunks, with account id, size and date. Each upload and deletion of the chunks is also recorded in P8 |
+| (d) Recipients | The account's own devices; Cloudflare (processor). Not end-to-end encrypted: the maintainer could decode a chunk, and does so only for an incident or an official request ([accounts security](accounts-security.md)) |
+| (e) Transfers | As P1 for Cloudflare |
+| (f) Erasure | When sync is turned off on any device, or at account deletion. No compaction: a value edited or deleted on a device stays in its older chunk until then — see [retention](retention-schedule.md) |
+| (g) Security | As P1; routes behind the session, each account reads only its chunks and the routes do not decode them; 256 KiB per chunk, 10 MiB per account, 120 chunks an hour per account, no new chunk past 400 MB of database |
 
 ## P5 — Security logs
 
@@ -90,11 +77,11 @@ Processing that happens only on the user's device (learning data, voice, journal
 |---|---|
 | (b) Purposes | Detect and investigate abuse and intrusions |
 | Legal basis | Legitimate interest (art. 6(1)(f)) |
-| (c) Data subjects | Everyone who signs in, asks for a sign-in code or enters an authenticator code; accounts an admin action concerns |
-| (c) Data | Sign-in, failed sign-in, code-sent, authenticator and admin-action events: method or operation, account id when known, account concerned by an admin action, IP address, user agent, failure code, time; rate-limit counters per IP address and route |
+| (c) Data subjects | Everyone who signs in, asks for a sign-in code or enters an authenticator code; accounts an admin action concerns; for the rate-limit counters, also whoever sends a notice or a sync chunk |
+| (c) Data | Sign-in, failed sign-in, code-sent, authenticator and admin-action events: method or operation, account id when known, account concerned by an admin action, IP address, user agent, failure code, time; rate-limit counters per IP address and route for `/api/auth`, per IP address for notices, per account id for sync uploads |
 | (d) Recipients | Maintainer; Cloudflare (processor) |
 | (e) Transfers | None |
-| (f) Erasure | 6 months (CNIL [« Tracer les opérations »](https://www.cnil.fr/fr/securite-tracer-les-operations): "entre six mois et un an"), by the daily jobs (#278); rate-limit counters after their window, by the same jobs. The data subject may object (art. 21), as the privacy notice says |
+| (f) Erasure | 6 months (CNIL [« Tracer les opérations »](https://www.cnil.fr/fr/securite-tracer-les-operations): "entre six mois et un an"), by the daily jobs (#278); rate-limit counters once older than 1 hour, by the same jobs. The data subject may object (art. 21), as the privacy notice says |
 | (g) Security | In D1 (`eu` jurisdiction); readable by the maintainer only; the account id is cleared when the account is deleted |
 
 ## P6 — Rights and support requests

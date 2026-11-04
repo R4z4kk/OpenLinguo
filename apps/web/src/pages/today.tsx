@@ -1,7 +1,7 @@
 import type { DayActivity, Progress as LearnerProgress, Result } from "@openlinguo/core";
 import { Link } from "@tanstack/react-router";
 import { Flame, Sparkles, type LucideIcon } from "lucide-react";
-import { Suspense, use, useMemo, useState } from "react";
+import { Suspense, use, useState, useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { buttonVariants } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -10,6 +10,7 @@ import { database } from "@/data/database";
 import { localNow } from "@/data/decks";
 import { loadProgress, SHOW_PROGRESS, type ProgressFailure } from "@/data/progress";
 import { describeFailure } from "@/data/review-log";
+import { useAfterMerge } from "@/shell/use-sync";
 
 const storage = (): Storage => localStorage;
 
@@ -96,11 +97,18 @@ const Chips = ({
 export const TodayPage = () => {
   const { t } = useTranslation();
   const [goal] = useState(() => currentSetting(storage, DAILY_GOAL));
-  const activity = useMemo(() => todayActivity(database, localNow()), []);
-  const progress = useMemo(
-    () => (currentSetting(storage, SHOW_PROGRESS) ? loadProgress(database, localNow()) : null),
-    [],
-  );
+  const load = () => ({
+    activity: todayActivity(database, localNow()),
+    progress: currentSetting(storage, SHOW_PROGRESS) ? loadProgress(database, localNow()) : null,
+  });
+  const [{ activity, progress }, setRead] = useState(load);
+  // What is shown stays on screen while a merge is read again.
+  const [, startTransition] = useTransition();
+  useAfterMerge(() => {
+    startTransition(() => {
+      setRead(load());
+    });
+  });
   return (
     <section>
       <header className="flex flex-wrap items-center justify-between gap-3">

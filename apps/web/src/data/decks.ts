@@ -29,9 +29,12 @@ import { describeFailure, guarded, type ReviewLogFailure } from "./review-log.ts
 /** A time with the local offset it was read in, as reviews store it. */
 export type LocalTime = { readonly at: number; readonly utcOffsetMinutes: number };
 
+/** Local time minus UTC at a date: `0 -` keeps UTC at `0`, where a unary minus gives `-0`. */
+export const utcOffsetOf = (date: Date): number => 0 - date.getTimezoneOffset();
+
 export const localNow = (): LocalTime => {
   const now = new Date();
-  return { at: now.getTime(), utcOffsetMinutes: -now.getTimezoneOffset() };
+  return { at: now.getTime(), utcOffsetMinutes: utcOffsetOf(now) };
 };
 
 export type DeckCounts = { readonly new: number; readonly learning: number; readonly due: number };
@@ -109,13 +112,17 @@ export const createDeck = (
   name: string,
 ): Promise<Result<StoredDeck, DeckNameFailure>> =>
   guarded(() =>
-    db.transaction("rw", db.decks, async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
-      const checked = await checkName(db, name, null);
-      if (!checked.ok) return checked;
-      const deck = { id: crypto.randomUUID(), name: checked.value };
-      await db.decks.add(deck);
-      return ok(deck);
-    }),
+    db.transaction(
+      "rw",
+      [db.decks, db.syncEntities],
+      async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
+        const checked = await checkName(db, name, null);
+        if (!checked.ok) return checked;
+        const deck = { id: crypto.randomUUID(), name: checked.value };
+        await db.decks.add(deck);
+        return ok(deck);
+      },
+    ),
   );
 
 export const renameDeck = (
@@ -124,15 +131,19 @@ export const renameDeck = (
   name: string,
 ): Promise<Result<StoredDeck, DeckNameFailure>> =>
   guarded(() =>
-    db.transaction("rw", db.decks, async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
-      const deck = await db.decks.get(deckId);
-      if (deck == null) return err({ kind: "unknown-deck", deckId });
-      const checked = await checkName(db, name, deckId);
-      if (!checked.ok) return checked;
-      const renamed = { ...deck, name: checked.value };
-      await db.decks.put(renamed);
-      return ok(renamed);
-    }),
+    db.transaction(
+      "rw",
+      [db.decks, db.syncEntities],
+      async (): Promise<Result<StoredDeck, DeckNameFailure>> => {
+        const deck = await db.decks.get(deckId);
+        if (deck == null) return err({ kind: "unknown-deck", deckId });
+        const checked = await checkName(db, name, deckId);
+        if (!checked.ok) return checked;
+        const renamed = { ...deck, name: checked.value };
+        await db.decks.put(renamed);
+        return ok(renamed);
+      },
+    ),
   );
 
 /**
@@ -202,7 +213,7 @@ export const introduceWord = (
   types: readonly CardType[] = PAIRED_TYPES,
 ): Promise<Result<null, ReviewLogFailure>> =>
   guarded(() =>
-    db.transaction("rw", [db.cards, db.reviews], async () => {
+    db.transaction("rw", [db.cards, db.reviews, db.syncEntities], async () => {
       const stored = await putCards(db, [subject], [], types);
       return stored.ok ? ok(null) : stored;
     }),
@@ -222,7 +233,7 @@ export const fileWord = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews, db.entries, db.audio],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.entries, db.audio, db.syncEntities],
       async (): Promise<Result<null, DeckFailure>> => {
         if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
           return err({ kind: "unknown-deck", deckId });
@@ -250,7 +261,7 @@ export const fileWords = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.reviews],
+      [db.decks, db.deckWords, db.cards, db.reviews, db.syncEntities],
       async (): Promise<Result<null, DeckFailure>> => {
         if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
           return err({ kind: "unknown-deck", deckId });
@@ -276,7 +287,7 @@ export const deleteDeck = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.cards, db.entries, db.audio, db.notes],
+      [db.decks, db.deckWords, db.cards, db.entries, db.audio, db.notes, db.syncEntities],
       async (): Promise<Result<null, DeckFailure>> => {
         if ((await db.decks.get(deckId)) == null) return err({ kind: "unknown-deck", deckId });
         const words = await db.deckWords.where("deckId").equals(deckId).toArray();
@@ -395,15 +406,24 @@ export const nextNewReadings = (
     );
     const words = [...personal.values()].filter(isWord);
     const entries = await db.entries.bulkGet(words.map(entryId));
+    // A filing can arrive before its note (ADR 0016): nothing to show yet.
+    const noteIds = [...personal.values()].flatMap((subject) =>
+      "note" in subject ? [subject.note] : [],
+    );
+    const contents = new Set(
+      (await db.notes.bulkGet(noteIds)).flatMap((note) => (note == null ? [] : [note.id])),
+    );
     const queue: Candidate[] = [
       ...words.map((word, index) => ({
         ...word,
         level: entries[index]?.[field] ?? null,
         frequency: entries[index]?.frequency ?? null,
       })),
-      ...[...personal.values()]
-        .filter((subject) => "note" in subject)
-        .map((note) => ({ ...note, level: null, frequency: null })),
+      ...[...personal.values()].flatMap((subject) =>
+        "note" in subject && contents.has(subject.note)
+          ? [{ ...subject, level: null, frequency: null }]
+          : [],
+      ),
     ].sort(byPriority);
     const levels = proficiencyFrameworks[referential].length;
     for (let level = 1; level <= levels && queue.length < limit; level += 1) {

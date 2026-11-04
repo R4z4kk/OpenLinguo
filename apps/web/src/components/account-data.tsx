@@ -2,11 +2,16 @@ import { PUBLISHED_CHOICES, type PublishedChoice } from "@openlinguo/core/accoun
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthFailure } from "@/components/auth-failure";
+import { toShown, useSyncText } from "@/components/sync-text";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { deleteAccount, exportAccount } from "@/data/account";
+import { deleteAccount } from "@/data/account";
+import { exportAccountFile, type ExportFailure } from "@/data/account-export";
+import { database } from "@/data/database";
 import { listSubmissions } from "@/data/submissions";
+import { forgetSync } from "@/data/sync";
 import { download } from "@/lib/download";
+import { resetSyncView } from "@/shell/use-sync";
 
 /** The ADR's default: kept, with no name. */
 const DEFAULT_CHOICE: PublishedChoice = "keep-anonymous";
@@ -19,6 +24,19 @@ const ORDER: readonly PublishedChoice[] = [
 const AccountExportSection = () => {
   const { t } = useTranslation("auth");
   const describe = useAuthFailure();
+  const sync = useSyncText();
+  const describeExport = (failure: ExportFailure): string => {
+    switch (failure.kind) {
+      case "api":
+        return describe(failure.failure);
+      case "unreadable-chunk":
+        return t("data.syncedUnreadable");
+      case "unavailable":
+        return t("data.syncedUnavailable");
+      case "newer-format":
+        return sync.message(failure);
+    }
+  };
   const [state, setState] = useState<
     | { readonly status: "idle" | "working" }
     | { readonly status: "saved"; readonly name: string }
@@ -28,9 +46,9 @@ const AccountExportSection = () => {
   const exportData = async () => {
     if (state.status === "working") return;
     setState({ status: "working" });
-    const result = await exportAccount();
+    const result = await exportAccountFile();
     if (!result.ok) {
-      setState({ status: "failed", message: describe(result.error) });
+      setState({ status: "failed", message: describeExport(result.error) });
       return;
     }
     const name = `openlinguo-account-${result.value.exportedAt.slice(0, 10)}.json`;
@@ -65,15 +83,17 @@ const AccountExportSection = () => {
 };
 
 /** The modal of the mockups: first focus on « Annuler », a choice for the published texts. */
-const DeletionDialog = ({
+export const DeletionDialog = ({
   onClose,
   onDeleted,
 }: {
   readonly onClose: () => void;
-  readonly onDeleted: () => void;
+  /** `syncProblem`: the account is gone, but the device could not forget its sync. */
+  readonly onDeleted: (syncProblem: string | null) => void;
 }) => {
   const { t } = useTranslation("auth");
   const describe = useAuthFailure();
+  const sync = useSyncText();
   const [published, setPublished] = useState<PublishedChoice>(DEFAULT_CHOICE);
   const [hasPublished, setHasPublished] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -96,11 +116,16 @@ const DeletionDialog = ({
     if (deleting) return;
     setDeleting(true);
     const result = await deleteAccount(published);
+    if (!result.ok) {
+      setDeleting(false);
+      setProblem(describe(result.error));
+      return;
+    }
+    const forgotten = await forgetSync(database);
+    resetSyncView();
     setDeleting(false);
-    if (result.ok) {
-      close();
-      onDeleted();
-    } else setProblem(describe(result.error));
+    close();
+    onDeleted(forgotten.ok ? null : sync.message(toShown(forgotten.error)));
   };
 
   return (
@@ -136,6 +161,7 @@ const DeletionDialog = ({
           <aside className="mt-4 rounded-card border border-hairline bg-sunken p-4">
             <h3 className="font-semibold">{t("deletion.keptTitle")}</h3>
             <p className="mt-1 text-small">{t("deletion.kept")}</p>
+            <p className="mt-2 text-small">{t("deletion.keptSync")}</p>
           </aside>
           {problem !== null && (
             <p role="alert" className="mt-4 text-danger">
@@ -160,7 +186,11 @@ const DeletionDialog = ({
 };
 
 /** Profile › Compte: « Mes données », then « Supprimer mon compte » (ADR 0015). */
-export const AccountData = ({ onDeleted }: { readonly onDeleted: () => void }) => {
+export const AccountData = ({
+  onDeleted,
+}: {
+  readonly onDeleted: (syncProblem: string | null) => void;
+}) => {
   const { t } = useTranslation("auth");
   const [open, setOpen] = useState(false);
   return (

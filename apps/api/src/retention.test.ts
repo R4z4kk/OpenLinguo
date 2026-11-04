@@ -33,7 +33,7 @@ describe("cutoffs", () => {
   it("dates each retention period back from now", () => {
     expect(cutoffs(NOW)).toEqual({
       securityEvents: at("2026-05-01T03:17:00.000Z"),
-      rateLimits: at("2026-11-01T03:07:00.000Z"),
+      rateLimits: at("2026-11-01T02:17:00.000Z"),
       codeRequests: at("2026-10-31T03:17:00.000Z"),
       undeclaredAccounts: at("2026-10-31T03:17:00.000Z"),
       hostingRecords: at("2025-11-01T03:17:00.000Z"),
@@ -145,8 +145,8 @@ describe("the daily jobs", () => {
       },
     ]);
     await db.insert(rateLimit).values([
-      { id: "old", key: "old", count: 1, lastRequest: NOW.getTime() - 11 * MINUTE_MS },
-      { id: "recent", key: "recent", count: 1, lastRequest: NOW.getTime() - 9 * MINUTE_MS },
+      { id: "old", key: "old", count: 1, lastRequest: NOW.getTime() - 61 * MINUTE_MS },
+      { id: "recent", key: "recent", count: 1, lastRequest: NOW.getTime() - 59 * MINUTE_MS },
     ]);
     await db.insert(codeRequest).values([
       { id: 1, emailHash: "a".repeat(64), createdAt: ago(25 * 60 * MINUTE_MS) },

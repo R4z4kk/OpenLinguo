@@ -17,6 +17,7 @@ import type { NameKind } from "./format.ts";
 import type { LexiconEntry } from "./lexicon.ts";
 import type { Resolution } from "./resolutions.ts";
 import type { SearchIndexRecord } from "./search-index.ts";
+import { recordChanges, type SyncEntity } from "./sync-entities.ts";
 
 export type StoredEntry = {
   /** `simplified \t reading key` */
@@ -234,6 +235,18 @@ export type StoredKnownMark = WordKey & { readonly markedAt: number };
 /** Version of a dataset downloaded on demand, kept apart from `meta` (cleared by a new dictionary). */
 export type OnDemandMetaRecord = { readonly key: "version"; readonly value: string };
 
+/** What sync remembers on this device: one row, never in the backup (ADR 0016). */
+export type SyncState = {
+  id: "state";
+  /** The account the cursor belongs to. */
+  accountId: string;
+  /** Id of the last chunk applied. */
+  cursor: number;
+  /** Id of the account's oldest chunk when last seen, `null` before the first one. */
+  oldest: number | null;
+  lastSyncAt: number | null;
+};
+
 export type Database = Dexie & {
   entries: EntityTable<StoredEntry, "id">;
   characters: EntityTable<StoredCharacter, "character">;
@@ -264,6 +277,8 @@ export type Database = Dexie & {
   knownMarks: Table<StoredKnownMark, [string, string]>;
   lexicon: EntityTable<LexiconEntry, "headword">;
   resolutions: Table<Resolution, [string, string]>;
+  syncEntities: EntityTable<SyncEntity, "id">;
+  syncState: EntityTable<SyncState, "id">;
 };
 
 export const openDatabase = (name: string): Database => {
@@ -362,6 +377,8 @@ export const openDatabase = (name: string): Database => {
   );
   db.version(23).stores({ texts: "id, createdAt", knownMarks: "[headword+readingKey]" });
   db.version(24).stores({ lexicon: "headword", resolutions: "[sequence+source], sequence" });
+  db.version(25).stores({ syncEntities: "id, pending", syncState: "id" });
+  recordChanges(db);
   return db;
 };
 

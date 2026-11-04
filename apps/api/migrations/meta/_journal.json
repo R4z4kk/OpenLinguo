@@ -64,6 +64,20 @@
       "when": 1793529691337,
       "tag": "0008_code_requests",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1793732013492,
+      "tag": "0009_sync_chunks",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793780232669,
+      "tag": "0010_sync_used_after",
+      "breakpoints": true
     }
   ]
 }

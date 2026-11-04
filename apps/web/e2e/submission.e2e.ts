@@ -39,6 +39,7 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
           ? {
               session: {},
               user: {
+                id: "user-1",
                 email: "lin@example.test",
                 name: "",
                 ageDeclaredAt: "2026-10-31T10:00:00.000Z",

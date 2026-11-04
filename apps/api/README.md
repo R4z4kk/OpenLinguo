@@ -42,6 +42,14 @@ sed -i 's/^INSERT INTO/INSERT OR IGNORE INTO/' erasure.sql && wrangler d1 execut
 
 The next daily run deletes those accounts again, with the same choice for their published texts and their sealed identity. `erasure.sql` holds IP addresses: delete it once the run has succeeded (`/api/health` answers 200).
 
+Then, after that run, as it reads an account's chunks to seal its identity, delete every sync chunk. The jobs run only on the cron trigger, at 03:17 UTC (`wrangler.jsonc`), and the cron Worker has no route to start them, so nothing here forces the run: the restored store stays live and devices keep syncing against it until then.
+
+```bash
+wrangler d1 execute openlinguo --remote --command "DELETE FROM sync_chunk"
+```
+
+The restore leaves the sync store wrong in three ways. A store turned off after the restore point has come back, and a turn-off is not in `erasure`. Changes uploaded after the restore point are gone, and the devices that sent them have marked them sent, so they would never go out again. Chunk ids are handed out again that devices' cursors have passed, so those devices would skip new chunks. With the store empty, every device stops and says sync was turned off elsewhere, keeps its data, and sends everything again once turned on. Learners have to be told: the message says another device did it.
+
 ## Settings of the Pages project
 
 Checked at each request by `AuthEnv` (`src/auth.ts`): a missing or invalid one answers 500 and logs its name, never a default. Placeholders for `wrangler pages dev` are in `apps/web/.dev.vars.example`. The maintainer creates the values and enters each one as a secret (type Secret in the dashboard, or `wrangler pages secret put`), since `apps/web/wrangler.jsonc` owns the plain variables; they never go in the repo.

@@ -38,6 +38,7 @@ import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
 import { gradeItem, loadSession, type ReviewItem, type Session } from "@/data/session";
 import { languages, type Language } from "@/i18n/language";
 import { formatInterval } from "@/lib/interval";
+import { requestSync } from "@/shell/use-sync";
 
 const GRADE_KEYS = ["1", "2", "3", "4"];
 
@@ -234,6 +235,10 @@ const Runner = ({
   useEffect(() => {
     focusTarget.current?.focus();
   }, [done, revealedAt, challengeDone]);
+
+  useEffect(() => {
+    if (ended && done > 0) void requestSync(true);
+  }, [ended, done]);
 
   const outcomes = useMemo(
     () =>

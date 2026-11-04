@@ -7,13 +7,14 @@ import {
   type Result,
 } from "@openlinguo/core";
 import { Award } from "lucide-react";
-import { Suspense, use, useMemo } from "react";
+import { Suspense, use, useState, useTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { Progress } from "@/components/ui/progress";
 import { database } from "@/data/database";
 import { localNow } from "@/data/decks";
 import { loadProgress, type ProgressFailure } from "@/data/progress";
 import { describeFailure } from "@/data/review-log";
+import { useAfterMerge } from "./use-sync.ts";
 
 const Details = ({
   progress,
@@ -80,7 +81,15 @@ const Details = ({
 
 /** Level, streak and earned achievements; nothing about what is not earned yet. */
 export const ProgressSummary = () => {
-  const progress = useMemo(() => loadProgress(database, localNow()), []);
+  const load = () => loadProgress(database, localNow());
+  const [progress, setProgress] = useState(load);
+  // What is shown stays on screen while a merge is read again.
+  const [, startTransition] = useTransition();
+  useAfterMerge(() => {
+    startTransition(() => {
+      setProgress(load());
+    });
+  });
   return (
     <Suspense fallback={null}>
       <Details progress={progress} />

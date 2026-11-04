@@ -18,6 +18,7 @@ import {
   type EntryRow,
 } from "./format.ts";
 import { importData, type FetchFile, type ImportProgress } from "./import.ts";
+import { seedLearning } from "./test-support.ts";
 
 const encode = (value: unknown): Uint8Array<ArrayBuffer> =>
   new TextEncoder().encode(JSON.stringify(value));
@@ -188,8 +189,8 @@ describe("importData", () => {
       wordDone: null,
     };
     await importData(db, server(files("v1"), []), () => null);
-    await db.cards.put(card);
-    await db.reviews.put(review);
+    await seedLearning(db, () => db.cards.put(card));
+    await seedLearning(db, () => db.reviews.put(review));
     expect(await importData(db, server(files("v2"), []), () => null)).toEqual(ok(null));
     expect(await db.cards.toArray()).toEqual([card]);
     expect(await db.reviews.toArray()).toEqual([review]);

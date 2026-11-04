@@ -1,6 +1,6 @@
 # Personal data breach procedure
 
-Applies to any breach of security leading to the accidental or unlawful destruction, loss, alteration, unauthorised disclosure of, or access to, personal data held by the server (accounts, submissions, synced data, leagues, logs, backups). Asked by the [DPIA](dpia.md) (risks R1 and R2). Sources read on 2026-11-02:
+Applies to any breach of security leading to the accidental or unlawful destruction, loss, alteration, unauthorised disclosure of, or access to, personal data held by the server (accounts, submissions, synced data, logs, backups). Asked by the [DPIA](dpia.md) (risks R1 and R2). Sources read on 2026-11-02:
 
 - GDPR [arts 33 and 34](https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre4) and art. 12(1) (clear and plain language, "in particular for any information addressed specifically to a child").
 - CNIL, [« Les violations de données personnelles »](https://www.cnil.fr/fr/les-violations-de-donnees-personnelles) and its [notification service](https://www.cnil.fr/fr/services-en-ligne/notifier-une-violation-de-donnees-personnelles).
@@ -18,7 +18,8 @@ The 72 hours run from step 1: note the time you became aware.
    - Export the database: `wrangler d1 export openlinguo --remote --output="$HOME/incident.sql"`. An export blocks other requests while it runs. Encrypt the file (`gpg -c ~/incident.sql`, then delete the clear copy), keep it outside the repository, and delete it when the case closes ([retention](retention-schedule.md)). The daily jobs keep purging, which makes this copy the only one of what reaches its end date meanwhile.
 2. **Contain.** Revoke what is exposed (below) and block the path used. Local-first means learners keep working offline.
 3. **Assess.** What data, how many people, what likely consequences, is there a risk to their rights and freedoms? Is the risk high? Read the evidence (below).
-   - The people are teenagers: treat an email linked to a pseudonym, a sealed identity or IP addresses read by someone else as high risk (DPIA, R1).
+   - The people are teenagers: treat an email linked to a pseudonym, a sealed identity, IP addresses or synced data read by someone else as high risk (DPIA, R1 and R9).
+   - `sync_chunk` is gzip, not encrypted. Whoever reads it can decode each learner's review times and time zones, cards, deck names, notes and « Je connais » marks, values since edited or deleted included.
    - If a Cloudflare account or token was taken, assume every table was read unless the evidence rules it out.
 4. **Record.** Add a line to the register (below), notified or not (art. 33(5)).
 5. **Notify the CNIL within 72 hours** of becoming aware, unless the breach is unlikely to result in a risk (art. 33(1)): [notifications.cnil.fr](https://notifications.cnil.fr/notifications/). If facts are incomplete, send an initial notification and complete it later, explaining any delay. The notification describes (art. 33(3)):
@@ -27,7 +28,7 @@ The 72 hours run from step 1: note the time you became aware.
    - the likely consequences;
    - the measures taken or proposed, including mitigation.
 6. **Inform the people affected without undue delay if the risk is high** (art. 34(1)), with the notice below. When unsure, notify the CNIL, which can indicate whether people must be informed.
-7. **Restore** if data was destroyed or altered: `wrangler d1 time-travel restore openlinguo --bookmark=<bookmark>`. It loses what was written after the bookmark. The next daily job applies recent erasures again (#277).
+7. **Restore** if data was destroyed or altered: follow [Restoring a backup](../../apps/api/README.md#restoring-a-backup), with `--bookmark=<bookmark>` in place of `--timestamp`. It saves and puts back the erasure log (#277) and deletes every sync chunk. It loses what was written after the bookmark. Learners who sync have to turn it on again: say so in the notice to the people affected.
 8. **Review.** Root cause, fix, and update the [data map](data-map.md), [records](records-of-processing.md) or security measures as needed.
 
 ## Take the API offline
@@ -65,7 +66,8 @@ A changed Pages secret only applies to the next deployment, so renew the deploy 
 | Evidence | Holds | Kept | Read with |
 |---|---|---|---|
 | `security_event` | Sign-ins, failures, codes sent, second factors, admin actions, with IP address and browser | 6 months | `wrangler d1 execute openlinguo --remote --json --command "SELECT type, method, user_id, ip_address, user_agent, reason, target, datetime(created_at / 1000, 'unixepoch') AS at FROM security_event WHERE created_at >= unixepoch('2026-11-01') * 1000 ORDER BY created_at"` |
-| `hosting_record` | Each creation, edit or deletion of a text, with IP address | 1 year | `wrangler d1 execute openlinguo --remote --json --command "SELECT operation, user_id, submission_id, ip_address, datetime(created_at / 1000, 'unixepoch') AS at FROM hosting_record WHERE created_at >= unixepoch('2026-11-01') * 1000 ORDER BY created_at"` |
+| `hosting_record` | Each creation, edit or deletion of a text, each sync upload (`sync:<chunk id>`) and each deletion of synced data (`sync:all`), with IP address | 1 year | `wrangler d1 execute openlinguo --remote --json --command "SELECT operation, user_id, submission_id, ip_address, datetime(created_at / 1000, 'unixepoch') AS at FROM hosting_record WHERE created_at >= unixepoch('2026-11-01') * 1000 ORDER BY created_at"` |
+| `sync_chunk` | Who holds synced data and how much: what a leak of this table exposes, and for whom | Until sync is turned off or the account deleted | `wrangler d1 execute openlinguo --remote --json --command "SELECT user_id, count(*) AS chunks, sum(size) AS bytes, datetime(max(created_at) / 1000, 'unixepoch') AS last FROM sync_chunk GROUP BY user_id"` |
 | `session` | Live sessions, with IP address and browser | Until expiry | In the export of step 1 |
 | `job_run` | Each daily job's outcome: a purge that failed or stopped | Not purged | `wrangler d1 execute openlinguo --remote --json --command "SELECT job, status, datetime(started_at / 1000, 'unixepoch') AS at FROM job_run ORDER BY started_at DESC LIMIT 50"` |
 | Mailbox | Requests answered and the data they needed ([requests runbook](requests.md), section 5). A read no request explains is a lead | 5 years for rights requests | `openlinguo@gmail.com` |
@@ -96,9 +98,9 @@ The content of art. 34(2), in words a 15-year-old can read (art. 12(1)). Send it
 >
 > Ce qui s'est passé : <une ou deux phrases, sans jargon>.
 >
-> Vos données concernées : <votre adresse e-mail, votre pseudonyme, l'adresse IP de vos connexions, les textes que vous avez envoyés>. OpenLinguo n'a pas de mot de passe : aucun n'a pu être volé. Ce que vous apprenez reste sur votre appareil et n'est pas touché.
+> Vos données concernées : <votre adresse e-mail, votre pseudonyme, l'adresse IP de vos connexions et de vos envois, les textes que vous avez envoyés, ce que vous avez synchronisé : vos révisions et leurs heures, vos cartes, vos paquets, vos notes, vos mots « Je connais »>. OpenLinguo n'a pas de mot de passe : aucun n'a pu être volé. <Sans `sync_chunk` touché : Ce que vous apprenez reste sur votre appareil et n'est pas touché. Sinon : Ce qui est sur votre appareil n'est pas touché, mais la copie synchronisée l'est.>
 >
-> Ce qui peut arriver : <quelqu'un peut faire le lien entre votre e-mail et votre pseudonyme ; vous pouvez recevoir des messages qui se font passer pour OpenLinguo>.
+> Ce qui peut arriver : <quelqu'un peut faire le lien entre votre e-mail et votre pseudonyme ; vous pouvez recevoir des messages qui se font passer pour OpenLinguo ; quelqu'un peut voir à quelles heures vous révisez et lire vos notes et le nom de vos paquets>.
 >
 > Ce que nous avons fait : <coupé l'accès, déconnecté tous les comptes, changé les clés>. Nous avons prévenu la CNIL, l'autorité française de protection des données.
 >
@@ -106,6 +108,7 @@ The content of art. 34(2), in words a 15-year-old can read (art. 12(1)). Send it
 >
 > - Méfiez-vous des messages qui parlent d'OpenLinguo, même s'ils citent votre pseudonyme. Nous ne vous demanderons jamais d'argent, de papiers ni de code.
 > - Ne donnez à personne un code de connexion, même si vous en recevez un sans l'avoir demandé.
+> - <Si `sync_chunk` est touché : Vous pouvez désactiver la synchronisation dans Profil › Compte : vos données sont alors supprimées du serveur.>
 > - Si un message vous inquiète ou si quelqu'un vous contacte à cause de ça, parlez-en à un adulte de confiance et écrivez-nous.
 >
 > Une question : openlinguo@gmail.com. Vous pouvez aussi vous plaindre à la CNIL.
@@ -116,9 +119,9 @@ The content of art. 34(2), in words a 15-year-old can read (art. 12(1)). Send it
 >
 > What happened: <one or two sentences, no jargon>.
 >
-> Your data involved: <your email address, your pseudonym, the IP address of your sign-ins, the texts you sent>. OpenLinguo has no passwords: none could be stolen. What you learn stays on your device and is not affected.
+> Your data involved: <your email address, your pseudonym, the IP address of your sign-ins and uploads, the texts you sent, what you synced: your reviews and their times, your cards, your decks, your notes, your words marked « I know it »>. OpenLinguo has no passwords: none could be stolen. <If `sync_chunk` was not reached: What you learn stays on your device and is not affected. Otherwise: What is on your device is not affected, but the synced copy is.>
 >
-> What could happen: <someone could link your email to your pseudonym; you could get messages pretending to be OpenLinguo>.
+> What could happen: <someone could link your email to your pseudonym; you could get messages pretending to be OpenLinguo; someone could see at what times you review and read your notes and deck names>.
 >
 > What we did: <cut the access, signed every account out, changed the keys>. We told the CNIL, the French data protection authority.
 >
@@ -126,6 +129,7 @@ The content of art. 34(2), in words a 15-year-old can read (art. 12(1)). Send it
 >
 > - Be careful with messages about OpenLinguo, even if they mention your pseudonym. We will never ask you for money, ID documents or a code.
 > - Never give anyone a sign-in code, even one you receive without asking for it.
+> - <If `sync_chunk` was reached: You can turn sync off in Profile › Account: your data is then deleted from the server.>
 > - If a message worries you, or someone contacts you because of this, talk to an adult you trust and write to us.
 >
 > A question: openlinguo@gmail.com. You can also complain to the CNIL.

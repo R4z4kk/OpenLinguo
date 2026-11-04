@@ -20,7 +20,7 @@ Answer within the month. If more time is needed (complex or many requests), tell
 
 Access, rectification, erasure, restriction, objection, portability (GDPR arts 15 to 21).
 
-1. **Point to the app first**: signing in already proves who the person is. Profile › Compte gives the export (« Mes données », arts 15 and 20), the pseudonym (art. 16) and the deletion (art. 17).
+1. **Point to the app first**: signing in already proves who the person is. Profile › Compte gives the export (« Mes données », arts 15 and 20, with the synced data decoded on the device), the pseudonym (art. 16), turning sync off or, from a device where it is off, « Supprimer les données du serveur », which delete the synced data, and the deletion (art. 17).
 2. **Otherwise, check identity through the account**:
    - If the request comes from the account's own address, answer that address.
    - If not, write to the account's address with a code (`openssl rand -hex 3`), and act only once the code comes back from that address.
@@ -33,6 +33,14 @@ Access, rectification, erasure, restriction, objection, portability (GDPR arts 1
 
    ```bash
    wrangler d1 execute openlinguo --remote --json --command "SELECT operation, submission_id, ip_address, protocol, datetime(created_at / 1000, 'unixepoch') AS at FROM hosting_record WHERE user_id = '<id>'"
+   ```
+
+   A `submission_id` of `sync:<chunk id>` is a sync upload, and `sync:all` a deletion of the synced data.
+
+   For someone who cannot sign in, their synced data, each `gzip` value then read with `xxd -r -p | gunzip`:
+
+   ```bash
+   wrangler d1 execute openlinguo --remote --json --command "SELECT id, hex(bytes) AS gzip FROM sync_chunk WHERE user_id = '<id>' ORDER BY id"
    ```
 
    For a deleted account, the identity kept under décret 2021-1362:
@@ -48,7 +56,7 @@ Access, rectification, erasure, restriction, objection, portability (GDPR arts 1
    wrangler d1 execute openlinguo --remote --command "DELETE FROM security_event WHERE user_id = '<id>'"
    ```
 
-5. **Erasure for someone who cannot sign in** (lost mailbox): once identity is checked as in step 2, delete in Moderation › Comptes (`/admin/accounts`). Published texts stay without a name, the default of the deletion screen.
+5. **Erasure for someone who cannot sign in** (lost mailbox): once identity is checked as in step 2, delete in Moderation › Comptes (`/admin/accounts`). Published texts stay without a name, the default of the deletion screen. Synced data goes with the account.
 6. Keep the request, the answer and their dates for 5 years as proof ([retention](retention-schedule.md)); nothing else.
 
 ## 3. Parents' requests
@@ -64,7 +72,7 @@ A parent asks for their child's account to be deleted, giving the account's addr
    - The holder deletes the account in the app meanwhile: nothing to do.
 5. If the parent writes again with facts that put the holder's answer in doubt, decide on those facts, still without asking for an ID document by default.
 
-The risk accepted: someone can have an unused account deleted after 14 days. Only the server account goes: the learning data stays on the device, and published texts stay without a name.
+The risk accepted: someone can have an unused account deleted after 14 days. Only the server account goes, with its synced data: the learning data stays on the device, and published texts stay without a name. An account that synced then keeps its sealed identity, like one that submitted.
 
 ### Message to the account (French, then English)
 
@@ -98,7 +106,7 @@ For the data of `hosting_record` and `sealed_identity` (LCEN art. 6 V.A, décret
 
 1. **Only a written requisition** from a judicial authority (a magistrate, or an officer of the judicial police acting on a requisition), or from another authority that cites the law giving it access. Nothing on a phone call or an email without a requisition, however urgent it sounds.
 2. **Check it**: the legal basis it cites, that it names the data and the account or the text concerned, and its origin. Call the service back on its official number, never on one given in the message.
-3. **Export only what is asked**, for the period asked, with the queries of section 2 filtered on the account or the text and the dates. Save the output to an encrypted file and send it by the channel the authority gives. Delete the local copy once it is received.
+3. **Export only what is asked**, for the period asked, with the queries of section 2 filtered on the account or the text and the dates. Synced data is given only if the requisition names it. Save the output to an encrypted file and send it by the channel the authority gives. Delete the local copy once it is received.
 4. Keep the requisition and the answer in the mailbox. If either went through another channel, mail yourself a note: date, authority, reference of the requisition, legal basis, data given, date sent.
 5. Removal orders (24 hours, 1 hour for terrorist content) follow the [moderation runbook](moderation.md), section 4.
 

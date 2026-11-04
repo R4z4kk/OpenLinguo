@@ -136,6 +136,7 @@ export {
   applyReview,
   Card,
   cardId,
+  cardKey,
   CardState,
   CardType,
   dueToday,

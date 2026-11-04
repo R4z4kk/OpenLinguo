@@ -9,7 +9,7 @@ The app must be intuitive, clean and modern, keep gamification motivating withou
 
 ## Decision
 
-- "Ink and tone" visual direction: calm editorial layout, monochrome ink interface (no accent color), hanzi as the visual hero; color is reserved for the Mandarin tones. Discreet gamification (streak and XP chips, league line). Values in [`docs/design/DESIGN-SYSTEM.md`](../design/DESIGN-SYSTEM.md).
+- "Ink and tone" visual direction: calm editorial layout, monochrome ink interface (no accent color), hanzi as the visual hero; color is reserved for the Mandarin tones. Discreet gamification (streak and XP chips, league line; leagues dropped on 2026-11-03 ([ADR 0016](0016-sync.md))). Values in [`docs/design/DESIGN-SYSTEM.md`](../design/DESIGN-SYSTEM.md).
 - shadcn/ui on Radix primitives, Tailwind v4 tokens (color, type, spacing, radius, motion), light/dark/system.
 - Navigation: guided "Today" session plus Today / Learn / Read / Profile tabs (bottom bar on mobile, sidebar from 1024px).
 - Tone colors are computed for contrast (≥ 5.2:1 light) and colorblind separation (smallest ΔE ≥ 30 under protanopia, deuteranopia and tritanopia), stay the same hue in both themes, and are always paired with diacritics.

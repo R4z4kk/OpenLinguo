@@ -87,7 +87,7 @@ export const fileNote = (
   guarded(() =>
     db.transaction(
       "rw",
-      [db.decks, db.deckWords, db.notes, db.cards, db.reviews],
+      [db.decks, db.deckWords, db.notes, db.cards, db.reviews, db.syncEntities],
       async (): Promise<Result<null, NoteFailure>> => {
         if (deckId !== MY_WORDS && (await db.decks.get(deckId)) == null)
           return err({ kind: "unknown-deck", deckId });

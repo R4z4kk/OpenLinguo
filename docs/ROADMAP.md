@@ -2,7 +2,7 @@
 
 ## Context
 
-OpenLinguo is an open-source (AGPL-3.0) language-learning app. Mandarin first, English second (to validate the multi-language abstraction), more languages later.
+OpenLinguo is an open-source (AGPL-3.0) app to learn Mandarin. English as a language to learn was dropped on 2026-11-03; the LanguagePack interface stays, so another language can be added as a package ([ADR 0003](adr/0003-languagepack-capabilities.md)).
 
 Pedagogy combines two models:
 
@@ -17,7 +17,7 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 |---|---|
 | Platform | Web PWA (React + Vite + TS) first, Capacitor wrapper post-v1. Flutter excluded (TS-only rule) |
 | User data | Local-first (IndexedDB via Dexie), optional account; append-only review log enables sync later |
-| v1 scope | Core (dictionary, HSK, decomposer, FSRS) + tones/pronunciation + writing + AI mobilization + graded reader + backend library + full gamification + `en` core. OCR post-v1 |
+| v1 scope | Core (dictionary, HSK, decomposer, FSRS) + tones/pronunciation + writing + AI mobilization + graded reader + backend library + full gamification. OCR post-v1 |
 | UI / glosses | i18n FR + EN from day one. Glosses: EN (CC-CEDICT), FR (CFDICT if license verified) |
 | HSK | HSK 3.0, two referentials: **2025 exam syllabus** (新版HSK考试大纲, CLEC, Nov 2025, `hsk-2025`, default) and the free **GF0025-2021** national standard (`gf0025-2021`), selectable |
 | Script | Simplified only (traditional stored, toggle later) |
@@ -27,8 +27,8 @@ Architecture decisions are recorded in [`docs/adr/`](adr/). Milestones and tasks
 | Reader content | AI-generated + coverage check, user import, in-app "submit to global library" → admin moderation |
 | Backend | TS API: Hono + Drizzle + Better Auth (email code + Google + GitHub, no passwords) on Cloudflare D1 ([ADR 0015](adr/0015-backend-and-shared-library.md)) |
 | Hosting | Cloudflare free plan: PWA on Pages at `openlinguo.razakk.fr` (custom domain, OVH CNAME), API as Pages Functions on the same origin (`/api/*`), D1 in the `eu` jurisdiction, a cron Worker for retention jobs. A third-party host keeps the maintainer anonymous (LCEN art. 1-1 II) |
-| Multi-language | Capability-based LanguagePack; `lang-zh` full, `lang-en` core (generic modules only) |
-| Gamification | Full: XP, levels, streaks, daily goal, achievements (local) + weekly leagues (server) |
+| Multi-language | Capability-based LanguagePack; `lang-zh` full, `lang-en` a minimal fixture of the contract tests |
+| Gamification | XP, levels, streaks, daily goal, achievements, all local. Leagues dropped on 2026-11-03 ([ADR 0016](adr/0016-sync.md)) |
 | Team | Solo for v1, contributors after v1 → automated PR security gates + mandatory human review |
 | License | AGPL-3.0 (code). Data keeps its own licenses (CC BY-SA, LGPL, Arphic…) |
 | Visual direction | Calm editorial base (direction A) with discreet gamification |
@@ -50,7 +50,7 @@ packages/
   core/           Result type, domain model, LanguagePack interface + contract tests,
                   FSRS wrapper (ts-fsrs), session composer, XP/achievement rules, shared zod schemas
   lang-zh/        pinyin, tones/sandhi, segmentation, decomposition, IME candidates, zh prompts
-  lang-en/        tokenization, IPA, CEFR levels, en prompts
+  lang-en/        minimal pack, fixture of the contract tests
 tools/
   data-pipeline/  TS scripts: download (pinned URL + sha256) → parse → build shards → manifest
 data/
@@ -81,7 +81,7 @@ interface LanguagePack {
 }
 ```
 
-Each module declares the features it requires; the module registry hides unsupported modules. Contract tests run against `lang-zh` and `lang-en` from M1 (minimal `lang-en` fixture stub first, full content in M9). Capabilities are added with the milestone that first uses them: `ime` (M4), `phonetics` (M3), `prompts` (M5).
+Each module declares the features it requires; the module registry hides unsupported modules. Contract tests run against `lang-zh` and a minimal `lang-en` fixture. Capabilities are added with the milestone that first uses them: `ime` (M4), `phonetics` (M3), `prompts` (M5).
 
 ### Code standards
 
@@ -97,7 +97,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **Strokes**: self-hosted `hanzi-writer-data` subset (HSK chars) imported into IndexedDB with the dictionary; stroke order drawn by in-house SVG (outlines clipping the medians, Web Animations API), never autoplayed, stepped without motion under reduced motion (Hanzi Writer rejected for the word page, decision 2026-10-10: no reduced-motion support, no static "first k strokes" view). The writing quiz is in-house too, on the same SVG, with Hanzi Writer's stroke matcher ported under its MIT license (decision 2026-10-16, [ADR 0011](adr/0011-writing-and-typing.md)).
 - **Input method**: in-house pinyin IME in `lang-zh` (the `ime` capability): syllable splitting, candidates from CC-CEDICT readings ranked by wordfreq, digits typed as tones, partial commits; no new dataset or dependency (pinyin-ime tested and rejected, [ADR 0011](adr/0011-writing-and-typing.md)).
 - **Pitch**: `pitchy` (MIT) F0 → semitones normalized to speaker mean → time-normalized comparison vs reference contour. Same code extracts reference contours in the pipeline and user contours in the browser.
-- **TTS**: Kokoro rejected for Mandarin (all zh voices graded D); used for English (af_bella A-). Mandarin (bake-off #112, ADR 0007): MOSS-TTS v1.5 for syllables, words and sentences, cloning a synthetic voice designed by MOSS-VoiceGenerator; a pinyin chart syllable missing in one tone is the same syllable recorded in another tone, re-pitched by the WORLD vocoder (#105). Engines run as Docker containers on a Radeon through WSL2 (ROCm), the TS pipeline calls their HTTP API.
+- **TTS**: Kokoro rejected for Mandarin (all zh voices graded D). Mandarin (bake-off #112, ADR 0007): MOSS-TTS v1.5 for syllables, words and sentences, cloning a synthetic voice designed by MOSS-VoiceGenerator; a pinyin chart syllable missing in one tone is the same syllable recorded in another tone, re-pitched by the WORLD vocoder (#105). Engines run as Docker containers on a Radeon through WSL2 (ROCm), the TS pipeline calls their HTTP API.
 - **STT**: Paraformer-small run by sherpa-onnx WebAssembly in a Web Worker (replaced transformers.js Whisper, too slow on phones, #119); opencc-js t→s conversion kept. STT checks intelligibility only; tone accuracy comes from the pitch module (CER hides same-character tone errors).
 - **AI (BYOK)**: in-house OpenAI-compatible client in `core` (`fetch` + zod, no dependency; `openai` and the Vercel AI SDK tested and rejected, [ADR 0012](adr/0012-ai-mobilization-byok.md)): strict JSON-schema output, `json_object` fallback with the schema in the prompt, zod validation, two retries on 429/5xx (providers hide `Retry-After` from scripts), typed errors parsed per provider shape. CSP `connect-src` lists the cloud presets and `localhost`/`127.0.0.1`. Key in IndexedDB or memory only, never in backups, sync or our API. Prompts versioned per language pack.
 - **Comprehensible input**: target ≥98% known-word coverage (Hu & Nation 2000), configurable.
@@ -107,7 +107,7 @@ Each module declares the features it requires; the module registry hides unsuppo
 
 ### Principles
 - "Ink and tone": calm, clean, modern; monochrome ink interface, color reserved for the tones, generous whitespace, flat surfaces, hanzi as the visual hero. Full spec in [`docs/design/DESIGN-SYSTEM.md`](design/DESIGN-SYSTEM.md).
-- Gamification present but quiet: XP, streak, league badge in a slim header; no confetti walls, no guilt copy, streak freeze, opt-in notifications only. No dark patterns.
+- Gamification present but quiet: XP and streak in a slim header; no confetti walls, no guilt copy, streak freeze, opt-in notifications only. No dark patterns.
 - Mobile-first: bottom tabs on mobile, sidebar from 1024px. One primary action per screen.
 - Copy FR/EN, sentence case, encouraging, never shaming.
 
@@ -121,11 +121,11 @@ Each module declares the features it requires; the module registry hides unsuppo
 - **Today**: one "Start" button runs the composed session (due reviews → new cards → tone drill → 5-sentence task), progress bar, daily goal.
 - **Learn**: free access to decks, dictionary, pronunciation studio, writing studio, typing.
 - **Read**: library (personal, AI, global), reader.
-- **Profile**: stats, achievements, league, settings (AI provider, audio, display, privacy, data export/delete).
+- **Profile**: stats, achievements, settings (AI provider, audio, display, privacy, data export/delete).
 - Onboarding without account: target language → level (self-assessment or short placement) → daily goal → optional interests (personal vocabulary).
 
 ### Key screens to mock up before UI code
-Today, review card (recognition / recall / listening / tone / writing variants), word page (decomposition tree), pronunciation studio (pitch overlay), writing studio (5 sentences + correction diff), reader with popup, profile/league.
+Today, review card (recognition / recall / listening / tone / writing variants), word page (decomposition tree), pronunciation studio (pitch overlay), writing studio (5 sentences + correction diff), reader with popup, profile.
 
 ## Accessibility (WCAG 2.2 AA)
 
@@ -135,7 +135,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
   - Tone information never by color only (SC 1.4.1).
   - Stroke writing is a path-based drag gesture → single-pointer, keyboard-operable alternative: write on paper, reveal the stroke order, self-grade (SC 2.5.1, 2.5.7, 2.1.1).
   - Every mic exercise has a non-speech alternative ("can't speak now") and stays skippable without penalty.
-  - No mandatory time limits: timed typing/league challenges adjustable or disableable (SC 2.2.1).
+  - No mandatory time limits: timed typing challenges adjustable or disableable (SC 2.2.1).
   - Targets ≥ 24×24 px (SC 2.5.8), visible unobscured focus (SC 2.4.7 / 2.4.11), reflow at 320 px and 200% text.
   - All audio has a text equivalent; animations respect reduced motion.
 - Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), manual keyboard + NVDA + VoiceOver checklist per milestone.
@@ -147,7 +147,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 
 | Obligation | Source | Applies to us | Implementation |
 |---|---|---|---|
-| Lawful basis: contract / legitimate interest | GDPR art. 6(1)(b), 6(1)(f) (CNIL official text) | Yes | Account, sync, leagues = contract; security logs = legitimate interest |
+| Lawful basis: contract / legitimate interest | GDPR art. 6(1)(b), 6(1)(f) (CNIL official text) | Yes | Account, sync = contract; security logs = legitimate interest |
 | Minor's consent: 16 by default, member states down to 13; France 15, below 15 joint consent with a parent | GDPR art. 8(1); Loi Informatique et Libertés art. 45 (Légifrance, in force 2019-06-01) | Only for consent-based processing (none in v1) | Accounts 15+ by design choice, self-declared (CNIL recommendations 1 and 7), parents can ask for deletion, information written in plain language. No French "digital majority" is in force: loi 2023-566 has no decree, art. 1 of loi 2026-813 was struck down (décision 2026-911 DC); checked 2026-10-31 |
 | Records of processing; <250-employee exemption does not apply to non-occasional processing | GDPR art. 30(5) | Yes | `docs/compliance/records-of-processing.md` |
 | Breach notification to CNIL within 72 h | GDPR art. 33(1) | Yes | `docs/compliance/breach-procedure.md` |
@@ -156,7 +156,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 | Inactive accounts: 2 years after last user action as the reference | CNIL guidance (commercial-activities reference, non-binding) | Yes (analogy) | Notice email, then deletion at 2 years of inactivity |
 | Legal notices: natural person → name, address, phone; publication director; host name/address/phone; a non-professional publisher may give only the host's details (II) | LCEN art. 1-1 (created by SREN law 2024-449, in force 2024-05-23) | Yes | `/legal` page: anonymous non-professional publisher, Cloudflare named as host (ADR 0015) |
 | Hosting service: notice and action, statements of reasons, terms, points of contact | DSA arts 11, 12, 14, 16, 17, 18 (micro regime); LCEN art. 6 | Yes, for the shared library (checked 2026-10-31) | Report form, statement of reasons for every rejection or removal, `/terms`, moderation runbook (ADR 0015) |
-| Host's identification data of contributors | LCEN art. 6 V, décret 2021-1362 | Yes, as far as collected | IP and time of each submission operation 1 year; email 5 years and pseudonym 1 year after an account that submitted is deleted (ADR 0015) |
+| Host's identification data of contributors | LCEN art. 6 V, décret 2021-1362 | Yes, as far as collected | IP and time of each submission operation, sync upload and deletion of synced data 1 year; email 5 years and pseudonym 1 year after an account that submitted or synced is deleted (ADR 0015, ADR 0016) |
 | AI interaction disclosure (providers) | AI Act art. 50(1), applies from 2026-08-02 (art. 113) | Yes, we build the AI-integrated system | Visible "AI" label on every AI feature and output |
 | Machine-readable marking of synthetic text (providers); standard-editing assistance exempt | AI Act art. 50(2); Commission guidelines C(2026) 5054 (2026-07-20) | Yes for generated stories (M6); corrections and translations exempt as standard editing, single words outside (checked 2026-10-19, ADR 0012) | `origin: "ai"` + provider, model, prompt version, date stored and exposed in exports and library API; gap analysis against the code of practice |
 | AI-generated public-interest text disclosure (deployers) | AI Act art. 50(4) | Unlikely (learning content), human-reviewed library anyway | Badge kept on library items |
@@ -166,13 +166,13 @@ Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301
 
 ### Measures
 
-- **Data map**: on-device only → cards, review logs, recordings, journal, AI key (never reaches our servers). Server → account (email, pseudonym, OAuth ids, age declaration; no password), sessions, submissions (text + attribution + license attestation), host records of submissions (IP, décret 2021-1362), notices and statements of reasons, synced logs, league XP, security events (IP).
-- **Legal bases**: contract (account, sync, leagues opt-in), legitimate interest (security logs). No consent-based processing in v1.
+- **Data map**: on-device only → recordings, journal, AI key (never reaches our servers); cards, review logs, decks, notes and « Je connais » marks too, unless the learner turns on sync. Server → account (email, pseudonym, OAuth ids, age declaration; no password), sessions, submissions (text + attribution + license attestation), host records of submissions and sync uploads (IP, décret 2021-1362), notices and statements of reasons, sync chunks, security events (IP).
+- **Legal bases**: contract (account, sync opt-in), legitimate interest (security logs). No consent-based processing in v1.
 - **Cookies**: only strictly necessary (session, CSRF) → exempt from consent per CNIL, no banner. No analytics in v1; if added later, CNIL-exempt self-hosted configuration only.
 - **No third-party runtime requests by default**: fonts, Hanzi Writer data, audio, the speech-recognition model and its WebAssembly runtime served from our own origin (decided in #119, ADR 0007).
 - **BYOK AI**: notice at setup naming the provider, its privacy policy and training opt-out; one notice before the first AI call of any kind saying what each AI button sends (#207); data flows device → provider on the learner's click, never through us. OpenLinguo is most likely not a controller of these transmissions (ADR 0012).
 - **Voice**: processed on-device (speech recognition, pitch), recordings stored locally and deletable, never uploaded.
-- **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). League pseudonyms + predefined avatars only, no messaging, no profiling, no ads.
+- **Minors**: app usable without account by anyone; accounts 15+ (self-declaration after the first sign-in). No messaging, no profiling, no ads.
 - **Rights**: in-app export (JSON) and account deletion (hard delete cascade), profile rectification, contact address.
 - **Docs** (`docs/compliance/`): records of processing, data map, retention schedule (logs 6 months, inactive accounts 2 years), sub-processors (Cloudflare, Lettermint transactional email; Google/GitHub OAuth as independent controllers), breach procedure (72 h), DPIA screening and DPIA (#280), privacy policy, legal notices.
 
@@ -195,10 +195,9 @@ All sources were verified on primary sources; the full table, obligations and at
 | CFDICT | CC BY-SA 3.0 |
 | HSK 2025 exam syllabus (official CTI PDF is copy-protected: pinned harukicoder/hsk30 transcription, permission requested; exam launch 2026-12-13) | Factual level mapping, attributed |
 | Make Me a Hanzi / hanzi-writer-data | LGPL-3.0+ / Arphic PL |
-| Wiktionary (kaikki.org), wordfreq, Octanove C1/C2 | CC BY-SA 4.0 |
-| CEFR-J 1.6 | Free with citation; redistribution not addressed (accepted risk) |
+| Wiktionary (kaikki.org), wordfreq | CC BY-SA 4.0 |
 | Tatoeba sentences (text only) | CC BY 2.0 FR |
-| Kokoro-82M / MOSS-TTS v1.5 + MOSS-VoiceGenerator | Apache-2.0 / Apache-2.0 |
+| MOSS-TTS v1.5 + MOSS-VoiceGenerator | Apache-2.0 |
 
 Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI job fails when an entry is expired, a monthly workflow pushes a refresh branch and opens an issue with diff stats; the maintainer opens and reviews the PR, never auto-merged. Commercial graded readers are never ingested; Tatoeba audio not used (mixed NC licenses).
 
@@ -222,13 +221,13 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M7 — Backend & shared library.** Hono API, Drizzle migrations, Better Auth (email code + Google + GitHub, TOTP for the admin), submissions with CC BY-SA 4.0 (or CC0 for AI stories) attestation, level estimate at moderation, admin moderation UI with statements of reasons, public library endpoints (AI badge + origin), notice and action (DSA), age gate 15+, account export/delete, retention jobs (logs 6 months, inactive accounts 2 years, décret 2021-1362 records), privacy policy + legal notices + terms + records of processing + DPIA, Cloudflare deploy (see Deployment), PWA on Cloudflare Pages custom domain. See [ADR 0015](adr/0015-backend-and-shared-library.md). *Exit: submit → admin approve → visible to another device; export/delete verified end to end.*
 
-**M8 — Sync + leagues.** Append-only review-log sync + LWW card content sync, server recomputes XP from logs, weekly leagues opt-in (pseudonyms, predefined avatars, no messaging), plausibility caps (local-first cannot fully prevent cheating — documented). *Exit: two devices converge, league table from server-computed XP.*
+**M8 — Sync.** Opt-in sync between devices: gzip chunks stored opaquely in D1, reviews merged by id, last-writer-wins with deletions for the rest, on-device merge. No leagues, no server XP. See [ADR 0016](adr/0016-sync.md). *Exit: two devices converge, deletions included.*
 
-**M9 — lang-en core.** Wiktionary (kaikki) EN glosses + FR translations, IPA, CEFR-J levels, wordfreq, Kokoro audio, en prompts. Generic modules work for en; zh-only modules hidden. *Exit: contract tests green for both packs, full learning loop in en.*
+**M9 — dropped.** The English pack will not be built: the project focuses on Mandarin (2026-11-03, [ADR 0003](adr/0003-languagepack-capabilities.md)).
 
 **M10 — v1.0 hardening.** Manual accessibility audit (keyboard, NVDA, VoiceOver) + published accessibility statement, GDPR review of docs vs implementation, performance (dataset load time, bundle), FSRS parameter optimization (optional), CONTRIBUTING, contributor PR gates (fork-run approval, OpenSSF Scorecard, CODEOWNERS on workflows/pipeline/lockfile), docs, release v1.0.0.
 
-**Post-v1.** Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle, more languages.
+**Post-v1.** Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle. Other languages only as contributed packages.
 
 ## Risks
 

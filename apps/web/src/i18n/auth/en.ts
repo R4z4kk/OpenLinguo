@@ -5,7 +5,8 @@ export const authEn = {
   account: "Account",
   signIn: "Sign in",
   back: "Back to the account",
-  intro: "An account lets you send texts to the shared library. Everything else works without one.",
+  intro:
+    "Learning needs no account. An account lets you send texts to the shared library and sync your devices.",
   email: "Email address",
   emailInvalid: "Enter an email address, such as name@example.org.",
   getCode: "Get a code",
@@ -61,10 +62,96 @@ export const authEn = {
   data: {
     title: "My data",
     intro:
-      "Everything the server holds about your account, in one JSON file: the account, how it signs in, its sessions, the texts you sent, the decisions on them and the security events. Your learning data stays on this device: Profile › Data saves it.",
+      "A JSON file with your account, how it signs in, its sessions, the texts you sent, the decisions on them, the security events and, if you used sync, your synced data. The records the law makes us keep (the IP address and time of each upload) are not in it: ask us for them at openlinguo@gmail.com. To back up your learning data on this device: Profile › Data.",
     download: "Download my data (.json)",
     downloading: "Preparing the file…",
     downloaded: "File saved: {{name}}",
+    syncedUnreadable:
+      "The file was not created: something synced on the server cannot be read. Write to us: openlinguo@gmail.com.",
+    syncedUnavailable:
+      "The file was not created: this browser cannot read your synced data. Try another browser.",
+  },
+  sync: {
+    title: "Sync",
+    intro:
+      "Find your cards and your progress on your other devices. It is optional: without it, everything keeps working on this device.",
+    sentTitle: "What goes to the server",
+    sent: "Your reviews with your answer, their date and time and your time zone, your cards, your decks and their words, your notes, and the words you marked “I know it”.",
+    stayedTitle: "What stays on this device",
+    stayed:
+      "Your journal, your challenges, your texts, your settings, audio, your voice and your AI key.",
+    knowTitle: "Good to know",
+    know: {
+      merge: "The data on this device and the data in your account will be merged.",
+      readable:
+        "It is not encrypted end to end, so OpenLinguo’s administrator could read it. They only do so for an incident or an official request.",
+      off: "If you turn sync off, it is deleted from the server.",
+      edited: "A note you edit or delete stays on the server until you turn sync off.",
+      law: "French law makes us keep records: the IP address of each upload and of each deletion for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
+    },
+    activate: "Start syncing",
+    activating: "Starting sync…",
+    never: "On. No sync has finished yet.",
+    lastToday: "On. Last sync today at {{time}}.",
+    lastYesterday: "On. Last sync yesterday at {{time}}.",
+    lastOn: "On. Last sync on {{date}} at {{time}}.",
+    running: "Syncing…",
+    usage: "Space used: {{used}} of {{limit}}",
+    megabytes: "{{value, number(maximumFractionDigits: 1)}} MB",
+    usageLabel: "{{ratio, number(style: percent)}} of the space used",
+    details: "What is synced",
+    syncNow: "Sync now",
+    turnOff: "Turn off and delete from the server",
+    schedule:
+      "Sync runs when the app opens, when you come back to it, when you leave it with changes to send, at the end of a session and when the network comes back. It never sends you a notification.",
+    offTitle: "Turn off sync?",
+    offBody:
+      "Your data will be deleted from the server, for all your devices. It stays on this device. Your other devices will stop syncing and tell you so.",
+    offLaw: "French law asks us to keep a record of each upload and of this turn-off for 1 year.",
+    offCancel: "Cancel",
+    offConfirm: "Turn off and delete",
+    offWorking: "Deleting from the server…",
+    offFailed: "Sync could not be turned off and stays on. Try again later.",
+    server: {
+      title: "Your data on the server",
+      body: "Your account still has data on the server, sent by one of your devices. You can delete it without starting sync here.",
+      erase: "Delete the data from the server",
+      erased: "The data on the server is deleted.",
+      checkFailed: "We could not check whether your account still has data on the server.",
+      askTitle: "Delete the data from the server?",
+      askBody:
+        "Your data will be deleted from the server, for all your devices. Devices still syncing will stop and tell you so.",
+      askLoss:
+        "Not all of it may be on this device. If you no longer have the device that sent it, it will be lost. To keep a copy, download your data first, under “My data”.",
+      askLaw: "French law asks us to keep a record of each upload and of this deletion for 1 year.",
+      confirm: "Delete",
+      refused: "The data could not be deleted and stays on the server. Try again later.",
+    },
+    paused: "Sync is paused: sign in to resume it.",
+    otherAccount:
+      "This device was synced with another account: sync is cut. If you start it here, everything on this device, including what came from the other account, will join this account.",
+    activateHere: "Start syncing for this account",
+    failure: {
+      offline: "No connection. Your changes will go at the next sync.",
+      quota:
+        "Your sync space is full ({{limit}}). Nothing is lost on this device, but your new changes no longer go.",
+      storeFull: "The server is full for now. Nothing is lost on this device. Try again later.",
+      tooMany: "Too many uploads in an hour. Sync will start again by itself.",
+      unexpected:
+        "The server did not answer as expected. Your changes wait on this device. Try again later.",
+      unreadable:
+        "Something received from the server cannot be read. Sync is stopped and nothing was changed here. Write to us: openlinguo@gmail.com.",
+      newer: "This data comes from a newer version of OpenLinguo. Update the app to continue.",
+      turnedOffElsewhere:
+        "Sync was turned off from another device and the data on the server was deleted. Everything is still on this device. Start it again to send everything back.",
+      tooLarge:
+        "One item is too big to be sent. Nothing is lost, but sync is stopped. Write to us: openlinguo@gmail.com.",
+      invalidRow:
+        "One item on this device could not be sent. Nothing is lost, but sync is stopped. Write to us: openlinguo@gmail.com.",
+      unavailable: "This browser does not allow sync. You can keep learning on this device.",
+      storage:
+        "This device could not read or write your data. Try again, and write to us if it keeps happening: openlinguo@gmail.com.",
+    },
   },
   deletion: {
     title: "Delete my account",
@@ -84,6 +171,8 @@ export const authEn = {
       "Copies other learners already imported stay on their devices: the CC BY-SA licence cannot be withdrawn.",
     keptTitle: "What the law makes us keep",
     kept: "If you sent texts to the library, French law (décret 2021-1362) makes us keep your email for 5 years and your pseudonyms for 1 year, locked away: only authorities entitled by law can ask for them. The address and time of each change to your texts are kept for 1 year.",
+    keptSync:
+      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year. They are only given to an authority that asks in writing under the law, or to you if you ask for them.",
     cancel: "Cancel",
     confirm: "Delete for good",
     deleting: "Deleting your account…",

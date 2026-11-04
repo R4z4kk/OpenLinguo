@@ -1,6 +1,6 @@
 # Retention schedule
 
-Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md), enforced by the daily jobs of the cron Worker (#278). Each run is recorded in `job_run`; `GET /api/health` answers 503 when a job failed or has not succeeded for 26 hours. A failed purge is never skipped silently. Legal references were read on their official text on 2026-10-31.
+Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md) and [ADR 0016](../adr/0016-sync.md), enforced by the daily jobs of the cron Worker (#278). Each run is recorded in `job_run`; `GET /api/health` answers 503 when a job failed or has not succeeded for 26 hours. A failed purge is never skipped silently. Legal references were read on their official text on 2026-10-31.
 
 ## On the server
 
@@ -11,22 +11,21 @@ Periods decided in [ADR 0015](../adr/0015-backend-and-shared-library.md), enforc
 | Sessions | Until sign-out or expiry: 7 days, extended by a day of use (Better Auth defaults, #270) | Strictly necessary |
 | Authenticator (TOTP secret, backup codes) | Until turned off or the account is deleted; a backup code is deleted once used | Purpose ends |
 | Sign-in codes and verification tokens | Valid 10 minutes; deleted when used or refused, otherwise at expiry | Strictly necessary |
-| Rate-limit counters (IP address and route) | Needed for 10 minutes at most; Better Auth never deletes them, so the daily jobs purge older rows | Security |
+| Rate-limit counters (IP address and route for `/api/auth`, IP address for notices, account id for sync uploads) | Needed for 1 hour at most; Better Auth never deletes them, so the daily jobs purge rows older than 1 hour, which can stay up to a day longer | Security |
 | Sign-in codes asked per address (a keyed hash of the address, never the address, and the time) | 24 hours, for the cap of 10 codes a day per address (#289); purged by the daily jobs | Security |
 | Pending or rejected library submissions | Deleted with the account; a pending text can be withdrawn at any time | Purpose ends |
 | Published library texts | Kept while published, under their licence (CC BY-SA 4.0, or CC0 1.0 for a story); at account deletion the person chooses: keep with their name, keep as anonymous (default) or remove | Licence terms |
 | Statements of reasons (rejections and removals) | 1 year after the decision; deleted earlier with the text or the account | DSA art. 17; ADR 0015 |
 | Notices (reports) and the decisions on them | 1 year after the decision | DSA art. 16; ADR 0015 |
-| Hosting records of each creation, edit or deletion of a submission (IP address, time) | 1 year after the operation, also after the text or the account is deleted | [Décret 2021-1362](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000044228912) art. 5: "un an à compter du jour de la connexion ou de la création d'un contenu" |
-| Sealed pseudonym of a deleted account that submitted | 1 year after the deletion | Décret 2021-1362 art. 3: "un an à compter de la fin de validité du contrat" |
-| Sealed email of a deleted account that submitted | 5 years after the deletion | Décret 2021-1362 art. 2: "cinq ans à compter de la fin de validité du contrat" |
+| Hosting records of each creation, edit or deletion of a submission, of each sync upload and of each deletion of synced data (IP address, time) | 1 year after the operation, also after the text, the synced data or the account is deleted; for sync, on the strict reading of [ADR 0016](../adr/0016-sync.md) | [Décret 2021-1362](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000044228912) art. 5: "un an à compter du jour de la connexion ou de la création d'un contenu" |
+| Sealed pseudonym of a deleted account that holds a text, a sync chunk or a hosting record at deletion | 1 year after the deletion | Décret 2021-1362 art. 3: "un an à compter de la fin de validité du contrat" |
+| Sealed email of the same accounts | 5 years after the deletion | Décret 2021-1362 art. 2: "cinq ans à compter de la fin de validité du contrat" |
 | Text removed on a removal order for terrorist content, with the related data | 6 months after the removal, longer only at the request of the authority or a court | [Regulation 2021/784](https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32021R0784) art. 6(2); kept by hand, see the [moderation runbook](moderation.md) |
 | Security events | 6 months | CNIL [« Tracer les opérations »](https://www.cnil.fr/fr/securite-tracer-les-operations): "entre six mois et un an" |
 | Erasure log (ids of what was erased, time) | 8 days, so that erasures are applied again after a Time Travel restore | EDPB CEF 2025 report on the right to erasure; longer than the 7 days of Time Travel |
 | Job runs (`job_run`: job, start, end, outcome; no personal data) | Not personal data | — |
 | Database backups (D1 Time Travel) | 7 days on the Workers Free plan; deleted data disappears from them within 7 days | [Time Travel](https://developers.cloudflare.com/d1/reference/time-travel/), `PROCESSOR_FACTS.d1TimeTravelDays` |
-| Synced cards and review log (M8) | Until account deletion or user deletion of synced data | Purpose ends |
-| League results (M8) | 12 weeks; deleted when leaving leagues | Purpose ends |
+| Sync chunks: reviews, cards, personal decks and their words, notes, « Je connais » marks | Until sync is turned off on any device or the account is deleted, by the learner, a request or the 2 years of inactivity. No compaction: a value edited or deleted on a device stays in its older chunk until then | Purpose ends |
 
 ## Elsewhere
 

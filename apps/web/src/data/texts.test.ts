@@ -12,6 +12,7 @@ import {
   saveText,
   TITLE_MAX,
 } from "./texts.ts";
+import { seedLearning } from "./test-support.ts";
 
 const ID = "6f1f3c8e-2f0b-4c8e-9a52-0b6f3b3c1a01";
 const AT = Date.UTC(2026, 9, 21, 10);
@@ -135,7 +136,9 @@ describe("listTexts and deleteText", () => {
   });
 
   it("leaves the marks and cards alone when a text is deleted", async () => {
-    await db.knownMarks.add({ headword: "好", readingKey: "hao3", markedAt: AT });
+    await seedLearning(db, () =>
+      db.knownMarks.add({ headword: "好", readingKey: "hao3", markedAt: AT }),
+    );
     await saveText(db, { title: "", body: "好", source: "paste" }, AT, ID);
     await deleteText(db, ID);
     expect(await db.knownMarks.count()).toBe(1);

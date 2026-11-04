@@ -12,7 +12,7 @@ import {
   type Subject,
   type WordKey,
 } from "@openlinguo/core";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   deckWordId,
   MY_WORDS,
@@ -29,14 +29,17 @@ import {
   fileWord,
   fileWords,
   introduceWord,
+  localNow,
   nextNewReadings,
   putCards,
   renameDeck,
+  utcOffsetOf,
   wordDecks,
   type DeckNameProblem,
   type LocalTime,
 } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
+import { seedLearning } from "./test-support.ts";
 
 const entry = (
   simplified: string,
@@ -134,16 +137,18 @@ const unknown = (deckId: string) => ({ ok: false, error: { kind: "unknown-deck",
 
 /** Files a note with its cards and content, as the Anki import does. */
 const fileNote = async (deckId: string, note: NoteKey): Promise<void> => {
-  await db.deckWords.put({ ...note, id: deckWordId(deckId, note), deckId });
-  await putCards(db, [note]);
-  await db.notes.put({
-    id: note.note,
-    characters: "字",
-    pinyin: "",
-    meaning: "m",
-    updatedAt: 0,
-    provenance: null,
-  });
+  await seedLearning(db, () => db.deckWords.put({ ...note, id: deckWordId(deckId, note), deckId }));
+  await seedLearning(db, () => putCards(db, [note]));
+  await seedLearning(db, () =>
+    db.notes.put({
+      id: note.note,
+      characters: "字",
+      pinyin: "",
+      meaning: "m",
+      updatedAt: 0,
+      provenance: null,
+    }),
+  );
 };
 
 describe("named decks", () => {
@@ -248,9 +253,9 @@ describe("fileWord", () => {
   });
 
   it("writes nothing when the log cannot be replayed or the cards cannot be stored", async () => {
-    await db
-      .table("reviews")
-      .add({ ...review(idOf(HAO, "recall"), "good"), scheduler: "fsrs7-v1" });
+    await seedLearning(db, () =>
+      db.table("reviews").add({ ...review(idOf(HAO, "recall"), "good"), scheduler: "fsrs7-v1" }),
+    );
     expect(await file(MY_WORDS, HAO)).toMatchObject({
       ok: false,
       error: { kind: "scheduler-failure" },
@@ -349,14 +354,16 @@ describe("deckCounts", () => {
   });
 
   it("counts started cards due before the next 4:00 rollover, and the words a deletion drops", async () => {
-    await db.cards.bulkAdd([
-      stored(HAO, "recognition", "review", NEXT_ROLLOVER - 1),
-      stored(HAO, "recall", "new", null),
-      stored(E, "recognition", "learning", NOW.at + HOUR / 6),
-      stored(E, "recall", "review", NEXT_ROLLOVER),
-      stored(NI, "recognition", "relearning", NOW.at - HOUR),
-      stored(NI, "recall", "new", null),
-    ]);
+    await seedLearning(db, () =>
+      db.cards.bulkAdd([
+        stored(HAO, "recognition", "review", NEXT_ROLLOVER - 1),
+        stored(HAO, "recall", "new", null),
+        stored(E, "recognition", "learning", NOW.at + HOUR / 6),
+        stored(E, "recall", "review", NEXT_ROLLOVER),
+        stored(NI, "recognition", "relearning", NOW.at - HOUR),
+        stored(NI, "recall", "new", null),
+      ]),
+    );
     const animals = await deckOf("Animals");
     await file(MY_WORDS, HAO);
     await file(MY_WORDS, E);
@@ -408,10 +415,12 @@ describe("nextNewReadings", () => {
     await file(MY_WORDS, E);
     await file(MY_WORDS, HANG);
     await file(zoo, HANG);
-    await db.cards.bulkAdd([
-      stored(TIAN, "recognition", "review", NOW.at),
-      stored(TIAN, "recall", "new", null),
-    ]);
+    await seedLearning(db, () =>
+      db.cards.bulkAdd([
+        stored(TIAN, "recognition", "review", NOW.at),
+        stored(TIAN, "recall", "new", null),
+      ]),
+    );
     await file(zoo, TIAN);
   });
 
@@ -425,11 +434,35 @@ describe("nextNewReadings", () => {
     expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, note, NI, HAO, XING]));
   });
 
+  it("skips a note whose content is not on the device", async () => {
+    const note = { note: "n" };
+    await fileNote(MY_WORDS, note);
+    await seedLearning(db, () => db.notes.delete(note.note));
+    expect(await nextNewReadings(db, "hsk-2025", 10)).toEqual(ok([HANG, E, NI, HAO, XING]));
+  });
+
   it("stops at the limit", async () => {
     expect(await nextNewReadings(db, "hsk-2025", 3)).toEqual(ok([HANG, E, NI]));
   });
 
   it("orders by the chosen referential", async () => {
     expect(await nextNewReadings(db, "gf0025-2021", 10)).toEqual(ok([E, HANG, NI, HAO, XING]));
+  });
+});
+
+describe("the UTC offset", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("is a positive zero in UTC, which JSON would otherwise change", () => {
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(0);
+    expect(Object.is(utcOffsetOf(new Date()), 0)).toBe(true);
+    expect(Object.is(localNow().utcOffsetMinutes, 0)).toBe(true);
+  });
+
+  it("is local time minus UTC", () => {
+    vi.spyOn(Date.prototype, "getTimezoneOffset").mockReturnValue(-120);
+    expect(localNow().utcOffsetMinutes).toBe(120);
   });
 });

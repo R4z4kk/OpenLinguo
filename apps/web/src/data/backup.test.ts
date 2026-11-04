@@ -33,6 +33,7 @@ import {
 } from "./database.ts";
 import type { LexiconEntry } from "./lexicon.ts";
 import type { Resolution } from "./resolutions.ts";
+import { seedLearning } from "./test-support.ts";
 
 const DAY = 24 * 60 * 60_000;
 const start = Date.UTC(2026, 9, 21, 6);
@@ -237,23 +238,27 @@ beforeEach(() => {
 describe("exportBackup", () => {
   it("exports cards without their state, the log, decks and settings, and parses back", async () => {
     const first = review(1, RECOGNITION.id, start, "good");
-    await db.cards.bulkAdd([
-      { ...RECOGNITION, ...replayed(RECOGNITION.id, [first]) },
-      { ...RECALL, ...NEW_CARD_STATE },
-      { ...NOTE_CARD, ...NEW_CARD_STATE },
-    ]);
-    await db.reviews.add(first);
-    await db.decks.add(ANIMALS);
-    await db.deckWords.bulkAdd([
-      {
-        id: deckWordId(ANIMALS.id, RECOGNITION),
-        deckId: ANIMALS.id,
-        headword: "好",
-        readingKey: "hao3",
-      },
-      { id: deckWordId(ANIMALS.id, { note: NOTE.id }), deckId: ANIMALS.id, note: NOTE.id },
-    ]);
-    await db.notes.add(NOTE);
+    await seedLearning(db, () =>
+      db.cards.bulkAdd([
+        { ...RECOGNITION, ...replayed(RECOGNITION.id, [first]) },
+        { ...RECALL, ...NEW_CARD_STATE },
+        { ...NOTE_CARD, ...NEW_CARD_STATE },
+      ]),
+    );
+    await seedLearning(db, () => db.reviews.add(first));
+    await seedLearning(db, () => db.decks.add(ANIMALS));
+    await seedLearning(db, () =>
+      db.deckWords.bulkAdd([
+        {
+          id: deckWordId(ANIMALS.id, RECOGNITION),
+          deckId: ANIMALS.id,
+          headword: "好",
+          readingKey: "hao3",
+        },
+        { id: deckWordId(ANIMALS.id, { note: NOTE.id }), deckId: ANIMALS.id, note: NOTE.id },
+      ]),
+    );
+    await seedLearning(db, () => db.notes.add(NOTE));
 
     const exported = await exportBackup(db, SETTINGS, now);
     const expected = backup({
@@ -273,7 +278,7 @@ describe("exportBackup", () => {
 
 describe("round trip", () => {
   it("keeps the provenance of AI notes", async () => {
-    await db.notes.bulkAdd([NOTE, AI_NOTE]);
+    await seedLearning(db, () => db.notes.bulkAdd([NOTE, AI_NOTE]));
     const exported = await exportBackup(db, SETTINGS, now);
     if (!exported.ok) throw new Error(exported.error.kind);
     const parsed = parseBackup(JSON.stringify(exported.value));
@@ -315,7 +320,7 @@ describe("round trip", () => {
 
   it("brings texts back with their provenance and chosen readings, and the known marks", async () => {
     await db.texts.bulkAdd([PASTED, STORY, COPIED]);
-    await db.knownMarks.bulkAdd(MARKS);
+    await seedLearning(db, () => db.knownMarks.bulkAdd(MARKS));
     const exported = await exportBackup(db, SETTINGS, now);
     if (!exported.ok) throw new Error(exported.error.kind);
     expect(exported.value.texts).toEqual([PASTED, STORY, COPIED]);
@@ -396,8 +401,8 @@ describe("round trip", () => {
       { ...writing, ...replayed(writing.id, log.slice(0, 1)) },
       { ...typing, ...replayed(typing.id, log.slice(1)) },
     ];
-    await db.cards.bulkAdd(states);
-    await db.reviews.bulkAdd(log);
+    await seedLearning(db, () => db.cards.bulkAdd(states));
+    await seedLearning(db, () => db.reviews.bulkAdd(log));
     const exported = await exportBackup(db, SETTINGS, now);
     if (!exported.ok) throw new Error(exported.error.kind);
     const parsed = parseBackup(JSON.stringify(exported.value));
@@ -612,13 +617,34 @@ describe("parseBackup", () => {
     });
   });
 
-  it("refuses duplicate ids, deck names taken and words filed in a missing deck", () => {
+  it("restores two decks of one name, as sync can leave them, with their words", async () => {
+    const twin = { id: uuid(101), name: "animals" };
+    const parsed = parseBackup(
+      JSON.stringify(
+        backup({
+          decks: [ANIMALS, twin],
+          deckWords: [
+            { deckId: ANIMALS.id, headword: "猫", readingKey: "mao1" },
+            { deckId: twin.id, headword: "好", readingKey: "hao3" },
+          ],
+        }),
+      ),
+    );
+    if (!parsed.ok) throw new Error(parsed.error.kind);
+    expect((await importBackup(db, parsed.value)).ok).toBe(true);
+    expect(await db.decks.count()).toBe(2);
+    expect((await db.deckWords.toArray()).map(({ deckId }) => deckId).sort()).toEqual(
+      [ANIMALS.id, twin.id].sort(),
+    );
+  });
+
+  it("refuses duplicate ids and words filed in a missing deck", () => {
     const first = review(1, RECALL.id, start, "good");
     const parsed = parseBackup(
       JSON.stringify(
         backup({
           reviews: [first, first],
-          decks: [ANIMALS, { id: uuid(101), name: " animals " }],
+          decks: [ANIMALS, ANIMALS],
           deckWords: [{ deckId: uuid(102), headword: "猫", readingKey: "mao1" }],
           notes: [NOTE, NOTE],
           aiGlosses: [GLOSS, GLOSS],
@@ -631,7 +657,7 @@ describe("parseBackup", () => {
         kind: "invalid",
         issues: [
           { path: "reviews.1.id" },
-          { path: "decks.1.name" },
+          { path: "decks.1.id" },
           { path: "notes.1.id" },
           { path: "aiGlosses.1" },
           { path: "deckWords.0.deckId" },
@@ -644,8 +670,10 @@ describe("parseBackup", () => {
 describe("importBackup", () => {
   it("replays every card from the merged log and keeps reviews of removed cards", async () => {
     const local = review(1, RECOGNITION.id, start, "good");
-    await db.cards.add({ ...RECOGNITION, ...replayed(RECOGNITION.id, [local]) });
-    await db.reviews.add(local);
+    await seedLearning(db, () =>
+      db.cards.add({ ...RECOGNITION, ...replayed(RECOGNITION.id, [local]) }),
+    );
+    await seedLearning(db, () => db.reviews.add(local));
     const lapse = review(2, RECOGNITION.id, start + 2 * DAY, "again");
     const recall = review(3, RECALL.id, start + DAY, "hard");
     const removed = review(4, "removed", start, "easy");
@@ -725,10 +753,12 @@ describe("importBackup", () => {
   });
 
   it("keeps local deck names and merges an imported deck into the local one of the same name", async () => {
-    await db.decks.bulkAdd([
-      { id: ANIMALS.id, name: "Zoo" },
-      { id: uuid(101), name: "Food" },
-    ]);
+    await seedLearning(db, () =>
+      db.decks.bulkAdd([
+        { id: ANIMALS.id, name: "Zoo" },
+        { id: uuid(101), name: "Food" },
+      ]),
+    );
     const data = backup({
       decks: [ANIMALS, { id: uuid(102), name: "food" }],
       deckWords: [
@@ -763,10 +793,12 @@ describe("importBackup", () => {
 
   it("files notes and keeps the latest content of each, the second time too", async () => {
     const older = { ...NOTE, id: "older", meaning: "old" };
-    await db.notes.bulkAdd([
-      { ...NOTE, meaning: "local", updatedAt: start + DAY },
-      { ...older, updatedAt: start - DAY },
-    ]);
+    await seedLearning(db, () =>
+      db.notes.bulkAdd([
+        { ...NOTE, meaning: "local", updatedAt: start + DAY },
+        { ...older, updatedAt: start - DAY },
+      ]),
+    );
     const data = backup({
       cards: [NOTE_CARD],
       deckWords: [{ deckId: MY_WORDS, note: NOTE.id }],
@@ -830,10 +862,10 @@ describe("importBackup", () => {
   });
 
   it("writes nothing when the merged log cannot be replayed", async () => {
-    await db.cards.add({ ...RECALL, ...NEW_CARD_STATE });
-    await db
-      .table("reviews")
-      .add({ ...review(1, RECALL.id, start, "good"), scheduler: "fsrs7-v1" });
+    await seedLearning(db, () => db.cards.add({ ...RECALL, ...NEW_CARD_STATE }));
+    await seedLearning(db, () =>
+      db.table("reviews").add({ ...review(1, RECALL.id, start, "good"), scheduler: "fsrs7-v1" }),
+    );
     const data = backup({
       cards: [CAT],
       reviews: [review(2, CAT.id, start, "good")],

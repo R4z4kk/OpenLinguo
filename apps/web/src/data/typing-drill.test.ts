@@ -18,6 +18,7 @@ import {
   type EndedRound,
   type Round,
 } from "./typing-drill.ts";
+import { seedLearning } from "./test-support.ts";
 
 const MINUTE = 60_000;
 const START = 1_000_000;
@@ -160,7 +161,9 @@ const TIAN: WordKey = { headword: "天", readingKey: "tian1" };
 const GONE: WordKey = { headword: "鹅", readingKey: "e2" };
 
 const startCards = (word: WordKey, types: readonly CardType[]) =>
-  db.cards.bulkPut(newCards("zh", word, types).map((card) => ({ ...card, ...NEW_CARD_STATE })));
+  seedLearning(db, () =>
+    db.cards.bulkPut(newCards("zh", word, types).map((card) => ({ ...card, ...NEW_CARD_STATE }))),
+  );
 
 let db: Database;
 let counter = 0;

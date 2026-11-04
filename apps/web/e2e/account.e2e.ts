@@ -6,12 +6,15 @@ import {
   PseudonymUpdate,
 } from "@openlinguo/core/account";
 import { LICENCES, type Submission } from "@openlinguo/core/submission";
+import { SYNC_HEADERS } from "@openlinguo/core/sync";
 import { expect, type Page, type Route } from "@playwright/test";
+import { readFile } from "node:fs/promises";
 import { z } from "zod";
 import { authEn } from "../src/i18n/auth/en.ts";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
+import { all, put } from "./seed.ts";
 
 const CODE = "246810";
 const TOTP = "135790";
@@ -20,6 +23,7 @@ const TOTP_URI =
   "otpauth://totp/OpenLinguo:lin%40example.test?secret=JBSWY3DPEHPK3PXP&issuer=OpenLinguo";
 
 type User = {
+  id: string;
   email: string;
   name: string;
   role: "admin" | null;
@@ -38,9 +42,11 @@ type FakeApi = {
   readonly codesSentTo: string[];
   readonly submissions: Submission[];
   deletedWith: PublishedChoice | null;
+  syncReads: number;
 };
 
 const user = (email: string, rest: Partial<User>): User => ({
+  id: `user-${email}`,
   email,
   name: "",
   role: null,
@@ -60,6 +66,7 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
     codesSentTo: [],
     submissions: [],
     deletedWith: null,
+    syncReads: 0,
   };
   const json = (route: Route, status: number, body: unknown) =>
     route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
@@ -210,6 +217,10 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
         await json(route, 200, exported);
         return;
       }
+      case "/api/sync/chunks/next":
+        api.syncReads += 1;
+        await route.fulfill({ status: 204, headers: { [SYNC_HEADERS.used]: "0" } });
+        return;
       case "/api/account/delete":
         if (current === null) {
           await refuse(route, 401, "UNAUTHORIZED");
@@ -482,11 +493,32 @@ test("downloads the account data, then deletes the account and keeps its texts",
   await expect(main.getByRole("heading", { name: authEn.data.title })).toBeVisible({
     timeout: 90_000,
   });
+  await expect(main.getByRole("heading", { name: authEn.sync.title })).toBeVisible();
+  await expect(main.getByRole("button", { name: authEn.sync.activate })).toBeVisible();
+  await put(page, "syncState", {
+    id: "state",
+    accountId: "user-lin@example.test",
+    cursor: 0,
+    oldest: null,
+    lastSyncAt: null,
+  });
+  await put(page, "syncEntities", {
+    id: "notes:n1",
+    table: "notes",
+    key: "n1",
+    changedAt: 1,
+    deleted: false,
+    pending: 1,
+  });
+  await put(page, "knownMarks", { headword: "好", readingKey: "hao3", markedAt: 1 });
   const saved = page.waitForEvent("download");
   await press(page, authEn.data.download);
-  expect((await saved).suggestedFilename()).toMatch(
-    /^openlinguo-account-\d{4}-\d{2}-\d{2}\.json$/u,
-  );
+  const download = await saved;
+  expect(download.suggestedFilename()).toMatch(/^openlinguo-account-\d{4}-\d{2}-\d{2}\.json$/u);
+  const file = z
+    .object({ synced: z.array(z.unknown()) })
+    .parse(JSON.parse(await readFile(await download.path(), "utf8")));
+  expect(file.synced).toEqual([]);
   await expect(main.getByRole("status").getByText(/^File saved: /u)).toBeVisible();
   await noViolations(page);
 
@@ -504,7 +536,43 @@ test("downloads the account data, then deletes the account and keeps its texts",
   await expect(main.getByRole("heading", { name: authEn.deletion.doneTitle })).toBeFocused();
   expect(api.deletedWith).toBe("keep-named");
   expect(api.users.has("lin@example.test")).toBe(false);
+  expect(await all(page, "syncState")).toEqual([]);
+  expect(await all(page, "syncEntities")).toEqual([]);
+  expect(await all(page, "knownMarks")).toHaveLength(1);
   await noViolations(page);
+});
+
+test("says sync is paused while signed out, and syncs again after signing in", async ({ page }) => {
+  const api = await fakeApi(page);
+  const known = user("lin@example.test", {});
+  api.users.set(known.email, known);
+  const main = page.getByRole("main");
+  await page.goto("/profile/account");
+  await expect(main.getByText(authEn.signedOut)).toBeVisible({ timeout: 90_000 });
+  await expect(main.getByText(authEn.sync.paused)).toHaveCount(0);
+
+  await put(page, "syncState", {
+    id: "state",
+    accountId: known.id,
+    cursor: 0,
+    oldest: null,
+    lastSyncAt: null,
+  });
+  await page.reload();
+  await expect(main.getByText(authEn.sync.paused)).toBeVisible({ timeout: 90_000 });
+  expect(api.syncReads).toBe(0);
+  await noViolations(page);
+
+  await press(page, authEn.signIn);
+  await expect(main.getByRole("textbox", { name: authEn.email })).toBeFocused();
+  await page.keyboard.type(known.email);
+  await page.keyboard.press("Enter");
+  await expect(main.getByRole("textbox", { name: authEn.code })).toBeFocused();
+  await page.keyboard.type(CODE);
+  await page.keyboard.press("Enter");
+  await expect(main.getByRole("heading", { name: authEn.sync.title })).toBeVisible();
+  await expect.poll(() => api.syncReads).toBeGreaterThan(0);
+  await expect(main.getByText(authEn.sync.paused)).toHaveCount(0);
 });
 
 test("asks nothing about published texts for an account without any", async ({ page }) => {

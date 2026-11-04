@@ -1,5 +1,6 @@
 import { AgeDeclaration } from "@openlinguo/core/account";
 import type { ApiError } from "@openlinguo/core/api-error";
+import { SYNC_LIMITS } from "@openlinguo/core/sync";
 import { getSessionCookie } from "better-auth/cookies";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
@@ -15,6 +16,7 @@ import { noticeRoutes } from "./notices.ts";
 import { lettermintMailer } from "./lettermint-mailer.ts";
 import { database, user } from "./schema.ts";
 import { submissionRoutes } from "./submissions.ts";
+import { type SyncLimits, syncRoutes } from "./sync.ts";
 
 export type Mailer = (env: AuthEnv) => SendMail;
 
@@ -32,9 +34,15 @@ const BEFORE_SECOND_FACTOR = new Set([
 const isAdminPath = (path: string) =>
   path.startsWith("/api/admin/") || path.startsWith("/api/auth/admin/");
 
+const READ_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
 const refused = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 
-export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) => {
+export const createApp = (
+  jobs: readonly string[],
+  mailer: Mailer = lettermint,
+  syncLimits: SyncLimits = SYNC_LIMITS,
+) => {
   const app = new Hono<{ Bindings: Env }>().basePath("/api");
 
   // Pages applies apps/web/public/_headers to static files only. HSTS matches it.
@@ -57,6 +65,15 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) 
     const settings = settingsOf(env);
     return createAuth(database(env.DB), settings, mailer(settings));
   };
+
+  // SameSite=Lax lets a sibling subdomain post text/plain with the session, without a preflight.
+  app.use(async (c, next) => {
+    if (READ_METHODS.has(c.req.method) || !getSessionCookie(c.req.raw)) return next();
+    if (c.req.header("origin") !== new URL(settingsOf(c.env).BETTER_AUTH_URL).origin) {
+      return c.json(refused("INVALID_REQUEST", "Expected a request from the app"), 403);
+    }
+    return next();
+  });
 
   app.use(async (c, next) => {
     const path = c.req.path;
@@ -119,6 +136,7 @@ export const createApp = (jobs: readonly string[], mailer: Mailer = lettermint) 
 
   app.route("/account", accountRoutes(authOf));
   app.route("/submissions", submissionRoutes(authOf));
+  app.route("/sync", syncRoutes(authOf, syncLimits));
   app.route("/library", libraryRoutes());
   app.route("/notices", noticeRoutes(moderationOf));
   app.route("/admin", moderationRoutes(authOf, moderationOf));

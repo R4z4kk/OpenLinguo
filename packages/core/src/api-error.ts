@@ -18,6 +18,10 @@ export const ApiErrorCode = z.enum([
   "SUBMISSION_NOT_APPROVED",
   "NOTICE_DECIDED",
   "USE_ACCOUNT_DELETION",
+  "SYNC_CHUNK_TOO_LARGE",
+  "SYNC_QUOTA",
+  "SYNC_STORE_FULL",
+  "SYNC_STORE_CHANGED",
 ]);
 export type ApiErrorCode = z.output<typeof ApiErrorCode>;
 
