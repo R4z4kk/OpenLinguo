@@ -5,7 +5,8 @@ export const authEn = {
   account: "Account",
   signIn: "Sign in",
   back: "Back to the account",
-  intro: "An account lets you send texts to the shared library. Everything else works without one.",
+  intro:
+    "Learning needs no account. An account lets you send texts to the shared library and sync your devices.",
   email: "Email address",
   emailInvalid: "Enter an email address, such as name@example.org.",
   getCode: "Get a code",
@@ -61,7 +62,7 @@ export const authEn = {
   data: {
     title: "My data",
     intro:
-      "Everything the server holds about your account, in one JSON file: the account, how it signs in, its sessions, the texts you sent, the decisions on them, the security events and, if you used sync, your synced data. Your learning data stays on this device: Profile › Data saves it.",
+      "A JSON file with your account, how it signs in, its sessions, the texts you sent, the decisions on them, the security events and, if you used sync, your synced data. The records the law makes us keep (the IP address and time of each upload) are not in it: ask us for them at openlinguo@gmail.com. To back up your learning data on this device: Profile › Data.",
     download: "Download my data (.json)",
     downloading: "Preparing the file…",
     downloaded: "File saved: {{name}}",
@@ -75,7 +76,7 @@ export const authEn = {
     intro:
       "Find your cards and your progress on your other devices. It is optional: without it, everything keeps working on this device.",
     sentTitle: "What goes to the server",
-    sent: "Your reviews with their date and time, your cards, your decks and their words, your notes, and the words you marked “I know it”.",
+    sent: "Your reviews with your answer, their date and time and your time zone, your cards, your decks and their words, your notes, and the words you marked “I know it”.",
     stayedTitle: "What stays on this device",
     stayed:
       "Your journal, your challenges, your texts, your settings, audio, your voice and your AI key.",
@@ -85,7 +86,8 @@ export const authEn = {
       readable:
         "It is not encrypted end to end, so OpenLinguo’s administrator could read it. They only do so for an incident or an official request.",
       off: "If you turn sync off, it is deleted from the server.",
-      law: "French law makes us keep records: the IP address of each upload for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
+      edited: "A note you edit or delete stays on the server until you turn sync off.",
+      law: "French law makes us keep records: the IP address of each upload and of each turn-off for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
     },
     activate: "Start syncing",
     activating: "Starting sync…",
@@ -101,15 +103,16 @@ export const authEn = {
     syncNow: "Sync now",
     turnOff: "Turn off and delete from the server",
     schedule:
-      "Sync runs when the app opens, at the end of a session and when the network comes back. It never sends you a notification.",
+      "Sync runs when the app opens, when you come back to it, when you leave it with changes to send, at the end of a session and when the network comes back. It never sends you a notification.",
     offTitle: "Turn off sync?",
     offBody:
       "Your data will be deleted from the server, for all your devices. It stays on this device. Your other devices will stop syncing and tell you so.",
-    offLaw: "The record of each upload is still kept for 1 year, as French law asks us to.",
+    offLaw: "French law asks us to keep a record of each upload and of this turn-off for 1 year.",
     offCancel: "Cancel",
     offConfirm: "Turn off and delete",
     offWorking: "Deleting from the server…",
     offFailed: "Sync could not be turned off and stays on. Try again later.",
+    paused: "Sync is paused: sign in to resume it.",
     otherAccount:
       "This device was synced with another account: sync is cut. If you start it here, everything on this device, including what came from the other account, will join this account.",
     activateHere: "Start syncing for this account",
@@ -154,7 +157,7 @@ export const authEn = {
     keptTitle: "What the law makes us keep",
     kept: "If you sent texts to the library, French law (décret 2021-1362) makes us keep your email for 5 years and your pseudonyms for 1 year, locked away: only authorities entitled by law can ask for them. The address and time of each change to your texts are kept for 1 year.",
     keptSync:
-      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year. They are only used to answer an authority.",
+      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year. They are only given to an authority that asks in writing under the law, or to you if you ask for them.",
     cancel: "Cancel",
     confirm: "Delete for good",
     deleting: "Deleting your account…",

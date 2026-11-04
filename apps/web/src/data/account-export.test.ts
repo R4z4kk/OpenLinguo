@@ -52,10 +52,13 @@ const serve = (input: string): Promise<Response> => {
   if (url.pathname === "/api/account/export")
     return Promise.resolve(server.account ?? Response.json(ACCOUNT_EXPORT));
   const after = Number(url.searchParams.get("after"));
-  const headers = new Headers({ [SYNC_HEADERS.used]: "0" });
+  const headers = new Headers();
   const bytes = server.chunks[after];
   if (server.chunks.length > 0) headers.set(SYNC_HEADERS.oldest, "1");
-  if (bytes == null) return Promise.resolve(new Response(null, { status: 204, headers }));
+  if (bytes == null) {
+    headers.set(SYNC_HEADERS.used, "0");
+    return Promise.resolve(new Response(null, { status: 204, headers }));
+  }
   headers.set(SYNC_HEADERS.id, String(after + 1));
   return Promise.resolve(new Response(new Uint8Array(bytes), { status: 200, headers }));
 };

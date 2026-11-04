@@ -156,7 +156,7 @@ describe("POST /api/sync/chunks", () => {
     expect(read.headers.get("cache-control")).toBe("no-store");
     expect(read.headers.get(SYNC_HEADERS.id)).toBe(String(chunk.id));
     expect(read.headers.get(SYNC_HEADERS.oldest)).toBe(String(chunk.id));
-    expect(read.headers.get(SYNC_HEADERS.used)).toBe(String(bytes.length));
+    expect(read.headers.get(SYNC_HEADERS.used)).toBeNull();
     expect(new Uint8Array(await read.arrayBuffer())).toEqual(bytes);
   });
 
@@ -174,6 +174,21 @@ describe("POST /api/sync/chunks", () => {
       expect(await response.json()).toMatchObject({ code: "INVALID_REQUEST" });
     }
     expect(await db.select().from(syncChunk)).toEqual([]);
+  });
+
+  it("refuses a body not sent as application/gzip, which a form could send without a preflight", async () => {
+    const cookie = await signedIn("lin@example.test");
+    for (const type of ["text/plain", "application/octet-stream", null]) {
+      const response = await call("/api/sync/chunks", {
+        method: "POST",
+        headers: { ...headersOf(cookie), ...(type === null ? {} : { "content-type": type }) },
+        body: gzipped(),
+      });
+      expect(response.status).toBe(415);
+      expect(await response.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    }
+    expect(await db.select().from(syncChunk)).toEqual([]);
+    expect(await records()).toEqual([]);
   });
 
   it("refuses a chunk over 262144 bytes", async () => {
@@ -321,6 +336,64 @@ describe("GET /api/sync/chunks/next", () => {
     expect(other.headers.get(SYNC_HEADERS.oldest)).toBeNull();
     expect(other.headers.get(SYNC_HEADERS.used)).toBe("0");
     expect((await next(lin, 0)).headers.get(SYNC_HEADERS.id)).toBe(String(chunk.id));
+  });
+});
+
+describe("what reading costs D1", () => {
+  const CHUNKS = 20;
+
+  /** Reads to the end, keeping the statements of the answers with a chunk and of the last one. */
+  const readAll = async (cookie: string) => {
+    let statements: string[] = [];
+    const DB = new Proxy(env.DB, {
+      get: (target, name): unknown => {
+        if (name === "prepare")
+          return (statement: string) => {
+            statements.push(statement);
+            return target.prepare(statement);
+          };
+        const value: unknown = Reflect.get(target, name);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+    const read = (after: number) =>
+      app.fetch(
+        new Request(`${ORIGIN}/api/sync/chunks/next?after=${String(after)}`, {
+          headers: headersOf(cookie),
+        }),
+        { ...env, DB },
+      );
+    let after = 0;
+    for (let count = 0; count < CHUNKS; count += 1) {
+      const answer = await read(after);
+      expect(answer.status).toBe(200);
+      expect(answer.headers.get(SYNC_HEADERS.oldest)).not.toBeNull();
+      after = Number(answer.headers.get(SYNC_HEADERS.id));
+    }
+    const chunks = statements;
+    statements = [];
+    const end = await read(after);
+    expect(end.status).toBe(204);
+    expect(end.headers.get(SYNC_HEADERS.used)).toBe(String(CHUNKS * 10));
+    return { chunks, end: statements };
+  };
+
+  it("reading through the chunks runs the sum only on the last answer", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const userId = await userIdOf("lin@example.test");
+    await db
+      .insert(syncChunk)
+      .values(Array.from({ length: CHUNKS }, () => ({ userId, bytes: gzipped(), size: 10 })));
+
+    const { chunks, end } = await readAll(cookie);
+
+    expect(chunks.filter((statement) => statement.includes("sum("))).toEqual([]);
+    expect(end.filter((statement) => statement.includes("sum("))).toHaveLength(1);
+
+    const oldest = chunks.find((statement) => statement.includes("min(id)")) ?? null;
+    if (oldest === null) throw new Error("no read of the oldest chunk");
+    const { meta } = await env.DB.prepare(oldest).bind(userId).all();
+    expect(meta.rows_read).toBe(1);
   });
 });
 

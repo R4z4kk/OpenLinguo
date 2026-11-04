@@ -26,7 +26,7 @@ const checked = (language: Language): string =>
 export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
   fr: {
     title: "Confidentialité",
-    updated: "2026-11-01",
+    updated: "2026-11-04",
     sections: [
       {
         id: "summary",
@@ -35,7 +35,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
           <List
             items={[
               "Sans compte, tout ce que vous apprenez reste sur votre appareil. Nous ne le recevons pas.",
-              "Un compte sert seulement à envoyer des textes à la bibliothèque partagée. Il garde votre adresse e-mail et un pseudonyme, jamais de mot de passe.",
+              "Un compte sert à envoyer des textes à la bibliothèque partagée et, si vous l’activez, à synchroniser vos appareils. Il garde votre adresse e-mail et un pseudonyme, jamais de mot de passe.",
+              "La synchronisation est facultative. Si vous l’activez, vos révisions, vos cartes, vos paquets, vos notes et vos mots « Je connais » vont sur le serveur, sans chiffrement de bout en bout.",
               "Pas de publicité, pas de statistiques de visite, pas de pistage, rien n’est vendu.",
               "Vous pouvez télécharger vos données et supprimer votre compte à tout moment.",
               "La loi nous oblige à garder quelques données un an ou cinq ans après certains envois : elles sont détaillées plus bas.",
@@ -62,8 +63,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               Vos cartes, vos révisions, vos textes, votre journal, vos enregistrements et vos
               réglages sont stockés dans votre navigateur. Ils ne quittent l’appareil que si vous
-              appuyez sur un bouton qui le dit (IA, Wikidata, envoi à la bibliothèque) ou si vous
-              exportez un fichier de sauvegarde.
+              appuyez sur un bouton qui le dit (IA, Wikidata, envoi à la bibliothèque), si vous
+              exportez un fichier de sauvegarde ou, pour une partie d’entre eux, si vous activez la
+              synchronisation.
             </Paragraph>
             <Paragraph>
               Ce stockage est strictement nécessaire au service que vous demandez, il n’a donc pas
@@ -161,12 +163,12 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         body: (
           <>
             <Paragraph>
-              Un compte sert à envoyer des textes à la bibliothèque. Nous gardons votre adresse
-              e-mail, votre pseudonyme (vide tant que vous n’en choisissez pas), l’identifiant de
-              votre compte Google ou GitHub si vous vous connectez ainsi, vos sessions (adresse IP,
-              navigateur), la date de votre réponse sur l’âge et, si vous l’activez, la vérification
-              en deux étapes (chiffrée). Pas de mot de passe, pas de nom ni de photo venant de
-              Google ou GitHub.
+              Un compte sert à envoyer des textes à la bibliothèque et à synchroniser vos appareils.
+              Nous gardons votre adresse e-mail, votre pseudonyme (vide tant que vous n’en
+              choisissez pas), l’identifiant de votre compte Google ou GitHub si vous vous connectez
+              ainsi, vos sessions (adresse IP, navigateur), la date de votre réponse sur l’âge et,
+              si vous l’activez, la vérification en deux étapes (chiffrée). Pas de mot de passe, pas
+              de nom ni de photo venant de Google ou GitHub.
             </Paragraph>
             <Paragraph>
               Base légale : le contrat, c’est-à-dire les conditions d’utilisation (RGPD, art.
@@ -218,26 +220,77 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         ),
       },
       {
+        id: "sync",
+        heading: "La synchronisation",
+        body: (
+          <>
+            <Paragraph>
+              Elle vous fait retrouver vos cartes et votre progression sur vos autres appareils.
+              Elle est éteinte tant que vous ne l’activez pas dans Profil › Compte, après une
+              explication. Une fois activée, elle se fait toute seule : à l’ouverture de
+              l’application, quand vous y revenez, quand vous la quittez avec des changements à
+              envoyer, en fin de séance et au retour du réseau, et quand vous appuyez sur «
+              Synchroniser maintenant ». Elle ne vous envoie jamais de notification. Base légale :
+              le contrat (RGPD, art. 6(1)(b)).
+            </Paragraph>
+            <List
+              items={[
+                "Ce qui part sur le serveur : vos révisions (le mot, votre réponse, la date, l’heure, votre fuseau horaire, votre objectif du jour, si le mot est fini pour ce jour), vos cartes, vos paquets et leurs mots, vos notes, vos mots marqués « Je connais ».",
+                "Ce qui reste sur cet appareil : votre journal, vos défis, vos textes, vos réglages, l’audio, votre voix et votre clé IA.",
+              ]}
+            />
+            <Paragraph>
+              Ces données ne sont pas chiffrées de bout en bout : l’administrateur d’OpenLinguo
+              pourrait les lire, y compris les heures de vos révisions. Il ne le fait que pour un
+              incident ou une demande officielle. Dans l’application, seuls vos appareils les
+              reçoivent : aucun autre apprenant ne les voit.
+            </Paragraph>
+            <Paragraph>
+              Les données de cet appareil et celles de votre compte sont fusionnées. Si un appareil
+              a servi à un autre compte, ce qui en vient rejoint aussi le vôtre : l’écran vous
+              prévient avant.
+            </Paragraph>
+            <Paragraph>
+              Elles restent sur le serveur jusqu’à ce que vous désactiviez la synchronisation ou que
+              le compte soit supprimé. « Désactiver et supprimer du serveur », depuis un seul
+              appareil, les supprime pour tous vos appareils ; elles restent sur vos appareils. Se
+              déconnecter arrête la synchronisation sur cet appareil, mais ne supprime rien du
+              serveur. Attention : changer ou supprimer une note ou un paquet sur un appareil ne
+              l’efface pas du serveur. L’ancien envoi y reste, et dans le fichier de vos données,
+              jusqu’à ce que vous désactiviez la synchronisation. Ce qui est supprimé disparaît des
+              sauvegardes de la base au bout de {String(backupDays)} jours.
+            </Paragraph>
+          </>
+        ),
+      },
+      {
         id: "legal-retention",
         heading: "Ce que la loi nous oblige à garder",
         body: (
           <>
             <Paragraph>
-              Un hébergeur doit garder de quoi identifier qui a publié un contenu (LCEN, art. 6, V ;{" "}
+              Un hébergeur doit garder de quoi identifier qui a créé un contenu (LCEN, art. 6, V ;{" "}
               <External href={DECREE}>décret n° 2021-1362</External>), seulement avec ce qu’il
               collecte déjà :
             </Paragraph>
             <List
               items={[
                 "pour chaque envoi, modification ou retrait d’un texte : l’adresse IP et l’heure, un an ;",
-                "si vous supprimez un compte qui a envoyé des textes : votre adresse e-mail, cinq ans, et votre pseudonyme, un an.",
+                "pour chaque envoi à la synchronisation et chaque suppression de vos données synchronisées : l’adresse IP et l’heure, un an. Recevoir vos données sur un appareil ne laisse pas de trace ;",
+                "si vous supprimez un compte qui a encore des textes, des données synchronisées ou l’une de ces traces : votre adresse e-mail, cinq ans, et votre pseudonyme, un an.",
               ]}
             />
             <Paragraph>
               Ces données sont mises à part, ne sont lues par personne dans l’application, et ne
-              sont données qu’à une autorité qui les demande par écrit selon la loi. Base légale :
-              l’obligation légale (RGPD, art. 6(1)(c)). Elles restent après la suppression du
-              compte, comme l’écran de suppression le dit.
+              sont données qu’à une autorité qui les demande par écrit selon la loi, ou à vous si
+              vous les demandez. Base légale : l’obligation légale (RGPD, art. 6(1)(c)). Elles
+              restent après la suppression du compte, comme l’écran de suppression le dit.
+            </Paragraph>
+            <Paragraph>
+              Le décret ne dit pas clairement s’il vise aussi ce qui reste privé, comme la
+              synchronisation. Ne pas l’appliquer pourrait être puni par la loi : par prudence, nous
+              l’appliquons. Vos données synchronisées elles-mêmes sont supprimées, seules ces traces
+              restent.
             </Paragraph>
           </>
         ),
@@ -249,6 +302,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
           <Paragraph>
             Chaque connexion, échec, code envoyé et action d’administration est noté avec l’adresse
             IP, le navigateur et l’heure, pour repérer les abus et les intrusions, pendant six mois.
+            Des compteurs limitent aussi le nombre de demandes, par adresse IP ou, pour la
+            synchronisation, par compte : ils sont effacés chaque jour une fois vieux d’une heure.
             Base légale : notre intérêt légitime à protéger le service et vos comptes (RGPD, art.
             6(1)(f)).
           </Paragraph>
@@ -286,9 +341,17 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 "Tant qu’ils sont publiés ; à la suppression du compte, vous choisissez : garder avec votre nom, garder anonyme (par défaut) ou retirer",
               ],
               ["Décisions de modération, signalements", "1 an après la décision"],
+              [
+                "Données synchronisées",
+                "Jusqu’à ce que vous désactiviez la synchronisation ou que le compte soit supprimé",
+              ],
               ["Adresse IP et heure de chaque envoi de texte", "1 an"],
               [
-                "E-mail et pseudonyme d’un compte supprimé qui a envoyé des textes",
+                "Adresse IP et heure de chaque envoi à la synchronisation et de chaque suppression de ces données",
+                "1 an",
+              ],
+              [
+                "E-mail et pseudonyme d’un compte supprimé qui a encore des textes, des données synchronisées ou une trace",
                 "E-mail 5 ans, pseudonyme 1 an",
               ],
               ["Journaux de sécurité", "6 mois"],
@@ -333,9 +396,11 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               Vous pouvez accéder à vos données, les corriger, les effacer, les récupérer, limiter
               leur usage ou vous y opposer. Dans Profil › Compte, vous pouvez changer votre
-              pseudonyme, télécharger vos données (JSON) et supprimer votre compte. Pour le reste,
-              écrivez à <Contact /> : nous répondons dans un mois, ou nous vous disons dans ce mois
-              pourquoi il nous faut jusqu’à deux mois de plus.
+              pseudonyme, télécharger vos données (JSON, avec vos données synchronisées), désactiver
+              la synchronisation et supprimer votre compte. Pour le reste, dont les traces gardées
+              par la loi, qui ne sont pas dans ce fichier, écrivez à <Contact /> : nous répondons
+              dans un mois, ou nous vous disons dans ce mois pourquoi il nous faut jusqu’à deux mois
+              de plus.
             </Paragraph>
             <Paragraph>
               Aucune décision vous concernant n’est prise par une machine seule. Si vous pensez que
@@ -371,7 +436,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
   },
   en: {
     title: "Privacy",
-    updated: "2026-11-01",
+    updated: "2026-11-04",
     sections: [
       {
         id: "summary",
@@ -380,7 +445,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
           <List
             items={[
               "Without an account, everything you learn stays on your device. We do not receive it.",
-              "An account is only for sending texts to the shared library. It keeps your email address and a pseudonym, never a password.",
+              "An account is for sending texts to the shared library and, if you turn it on, for syncing your devices. It keeps your email address and a pseudonym, never a password.",
+              "Sync is optional. If you turn it on, your reviews, cards, decks, notes and « I know it » words go to the server, with no end-to-end encryption.",
               "No ads, no visit statistics, no tracking, nothing is sold.",
               "You can download your data and delete your account at any time.",
               "The law makes us keep a few data for one or five years after some submissions: they are listed below.",
@@ -407,7 +473,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               Your cards, reviews, texts, journal, recordings and settings are stored in your
               browser. They leave the device only when you press a button that says so (AI,
-              Wikidata, sending to the library) or when you export a backup file.
+              Wikidata, sending to the library), when you export a backup file or, for some of them,
+              when you turn on sync.
             </Paragraph>
             <Paragraph>
               This storage is strictly necessary for the service you ask for, so it needs no consent
@@ -499,11 +566,11 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         body: (
           <>
             <Paragraph>
-              An account is for sending texts to the library. We keep your email address, your
-              pseudonym (empty until you choose one), your Google or GitHub account id if you sign
-              in that way, your sessions (IP address, browser), the date of your answer about your
-              age and, if you turn it on, two-step verification (encrypted). No password, no name or
-              picture from Google or GitHub.
+              An account is for sending texts to the library and syncing your devices. We keep your
+              email address, your pseudonym (empty until you choose one), your Google or GitHub
+              account id if you sign in that way, your sessions (IP address, browser), the date of
+              your answer about your age and, if you turn it on, two-step verification (encrypted).
+              No password, no name or picture from Google or GitHub.
             </Paragraph>
             <Paragraph>
               Legal basis: the contract, that is the terms of use (GDPR art. 6(1)(b)). The email
@@ -553,25 +620,71 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         ),
       },
       {
+        id: "sync",
+        heading: "Sync",
+        body: (
+          <>
+            <Paragraph>
+              It lets you find your cards and your progress on your other devices. It is off until
+              you turn it on in Profile › Account, after an explanation. Once on, it runs by itself:
+              when the app opens, when you come back to it, when you leave it with changes to send,
+              at the end of a session and when the network comes back, and when you press « Sync now
+              ». It never sends you a notification. Legal basis: the contract (GDPR art. 6(1)(b)).
+            </Paragraph>
+            <List
+              items={[
+                "What goes to the server: your reviews (the word, your answer, the date, the time, your time zone, your daily goal, whether the word is done for that day), your cards, your decks and their words, your notes, and the words you marked « I know it ».",
+                "What stays on this device: your journal, your challenges, your texts, your settings, audio, your voice and your AI key.",
+              ]}
+            />
+            <Paragraph>
+              This data is not encrypted end to end, so OpenLinguo’s administrator could read it,
+              including the times of your reviews. They only do so for an incident or an official
+              request. In the app, only your devices receive it: no other learner sees it.
+            </Paragraph>
+            <Paragraph>
+              The data on this device and the data in your account are merged. If a device was used
+              by another account, what came from it joins yours too: the screen warns you first.
+            </Paragraph>
+            <Paragraph>
+              It stays on the server until you turn sync off or the account is deleted. « Turn off
+              and delete from the server », from just one device, deletes it for all your devices;
+              it stays on your devices. Signing out stops sync on this device but deletes nothing
+              from the server. Careful: changing or deleting a note or a deck on a device does not
+              erase it from the server. The older upload stays there, and in your data file, until
+              you turn sync off. What is deleted leaves the database backups after{" "}
+              {String(backupDays)} days.
+            </Paragraph>
+          </>
+        ),
+      },
+      {
         id: "legal-retention",
         heading: "What the law makes us keep",
         body: (
           <>
             <Paragraph>
-              A host must keep what identifies whoever published a content (LCEN, art. 6, V;{" "}
+              A host must keep what identifies whoever created a content (LCEN, art. 6, V;{" "}
               <External href={DECREE}>décret no. 2021-1362</External>), only with what it already
               collects:
             </Paragraph>
             <List
               items={[
                 "for each submission, edit or withdrawal of a text: the IP address and the time, for one year;",
-                "if you delete an account that sent texts: your email address for five years, and your pseudonym for one year.",
+                "for each sync upload and each deletion of your synced data: the IP address and the time, for one year. Receiving your data on a device leaves no record;",
+                "if you delete an account that still has texts, synced data or one of these records: your email address for five years, and your pseudonym for one year.",
               ]}
             />
             <Paragraph>
               These data are set apart, read by no one in the app, and given only to an authority
-              that asks in writing under the law. Legal basis: legal obligation (GDPR art. 6(1)(c)).
-              They remain after the account is deleted, as the deletion screen says.
+              that asks in writing under the law, or to you if you ask for them. Legal basis: legal
+              obligation (GDPR art. 6(1)(c)). They remain after the account is deleted, as the
+              deletion screen says.
+            </Paragraph>
+            <Paragraph>
+              The decree does not say clearly whether it also covers what stays private, like sync.
+              Not applying it could be punished by law: to be careful, we apply it. Your synced data
+              itself is deleted; only these records stay.
             </Paragraph>
           </>
         ),
@@ -582,8 +695,10 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         body: (
           <Paragraph>
             Every sign-in, failure, code sent and admin action is logged with the IP address, the
-            browser and the time, to spot abuse and intrusions, for six months. Legal basis: our
-            legitimate interest in protecting the service and your account (GDPR art. 6(1)(f)).
+            browser and the time, to spot abuse and intrusions, for six months. Counters also limit
+            the number of requests, per IP address or, for sync, per account: they are erased every
+            day once an hour old. Legal basis: our legitimate interest in protecting the service and
+            your account (GDPR art. 6(1)(f)).
           </Paragraph>
         ),
       },
@@ -619,9 +734,11 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 "While published; when you delete the account, you choose: keep with your name, keep as anonymous (default) or remove",
               ],
               ["Moderation decisions, reports", "1 year after the decision"],
+              ["Synced data", "Until you turn sync off or the account is deleted"],
               ["IP address and time of each text submission", "1 year"],
+              ["IP address and time of each sync upload and each deletion of that data", "1 year"],
               [
-                "Email and pseudonym of a deleted account that sent texts",
+                "Email and pseudonym of a deleted account that still has texts, synced data or a record",
                 "Email 5 years, pseudonym 1 year",
               ],
               ["Security logs", "6 months"],
@@ -663,8 +780,10 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               You may access your data, correct it, erase it, take it with you, restrict its use or
               object to it. In Profile › Account, you can change your pseudonym, download your data
-              (JSON) and delete your account. For anything else, write to <Contact />: we answer
-              within one month, or tell you within that month why we need up to two more.
+              (JSON, with your synced data), turn sync off and delete your account. For anything
+              else, including the records the law makes us keep, which are not in that file, write
+              to <Contact />: we answer within one month, or tell you within that month why we need
+              up to two more.
             </Paragraph>
             <Paragraph>
               No decision about you is made by a machine alone. If you think your rights are not

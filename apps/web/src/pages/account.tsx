@@ -7,7 +7,7 @@ import { AccountGate, SessionFailure, useSession } from "@/components/account-ga
 import { AccountPseudonym } from "@/components/account-pseudonym";
 import { AccountSignInMethod } from "@/components/account-sign-in-method";
 import { AccountSubmissions } from "@/components/account-submissions";
-import { AccountSync } from "@/components/account-sync";
+import { AccountSync, SyncPaused } from "@/components/account-sync";
 import { AccountTwoFactor } from "@/components/account-two-factor";
 import { DEFAULT_RETURN } from "@/data/account";
 
@@ -17,6 +17,7 @@ export const AccountPage = () => {
   const { state, reload } = useSession();
   const [signedOutNow, setSignedOutNow] = useState(false);
   const [deleted, setDeleted] = useState(false);
+  const [syncProblem, setSyncProblem] = useState<string | null>(null);
   const deletedHeading = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
     if (deleted) deletedHeading.current?.focus();
@@ -40,6 +41,11 @@ export const AccountPage = () => {
             {t("deletion.doneTitle")}
           </h2>
           <p className="mt-2">{t("deletion.doneBody")}</p>
+          {syncProblem !== null && (
+            <p role="alert" className="mt-2 text-danger">
+              {syncProblem}
+            </p>
+          )}
         </>
       )}
       {!deleted && state.status === "loaded" && state.session === null && (
@@ -48,6 +54,7 @@ export const AccountPage = () => {
             {signedOutNow ? t("signedOutNow") : t("signedOut")}
           </p>
           <p className="mt-2">{t("intro")}</p>
+          <SyncPaused />
           <p className="mt-4">
             <Link
               to="/account/sign-in"
@@ -75,7 +82,8 @@ export const AccountPage = () => {
               <AccountSubmissions />
               <AccountSync session={session} />
               <AccountData
-                onDeleted={() => {
+                onDeleted={(problem) => {
+                  setSyncProblem(problem);
                   setDeleted(true);
                   reload();
                 }}

@@ -30,6 +30,7 @@ import { describeDeckFailure, fileWord, wordDecks, type WordDecks } from "@/data
 import { groupGlosses } from "@/data/gloss-summary";
 import { describeFailure, guarded, type ReviewLogFailure } from "@/data/review-log";
 import { languages, type Language } from "@/i18n/language";
+import { useSyncView } from "@/shell/use-sync";
 
 const HAN = /\p{Script=Han}/u;
 
@@ -187,6 +188,7 @@ const DeckPicker = ({
     key.ok ? null : `${key.error.kind} ${key.error.reading}`,
   );
   const pending = useRef(false);
+  const { revision } = useSyncView();
 
   useEffect(() => {
     if (!key.ok) return;
@@ -199,7 +201,7 @@ const DeckPicker = ({
     return () => {
       active = false;
     };
-  }, [headword, key]);
+  }, [headword, key, revision]);
 
   const toggle = async (deckId: string, filed: boolean): Promise<void> => {
     if (!key.ok || pending.current) return;

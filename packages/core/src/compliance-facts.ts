@@ -68,8 +68,16 @@ export const DEPLOY_TOKEN = {
 export const DPIA_REVIEW = {
   value: "docs/compliance/dpia.md",
   source: "docs/compliance/dpia.md#43-decision-and-review",
-  checkedOn: "2026-10-31",
+  checkedOn: "2026-11-04",
   reviewBy: "2027-10-31",
+} as const satisfies DatedFact;
+
+/** End of the one-year injunction for the data of art. 6 of décret 2021-1362 (in force 2026-10-21). */
+export const DATA_RETENTION_INJUNCTION = {
+  value: "2027-10-21",
+  source: "https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000054945173",
+  checkedOn: "2026-11-04",
+  reviewBy: "2027-09-21",
 } as const satisfies DatedFact;
 
 /** The D1 database size the sync store stays under (ADR 0016); `SYNC_LIMITS.databaseBytes` keeps a margin. */

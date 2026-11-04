@@ -2,7 +2,7 @@
 
 Open-source app to learn Mandarin Chinese, with the interface in French or English: [openlinguo.razakk.fr](https://openlinguo.razakk.fr).
 
-It is local-first: you can learn offline, without an account, and your learning data stays on your device.
+It is local-first: you can learn offline, without an account, and your learning data stays on your device unless you turn on sync.
 
 ## What it does
 

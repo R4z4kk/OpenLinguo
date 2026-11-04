@@ -62,35 +62,52 @@ const exclusive = async <T>(
 /** A waiting row with the value it sends: nothing for a deletion. */
 type Item = { readonly row: SyncEntity; readonly value: unknown };
 
-/** What a row sends: `null` when it has none, which validation refuses for a live row. */
-const valueOf = async (db: Database, { table, key }: SyncEntity): Promise<unknown> => {
-  switch (table) {
-    case "reviews": {
-      return (await db.reviews.get(key)) ?? null;
-    }
-    // Cards and deck words are their key: a word gone with its deck still has one.
-    case "cards": {
-      const parts = cardKey(key);
-      return parts === null ? null : { ...parts, id: key };
-    }
-    case "deckWords": {
-      const parts = parseDeckWordId(key);
-      return parts === null ? null : { deckId: parts.deckId, ...parts.subject };
-    }
-    case "decks": {
-      return (await db.decks.get(key)) ?? null;
-    }
-    case "notes": {
-      return (await db.notes.get(key)) ?? null;
-    }
-    case "knownMarks": {
-      try {
-        return (await db.knownMarks.get(parseKnownMarkKey(key))) ?? null;
-      } catch {
-        return null;
-      }
-    }
+const markKeyOf = (key: string): [string, string] | null => {
+  try {
+    return parseKnownMarkKey(key);
+  } catch {
+    return null;
   }
+};
+
+/**
+ * What each live row sends, by entity id, read table by table: one read per row would block the
+ * learner's writes on a large first upload. `null` when it has none, which validation refuses.
+ */
+const valuesOf = async (
+  db: Database,
+  rows: readonly SyncEntity[],
+): Promise<ReadonlyMap<string, unknown>> => {
+  const values = new Map<string, unknown>();
+  const of = (table: SyncEntity["table"]) => rows.filter((row) => row.table === table);
+  const keys = (listed: readonly SyncEntity[]) => listed.map(({ key }) => key);
+  const fill = (listed: readonly SyncEntity[], read: readonly unknown[]): void => {
+    listed.forEach(({ id }, index) => values.set(id, read[index] ?? null));
+  };
+  // Cards and deck words are their key: a word gone with its deck still has one.
+  for (const { id, key } of of("cards")) {
+    const parts = cardKey(key);
+    values.set(id, parts === null ? null : { ...parts, id: key });
+  }
+  for (const { id, key } of of("deckWords")) {
+    const parts = parseDeckWordId(key);
+    values.set(id, parts === null ? null : { deckId: parts.deckId, ...parts.subject });
+  }
+  const reviews = of("reviews");
+  fill(reviews, await db.reviews.bulkGet(keys(reviews)));
+  const decks = of("decks");
+  fill(decks, await db.decks.bulkGet(keys(decks)));
+  const notes = of("notes");
+  fill(notes, await db.notes.bulkGet(keys(notes)));
+  const marks = of("knownMarks").flatMap((row) => {
+    const key = markKeyOf(row.key);
+    return key === null ? [] : [{ row, key }];
+  });
+  fill(
+    marks.map(({ row }) => row),
+    await db.knownMarks.bulkGet(marks.map(({ key }) => key)),
+  );
+  return values;
 };
 
 /** A deck word goes no later than a note: the merge refuses a note's deletion while a word files it. */
@@ -105,10 +122,11 @@ const waiting = (db: Database): Promise<Item[]> =>
       const rows = (await db.syncEntities.where("pending").equals(1).toArray()).sort(
         (a, b) => rank(a) - rank(b),
       );
-      const items: Item[] = [];
-      for (const row of rows)
-        items.push({ row, value: row.deleted ? null : await valueOf(db, row) });
-      return items;
+      const values = await valuesOf(
+        db,
+        rows.filter(({ deleted }) => !deleted),
+      );
+      return rows.map((row) => ({ row, value: values.get(row.id) ?? null }));
     },
   );
 
@@ -205,15 +223,17 @@ const run = async (db: Database, accountId: string): Promise<Result<SyncUsage, S
   for (;;) {
     const next = await nextChunk(cursor);
     if (!next.ok) return err(apiFailure(next.error));
-    used = next.value.used;
     if (oldest !== null && next.value.oldest !== oldest)
       return err({ kind: "turned-off-elsewhere" });
     if (oldest === null && next.value.oldest !== null) {
       oldest = next.value.oldest;
       await db.syncState.update("state", { oldest });
     }
+    if (next.value.id === null) {
+      ({ used } = next.value);
+      break;
+    }
     const { id, bytes } = next.value;
-    if (id === null || bytes === null) break;
     if (id <= cursor) return err(apiFailure({ kind: "unexpected", status: 200 }));
     const decoded = await decodeChunk(bytes);
     if (!decoded.ok)
@@ -292,21 +312,32 @@ export const turnOn = (
     }
   }, true);
 
+const forget = async (db: Database): Promise<Result<null, SyncFailure>> => {
+  try {
+    await db.transaction("rw", [db.syncState, db.syncEntities], async () => {
+      await db.syncState.delete("state");
+      await clearEntities(db);
+    });
+    return ok(null);
+  } catch (error) {
+    return err(storage(String(error)));
+  }
+};
+
 /** Deletes the server's copy for every device, then forgets sync here: the device's data stays. */
 export const turnOff = (db: Database): Promise<Result<null, SyncFailure>> =>
   exclusive(async () => {
     const deleted = await deleteStore();
-    if (!deleted.ok) return err(apiFailure(deleted.error));
-    try {
-      await db.transaction("rw", [db.syncState, db.syncEntities], async () => {
-        await db.syncState.delete("state");
-        await clearEntities(db);
-      });
-      return ok(null);
-    } catch (error) {
-      return err(storage(String(error)));
-    }
+    return deleted.ok ? forget(db) : err(apiFailure(deleted.error));
   }, true);
+
+/**
+ * The account is gone, so is its store: the device stops recording, and a later account does not
+ * read "synced with another account". The learning data stays. A browser without sync has no run
+ * to wait for.
+ */
+export const forgetSync = (db: Database): Promise<Result<null, SyncFailure>> =>
+  supported() ? exclusive(() => forget(db), true) : forget(db);
 
 /** At app start: with sync off, what was recorded while a tab was activating is not needed. */
 export const clearWhenOff = async (db: Database): Promise<Result<null, SyncFailure>> => {

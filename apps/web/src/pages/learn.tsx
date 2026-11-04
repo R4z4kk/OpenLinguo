@@ -37,6 +37,7 @@ import {
 } from "@/data/decks";
 import { fetchDataFile } from "@/data/import";
 import { describeFailure, type ReviewLogFailure } from "@/data/review-log";
+import { useAfterMerge } from "@/shell/use-sync";
 
 const COUNTS = ["new", "learning", "due"] as const;
 
@@ -434,7 +435,7 @@ const DeckSections = ({ referential }: { readonly referential: ZhProficiency }) 
   const { t } = useTranslation();
   const bandsId = useId();
   const load = () => deckCounts(database, referential, localNow());
-  // Read once per visit and after each change: words filed on a word page show up when coming back.
+  // Read per visit and after each change or merge: words filed on a word page show up on return.
   const [decks, setDecks] = useState(load);
   // The lists stay on screen, with their focus, while the new counts load.
   const [, startTransition] = useTransition();
@@ -443,6 +444,7 @@ const DeckSections = ({ referential }: { readonly referential: ZhProficiency }) 
       setDecks(load());
     });
   };
+  useAfterMerge(refresh);
   const loadAudio = () => loadAudioPacks(database, fetchDataFile);
   const [audio, setAudio] = useState(loadAudio);
   const refreshAudio = (): void => {

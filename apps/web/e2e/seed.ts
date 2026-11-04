@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 
-export type Store = "texts" | "knownMarks" | "aiSettings" | "reviews";
+export type Store =
+  "texts" | "knownMarks" | "aiSettings" | "reviews" | "syncState" | "syncEntities";
 
 /** Writes a row as the app stores it: the page must have opened the database once. */
 export const put = (page: Page, store: Store, row: object): Promise<void> =>

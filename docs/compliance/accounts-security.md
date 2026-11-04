@@ -35,7 +35,7 @@ The end date is `DEPLOY_TOKEN` in `packages/core/src/compliance-facts.ts`; it is
 
 ## Direct reads of the database
 
-Only for an incident, a rights request, a requisition, a removal order or [the admin's account](../../apps/api/README.md#admin). A request keeps its proof in the mailbox ([requests runbook](requests.md), section 5).
+Only for an incident, a rights request, a requisition, a removal order or [the admin's account](../../apps/api/README.md#admin). The same goes for `sync_chunk`: a chunk is gzip, not encrypted, and could be decoded (ADR 0016). A request keeps its proof in the mailbox ([requests runbook](requests.md), section 5).
 
 ## Audit log
 

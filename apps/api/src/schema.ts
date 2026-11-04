@@ -289,8 +289,9 @@ export const DELETED_ACCOUNT = {
 } as const;
 
 /**
- * Décret 2021-1362 arts 2 and 3, for a deleted account that submitted: the email for 5 years, the
- * pseudonyms for 1 year. Read only by the jobs and the admin export for an authority.
+ * Décret 2021-1362 arts 2 and 3, for a deleted account that holds a text, a sync chunk or a
+ * hosting record: the email for 5 years, the pseudonyms for 1 year. Read only by the jobs and the
+ * maintainer's query for a request.
  */
 export const sealedIdentity = sqliteTable("sealed_identity", {
   userId: text().primaryKey(),

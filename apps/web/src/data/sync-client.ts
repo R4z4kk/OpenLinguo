@@ -2,13 +2,20 @@ import { err, ok, parseWith, type Result } from "@openlinguo/core";
 import { StoredChunk, SYNC_HEADERS } from "@openlinguo/core/sync";
 import { type ApiFailure, refusedWith, request } from "./api.ts";
 
-/** The next chunk after a cursor, `id` and `bytes` `null` when there is none. */
-export type NextChunk = {
-  readonly id: number | null;
-  readonly bytes: Uint8Array | null;
-  readonly oldest: number | null;
-  readonly used: number;
-};
+/** The next chunk after a cursor, or the end of the store, the only answer to carry the usage. */
+export type NextChunk =
+  | {
+      readonly id: number;
+      readonly bytes: Uint8Array;
+      readonly oldest: number | null;
+      readonly used: null;
+    }
+  | {
+      readonly id: null;
+      readonly bytes: null;
+      readonly oldest: number | null;
+      readonly used: number;
+    };
 
 const PATH = "/api/sync/chunks";
 const unexpected = (response: Response): ApiFailure => ({
@@ -50,14 +57,16 @@ export const nextChunk = async (after: number): Promise<Result<NextChunk, ApiFai
   if (!answer.ok) return answer;
   const response = answer.value;
   if (!response.ok) return err(await refused(response));
-  const used = count(response, SYNC_HEADERS.used);
   const oldest = count(response, SYNC_HEADERS.oldest);
-  if (used === null || oldest === 0) return err(unexpected(response));
-  if (response.status === 204) return ok({ id: null, bytes: null, oldest, used });
+  if (oldest === 0) return err(unexpected(response));
+  if (response.status === 204) {
+    const used = count(response, SYNC_HEADERS.used);
+    return used === null ? err(unexpected(response)) : ok({ id: null, bytes: null, oldest, used });
+  }
   const id = count(response, SYNC_HEADERS.id);
   if (id === null || id === 0 || response.status !== 200) return err(unexpected(response));
   try {
-    return ok({ id, bytes: new Uint8Array(await response.arrayBuffer()), oldest, used });
+    return ok({ id, bytes: new Uint8Array(await response.arrayBuffer()), oldest, used: null });
   } catch {
     return err({ kind: "offline" });
   }

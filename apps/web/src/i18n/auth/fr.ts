@@ -7,7 +7,7 @@ export const authFr: AuthMessages = {
   signIn: "Se connecter",
   back: "Retour au compte",
   intro:
-    "Un compte sert à envoyer des textes à la bibliothèque partagée. Tout le reste marche sans compte.",
+    "Apprendre ne demande pas de compte. Un compte sert à envoyer des textes à la bibliothèque partagée et à synchroniser vos appareils.",
   email: "Adresse e-mail",
   emailInvalid: "Saisissez une adresse e-mail, par exemple nom@exemple.fr.",
   getCode: "Recevoir un code",
@@ -67,7 +67,7 @@ export const authFr: AuthMessages = {
   data: {
     title: "Mes données",
     intro:
-      "Tout ce que le serveur garde sur votre compte, dans un fichier JSON : le compte, comment il se connecte, ses sessions, les textes envoyés, les décisions sur ces textes, les événements de sécurité et, si vous avez utilisé la synchronisation, vos données synchronisées. Vos données d’apprentissage restent sur cet appareil : Profil › Données les sauvegarde.",
+      "Un fichier JSON avec votre compte, comment il se connecte, ses sessions, les textes envoyés, les décisions sur ces textes, les événements de sécurité et, si vous avez utilisé la synchronisation, vos données synchronisées. Les traces gardées par la loi (adresse IP et heure de chaque envoi) n’y sont pas : demandez-les-nous à openlinguo@gmail.com. Pour sauvegarder vos données d’apprentissage sur cet appareil : Profil › Données.",
     download: "Télécharger mes données (.json)",
     downloading: "Préparation du fichier…",
     downloaded: "Fichier enregistré : {{name}}",
@@ -81,7 +81,7 @@ export const authFr: AuthMessages = {
     intro:
       "Retrouvez vos cartes et votre progression sur vos autres appareils. C’est facultatif : sans elle, tout continue de marcher sur cet appareil.",
     sentTitle: "Ce qui part sur le serveur",
-    sent: "Vos révisions avec leur date et leur heure, vos cartes, vos paquets et leurs mots, vos notes, vos mots marqués « Je connais ».",
+    sent: "Vos révisions avec votre réponse, leur date, leur heure et votre fuseau horaire, vos cartes, vos paquets et leurs mots, vos notes, vos mots marqués « Je connais ».",
     stayedTitle: "Ce qui reste sur cet appareil",
     stayed:
       "Votre journal, vos défis, vos textes, vos réglages, l’audio, votre voix et votre clé IA.",
@@ -91,7 +91,9 @@ export const authFr: AuthMessages = {
       readable:
         "Elles ne sont pas chiffrées de bout en bout : l’administrateur d’OpenLinguo pourrait les lire. Il ne le fait que pour un incident ou une demande officielle.",
       off: "Si vous désactivez la synchronisation, elles sont supprimées du serveur.",
-      law: "La loi française nous fait garder des traces : l’adresse IP de chaque envoi pendant 1 an et, après la suppression du compte, votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an.",
+      edited:
+        "Une note modifiée ou supprimée reste sur le serveur jusqu’à ce que vous désactiviez la synchronisation.",
+      law: "La loi française nous fait garder des traces : l’adresse IP de chaque envoi et de chaque désactivation pendant 1 an et, après la suppression du compte, votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an.",
     },
     activate: "Activer la synchronisation",
     activating: "Activation de la synchronisation…",
@@ -107,16 +109,18 @@ export const authFr: AuthMessages = {
     syncNow: "Synchroniser maintenant",
     turnOff: "Désactiver et supprimer du serveur",
     schedule:
-      "La synchronisation se fait à l’ouverture de l’app, en fin de séance et au retour du réseau. Elle ne vous envoie jamais de notification.",
+      "La synchronisation se fait à l’ouverture de l’app, quand vous y revenez, quand vous la quittez avec des changements à envoyer, en fin de séance et au retour du réseau. Elle ne vous envoie jamais de notification.",
     offTitle: "Désactiver la synchronisation ?",
     offBody:
       "Vos données seront supprimées du serveur, pour tous vos appareils. Elles restent sur cet appareil. Vos autres appareils arrêteront de se synchroniser et vous le diront.",
-    offLaw: "La trace de chaque envoi reste gardée 1 an, comme la loi française nous le demande.",
+    offLaw:
+      "La loi française nous demande de garder 1 an la trace de chaque envoi et de cette désactivation.",
     offCancel: "Annuler",
     offConfirm: "Désactiver et supprimer",
     offWorking: "Suppression sur le serveur…",
     offFailed:
       "La synchronisation n’a pas pu être désactivée et reste activée. Réessayez plus tard.",
+    paused: "La synchronisation est en pause : connectez-vous pour la reprendre.",
     otherAccount:
       "Cet appareil était synchronisé avec un autre compte : la synchronisation est coupée. Si vous l’activez ici, tout ce qui se trouve sur cet appareil, y compris ce qui vient de l’autre compte, rejoindra ce compte.",
     activateHere: "Activer pour ce compte",
@@ -165,7 +169,7 @@ export const authFr: AuthMessages = {
     keptTitle: "Ce que la loi nous oblige à garder",
     kept: "Si vous avez envoyé des textes à la bibliothèque, la loi française (décret 2021-1362) nous oblige à garder votre e-mail 5 ans et vos pseudonymes 1 an, sous clé : seules les autorités que la loi y autorise peuvent les demander. L’adresse et l’heure de chaque changement sur vos textes sont gardées 1 an.",
     keptSync:
-      "Si vous avez utilisé la synchronisation, vos données synchronisées sont supprimées, mais la loi française nous fait garder votre e-mail pendant 5 ans, votre pseudonyme pendant 1 an, et la trace de chaque envoi pendant 1 an. Ils ne servent qu’à répondre à une autorité.",
+      "Si vous avez utilisé la synchronisation, vos données synchronisées sont supprimées, mais la loi française nous fait garder votre e-mail pendant 5 ans, votre pseudonyme pendant 1 an, et la trace de chaque envoi pendant 1 an. Ils ne sont donnés qu’à une autorité qui les demande par écrit selon la loi, ou à vous si vous les demandez.",
     cancel: "Annuler",
     confirm: "Supprimer définitivement",
     deleting: "Suppression de votre compte…",

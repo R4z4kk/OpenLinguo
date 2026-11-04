@@ -2,13 +2,16 @@ import { PUBLISHED_CHOICES, type PublishedChoice } from "@openlinguo/core/accoun
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuthFailure } from "@/components/auth-failure";
-import { useSyncText } from "@/components/sync-text";
+import { toShown, useSyncText } from "@/components/sync-text";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { deleteAccount } from "@/data/account";
 import { exportAccountFile, type ExportFailure } from "@/data/account-export";
+import { database } from "@/data/database";
 import { listSubmissions } from "@/data/submissions";
+import { forgetSync } from "@/data/sync";
 import { download } from "@/lib/download";
+import { resetSyncView } from "@/shell/use-sync";
 
 /** The ADR's default: kept, with no name. */
 const DEFAULT_CHOICE: PublishedChoice = "keep-anonymous";
@@ -85,10 +88,12 @@ export const DeletionDialog = ({
   onDeleted,
 }: {
   readonly onClose: () => void;
-  readonly onDeleted: () => void;
+  /** `syncProblem`: the account is gone, but the device could not forget its sync. */
+  readonly onDeleted: (syncProblem: string | null) => void;
 }) => {
   const { t } = useTranslation("auth");
   const describe = useAuthFailure();
+  const sync = useSyncText();
   const [published, setPublished] = useState<PublishedChoice>(DEFAULT_CHOICE);
   const [hasPublished, setHasPublished] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -111,11 +116,16 @@ export const DeletionDialog = ({
     if (deleting) return;
     setDeleting(true);
     const result = await deleteAccount(published);
+    if (!result.ok) {
+      setDeleting(false);
+      setProblem(describe(result.error));
+      return;
+    }
+    const forgotten = await forgetSync(database);
+    resetSyncView();
     setDeleting(false);
-    if (result.ok) {
-      close();
-      onDeleted();
-    } else setProblem(describe(result.error));
+    close();
+    onDeleted(forgotten.ok ? null : sync.message(toShown(forgotten.error)));
   };
 
   return (
@@ -176,7 +186,11 @@ export const DeletionDialog = ({
 };
 
 /** Profile › Compte: « Mes données », then « Supprimer mon compte » (ADR 0015). */
-export const AccountData = ({ onDeleted }: { readonly onDeleted: () => void }) => {
+export const AccountData = ({
+  onDeleted,
+}: {
+  readonly onDeleted: (syncProblem: string | null) => void;
+}) => {
   const { t } = useTranslation("auth");
   const [open, setOpen] = useState(false);
   return (
