@@ -22,7 +22,7 @@ export const exportSyncedData = async (): Promise<Result<readonly SyncChunk[], E
     const next = await nextChunk(cursor);
     if (!next.ok) return err({ kind: "api", failure: next.error });
     const { id, bytes } = next.value;
-    if (id === null || bytes === null) return ok(chunks);
+    if (id === null) return ok(chunks);
     if (id <= cursor) return err({ kind: "api", failure: { kind: "unexpected", status: 200 } });
     const decoded = await decodeChunk(bytes);
     if (!decoded.ok)

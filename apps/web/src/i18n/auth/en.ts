@@ -76,7 +76,7 @@ export const authEn = {
     intro:
       "Find your cards and your progress on your other devices. It is optional: without it, everything keeps working on this device.",
     sentTitle: "What goes to the server",
-    sent: "Your reviews with their date and time, your cards, your decks and their words, your notes, and the words you marked “I know it”.",
+    sent: "Your reviews with your answer, their date and time and your time zone, your cards, your decks and their words, your notes, and the words you marked “I know it”.",
     stayedTitle: "What stays on this device",
     stayed:
       "Your journal, your challenges, your texts, your settings, audio, your voice and your AI key.",
@@ -87,7 +87,7 @@ export const authEn = {
         "It is not encrypted end to end, so OpenLinguo’s administrator could read it. They only do so for an incident or an official request.",
       off: "If you turn sync off, it is deleted from the server.",
       edited: "A note you edit or delete stays on the server until you turn sync off.",
-      law: "French law makes us keep records: the IP address of each upload for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
+      law: "French law makes us keep records: the IP address of each upload and of each turn-off for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
     },
     activate: "Start syncing",
     activating: "Starting sync…",
@@ -103,15 +103,16 @@ export const authEn = {
     syncNow: "Sync now",
     turnOff: "Turn off and delete from the server",
     schedule:
-      "Sync runs when the app opens, at the end of a session and when the network comes back. It never sends you a notification.",
+      "Sync runs when the app opens, when you come back to it, when you leave it with changes to send, at the end of a session and when the network comes back. It never sends you a notification.",
     offTitle: "Turn off sync?",
     offBody:
       "Your data will be deleted from the server, for all your devices. It stays on this device. Your other devices will stop syncing and tell you so.",
-    offLaw: "The record of each upload is still kept for 1 year, as French law asks us to.",
+    offLaw: "French law asks us to keep a record of each upload and of this turn-off for 1 year.",
     offCancel: "Cancel",
     offConfirm: "Turn off and delete",
     offWorking: "Deleting from the server…",
     offFailed: "Sync could not be turned off and stays on. Try again later.",
+    paused: "Sync is paused: sign in to resume it.",
     otherAccount:
       "This device was synced with another account: sync is cut. If you start it here, everything on this device, including what came from the other account, will join this account.",
     activateHere: "Start syncing for this account",

@@ -21,7 +21,10 @@ const UsageRow = z.object({
   oldest: z.number().int().positive().nullable(),
 });
 
-/** The account's stored bytes and first chunk, and the database size D1 reports after the read. */
+/**
+ * The account's stored bytes and first chunk, and the database size D1 reports after the read. The
+ * sum reads every chunk row of the account: it answers a write or the end of a read, not each chunk.
+ */
 const usageOf = async (d1: D1Database, userId: string) => {
   const result = await d1
     .prepare(
@@ -30,6 +33,17 @@ const usageOf = async (d1: D1Database, userId: string) => {
     .bind(userId)
     .all();
   return { ...UsageRow.parse(result.results[0]), databaseBytes: result.meta.size_after };
+};
+
+const OldestRow = UsageRow.pick({ oldest: true });
+
+/** The account's first chunk, from the one index row that holds it. */
+const oldestOf = async (d1: D1Database, userId: string): Promise<number | null> => {
+  const result = await d1
+    .prepare("SELECT min(id) AS oldest FROM sync_chunk WHERE user_id = ?")
+    .bind(userId)
+    .all();
+  return OldestRow.parse(result.results[0]).oldest;
 };
 
 const Expected = z.string().regex(/^\d+$/u).transform(Number).pipe(z.number().int().positive());
@@ -56,6 +70,10 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
       "/chunks",
       bodyLimit({ maxSize: limits.chunkBytes, onError: (c) => c.json(tooLarge, 413) }),
       async (c) => {
+        // Any other type could be posted from another site without a preflight.
+        if (c.req.header("content-type") !== "application/gzip") {
+          return c.json(refusal("INVALID_REQUEST", "Expected application/gzip"), 415);
+        }
         const body = new Uint8Array(await c.req.arrayBuffer());
         if (body.length > limits.chunkBytes) return c.json(tooLarge, 413);
         if (body[0] !== 0x1f || body[1] !== 0x8b) {
@@ -119,11 +137,15 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
         .where(and(eq(syncChunk.userId, userId), gt(syncChunk.id, after.data)))
         .orderBy(asc(syncChunk.id))
         .limit(1);
-      const usage = await usageOf(c.env.DB, userId);
       c.header("cache-control", "no-store");
-      c.header(SYNC_HEADERS.used, String(usage.used));
-      if (usage.oldest !== null) c.header(SYNC_HEADERS.oldest, String(usage.oldest));
-      if (!chunk) return c.body(null, 204);
+      if (!chunk) {
+        const usage = await usageOf(c.env.DB, userId);
+        c.header(SYNC_HEADERS.used, String(usage.used));
+        if (usage.oldest !== null) c.header(SYNC_HEADERS.oldest, String(usage.oldest));
+        return c.body(null, 204);
+      }
+      const oldest = await oldestOf(c.env.DB, userId);
+      if (oldest !== null) c.header(SYNC_HEADERS.oldest, String(oldest));
       c.header(SYNC_HEADERS.id, String(chunk.id));
       c.header("content-type", "application/gzip");
       return c.body(chunk.bytes);
@@ -131,8 +153,7 @@ export const syncRoutes = (authOf: (env: Env) => Auth, limits: SyncLimits = SYNC
     .delete("/chunks", async (c) => {
       const { userId } = c.var;
       const db = database(c.env.DB);
-      const { oldest } = await usageOf(c.env.DB, userId);
-      if (oldest !== null) {
+      if ((await oldestOf(c.env.DB, userId)) !== null) {
         await db.batch([
           db.delete(syncChunk).where(eq(syncChunk.userId, userId)),
           db

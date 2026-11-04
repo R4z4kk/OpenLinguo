@@ -8,7 +8,7 @@ import { authEn } from "../src/i18n/auth/en.ts";
 import { en } from "../src/i18n/en.ts";
 import { accessibilityViolations } from "./accessibility.ts";
 import { test } from "./app.ts";
-import { all } from "./seed.ts";
+import { all, put } from "./seed.ts";
 
 const USER = {
   id: "user-lin",
@@ -41,6 +41,10 @@ const serveSync = async (api: FakeApi, route: Route): Promise<void> => {
   const oldest = api.chunks[0]?.id ?? null;
   switch (request.method()) {
     case "POST": {
+      if (request.headers()["content-type"] !== "application/gzip") {
+        await refuse(route, 415, "INVALID_REQUEST");
+        return;
+      }
       const body = request.postDataBuffer();
       if (body === null || body[0] !== 0x1f || body[1] !== 0x8b) {
         await refuse(route, 400, "INVALID_REQUEST");
@@ -73,10 +77,13 @@ const serveSync = async (api: FakeApi, route: Route): Promise<void> => {
       api.reads += 1;
       const after = Number(new URL(request.url()).searchParams.get("after"));
       const chunk = api.chunks.find(({ id }) => id > after) ?? null;
-      const headers: Record<string, string> = { [SYNC_HEADERS.used]: String(used) };
+      const headers: Record<string, string> = {};
       if (oldest !== null) headers[SYNC_HEADERS.oldest] = String(oldest);
       if (chunk === null) {
-        await route.fulfill({ status: 204, headers });
+        await route.fulfill({
+          status: 204,
+          headers: { ...headers, [SYNC_HEADERS.used]: String(used) },
+        });
         return;
       }
       await route.fulfill({
@@ -191,6 +198,18 @@ const syncNow = async (page: Page, api: FakeApi): Promise<void> => {
   await noViolations(page);
 };
 
+/** The learner back on a running app whose last sync is long past: the screen stays open. */
+const comeBack = async (page: Page, api: FakeApi): Promise<void> => {
+  await page.bringToFront();
+  const [state] = await all(page, "syncState");
+  await put(page, "syncState", { ...(state as object), lastSyncAt: null });
+  const before = api.reads;
+  await page.evaluate(() => {
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect.poll(() => api.reads).toBeGreaterThan(before);
+};
+
 const myWords = (page: Page): Locator =>
   mainOf(page).getByRole("checkbox", { name: en.decks.myWords });
 
@@ -203,6 +222,29 @@ const openWord = async (page: Page): Promise<Locator> => {
 };
 
 test.use({ serviceWorkers: "block" });
+
+test("the end of a session sends it at once, inside the five minutes", async ({
+  page,
+  context,
+}) => {
+  const api = await fakeApi(context);
+  await turnOn(page);
+  await page.evaluate(() => {
+    localStorage.setItem("openlinguo.newCardsPerDay", "5");
+  });
+  const sent = api.chunks.length;
+
+  await page.goto("/review");
+  const focused = page.locator(":focus");
+  for (let done = 0; done < 5; done += 1) {
+    await expect(focused).toContainText(en.review.recognition, { timeout: 90_000 });
+    await page.keyboard.press("Space");
+    await expect(mainOf(page).getByRole("button", { name: /^Easy/u })).toBeVisible();
+    await page.keyboard.press("4");
+  }
+
+  await expect.poll(() => api.chunks.length).toBeGreaterThan(sent);
+});
 
 test("two devices converge", async ({
   page,
@@ -232,7 +274,17 @@ test("two devices converge", async ({
       await expect(myWords(page)).toBeChecked();
       await syncNow(page, api);
 
-      await syncNow(other, api);
+      await other.bringToFront();
+      await other.goto("/learn");
+      const newWords = mainOf(other)
+        .getByRole("listitem")
+        .filter({ has: other.getByRole("heading", { name: en.decks.myWords }) })
+        .getByRole("definition")
+        .first();
+      await expect(newWords).toHaveText("0", { timeout: 90_000 });
+      await comeBack(other, api);
+      await expect(newWords).not.toHaveText("0");
+
       await expect(await openWord(other)).toBeChecked();
       expect(await all(other, "deckWords")).toHaveLength(1);
 
@@ -254,22 +306,27 @@ test("two devices converge", async ({
       expect(reviews).toHaveLength(1);
       await syncNow(other, api);
 
-      await syncNow(page, api);
-      expect(await all(page, "reviews")).toEqual(reviews);
-      expect(await all(page, "cards")).toEqual(await all(other, "cards"));
+      await page.bringToFront();
       await page.getByRole("link", { name: en.nav.today }).focus();
       await page.keyboard.press("Enter");
       await expect(mainOf(page)).toContainText(
+        en.today.goalCount.replace("{{done}}", "0").replace("{{goal}}", "20"),
+      );
+      await comeBack(page, api);
+      await expect(mainOf(page)).toContainText(
         en.today.goalCount.replace("{{done}}", "1").replace("{{goal}}", "20"),
       );
+      expect(await all(page, "reviews")).toEqual(reviews);
+      expect(await all(page, "cards")).toEqual(await all(other, "cards"));
 
       await expect(await openWord(page)).toBeChecked();
       await press(myWords(page), "Space");
       await expect(myWords(page)).not.toBeChecked();
       await syncNow(page, api);
 
-      await syncNow(other, api);
-      await expect(await openWord(other)).not.toBeChecked();
+      await expect(await openWord(other)).toBeChecked();
+      await comeBack(other, api);
+      await expect(myWords(other)).not.toBeChecked();
       expect(await all(other, "deckWords")).toHaveLength(0);
       expect(await all(other, "reviews")).toEqual(reviews);
 

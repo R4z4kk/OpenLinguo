@@ -42,7 +42,7 @@ sed -i 's/^INSERT INTO/INSERT OR IGNORE INTO/' erasure.sql && wrangler d1 execut
 
 The next daily run deletes those accounts again, with the same choice for their published texts and their sealed identity. `erasure.sql` holds IP addresses: delete it once the run has succeeded (`/api/health` answers 200).
 
-Then, after that run, as it reads an account's chunks to seal its identity, delete every sync chunk:
+Then, after that run, as it reads an account's chunks to seal its identity, delete every sync chunk. The jobs run only on the cron trigger, at 03:17 UTC (`wrangler.jsonc`), and the cron Worker has no route to start them, so nothing here forces the run: the restored store stays live and devices keep syncing against it until then.
 
 ```bash
 wrangler d1 execute openlinguo --remote --command "DELETE FROM sync_chunk"

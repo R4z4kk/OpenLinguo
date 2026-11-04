@@ -159,6 +159,13 @@ const snapshot = async (db: Database) => ({
     .map(({ id, changedAt, deleted }) => ({ id, changedAt, deleted })),
 });
 
+const permutations = <T>(items: readonly T[]): T[][] =>
+  items.length < 2
+    ? [[...items]]
+    : items.flatMap((item, index) =>
+        permutations(items.toSpliced(index, 1)).map((rest) => [item, ...rest]),
+      );
+
 const noteEdit = (changes: Partial<StoredNote>, db: Database) => () =>
   db.notes.put({ ...NOTE, ...changes });
 
@@ -210,6 +217,48 @@ describe("applyChunk", () => {
     expect((await ab.notes.get(NOTE.id))?.meaning).toBe("from b");
     expect(await ab.knownMarks.count()).toBe(0);
   });
+
+  it("every order of a set of chunks gives every fresh device the same data", async () => {
+    const origin = await device();
+    await seed(origin, 100, async () => {
+      await origin.decks.add({ id: SMALL, name: "Trips" });
+      await origin.notes.add(NOTE);
+    });
+    at(110);
+    expect((await fileWord(origin, SMALL, GOOD, true, REFERENTIAL)).ok).toBe(true);
+    expect((await fileWord(origin, MY_WORDS, DOG, true, REFERENTIAL)).ok).toBe(true);
+    const filed = await send(origin);
+    const review = reviewOf(recall(DOG), Date.UTC(2026, 10, 3));
+    expect((await recordReview(origin, review)).ok).toBe(true);
+    const reviewed = await send(origin);
+    await seed(origin, 200, noteEdit({ meaning: "edited" }, origin));
+    const edited = await send(origin);
+    await seed(origin, 210, () => origin.knownMarks.add({ ...CAT, markedAt: 1 }));
+    const marked = await send(origin);
+    at(300);
+    expect((await deleteDeck(origin, SMALL, REFERENTIAL)).ok).toBe(true);
+    const deleted = await send(origin);
+
+    const orders = permutations([filed, reviewed, edited, marked, deleted]);
+    expect(orders).toHaveLength(120);
+    const expected = await snapshot(origin);
+    for (const order of orders) {
+      const fresh = await device();
+      await deliver(fresh, order);
+      expect(await snapshot(fresh)).toEqual(expected);
+      fresh.close();
+    }
+
+    expect(await origin.decks.count()).toBe(0);
+    expect((await origin.deckWords.toArray()).map(({ id }) => id)).toEqual([
+      deckWordId(MY_WORDS, DOG),
+    ]);
+    expect((await origin.notes.get(NOTE.id))?.meaning).toBe("edited");
+    expect(await origin.reviews.toArray()).toEqual([review]);
+    expect(await origin.knownMarks.count()).toBe(1);
+    expect((await origin.cards.get(recall(DOG).id))?.reps).toBe(1);
+    expect(await origin.cards.get(recall(GOOD).id)).toBeUndefined();
+  }, 120_000);
 
   it("the same chunk twice changes nothing", async () => {
     const a = await device();
@@ -616,6 +665,29 @@ describe("applyChunk", () => {
       await deliver(db, [chunk(100)]);
       await deliver(db, [chunk(200)]);
       expect((await db.cards.get(card.id))?.reps).toBe(1);
+    });
+
+    it("a review this device already has stops waiting: the store holds it", async () => {
+      const a = await device();
+      const b = await device();
+      at(100);
+      expect((await fileWord(a, MY_WORDS, GOOD, true, REFERENTIAL)).ok).toBe(true);
+      expect((await fileWord(b, MY_WORDS, GOOD, true, REFERENTIAL)).ok).toBe(true);
+      const shared = reviewOf(recall(GOOD), Date.UTC(2026, 10, 3));
+      expect((await recordReview(a, shared)).ok).toBe(true);
+      const chunk = await send(a);
+      expect((await recordReview(b, shared)).ok).toBe(true);
+      const own = reviewOf(recall(GOOD), Date.UTC(2026, 10, 4));
+      expect((await recordReview(b, own)).ok).toBe(true);
+      expect(await b.syncEntities.get(`reviews:${shared.id}`)).toMatchObject({ pending: 1 });
+
+      await deliver(b, [chunk]);
+
+      expect(await b.syncEntities.get(`reviews:${shared.id}`)).toBeUndefined();
+      expect(await b.syncEntities.get(`reviews:${own.id}`)).toMatchObject({ pending: 1 });
+      expect((await b.reviews.toArray()).map(({ id }) => id).sort()).toEqual(
+        [shared.id, own.id].sort(),
+      );
     });
 
     it("a new card has a new card's state", async () => {

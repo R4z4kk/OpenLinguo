@@ -237,7 +237,7 @@ const Runner = ({
   }, [done, revealedAt, challengeDone]);
 
   useEffect(() => {
-    if (ended && done > 0) void requestSync();
+    if (ended && done > 0) void requestSync(true);
   }, [ended, done]);
 
   const outcomes = useMemo(

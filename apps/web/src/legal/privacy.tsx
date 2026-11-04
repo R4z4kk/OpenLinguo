@@ -228,7 +228,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               Elle vous fait retrouver vos cartes et votre progression sur vos autres appareils.
               Elle est éteinte tant que vous ne l’activez pas dans Profil › Compte, après une
               explication. Une fois activée, elle se fait toute seule : à l’ouverture de
-              l’application, en fin de séance et au retour du réseau, et quand vous appuyez sur «
+              l’application, quand vous y revenez, quand vous la quittez avec des changements à
+              envoyer, en fin de séance et au retour du réseau, et quand vous appuyez sur «
               Synchroniser maintenant ». Elle ne vous envoie jamais de notification. Base légale :
               le contrat (RGPD, art. 6(1)(b)).
             </Paragraph>
@@ -626,9 +627,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               It lets you find your cards and your progress on your other devices. It is off until
               you turn it on in Profile › Account, after an explanation. Once on, it runs by itself:
-              when the app opens, at the end of a session and when the network comes back, and when
-              you press « Sync now ». It never sends you a notification. Legal basis: the contract
-              (GDPR art. 6(1)(b)).
+              when the app opens, when you come back to it, when you leave it with changes to send,
+              at the end of a session and when the network comes back, and when you press « Sync now
+              ». It never sends you a notification. Legal basis: the contract (GDPR art. 6(1)(b)).
             </Paragraph>
             <List
               items={[

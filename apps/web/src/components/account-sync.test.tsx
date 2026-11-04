@@ -5,12 +5,12 @@ import { describe, expect, it } from "vitest";
 import { createI18n } from "@/i18n";
 import type { SyncView } from "@/shell/use-sync";
 import { DeletionDialog } from "./account-data";
-import { SyncPanel, TurnOffDialog } from "./account-sync";
+import { SyncPanel, SyncPausedNotice, type SyncMode, TurnOffDialog } from "./account-sync";
 
 const NOW = new Date(2026, 10, 3, 18, 42).getTime();
 const YESTERDAY = new Date(2026, 10, 2, 21, 5).getTime();
 
-const IDLE: SyncView = { running: false, usage: null, failure: null };
+const IDLE: SyncView = { running: false, usage: null, failure: null, revision: 0 };
 const USAGE = { used: 1_258_291, limit: SYNC_LIMITS.accountBytes, oldest: 1 };
 
 const noop = (): void => {};
@@ -76,7 +76,8 @@ describe("the section while sync is off", () => {
       "seront fusionnées",
       "Une note modifiée ou supprimée reste sur le serveur jusqu'à ce que vous désactiviez la synchronisation.",
       "l'administrateur d'OpenLinguo pourrait les lire",
-      "l'adresse IP de chaque envoi pendant 1 an",
+      "l'adresse IP de chaque envoi et de chaque désactivation pendant 1 an",
+      "Vos révisions avec votre réponse, leur date, leur heure et votre fuseau horaire",
       "votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an",
     ])
       expect(shown).toContain(phrase);
@@ -98,7 +99,10 @@ describe("the section while sync is off", () => {
     const shown = text(panel({}, "en"));
     expect(shown).toContain("Sync");
     expect(shown).toContain("your email for 5 years and your pseudonym for 1 year");
-    expect(shown).toContain("the IP address of each upload for 1 year");
+    expect(shown).toContain("the IP address of each upload and of each turn-off for 1 year");
+    expect(shown).toContain(
+      "Your reviews with your answer, their date and time and your time zone",
+    );
     expect(shown).toContain("OpenLinguo's administrator could read it");
     expect(shown).toContain("will be merged");
     expect(shown).toContain(
@@ -174,6 +178,7 @@ describe("the section while sync is on", () => {
     expect(button(html, "Synchroniser maintenant")).not.toBeNull();
     expect(button(html, "Désactiver et supprimer du serveur")).not.toBeNull();
     expect(button(html, "Activer la synchronisation")).toBeNull();
+    expect(text(html)).toContain("quand vous y revenez");
     expect(text(html)).toContain("Elle ne vous envoie jamais de notification.");
   });
 
@@ -247,6 +252,19 @@ describe("the section for another account", () => {
     expect(button(html, "Activer pour ce compte")).not.toBeNull();
     expect(button(html, "Synchroniser maintenant")).toBeNull();
   });
+
+  it("gives the same explanation as the off state, before the button", () => {
+    const shown = text(panel({ mode: { kind: "other-account" } }));
+    for (const block of [
+      "Ce qui part sur le serveur",
+      "Ce qui reste sur cet appareil",
+      "Ce qu'il faut savoir",
+    ]) {
+      expect(shown).toContain(block);
+      expect(shown.indexOf(block)).toBeLessThan(shown.indexOf("Activer pour ce compte"));
+    }
+    expect(shown).not.toContain("Retrouvez vos cartes");
+  });
 });
 
 describe("the section when the device cannot be read", () => {
@@ -265,6 +283,35 @@ describe("the section when the device cannot be read", () => {
     expect(statuses(html)).toEqual([""]);
     expect(alerts(html)).toEqual([]);
     expect(html).not.toContain("<button");
+  });
+});
+
+describe("signed out on a device that syncs", () => {
+  const notice = (mode: SyncMode, language: "fr" | "en" = "fr") => {
+    createI18n(language);
+    return renderToStaticMarkup(<SyncPausedNotice mode={mode} />);
+  };
+
+  it("says sync is paused and how to resume it", () => {
+    expect(text(notice({ kind: "other-account" }))).toContain(
+      "La synchronisation est en pause : connectez-vous pour la reprendre.",
+    );
+    expect(text(notice({ kind: "other-account" }, "en"))).toContain(
+      "Sync is paused: sign in to resume it.",
+    );
+  });
+
+  it("says nothing with no sync on the device, or before it has read it", () => {
+    expect(notice({ kind: "off" })).toBe("");
+    expect(notice({ kind: "loading" })).toBe("");
+  });
+
+  it("shows a device it cannot read", () => {
+    expect(
+      alerts(notice({ kind: "unreadable", failure: { kind: "storage", message: "x" } })),
+    ).toEqual([
+      "Cet appareil n'a pas pu lire ou écrire vos données. Réessayez, et écrivez-nous si cela continue : openlinguo@gmail.com.",
+    ]);
   });
 });
 
@@ -287,7 +334,7 @@ describe("the turn-off confirmation", () => {
     expect(shown).toContain("Vos données seront supprimées du serveur, pour tous vos appareils.");
     expect(shown).toContain("Elles restent sur cet appareil.");
     expect(shown).toContain(
-      "La trace de chaque envoi reste gardée 1 an, comme la loi française nous le demande.",
+      "La loi française nous demande de garder 1 an la trace de chaque envoi et de cette désactivation.",
     );
     expect(button(html, "Annuler")).toContain("data-autofocus");
     expect(button(html, "Désactiver et supprimer")).toContain("border-danger");
@@ -304,6 +351,9 @@ describe("the turn-off confirmation", () => {
     const shown = text(dialog({}, "en"));
     expect(shown).toContain("Turn off sync?");
     expect(shown).toContain("deleted from the server, for all your devices");
+    expect(shown).toContain(
+      "French law asks us to keep a record of each upload and of this turn-off for 1 year.",
+    );
   });
 });
 
