@@ -203,7 +203,7 @@ Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI j
 
 ## Milestones
 
-Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verification.
+Each milestone ships a usable increment, promoted to `main` and deployed. Only M10 ends in a version: the `v1.0.0` tag ([ADR 0010](adr/0010-branches-and-ci.md)). Exit criteria = verification.
 
 **M0 — Foundations.** Monorepo, strict TS + lint, Vitest, CI (typecheck/lint/test/build), supply-chain baseline (pinned actions, minimal permissions, dependency-review with license allowlist, CodeQL, OSV-Scanner, Dependabot, pnpm lifecycle-script allowlist), rulesets on `main`, CODEOWNERS, `Result` type, source/license verification → `data/SOURCES.md`, design tokens + mockups of the key screens (validated by the maintainer before any UI code), compliance baseline (data map, privacy-by-design checklist, accessibility statement template). *Exit: green CI on a trivial package, all "to verify" sources resolved or replaced, mockups approved.*
 
