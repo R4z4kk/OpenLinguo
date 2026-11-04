@@ -37,14 +37,20 @@ export const chineseOutsideZh = (page: Page): Promise<readonly string[]> =>
 export const horizontalOverflow = (page: Page): Promise<number> =>
   page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
-/** Animations still running, for a page under `prefers-reduced-motion: reduce`. */
+/**
+ * Animations still running a second after, for a page under `prefers-reduced-motion: reduce`: the
+ * 0.01 ms ones it leaves end on the next frame, a transition that starts late (a delay) does not.
+ */
 export const runningAnimations = (page: Page): Promise<readonly string[]> =>
-  page.evaluate(() =>
-    document
-      .getAnimations()
-      .filter(({ playState }) => playState === "running")
-      .map((animation) => animation.constructor.name),
-  );
+  page.evaluate(async () => {
+    const running = () =>
+      document.getAnimations().filter(({ playState }) => playState === "running");
+    const deadline = performance.now() + 1_000;
+    while (running().length > 0 && performance.now() < deadline) {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    }
+    return running().map((animation) => animation.constructor.name);
+  });
 
 const MAX_TAB_STOPS = 500;
 
