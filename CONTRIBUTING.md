@@ -28,7 +28,7 @@ More in the [web app](apps/web/README.md) and [API](apps/api/README.md) READMEs.
 3. Fill in the pull request template, including its privacy and accessibility checklist.
 4. The maintainer squash-merges. Name the pull request in the style of the recent ones (`feat(web): …`, `fix(api): …`, `docs: …`, `test(web): …`).
 
-CI runs `quick` on every pull request: typecheck, lint, format, unit tests with coverage, build and data checks. The full browser tests (Chromium and WebKit) run nightly, on promotions and on demand. If your change touches the web app, ask the maintainer to run them on your branch. A pull request from a new contributor waits for the maintainer to approve its CI run.
+CI runs `quick` on every pull request: typecheck, lint, format, unit tests with coverage, build and data checks. The full browser tests (Chromium and WebKit) run nightly, on promotions and on demand. If your change touches the web app, ask the maintainer to run them on your branch. The maintainer approves each CI run on a pull request from a fork, on every push.
 
 Before you push:
 

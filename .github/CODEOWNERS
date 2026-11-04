@@ -4,3 +4,8 @@
 /pnpm-lock.yaml @R4z4kk
 /pnpm-workspace.yaml @R4z4kk
 package.json @R4z4kk
+/apps/api/migrations/ @R4z4kk
+/apps/api/wrangler.jsonc @R4z4kk
+/apps/web/wrangler.jsonc @R4z4kk
+/apps/web/functions/ @R4z4kk
+/apps/web/public/_headers @R4z4kk
