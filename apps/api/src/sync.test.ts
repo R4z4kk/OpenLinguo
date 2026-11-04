@@ -206,6 +206,7 @@ describe("POST /api/sync/chunks", () => {
       userId,
       bytes: gzipped(),
       size: SYNC_LIMITS.accountBytes - 10,
+      usedAfter: SYNC_LIMITS.accountBytes - 10,
     });
     const response = await post(cookie, gzipHeaded(11));
     expect(response.status).toBe(409);
@@ -339,12 +340,12 @@ describe("GET /api/sync/chunks/next", () => {
   });
 });
 
-describe("what reading costs D1", () => {
+describe("what the usage costs D1", () => {
   const CHUNKS = 20;
 
-  /** Reads to the end, keeping the statements of the answers with a chunk and of the last one. */
-  const readAll = async (cookie: string) => {
-    let statements: string[] = [];
+  /** The bindings of a request, keeping every statement prepared through them. */
+  const recording = () => {
+    const statements: string[] = [];
     const DB = new Proxy(env.DB, {
       get: (target, name): unknown => {
         if (name === "prepare")
@@ -356,44 +357,151 @@ describe("what reading costs D1", () => {
         return typeof value === "function" ? value.bind(target) : value;
       },
     });
-    const read = (after: number) =>
-      app.fetch(
-        new Request(`${ORIGIN}/api/sync/chunks/next?after=${String(after)}`, {
-          headers: headersOf(cookie),
-        }),
-        { ...env, DB },
-      );
-    let after = 0;
-    for (let count = 0; count < CHUNKS; count += 1) {
-      const answer = await read(after);
-      expect(answer.status).toBe(200);
-      expect(answer.headers.get(SYNC_HEADERS.oldest)).not.toBeNull();
-      after = Number(answer.headers.get(SYNC_HEADERS.id));
-    }
-    const chunks = statements;
-    statements = [];
-    const end = await read(after);
-    expect(end.status).toBe(204);
-    expect(end.headers.get(SYNC_HEADERS.used)).toBe(String(CHUNKS * 10));
-    return { chunks, end: statements };
+    return { statements, env: { ...env, DB } };
   };
 
-  it("reading through the chunks runs the sum only on the last answer", async () => {
+  const filled = async () => {
     const cookie = await signedIn("lin@example.test");
-    const userId = await userIdOf("lin@example.test");
-    await db
-      .insert(syncChunk)
-      .values(Array.from({ length: CHUNKS }, () => ({ userId, bytes: gzipped(), size: 10 })));
+    for (let count = 0; count < CHUNKS; count += 1) {
+      expect((await post(cookie, gzipHeaded(10))).status).toBe(201);
+    }
+    return { cookie, userId: await userIdOf("lin@example.test") };
+  };
 
-    const { chunks, end } = await readAll(cookie);
+  const rowsRead = async (statements: readonly string[], userId: string) => {
+    const usage = statements.find((statement) => statement.includes("AS used")) ?? null;
+    if (usage === null) throw new Error("no read of the usage");
+    const { meta } = await env.DB.prepare(usage).bind(userId).all();
+    return meta.rows_read;
+  };
 
-    expect(chunks.filter((statement) => statement.includes("sum("))).toEqual([]);
-    expect(end.filter((statement) => statement.includes("sum("))).toHaveLength(1);
+  it("reads a few rows at the end of a read, however many chunks the account holds", async () => {
+    const { cookie, userId } = await filled();
+    const { statements, env: recorded } = recording();
+    const end = await app.fetch(
+      new Request(`${ORIGIN}/api/sync/chunks/next?after=${String(Number.MAX_SAFE_INTEGER)}`, {
+        headers: headersOf(cookie),
+      }),
+      recorded,
+    );
+    expect(end.status).toBe(204);
+    expect(end.headers.get(SYNC_HEADERS.used)).toBe(String(CHUNKS * 10));
+    expect(statements.filter((statement) => statement.includes("sum("))).toEqual([]);
+    expect(await rowsRead(statements, userId)).toBeLessThanOrEqual(2);
+  });
 
-    const oldest = chunks.find((statement) => statement.includes("min(id)")) ?? null;
+  it("reads a few rows for a push, however many chunks the account holds", async () => {
+    const { cookie, userId } = await filled();
+    const { statements, env: recorded } = recording();
+    const response = await app.fetch(
+      new Request(`${ORIGIN}/api/sync/chunks`, {
+        method: "POST",
+        headers: { "content-type": "application/gzip", ...headersOf(cookie) },
+        body: gzipHeaded(10),
+      }),
+      recorded,
+    );
+    expect(response.status).toBe(201);
+    expect(statements.filter((statement) => statement.includes("sum("))).toEqual([]);
+    expect(await rowsRead(statements, userId)).toBeLessThanOrEqual(2);
+  });
+
+  it("reads the oldest chunk from one row on an answer with a chunk", async () => {
+    const { cookie, userId } = await filled();
+    const { statements, env: recorded } = recording();
+    const answer = await app.fetch(
+      new Request(`${ORIGIN}/api/sync/chunks/next?after=0`, { headers: headersOf(cookie) }),
+      recorded,
+    );
+    expect(answer.status).toBe(200);
+    expect(statements.filter((statement) => statement.includes("AS used"))).toEqual([]);
+    const oldest = statements.find((statement) => statement.includes("min(id)")) ?? null;
     if (oldest === null) throw new Error("no read of the oldest chunk");
     const { meta } = await env.DB.prepare(oldest).bind(userId).all();
     expect(meta.rows_read).toBe(1);
+  });
+
+  it("keeps the total of pushes sent at once", async () => {
+    const cookie = await signedIn("lin@example.test");
+    await Promise.all([post(cookie, gzipHeaded(10)), post(cookie, gzipHeaded(20))]);
+    const end = await next(cookie, Number.MAX_SAFE_INTEGER);
+    expect(end.headers.get(SYNC_HEADERS.used)).toBe("30");
+  });
+
+  it("starts the total again after a turn-off, and keeps accounts apart", async () => {
+    const lin = await signedIn("lin@example.test");
+    const wei = await signedIn("wei@example.test");
+    await post(lin, gzipHeaded(10));
+    await post(wei, gzipHeaded(100));
+    await clear(lin);
+    const after = await stored(await post(lin, gzipHeaded(20)));
+    expect(after.used).toBe(20);
+    expect((await stored(await post(wei, gzipHeaded(1000)))).used).toBe(1100);
+  });
+});
+
+describe("the origin of a state-changing request", () => {
+  const SIBLING = "https://sibling.example.test";
+
+  it.each([
+    ["from a sibling site", { origin: SIBLING }],
+    ["with no origin", {}],
+  ])("refuses a signed-in text/plain POST %s", async (_case, origin: Record<string, string>) => {
+    const cookie = await signedIn("lin@example.test");
+    const response = await call("/api/account/delete", {
+      method: "POST",
+      headers: { "content-type": "text/plain", cookie, ...origin },
+      body: JSON.stringify({ published: "remove" }),
+    });
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    expect(await userIdOf("lin@example.test")).not.toBe("");
+  });
+
+  it("refuses a signed-in submission from a sibling site", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const response = await call("/api/submissions", {
+      method: "POST",
+      headers: { "content-type": "text/plain", origin: SIBLING, cookie },
+      body: "{}",
+    });
+    expect(response.status).toBe(403);
+    expect(await response.json()).toMatchObject({ code: "INVALID_REQUEST" });
+  });
+
+  it("refuses a signed-in DELETE from a sibling site", async () => {
+    const cookie = await signedIn("lin@example.test");
+    await post(cookie, gzipped());
+    const response = await call("/api/sync/chunks", {
+      method: "DELETE",
+      headers: { origin: SIBLING, cookie },
+    });
+    expect(response.status).toBe(403);
+    expect(await db.select().from(syncChunk)).toHaveLength(1);
+  });
+
+  it("answers a signed-in read, which a browser sends with no origin", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const response = await call("/api/sync/chunks/next?after=0", { headers: { cookie } });
+    expect(response.status).toBe(204);
+  });
+
+  it("leaves a request without a session to its route", async () => {
+    const response = await call("/api/notices", {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: SIBLING },
+      body: "{}",
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it("answers the app's own origin", async () => {
+    const cookie = await signedIn("lin@example.test");
+    const response = await call("/api/sync/chunks", {
+      method: "DELETE",
+      headers: { origin: ORIGIN, cookie },
+    });
+    expect(response.status).toBe(204);
   });
 });
 

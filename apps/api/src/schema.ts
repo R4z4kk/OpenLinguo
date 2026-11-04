@@ -342,6 +342,8 @@ export const syncChunk = sqliteTable(
       .references(() => user.id, { onDelete: "cascade" }),
     bytes: bytes().notNull(),
     size: integer().notNull(),
+    /** The account's stored bytes with this chunk, so the usage reads one row, not all of them. */
+    usedAfter: integer().notNull().default(0),
     createdAt: createdAt(),
   },
   (table) => [index("sync_chunk_user").on(table.userId, table.id)],
