@@ -1,7 +1,7 @@
 /**
  * Performance budgets (#349). Measured 2026-11-04 on develop (6b09e37): Chromium, Playwright CPU
- * throttling 4x, local network, i7-13700KF. Each size limit is the measure plus 14-20 %; the
- * times are provisional (see below). Raising one is a decision: say why in the pull request.
+ * throttling 4x, local network, i7-13700KF, and on a CI runner. Each size limit is the measure plus
+ * 14-20 %, each time limit 1.5x or more. Raising one is a decision: say why in the pull request.
  * The sizes are checked after `pnpm build` (`pnpm budgets`), the times in e2e/performance.e2e.ts.
  */
 export const BUDGETS_DATED = "2026-11-04";
@@ -49,16 +49,16 @@ export type TimingBudgets = {
   /** Playwright CPU throttling, about a mid-range phone (Lighthouse's mobile profile). */
   readonly cpuSlowdown: number;
   /**
-   * First visit, import included, until the Today page shows its content: 22-24 s locally.
-   * Provisional until a CI run is measured; the budget is then 1.5x that run.
+   * First visit, import included, until the Today page shows its content: 22-24 s locally, 34 s on CI
+   * (run 41863244824, 2026-11-04, with the other tests of the shard running): the budget is 1.5x that.
    */
   readonly coldUsableMs: number;
-  /** Median of 3 next visits, data already in IndexedDB: 1.3-1.7 s locally, provisional as above. */
+  /** Median of 3 next visits, data already in IndexedDB: 1.3-1.7 s locally, 1.2-1.3 s on CI. */
   readonly warmUsableMs: number;
 };
 
 export const TIMING_BUDGETS: TimingBudgets = {
   cpuSlowdown: 4,
-  coldUsableMs: 30_000,
+  coldUsableMs: 50_000,
   warmUsableMs: 3_000,
 };
