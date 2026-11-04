@@ -254,7 +254,7 @@ describe("POST /api/admin/submissions/:id/reject", () => {
       admin,
     );
     expect(mailer.sent.at(-1)?.text).toContain(
-      "Motif : règles de la bibliothèque, article 3.2 des conditions d'utilisation : le texte n'est pas en chinois.",
+      "Motif : règles de la bibliothèque, article 4.2 des conditions d'utilisation : le texte n'est pas en chinois.",
     );
   });
 

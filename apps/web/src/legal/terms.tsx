@@ -2,15 +2,16 @@ import { TERMS_CLAUSES } from "@openlinguo/core/moderation";
 import { SYNC_LIMITS } from "@openlinguo/core/sync";
 import type { ReactNode } from "react";
 import type { Language } from "@/i18n/language";
-import { Contact, External, List, Paragraph, type LegalDocument } from "./legal-page";
+import { Contact, External, List, Paragraph, REPOSITORY, type LegalDocument } from "./legal-page";
 
 const BY_SA = "https://creativecommons.org/licenses/by-sa/4.0/deed.fr";
 const BY_SA_EN = "https://creativecommons.org/licenses/by-sa/4.0/legalcode.en";
 const CC0 = "https://creativecommons.org/publicdomain/zero/1.0/deed.fr";
 const CC0_EN = "https://creativecommons.org/publicdomain/zero/1.0/legalcode.en";
+const HISTORY = `${REPOSITORY}/commits/main/apps/web/src/legal/terms.tsx`;
 const SYNC_SPACE_MB = SYNC_LIMITS.accountBytes / (1024 * 1024);
 
-/** Rule 3.1 has no entry in `TERMS_CLAUSES`: a statement cites the law itself. */
+/** Rule 4.1 has no entry in `TERMS_CLAUSES`: a statement cites the law itself. */
 const Rule = ({
   number,
   title,
@@ -54,7 +55,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "Vous vous connectez avec un code reçu par e-mail, ou avec Google ou GitHub. Il n’y a pas de mot de passe.",
               "Un compte est personnel. Protégez l’accès à votre boîte e-mail : elle donne accès au compte.",
               "Vous pouvez supprimer votre compte à tout moment dans Profil › Compte.",
-              "Si un compte envoie plusieurs fois des contenus illégaux (règle 3.1), nous pouvons le suspendre, avec les raisons par e-mail.",
+              "Si un compte envoie plusieurs fois des contenus illégaux (règle 4.1), nous pouvons le suspendre et nous écrivons à l’adresse du compte pour dire pourquoi.",
             ]}
           />
         ),
@@ -83,7 +84,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               Un texte qui ne respecte pas l’une de ces règles est refusé, ou retiré s’il a déjà été
               publié. Chaque décision cite le numéro de la règle.
             </Paragraph>
-            <Rule number="3.1" title="Contenu illégal">
+            <Rule number="4.1" title="Contenu illégal">
               <Paragraph>
                 Pas de texte copié sans le droit de le faire (paroles de chansons, livres,
                 articles), de diffamation ou d’insulte, de haine ou d’appel à la violence,
@@ -132,7 +133,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
                   <External href={CC0}>CC0 1.0</External>, sans auteur, avec son badge IA. Vous
                   déclarez qu’elle ne contient aucun texte écrit par quelqu’un d’autre.
                 </>,
-                "Texte brut, 20 000 caractères au plus, 5 textes en attente au plus par compte. Un texte envoyé ne se modifie pas : retirez-le et envoyez-le de nouveau.",
+                "Texte brut, 20 000 caractères au plus, 5 textes en attente au plus par compte. Un texte envoyé ne se modifie pas : tant qu’il est en attente, retirez-le et envoyez-le de nouveau. Pour un texte publié, écrivez à l’adresse de contact.",
                 "Vous choisissez la signature : votre pseudonyme ou anonyme.",
               ]}
             />
@@ -213,8 +214,9 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
         heading: "Changements",
         body: (
           <Paragraph>
-            Si ces conditions changent sur un point important, l’application le dit avant que le
-            changement s’applique. Vous pouvez alors supprimer votre compte.
+            La date en haut de la page est celle du dernier changement, et l’historique de la page
+            est public : <External href={HISTORY}>chaque version avec sa date</External>. Si un
+            changement ne vous convient pas, vous pouvez supprimer votre compte.
           </Paragraph>
         ),
       },
@@ -255,7 +257,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "You sign in with a code sent by email, or with Google or GitHub. There is no password.",
               "An account is personal. Protect access to your mailbox: it gives access to the account.",
               "You can delete your account at any time in Profile › Account.",
-              "If an account sends illegal content several times (rule 3.1), we may suspend it, with the reasons by email.",
+              "If an account sends illegal content several times (rule 4.1), we may suspend it and we write to the account’s address to say why.",
             ]}
           />
         ),
@@ -284,7 +286,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               A text that breaks one of these rules is rejected, or removed if already published.
               Each decision cites the number of the rule.
             </Paragraph>
-            <Rule number="3.1" title="Illegal content">
+            <Rule number="4.1" title="Illegal content">
               <Paragraph>
                 No text copied without the right to do so (song lyrics, books, articles), no
                 defamation or insult, no hatred or call to violence, no information that identifies
@@ -331,7 +333,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
                 <External href={CC0_EN}>CC0 1.0</External>, with no author, with its AI badge. You
                 state that it contains no text written by someone else.
               </>,
-              "Plain text, 20,000 characters at most, 5 pending texts at most per account. A text sent cannot be edited: withdraw it and send it again.",
+              "Plain text, 20,000 characters at most, 5 pending texts at most per account. A text sent cannot be edited: while it is pending, withdraw it and send it again. For a published text, write to the contact address.",
               "You choose the signature: your pseudonym or anonymous.",
             ]}
           />
@@ -408,8 +410,9 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
         heading: "Changes",
         body: (
           <Paragraph>
-            If these terms change on an important point, the app says so before the change applies.
-            You may then delete your account.
+            The date at the top of the page is that of the last change, and the history of the page
+            is public: <External href={HISTORY}>every version with its date</External>. If a change
+            does not suit you, you can delete your account.
           </Paragraph>
         ),
       },
