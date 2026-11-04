@@ -36,6 +36,7 @@ jobs:
       - run: pnpm format:check
       - run: pnpm test:coverage
       - run: pnpm build
+      - run: pnpm budgets
       - run: pnpm data:freshness
       - run: pnpm data:gaps --check
 
