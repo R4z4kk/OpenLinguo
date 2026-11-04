@@ -6,6 +6,7 @@ import {
   DEPLOY_TOKEN,
   DPF_STATUS,
   DPIA_REVIEW,
+  LEGAL_WATCH,
   PROCESSOR_FACTS,
 } from "./compliance-facts.ts";
 
@@ -51,6 +52,14 @@ describe("compliance facts", () => {
       Date.parse(DATA_RETENTION_INJUNCTION.value) - Date.parse(DATA_RETENTION_INJUNCTION.checkedOn),
     ).toBeLessThanOrEqual(366 * DAY);
   });
+
+  test.each(Object.entries(LEGAL_WATCH))(
+    "%s is read again on its source in the last six months: re-read it, update docs/ROADMAP.md (Privacy & compliance, accessibility) and the statement in docs/compliance/accessibility-statement-template.md, then move value, checkedOn and reviewBy",
+    (_, fact) => {
+      expect(Date.now()).toBeLessThan(Date.parse(fact.reviewBy));
+      expect(Date.parse(fact.reviewBy) - Date.parse(fact.checkedOn)).toBeLessThanOrEqual(184 * DAY);
+    },
+  );
 
   test("the D1 size limit is read again within a year: check the D1 limits page, then move checkedOn and reviewBy", () => {
     expect(Date.now()).toBeLessThan(Date.parse(D1_FREE_DATABASE_SIZE.reviewBy));
