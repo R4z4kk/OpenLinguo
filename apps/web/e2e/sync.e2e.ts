@@ -22,7 +22,13 @@ const USER = {
 type Chunk = { readonly id: number; readonly bytes: Buffer };
 
 // `vite preview` has no Functions: one store answers both devices, following `apps/api/src/sync.ts`.
-type FakeApi = { readonly chunks: Chunk[]; nextId: number; reads: number };
+type FakeApi = {
+  readonly chunks: Chunk[];
+  nextId: number;
+  reads: number;
+  /** The one method the server refuses for now. */
+  refusing: "GET" | "DELETE" | null;
+};
 
 const json = (route: Route, status: number, body: unknown, headers: Record<string, string> = {}) =>
   route.fulfill({
@@ -39,6 +45,10 @@ const serveSync = async (api: FakeApi, route: Route): Promise<void> => {
   const request = route.request();
   const used = api.chunks.reduce((sum, { bytes }) => sum + bytes.length, 0);
   const oldest = api.chunks[0]?.id ?? null;
+  if (request.method() === api.refusing) {
+    await refuse(route, 429, "TOO_MANY_ATTEMPTS");
+    return;
+  }
   switch (request.method()) {
     case "POST": {
       if (request.headers()["content-type"] !== "application/gzip") {
@@ -104,7 +114,7 @@ const serveSync = async (api: FakeApi, route: Route): Promise<void> => {
 };
 
 const fakeApi = async (...contexts: readonly BrowserContext[]): Promise<FakeApi> => {
-  const api: FakeApi = { chunks: [], nextId: 0, reads: 0 };
+  const api: FakeApi = { chunks: [], nextId: 0, reads: 0, refusing: null };
   for (const context of contexts) {
     await context.route("**/api/**", async (route) => {
       const { pathname } = new URL(route.request().url());
@@ -244,6 +254,72 @@ test("the end of a session sends it at once, inside the five minutes", async ({
   }
 
   await expect.poll(() => api.chunks.length).toBeGreaterThan(sent);
+});
+
+test("with sync off, the server's data is deleted by keyboard, refusals shown", async ({
+  page,
+  context,
+}) => {
+  const api = await fakeApi(context);
+  const section = syncOf(page);
+  const blockHeading = section.getByRole("heading", { name: authEn.sync.server.title });
+  const erase = section.getByRole("button", { name: authEn.sync.server.erase });
+
+  const answered = page.waitForResponse((response) =>
+    response.url().includes("/api/sync/chunks/next"),
+  );
+  await openSync(page);
+  await answered;
+  await expect(section.getByRole("button", { name: authEn.sync.activate })).toBeVisible();
+  await expect(blockHeading).toHaveCount(0);
+  await noViolations(page);
+
+  api.nextId = 1;
+  api.chunks.push({ id: 1, bytes: Buffer.from([0x1f, 0x8b]) });
+  api.refusing = "GET";
+  await openSync(page);
+  await expect(section.getByRole("alert")).toHaveText(authEn.sync.server.checkFailed);
+  await expect(erase).toHaveCount(0);
+  await noViolations(page);
+
+  api.refusing = null;
+  await press(section.getByRole("button", { name: authEn.retry }));
+  await expect(blockHeading).toBeFocused();
+  await expect(section.getByRole("alert")).toHaveCount(0);
+  await noViolations(page);
+
+  await press(erase);
+  const dialog = page.getByRole("dialog", { name: authEn.sync.server.askTitle });
+  const cancel = dialog.getByRole("button", { name: authEn.sync.offCancel });
+  const confirm = dialog.getByRole("button", { name: authEn.sync.server.confirm, exact: true });
+  await expect(cancel).toBeFocused();
+  await expect(dialog).toContainText(authEn.sync.server.askLoss);
+  await noViolations(page);
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeHidden();
+  expect(api.chunks).toHaveLength(1);
+
+  await press(erase);
+  await expect(cancel).toBeFocused();
+  api.refusing = "DELETE";
+  await page.keyboard.press("Tab");
+  await expect(confirm).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dialog.getByRole("alert")).toHaveText(authEn.sync.server.refused);
+  expect(api.chunks).toHaveLength(1);
+  await noViolations(page);
+
+  api.refusing = null;
+  await expect(confirm).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(dialog).toBeHidden();
+  await expect(blockHeading).toBeFocused();
+  await expect(section.getByRole("status").last()).toHaveText(authEn.sync.server.erased);
+  await expect(erase).toHaveCount(0);
+  expect(api.chunks).toHaveLength(0);
+  expect(await all(page, "syncState")).toHaveLength(0);
+  await expect(section.getByRole("button", { name: authEn.sync.activate })).toBeVisible();
+  await noViolations(page);
 });
 
 test("two devices converge", async ({

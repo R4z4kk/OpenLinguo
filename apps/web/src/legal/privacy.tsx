@@ -251,13 +251,17 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               prévient avant.
             </Paragraph>
             <Paragraph>
-              Elles restent sur le serveur jusqu’à ce que vous désactiviez la synchronisation ou que
-              le compte soit supprimé. « Désactiver et supprimer du serveur », depuis un seul
-              appareil, les supprime pour tous vos appareils ; elles restent sur vos appareils. Se
+              Elles restent sur le serveur jusqu’à ce que vous les supprimiez ou que le compte soit
+              supprimé. « Désactiver et supprimer du serveur », depuis un seul appareil, les
+              supprime pour tous vos appareils ; elles restent sur vos appareils. Sur un appareil où
+              la synchronisation est éteinte, « Supprimer les données du serveur » les supprime
+              aussi pour tous vos appareils, mais elles ne sont peut-être pas toutes sur cet
+              appareil. Pour vous le proposer, Profil › Compte demande au serveur s’il reste des
+              données : cette question ne laisse pas de trace et rien n’est gardé sur l’appareil. Se
               déconnecter arrête la synchronisation sur cet appareil, mais ne supprime rien du
               serveur. Attention : changer ou supprimer une note ou un paquet sur un appareil ne
               l’efface pas du serveur. L’ancien envoi y reste, et dans le fichier de vos données,
-              jusqu’à ce que vous désactiviez la synchronisation. Ce qui est supprimé disparaît des
+              jusqu’à ce que ces données soient supprimées. Ce qui est supprimé disparaît des
               sauvegardes de la base au bout de {String(backupDays)} jours.
             </Paragraph>
           </>
@@ -343,7 +347,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               ["Décisions de modération, signalements", "1 an après la décision"],
               [
                 "Données synchronisées",
-                "Jusqu’à ce que vous désactiviez la synchronisation ou que le compte soit supprimé",
+                "Jusqu’à ce que vous les supprimiez ou que le compte soit supprimé",
               ],
               ["Adresse IP et heure de chaque envoi de texte", "1 an"],
               [
@@ -397,10 +401,10 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               Vous pouvez accéder à vos données, les corriger, les effacer, les récupérer, limiter
               leur usage ou vous y opposer. Dans Profil › Compte, vous pouvez changer votre
               pseudonyme, télécharger vos données (JSON, avec vos données synchronisées), désactiver
-              la synchronisation et supprimer votre compte. Pour le reste, dont les traces gardées
-              par la loi, qui ne sont pas dans ce fichier, écrivez à <Contact /> : nous répondons
-              dans un mois, ou nous vous disons dans ce mois pourquoi il nous faut jusqu’à deux mois
-              de plus.
+              la synchronisation, supprimer les données du serveur et supprimer votre compte. Pour
+              le reste, dont les traces gardées par la loi, qui ne sont pas dans ce fichier, écrivez
+              à <Contact /> : nous répondons dans un mois, ou nous vous disons dans ce mois pourquoi
+              il nous faut jusqu’à deux mois de plus.
             </Paragraph>
             <Paragraph>
               Aucune décision vous concernant n’est prise par une machine seule. Si vous pensez que
@@ -647,13 +651,16 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               by another account, what came from it joins yours too: the screen warns you first.
             </Paragraph>
             <Paragraph>
-              It stays on the server until you turn sync off or the account is deleted. « Turn off
-              and delete from the server », from just one device, deletes it for all your devices;
-              it stays on your devices. Signing out stops sync on this device but deletes nothing
-              from the server. Careful: changing or deleting a note or a deck on a device does not
-              erase it from the server. The older upload stays there, and in your data file, until
-              you turn sync off. What is deleted leaves the database backups after{" "}
-              {String(backupDays)} days.
+              It stays on the server until you delete it or the account is deleted. « Turn off and
+              delete from the server », from just one device, deletes it for all your devices; it
+              stays on your devices. On a device where sync is off, « Delete the data from the
+              server » also deletes it for all your devices, but not all of it may be on that
+              device. To offer this, Profile › Account asks the server whether any data remains:
+              asking leaves no record and nothing is kept on the device. Signing out stops sync on
+              this device but deletes nothing from the server. Careful: changing or deleting a note
+              or a deck on a device does not erase it from the server. The older upload stays there,
+              and in your data file, until that data is deleted. What is deleted leaves the database
+              backups after {String(backupDays)} days.
             </Paragraph>
           </>
         ),
@@ -734,7 +741,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 "While published; when you delete the account, you choose: keep with your name, keep as anonymous (default) or remove",
               ],
               ["Moderation decisions, reports", "1 year after the decision"],
-              ["Synced data", "Until you turn sync off or the account is deleted"],
+              ["Synced data", "Until you delete it or the account is deleted"],
               ["IP address and time of each text submission", "1 year"],
               ["IP address and time of each sync upload and each deletion of that data", "1 year"],
               [
@@ -780,10 +787,10 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               You may access your data, correct it, erase it, take it with you, restrict its use or
               object to it. In Profile › Account, you can change your pseudonym, download your data
-              (JSON, with your synced data), turn sync off and delete your account. For anything
-              else, including the records the law makes us keep, which are not in that file, write
-              to <Contact />: we answer within one month, or tell you within that month why we need
-              up to two more.
+              (JSON, with your synced data), turn sync off, delete the data from the server and
+              delete your account. For anything else, including the records the law makes us keep,
+              which are not in that file, write to <Contact />: we answer within one month, or tell
+              you within that month why we need up to two more.
             </Paragraph>
             <Paragraph>
               No decision about you is made by a machine alone. If you think your rights are not

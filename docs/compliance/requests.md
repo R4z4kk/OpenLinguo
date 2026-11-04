@@ -20,7 +20,7 @@ Answer within the month. If more time is needed (complex or many requests), tell
 
 Access, rectification, erasure, restriction, objection, portability (GDPR arts 15 to 21).
 
-1. **Point to the app first**: signing in already proves who the person is. Profile › Compte gives the export (« Mes données », arts 15 and 20, with the synced data decoded on the device), the pseudonym (art. 16), turning sync off, which deletes the synced data, and the deletion (art. 17).
+1. **Point to the app first**: signing in already proves who the person is. Profile › Compte gives the export (« Mes données », arts 15 and 20, with the synced data decoded on the device), the pseudonym (art. 16), turning sync off or, from a device where it is off, « Supprimer les données du serveur », which delete the synced data, and the deletion (art. 17).
 2. **Otherwise, check identity through the account**:
    - If the request comes from the account's own address, answer that address.
    - If not, write to the account's address with a code (`openssl rand -hex 3`), and act only once the code comes back from that address.

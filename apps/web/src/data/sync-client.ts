@@ -72,6 +72,12 @@ export const nextChunk = async (after: number): Promise<Result<NextChunk, ApiFai
   }
 };
 
+/** Whether the account's store holds a chunk, whatever this device remembers. Decodes nothing. */
+export const holdsChunks = async (): Promise<Result<boolean, ApiFailure>> => {
+  const next = await nextChunk(0);
+  return next.ok ? ok(next.value.id !== null) : next;
+};
+
 export const deleteStore = async (): Promise<Result<null, ApiFailure>> => {
   const answer = await request(PATH, { method: "DELETE" });
   if (!answer.ok) return answer;

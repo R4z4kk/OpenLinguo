@@ -87,7 +87,7 @@ export const authEn = {
         "It is not encrypted end to end, so OpenLinguo’s administrator could read it. They only do so for an incident or an official request.",
       off: "If you turn sync off, it is deleted from the server.",
       edited: "A note you edit or delete stays on the server until you turn sync off.",
-      law: "French law makes us keep records: the IP address of each upload and of each turn-off for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
+      law: "French law makes us keep records: the IP address of each upload and of each deletion for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
     },
     activate: "Start syncing",
     activating: "Starting sync…",
@@ -112,6 +112,21 @@ export const authEn = {
     offConfirm: "Turn off and delete",
     offWorking: "Deleting from the server…",
     offFailed: "Sync could not be turned off and stays on. Try again later.",
+    server: {
+      title: "Your data on the server",
+      body: "Your account still has data on the server, sent by one of your devices. You can delete it without starting sync here.",
+      erase: "Delete the data from the server",
+      erased: "The data on the server is deleted.",
+      checkFailed: "We could not check whether your account still has data on the server.",
+      askTitle: "Delete the data from the server?",
+      askBody:
+        "Your data will be deleted from the server, for all your devices. Devices still syncing will stop and tell you so.",
+      askLoss:
+        "Not all of it may be on this device. If you no longer have the device that sent it, it will be lost. To keep a copy, download your data first, under “My data”.",
+      askLaw: "French law asks us to keep a record of each upload and of this deletion for 1 year.",
+      confirm: "Delete",
+      refused: "The data could not be deleted and stays on the server. Try again later.",
+    },
     paused: "Sync is paused: sign in to resume it.",
     otherAccount:
       "This device was synced with another account: sync is cut. If you start it here, everything on this device, including what came from the other account, will join this account.",
