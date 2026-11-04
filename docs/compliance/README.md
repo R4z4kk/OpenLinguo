@@ -19,7 +19,7 @@ Values that can expire (Data Privacy Framework statuses, processor agreements, t
 | [Requests runbook](requests.md) | Rights requests, parents' requests to delete a child's account, authorities' requisitions, and where their proof is kept |
 | [Wikidata lookup](wikidata.md) | What the lookup sends to the Wikimedia Foundation, roles, the U.S. transfer, the dated endpoint |
 | [Privacy notice](privacy-notice.md) | Where the public legal pages live: `/legal`, `/privacy`, `/terms` |
-| [Accessibility statement template](accessibility-statement-template.md) | Published at v1 |
+| [Accessibility statement](../../apps/web/src/legal/accessibility.tsx) | Published at `/accessibility`; says only what the E2E tests and the app do |
 
 Every pull request goes through the privacy and accessibility checklist in [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
 
