@@ -27,10 +27,16 @@ import { type Connection, connectionOf, hostingRow } from "./submissions.ts";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 /** Décret 2021-1362: identity 5 years (art. 2), pseudonyms 1 year (art. 3) after the contract. */
-const SEALED_EMAIL_DAYS = 5 * 365;
-const SEALED_PSEUDONYM_DAYS = 365;
+const SEALED_EMAIL_YEARS = 5;
+const SEALED_PSEUDONYM_YEARS = 1;
 /** Longer than D1 Time Travel's 7 days on the Workers Free plan (retention schedule). */
 const ERASURE_LOG_DAYS = 8;
+
+const yearsAfter = (date: Date, years: number) => {
+  const result = new Date(date);
+  result.setUTCFullYear(result.getUTCFullYear() + years);
+  return result;
+};
 
 const refusal = (code: ApiError["code"], message: string): ApiError => ({ code, message });
 
@@ -101,9 +107,9 @@ export const accountDeletion = async (
   if (texts.length > 0 || synced || (recorded?.total ?? 0) > 0) {
     const sealed = {
       email: found.email,
-      emailUntil: new Date(now.getTime() + SEALED_EMAIL_DAYS * DAY_MS),
+      emailUntil: yearsAfter(now, SEALED_EMAIL_YEARS),
       pseudonyms: pseudonyms.length > 0 ? pseudonyms : null,
-      pseudonymsUntil: new Date(now.getTime() + SEALED_PSEUDONYM_DAYS * DAY_MS),
+      pseudonymsUntil: yearsAfter(now, SEALED_PSEUDONYM_YEARS),
     };
     writes.push(
       db

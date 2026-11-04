@@ -91,11 +91,10 @@ const submit = (cookie: string, body: object = text) =>
 
 const records = async () =>
   (await db.select().from(hostingRecord).orderBy(hostingRecord.id)).map(
-    ({ submissionId, operation, ipAddress, port, protocol }) => ({
+    ({ submissionId, operation, ipAddress, protocol }) => ({
       submissionId,
       operation,
       ipAddress,
-      port,
       protocol,
     }),
   );
@@ -127,7 +126,6 @@ describe("POST /api/submissions", () => {
         submissionId: created.id,
         operation: "create",
         ipAddress: `198.51.100.${String(ip)}`,
-        port: null,
         protocol: null,
       },
     ]);
