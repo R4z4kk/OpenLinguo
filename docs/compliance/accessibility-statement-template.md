@@ -1,12 +1,12 @@
 # Accessibility statement (template, published at v1)
 
-> Fill in at M10 after the manual audit. Publish in the app (`/accessibility`) in French and English.
+> Fill in at M10 (#346), after the automated checks of #344. Publish in the app (`/accessibility`) in French and English.
 
 **OpenLinguo** is committed to making its web application accessible, in line with the Web Content Accessibility Guidelines (WCAG) 2.2, level AA, the web baseline of EN 301 549 v4.1.1.
 
 ## Conformance status
 
-`[Fully / Partially / Not]` conformant with WCAG 2.2 AA. Audit performed on `[DATE]` by `[WHO]` on `[SCOPE: screens, browsers, assistive technologies]`.
+Conformance with WCAG 2.2 AA is **not claimed**. On `[DATE]` automated tests checked every screen in light and dark (axe, WCAG 2.0 to 2.2 levels A and AA), the language of Chinese text, reflow at 320 px, reduced motion and keyboard focus (Chromium). No test was done with assistive technology (screen readers, voice control).
 
 ## Known limitations
 

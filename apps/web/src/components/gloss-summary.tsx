@@ -1,5 +1,7 @@
 import type { Gloss } from "@openlinguo/core";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
+import { GlossText } from "@/components/gloss-text";
 import { AI_GLOSS_SOURCE, summarizeGlosses } from "@/data/gloss-summary";
 import { languages, type Language } from "@/i18n/language";
 import { cn } from "@/lib/utils";
@@ -39,7 +41,12 @@ export const GlossSummary = ({ glosses, language, className }: Props) => {
         </>
       )}
       <span lang={summary.lang}>
-        {summary.texts.join(summary.lang === "fr" ? "\u00a0; " : "; ")}
+        {summary.texts.map((text, index) => (
+          <Fragment key={text}>
+            {index > 0 && (summary.lang === "fr" ? "\u00a0; " : "; ")}
+            <GlossText text={text} />
+          </Fragment>
+        ))}
       </span>
     </p>
   );
