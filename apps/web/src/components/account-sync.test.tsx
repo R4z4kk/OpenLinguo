@@ -5,7 +5,14 @@ import { describe, expect, it } from "vitest";
 import { createI18n } from "@/i18n";
 import type { SyncView } from "@/shell/use-sync";
 import { DeletionDialog } from "./account-data";
-import { SyncPanel, SyncPausedNotice, type SyncMode, TurnOffDialog } from "./account-sync";
+import {
+  ServerDataBlock,
+  ServerDataDialog,
+  SyncPanel,
+  SyncPausedNotice,
+  type SyncMode,
+  TurnOffDialog,
+} from "./account-sync";
 
 const NOW = new Date(2026, 10, 3, 18, 42).getTime();
 const YESTERDAY = new Date(2026, 10, 2, 21, 5).getTime();
@@ -31,6 +38,7 @@ const panel = (
       onActivate={noop}
       onSyncNow={noop}
       onTurnOff={noop}
+      serverData={null}
       {...props}
     />,
   );
@@ -76,7 +84,7 @@ describe("the section while sync is off", () => {
       "seront fusionnées",
       "Une note modifiée ou supprimée reste sur le serveur jusqu'à ce que vous désactiviez la synchronisation.",
       "l'administrateur d'OpenLinguo pourrait les lire",
-      "l'adresse IP de chaque envoi et de chaque désactivation pendant 1 an",
+      "l'adresse IP de chaque envoi et de chaque suppression pendant 1 an",
       "Vos révisions avec votre réponse, leur date, leur heure et votre fuseau horaire",
       "votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an",
     ])
@@ -99,7 +107,7 @@ describe("the section while sync is off", () => {
     const shown = text(panel({}, "en"));
     expect(shown).toContain("Sync");
     expect(shown).toContain("your email for 5 years and your pseudonym for 1 year");
-    expect(shown).toContain("the IP address of each upload and of each turn-off for 1 year");
+    expect(shown).toContain("the IP address of each upload and of each deletion for 1 year");
     expect(shown).toContain(
       "Your reviews with your answer, their date and time and your time zone",
     );
@@ -353,6 +361,125 @@ describe("the turn-off confirmation", () => {
     expect(shown).toContain("deleted from the server, for all your devices");
     expect(shown).toContain(
       "French law asks us to keep a record of each upload and of this turn-off for 1 year.",
+    );
+  });
+});
+
+describe("the server's data, with sync off on this device", () => {
+  const OFFER = "Supprimer les données du serveur";
+
+  const block = (
+    state: ComponentProps<typeof ServerDataBlock>["state"],
+    language: "fr" | "en" = "fr",
+  ) => {
+    createI18n(language);
+    return renderToStaticMarkup(
+      <ServerDataBlock state={state} headingRef={createRef()} onErase={noop} onRetry={noop} />,
+    );
+  };
+
+  const dialog = (
+    props: Partial<ComponentProps<typeof ServerDataDialog>> = {},
+    language: "fr" | "en" = "fr",
+  ) => {
+    createI18n(language);
+    return renderToStaticMarkup(
+      <ServerDataDialog
+        working={false}
+        problem={null}
+        onClose={noop}
+        onConfirm={noop}
+        {...props}
+      />,
+    );
+  };
+
+  it("has its place only while sync is off for this account", () => {
+    const serverData = <p>server data</p>;
+    const shown = (mode: SyncMode) => text(panel({ mode, serverData })).includes("server data");
+
+    expect(shown({ kind: "off" })).toBe(true);
+    expect(shown({ kind: "other-account" })).toBe(true);
+    expect(shown({ kind: "on", lastSyncAt: null })).toBe(false);
+    expect(shown({ kind: "loading" })).toBe(false);
+    expect(shown({ kind: "unreadable", failure: { kind: "storage", message: "x" } })).toBe(false);
+  });
+
+  it("comes after the button that turns sync on", () => {
+    const shown = text(panel({ serverData: <p>server data</p> }));
+    expect(shown.indexOf("Activer la synchronisation")).toBeLessThan(shown.indexOf("server data"));
+  });
+
+  it("offers the deletion when the account holds chunks", () => {
+    const html = block({ kind: "held" });
+    expect(text(html)).toContain("Vos données sur le serveur");
+    expect(text(html)).toContain("Vous pouvez les supprimer sans activer la synchronisation ici.");
+    expect(button(html, OFFER)).toContain("border-danger");
+    expect(html).toMatch(/<h3[^>]*tabindex="-1"/u);
+  });
+
+  it("offers nothing while it does not know, or when the store is empty", () => {
+    expect(block({ kind: "checking" })).toBe("");
+    expect(block({ kind: "none" })).toBe("");
+  });
+
+  it("says a failed check in an alert, with a retry and no offer", () => {
+    const html = block({ kind: "failed" });
+    expect(alerts(html)).toEqual([
+      "Impossible de savoir si votre compte a encore des données sur le serveur.",
+    ]);
+    expect(button(html, "Réessayer")).not.toBeNull();
+    expect(button(html, OFFER)).toBeNull();
+  });
+
+  it("drops the alert during a retry, so that a second failure is read out", () => {
+    const html = block({ kind: "retrying" });
+    expect(alerts(html)).toEqual([]);
+    expect(button(html, "Réessayer")).toContain('aria-disabled="true"');
+  });
+
+  it("says the deletion is done, and offers it no more", () => {
+    const html = block({ kind: "deleted" });
+    expect(statuses(html)).toEqual(["Les données du serveur sont supprimées."]);
+    expect(button(html, OFFER)).toBeNull();
+  });
+
+  it("asks first, warns that the data may be lost, and starts on « Annuler »", () => {
+    const html = dialog();
+    const shown = text(html);
+
+    expect(shown).toContain("Supprimer les données du serveur ?");
+    expect(shown).toContain("Vos données seront supprimées du serveur, pour tous vos appareils.");
+    expect(shown).toContain("Elles ne sont peut-être pas toutes sur cet appareil.");
+    expect(shown).toContain("téléchargez d'abord vos données, dans « Mes données »");
+    expect(shown).toContain(
+      "La loi française nous demande de garder 1 an la trace de chaque envoi et de cette suppression.",
+    );
+    expect(shown).not.toContain("Elles restent sur cet appareil");
+    expect(button(html, "Annuler")).toContain("data-autofocus");
+    expect(button(html, "Supprimer")).toContain("border-danger");
+  });
+
+  it("reads a refused deletion in an alert inside the dialog", () => {
+    expect(alerts(dialog({ problem: "Échec." }))).toEqual(["Échec."]);
+    const working = dialog({ working: true });
+    expect(statuses(working)).toEqual(["Suppression sur le serveur…"]);
+    expect(button(working, "Supprimer")).toContain('aria-disabled="true"');
+  });
+
+  it("reads in English", () => {
+    expect(button(block({ kind: "held" }, "en"), "Delete the data from the server")).not.toBeNull();
+    expect(alerts(block({ kind: "failed" }, "en"))).toEqual([
+      "We could not check whether your account still has data on the server.",
+    ]);
+    expect(statuses(block({ kind: "deleted" }, "en"))).toEqual([
+      "The data on the server is deleted.",
+    ]);
+    const shown = text(dialog({}, "en"));
+    expect(shown).toContain("Delete the data from the server?");
+    expect(shown).toContain("Not all of it may be on this device.");
+    expect(shown).toContain(
+      "French law asks us to keep a record of each upload and of this deletion for 1 year.",
     );
   });
 });

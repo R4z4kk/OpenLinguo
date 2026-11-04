@@ -1,12 +1,13 @@
 import { SYNC_LIMITS } from "@openlinguo/core/sync";
 import { liveQuery } from "dexie";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { isShown, toShown, useSyncText, type ShownFailure } from "@/components/sync-text";
 import type { Session } from "@/data/account";
 import { database, type SyncState } from "@/data/database";
+import { deleteStore, holdsChunks } from "@/data/sync-client";
 import { turnOff, turnOn, type SyncFailure } from "@/data/sync";
 import { requestSync, resetSyncView, useSyncView, type SyncView } from "@/shell/use-sync";
 
@@ -112,6 +113,7 @@ export const SyncPanel = ({
   onActivate,
   onSyncNow,
   onTurnOff,
+  serverData,
 }: {
   readonly mode: SyncMode;
   readonly view: SyncView;
@@ -122,6 +124,7 @@ export const SyncPanel = ({
   readonly onActivate: () => void;
   readonly onSyncNow: () => void;
   readonly onTurnOff: () => void;
+  readonly serverData: ReactNode;
 }) => {
   const { t } = useTranslation("auth");
   const text = useSyncText();
@@ -209,6 +212,7 @@ export const SyncPanel = ({
           <div>{activate(t("sync.activateHere"))}</div>
         </div>
       )}
+      {(mode.kind === "off" || mode.kind === "other-account") && serverData}
     </section>
   );
 };
@@ -229,29 +233,39 @@ export const SyncPausedNotice = ({ mode }: { readonly mode: SyncMode }) => {
 /** A session that ended stops sync: the signed-out page says so rather than leave it silent. */
 export const SyncPaused = () => <SyncPausedNotice mode={useSyncMode(null).mode} />;
 
-/** The confirmation of the mockups: first focus on « Annuler », the deletion said in full. */
-export const TurnOffDialog = ({
-  working,
-  problem,
-  onClose,
-  onConfirm,
-}: {
+type DeletionProps = {
   readonly working: boolean;
   readonly problem: string | null;
   readonly onClose: () => void;
   readonly onConfirm: (close: () => void) => void;
+};
+
+/** The confirmation of the mockups: first focus on « Annuler », the deletion said in full. */
+const DeletionConfirmation = ({
+  title,
+  body,
+  notes,
+  confirm,
+  working,
+  problem,
+  onClose,
+  onConfirm,
+}: DeletionProps & {
+  readonly title: string;
+  readonly body: string;
+  readonly notes: readonly string[];
+  readonly confirm: string;
 }) => {
   const { t } = useTranslation("auth");
   return (
-    <Dialog
-      title={t("sync.offTitle")}
-      description={t("sync.offBody")}
-      sheet={null}
-      onClose={onClose}
-    >
+    <Dialog title={title} description={body} sheet={null} onClose={onClose}>
       {(close) => (
         <>
-          <p className="mt-3">{t("sync.offLaw")}</p>
+          {notes.map((note) => (
+            <p key={note} className="mt-3">
+              {note}
+            </p>
+          ))}
           {problem !== null && (
             <p role="alert" className="mt-4 text-danger">
               {problem}
@@ -268,7 +282,7 @@ export const TurnOffDialog = ({
                 onConfirm(close);
               }}
             >
-              {t("sync.offConfirm")}
+              {confirm}
             </Button>
           </div>
           <p role="status" className="mt-3 text-small">
@@ -277,6 +291,167 @@ export const TurnOffDialog = ({
         </>
       )}
     </Dialog>
+  );
+};
+
+export const TurnOffDialog = (props: DeletionProps) => {
+  const { t } = useTranslation("auth");
+  return (
+    <DeletionConfirmation
+      title={t("sync.offTitle")}
+      body={t("sync.offBody")}
+      notes={[t("sync.offLaw")]}
+      confirm={t("sync.offConfirm")}
+      {...props}
+    />
+  );
+};
+
+/** Unlike a turn-off, the data may not be on this device: the confirmation says it can be lost. */
+export const ServerDataDialog = (props: DeletionProps) => {
+  const { t } = useTranslation("auth");
+  return (
+    <DeletionConfirmation
+      title={t("sync.server.askTitle")}
+      body={t("sync.server.askBody")}
+      notes={[t("sync.server.askLoss"), t("sync.server.askLaw")]}
+      confirm={t("sync.server.confirm")}
+      {...props}
+    />
+  );
+};
+
+/** What the store of the account holds, as far as this device knows. */
+export type ServerData = {
+  readonly kind: "checking" | "none" | "held" | "failed" | "retrying" | "deleted";
+};
+
+/** The block under the section: its heading stays when the button that was pressed goes. */
+export const ServerDataBlock = ({
+  state,
+  headingRef,
+  onErase,
+  onRetry,
+}: {
+  readonly state: ServerData;
+  readonly headingRef: RefObject<HTMLHeadingElement | null>;
+  readonly onErase: () => void;
+  readonly onRetry: () => void;
+}) => {
+  const { t } = useTranslation("auth");
+  if (state.kind === "checking" || state.kind === "none") return null;
+  return (
+    <div className="mt-6 border-t border-hairline pt-4">
+      <h3 ref={headingRef} tabIndex={-1} className="font-semibold">
+        {t("sync.server.title")}
+      </h3>
+      {state.kind === "held" && (
+        <>
+          <p className="mt-1">{t("sync.server.body")}</p>
+          <div className="mt-3">
+            <Button variant="danger" onClick={onErase}>
+              {t("sync.server.erase")}
+            </Button>
+          </div>
+        </>
+      )}
+      {state.kind === "deleted" && (
+        <p role="status" className="mt-1">
+          {t("sync.server.erased")}
+        </p>
+      )}
+      {state.kind === "failed" && (
+        <p role="alert" className="mt-1 text-danger">
+          {t("sync.server.checkFailed")}
+        </p>
+      )}
+      {(state.kind === "failed" || state.kind === "retrying") && (
+        <div className="mt-3">
+          <Button variant="outline" aria-disabled={state.kind === "retrying"} onClick={onRetry}>
+            {t("retry")}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const readServerData = async (): Promise<ServerData> => {
+  const held = await holdsChunks();
+  if (!held.ok) return { kind: "failed" };
+  return { kind: held.value ? "held" : "none" };
+};
+
+/** Mounted while sync is off here, so turning it off again asks the server again (ADR 0016). */
+const AccountServerData = ({
+  sectionHeading,
+}: {
+  readonly sectionHeading: RefObject<HTMLHeadingElement | null>;
+}) => {
+  const { t } = useTranslation("auth");
+  const heading = useRef<HTMLHeadingElement>(null);
+  const [state, setState] = useState<ServerData>({ kind: "checking" });
+  const [asking, setAsking] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  useEffect(() => {
+    let current = true;
+    void readServerData().then((read) => {
+      if (current) setState(read);
+    });
+    return () => {
+      current = false;
+    };
+  }, []);
+
+  const retry = async () => {
+    if (state.kind === "retrying") return;
+    setState({ kind: "retrying" });
+    const read = await readServerData();
+    setState(read);
+    // « Réessayer » goes unless the check failed again; an empty store takes the whole block.
+    if (read.kind === "none") sectionHeading.current?.focus();
+    if (read.kind === "held") heading.current?.focus();
+  };
+
+  const erase = async (close: () => void) => {
+    if (deleting) return;
+    setDeleting(true);
+    setProblem(null);
+    const deleted = await deleteStore();
+    setDeleting(false);
+    if (!deleted.ok) {
+      setProblem(t("sync.server.refused"));
+      return;
+    }
+    setState({ kind: "deleted" });
+    close();
+    heading.current?.focus();
+  };
+
+  return (
+    <>
+      <ServerDataBlock
+        state={state}
+        headingRef={heading}
+        onErase={() => {
+          setProblem(null);
+          setAsking(true);
+        }}
+        onRetry={() => void retry()}
+      />
+      {asking && (
+        <ServerDataDialog
+          working={deleting}
+          problem={problem}
+          onClose={() => {
+            setAsking(false);
+          }}
+          onConfirm={(close) => void erase(close)}
+        />
+      )}
+    </>
   );
 };
 
@@ -347,6 +522,7 @@ export const AccountSync = ({ session }: { readonly session: Session }) => {
           setOffProblem(null);
           setAsking(true);
         }}
+        serverData={<AccountServerData sectionHeading={heading} />}
       />
       {asking && (
         <TurnOffDialog

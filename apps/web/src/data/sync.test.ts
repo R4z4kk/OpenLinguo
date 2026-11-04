@@ -15,6 +15,7 @@ import { deckWordId, MY_WORDS, openDatabase, type Database, type StoredNote } fr
 import { deleteDeck, fileWord, putCards } from "./decks.ts";
 import { recordReview } from "./review-log.ts";
 import { decodeChunk, SYNC_FORMAT, SYNC_VERSION } from "./sync-chunk.ts";
+import { holdsChunks } from "./sync-client.ts";
 import { SYNCED_TABLES } from "./sync-entities.ts";
 import { clearWhenOff, forgetSync, syncNow, turnOff, turnOn } from "./sync.ts";
 import { seedLearning } from "./test-support.ts";
@@ -836,6 +837,27 @@ describe("turnOff", () => {
     expect(result).toEqual({ ok: false, error: { kind: "api", failure: { kind: "offline" } } });
     expect(await a.syncState.get("state")).toBeDefined();
     expect(await a.syncEntities.count()).toBe(rows);
+  });
+});
+
+describe("holdsChunks", () => {
+  it("answers true for an account with chunks, from a device with sync off", async () => {
+    const a = await device();
+    await learn(a, 100);
+    await sync(a);
+    const stored = store.chunks.length;
+
+    expect(await holdsChunks()).toEqual({ ok: true, value: true });
+    expect(store.chunks).toHaveLength(stored);
+  });
+
+  it("answers false for an empty store", async () => {
+    expect(await holdsChunks()).toEqual({ ok: true, value: false });
+  });
+
+  it("gives the failure rather than an answer", async () => {
+    store.offline = true;
+    expect(await holdsChunks()).toEqual({ ok: false, error: { kind: "offline" } });
   });
 });
 

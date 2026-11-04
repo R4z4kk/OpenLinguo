@@ -93,7 +93,7 @@ export const authFr: AuthMessages = {
       off: "Si vous désactivez la synchronisation, elles sont supprimées du serveur.",
       edited:
         "Une note modifiée ou supprimée reste sur le serveur jusqu’à ce que vous désactiviez la synchronisation.",
-      law: "La loi française nous fait garder des traces : l’adresse IP de chaque envoi et de chaque désactivation pendant 1 an et, après la suppression du compte, votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an.",
+      law: "La loi française nous fait garder des traces : l’adresse IP de chaque envoi et de chaque suppression pendant 1 an et, après la suppression du compte, votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an.",
     },
     activate: "Activer la synchronisation",
     activating: "Activation de la synchronisation…",
@@ -120,6 +120,23 @@ export const authFr: AuthMessages = {
     offWorking: "Suppression sur le serveur…",
     offFailed:
       "La synchronisation n’a pas pu être désactivée et reste activée. Réessayez plus tard.",
+    server: {
+      title: "Vos données sur le serveur",
+      body: "Votre compte a encore des données sur le serveur, envoyées par un de vos appareils. Vous pouvez les supprimer sans activer la synchronisation ici.",
+      erase: "Supprimer les données du serveur",
+      erased: "Les données du serveur sont supprimées.",
+      checkFailed: "Impossible de savoir si votre compte a encore des données sur le serveur.",
+      askTitle: "Supprimer les données du serveur ?",
+      askBody:
+        "Vos données seront supprimées du serveur, pour tous vos appareils. Vos appareils encore synchronisés s’arrêteront et vous le diront.",
+      askLoss:
+        "Elles ne sont peut-être pas toutes sur cet appareil. Si vous n’avez plus l’appareil qui les a envoyées, elles seront perdues. Pour en garder une copie, téléchargez d’abord vos données, dans « Mes données ».",
+      askLaw:
+        "La loi française nous demande de garder 1 an la trace de chaque envoi et de cette suppression.",
+      confirm: "Supprimer",
+      refused:
+        "Les données n’ont pas pu être supprimées et restent sur le serveur. Réessayez plus tard.",
+    },
     paused: "La synchronisation est en pause : connectez-vous pour la reprendre.",
     otherAccount:
       "Cet appareil était synchronisé avec un autre compte : la synchronisation est coupée. Si vous l’activez ici, tout ce qui se trouve sur cet appareil, y compris ce qui vient de l’autre compte, rejoindra ce compte.",
