@@ -28,7 +28,7 @@ The 72 hours run from step 1: note the time you became aware.
    - the likely consequences;
    - the measures taken or proposed, including mitigation.
 6. **Inform the people affected without undue delay if the risk is high** (art. 34(1)), with the notice below. When unsure, notify the CNIL, which can indicate whether people must be informed.
-7. **Restore** if data was destroyed or altered: `wrangler d1 time-travel restore openlinguo --bookmark=<bookmark>`. It loses what was written after the bookmark. The next daily job applies recent erasures again (#277). Then delete every chunk, after the export: `wrangler d1 execute openlinguo --remote --command "DELETE FROM sync_chunk"`. A turn-off of sync made after the bookmark is not in the erasure log, so that store has come back, and a restore hands out chunk ids again that devices' cursors have passed, so they would skip new chunks. With the store empty, every device stops and says sync was turned off, and it sends everything again once turned on. Say so in the notice to the people affected.
+7. **Restore** if data was destroyed or altered: follow [Restoring a backup](../../apps/api/README.md#restoring-a-backup), with `--bookmark=<bookmark>` in place of `--timestamp`. It saves and puts back the erasure log (#277) and deletes every sync chunk. It loses what was written after the bookmark. Learners who sync have to turn it on again: say so in the notice to the people affected.
 8. **Review.** Root cause, fix, and update the [data map](data-map.md), [records](records-of-processing.md) or security measures as needed.
 
 ## Take the API offline

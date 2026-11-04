@@ -74,6 +74,7 @@ describe("the section while sync is off", () => {
       "Ce qui part sur le serveur",
       "Ce qui reste sur cet appareil",
       "seront fusionnées",
+      "Une note modifiée ou supprimée reste sur le serveur jusqu'à ce que vous désactiviez la synchronisation.",
       "l'administrateur d'OpenLinguo pourrait les lire",
       "l'adresse IP de chaque envoi pendant 1 an",
       "votre e-mail pendant 5 ans et votre pseudonyme pendant 1 an",
@@ -100,6 +101,9 @@ describe("the section while sync is off", () => {
     expect(shown).toContain("the IP address of each upload for 1 year");
     expect(shown).toContain("OpenLinguo's administrator could read it");
     expect(shown).toContain("will be merged");
+    expect(shown).toContain(
+      "A note you edit or delete stays on the server until you turn sync off.",
+    );
     expect(shown).toContain("Start syncing");
   });
 
@@ -311,10 +315,10 @@ describe("the account deletion screen", () => {
 
   it("always says what survives if the account has synced", () => {
     expect(deletion("fr")).toContain(
-      "Si vous avez utilisé la synchronisation, vos données synchronisées sont supprimées, mais la loi française nous fait garder votre e-mail pendant 5 ans, votre pseudonyme pendant 1 an, et la trace de chaque envoi pendant 1 an. Ils ne servent qu'à répondre à une autorité.",
+      "Si vous avez utilisé la synchronisation, vos données synchronisées sont supprimées, mais la loi française nous fait garder votre e-mail pendant 5 ans, votre pseudonyme pendant 1 an, et la trace de chaque envoi pendant 1 an. Ils ne sont donnés qu'à une autorité qui les demande par écrit selon la loi, ou à vous si vous les demandez.",
     );
     expect(deletion("en")).toContain(
-      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year.",
+      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year. They are only given to an authority that asks in writing under the law, or to you if you ask for them.",
     );
   });
 });

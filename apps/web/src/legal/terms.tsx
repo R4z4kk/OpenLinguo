@@ -269,7 +269,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "It is optional and needs an account. Without it, everything keeps working on your device.",
               "The server keeps your synced data for your other devices, until you turn sync off or the account is deleted. The Privacy page says what goes, who could read it and what the law makes us keep.",
               "« Turn off and delete from the server » deletes it for all your devices. It stays on your devices.",
-              `Your space is ${String(SYNC_SPACE_MB)} MB, with a limited number of uploads per hour. If the space or the server is full, your new changes no longer go, but nothing is lost on your device.`,
+              `Your space is ${String(SYNC_SPACE_MB)} MB, with a limited number of uploads per hour. If the space or the server is full, your new changes are no longer sent, but nothing is lost on your device.`,
               "It does not replace a backup file: if the server loses your data, only your devices still have it.",
             ]}
           />

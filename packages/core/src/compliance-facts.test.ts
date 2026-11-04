@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   CONTACT_EMAIL,
   D1_FREE_DATABASE_SIZE,
+  DATA_RETENTION_INJUNCTION,
   DEPLOY_TOKEN,
   DPF_STATUS,
   DPIA_REVIEW,
@@ -39,6 +40,16 @@ describe("compliance facts", () => {
     expect(Date.parse(DEPLOY_TOKEN.value) - Date.parse(DEPLOY_TOKEN.checkedOn)).toBeLessThanOrEqual(
       366 * DAY,
     );
+  });
+
+  test("the data retention injunction is read again a month before it ends: find the décret that renews it, update docs/compliance/dpia.md, then move value, source, checkedOn and reviewBy", () => {
+    expect(Date.now()).toBeLessThan(Date.parse(DATA_RETENTION_INJUNCTION.reviewBy));
+    expect(Date.parse(DATA_RETENTION_INJUNCTION.reviewBy)).toBeLessThan(
+      Date.parse(DATA_RETENTION_INJUNCTION.value),
+    );
+    expect(
+      Date.parse(DATA_RETENTION_INJUNCTION.value) - Date.parse(DATA_RETENTION_INJUNCTION.checkedOn),
+    ).toBeLessThanOrEqual(366 * DAY);
   });
 
   test("the D1 size limit is read again within a year: check the D1 limits page, then move checkedOn and reviewBy", () => {

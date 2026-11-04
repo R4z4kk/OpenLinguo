@@ -68,6 +68,7 @@ const Explanation = () => {
           <li>{t("sync.know.merge")}</li>
           <li>{t("sync.know.readable")}</li>
           <li>{t("sync.know.off")}</li>
+          <li>{t("sync.know.edited")}</li>
           <li>{t("sync.know.law")}</li>
         </ul>
       </div>

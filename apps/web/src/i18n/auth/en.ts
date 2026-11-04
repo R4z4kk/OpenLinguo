@@ -5,7 +5,8 @@ export const authEn = {
   account: "Account",
   signIn: "Sign in",
   back: "Back to the account",
-  intro: "An account lets you send texts to the shared library. Everything else works without one.",
+  intro:
+    "Learning needs no account. An account lets you send texts to the shared library and sync your devices.",
   email: "Email address",
   emailInvalid: "Enter an email address, such as name@example.org.",
   getCode: "Get a code",
@@ -61,7 +62,7 @@ export const authEn = {
   data: {
     title: "My data",
     intro:
-      "Everything the server holds about your account, in one JSON file: the account, how it signs in, its sessions, the texts you sent, the decisions on them, the security events and, if you used sync, your synced data. Your learning data stays on this device: Profile › Data saves it.",
+      "A JSON file with your account, how it signs in, its sessions, the texts you sent, the decisions on them, the security events and, if you used sync, your synced data. The records the law makes us keep (the IP address and time of each upload) are not in it: ask us for them at openlinguo@gmail.com. To back up your learning data on this device: Profile › Data.",
     download: "Download my data (.json)",
     downloading: "Preparing the file…",
     downloaded: "File saved: {{name}}",
@@ -85,6 +86,7 @@ export const authEn = {
       readable:
         "It is not encrypted end to end, so OpenLinguo’s administrator could read it. They only do so for an incident or an official request.",
       off: "If you turn sync off, it is deleted from the server.",
+      edited: "A note you edit or delete stays on the server until you turn sync off.",
       law: "French law makes us keep records: the IP address of each upload for 1 year and, after the account is deleted, your email for 5 years and your pseudonym for 1 year.",
     },
     activate: "Start syncing",
@@ -154,7 +156,7 @@ export const authEn = {
     keptTitle: "What the law makes us keep",
     kept: "If you sent texts to the library, French law (décret 2021-1362) makes us keep your email for 5 years and your pseudonyms for 1 year, locked away: only authorities entitled by law can ask for them. The address and time of each change to your texts are kept for 1 year.",
     keptSync:
-      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year. They are only used to answer an authority.",
+      "If you used sync, your synced data is deleted, but French law makes us keep your email for 5 years, your pseudonym for 1 year, and the record of each upload for 1 year. They are only given to an authority that asks in writing under the law, or to you if you ask for them.",
     cancel: "Cancel",
     confirm: "Delete for good",
     deleting: "Deleting your account…",

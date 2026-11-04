@@ -286,10 +286,10 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               restent après la suppression du compte, comme l’écran de suppression le dit.
             </Paragraph>
             <Paragraph>
-              Le texte ne dit pas clairement s’il vise ce qui est stocké en privé, comme la
-              synchronisation. La sanction est pénale : nous l’appliquons donc aussi à la
-              synchronisation. Vos données synchronisées elles-mêmes sont supprimées, seules ces
-              traces restent.
+              Le décret ne dit pas clairement s’il vise aussi ce qui reste privé, comme la
+              synchronisation. Ne pas l’appliquer pourrait être puni par la loi : par prudence, nous
+              l’appliquons. Vos données synchronisées elles-mêmes sont supprimées, seules ces traces
+              restent.
             </Paragraph>
           </>
         ),
@@ -681,9 +681,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               deletion screen says.
             </Paragraph>
             <Paragraph>
-              The text does not say clearly whether it covers what is stored privately, like sync.
-              The penalty is criminal, so we apply it to sync too. Your synced data itself is
-              deleted; only these records stay.
+              The decree does not say clearly whether it also covers what stays private, like sync.
+              Not applying it could be punished by law: to be careful, we apply it. Your synced data
+              itself is deleted; only these records stay.
             </Paragraph>
           </>
         ),
