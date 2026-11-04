@@ -138,7 +138,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
   - No mandatory time limits: timed typing challenges adjustable or disableable (SC 2.2.1).
   - Targets ≥ 24×24 px (SC 2.5.8), visible unobscured focus (SC 2.4.7 / 2.4.11), reflow at 320 px and 200% text.
   - All audio has a text equivalent; animations respect reduced motion.
-- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), manual keyboard + NVDA + VoiceOver checklist per milestone.
+- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), E2E checks of the language of Chinese text, reflow at 320 px, reduced motion and keyboard focus; no manual assistive-technology testing.
 - Accessibility statement page published at v1 (conformance level, known gaps, contact).
 
 ## Privacy & compliance (GDPR, AI Act)
@@ -225,9 +225,9 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M9 — dropped.** The English pack will not be built: the project focuses on Mandarin (2026-11-03, [ADR 0003](adr/0003-languagepack-capabilities.md)).
 
-**M10 — v1.0 hardening.** Manual accessibility audit (keyboard, NVDA, VoiceOver) + published accessibility statement, GDPR review of docs vs implementation, performance (dataset load time, bundle), FSRS parameter optimization (optional), CONTRIBUTING, contributor PR gates (fork-run approval, OpenSSF Scorecard, CODEOWNERS on workflows/pipeline/lockfile), docs, release v1.0.0.
+**M10 — v1.0 hardening.** Automated accessibility checks beyond axe + a short published accessibility statement (automated testing only), GDPR review of docs vs implementation, performance (dataset load time, bundle), CONTRIBUTING, contributor PR gates (fork-run approval, OpenSSF Scorecard, CODEOWNERS on workflows/pipeline/lockfile), docs, release v1.0.0.
 
-**Post-v1.** Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle. Other languages only as contributed packages.
+**Post-v1.** FSRS parameter optimization (needs real review data), Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle. Other languages only as contributed packages.
 
 ## Risks
 
