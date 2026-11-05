@@ -311,6 +311,47 @@ describe("notices in /api/admin", () => {
     expect(await statusOf(id)).toBe("removed");
   });
 
+  it("removes the text on the admin's own initiative: it decides the open notices and tells each notifier", async () => {
+    const id = await published();
+    const kept = await noticed(id, { name: "Zhang", email: "zhang@example.test" });
+    await noticed(id, { reason: "child-sexual-abuse", name: null, email: null });
+    const admin = await signedInAdmin();
+    await call(
+      `/api/admin/notices/${kept.id}/keep`,
+      { reply: "Le texte est libre de droits." },
+      admin,
+    );
+    await noticed(id);
+    mailer = memoryMailer();
+    sendMail = mailer.sendMail;
+    const removed = await call(`/api/admin/submissions/${id}/remove`, statement, admin);
+    expect(removed.status).toBe(201);
+    const decided = NoticeDecided.parse(await removed.json());
+    expect(decided.unsent).toEqual([]);
+    expect(decided.statement).toMatchObject({ measure: "removed", source: "own-initiative" });
+    expect(await statusOf(id)).toBe("removed");
+    const rows = await db.select().from(notice);
+    expect(rows.map(({ outcome }) => outcome)).toEqual(["kept", "removed", "removed"]);
+    expect(rows.slice(1).every(({ reply }) => reply === statement.explanation)).toBe(true);
+    expect(mailer.sent.map(({ to }) => to)).toEqual(["learner@example.test", "lin@example.test"]);
+    expect(mailer.sent[1]?.text).toContain("a été retiré");
+  });
+
+  it("names the notifier whose mail fails when the admin removes a text on their own", async () => {
+    const id = await published();
+    await noticed(id);
+    const admin = await signedInAdmin();
+    sendMail = (mail) =>
+      mail.to === "lin@example.test"
+        ? Promise.resolve(err({ kind: "rejected", message: "mailbox full" }))
+        : mailer.sendMail(mail);
+    const removed = await call(`/api/admin/submissions/${id}/remove`, statement, admin);
+    expect(removed.status).toBe(201);
+    expect(NoticeDecided.parse(await removed.json()).unsent).toEqual(["lin@example.test"]);
+    expect(await statusOf(id)).toBe("removed");
+    expect((await db.select().from(notice))[0]?.outcome).toBe("removed");
+  });
+
   it("changes nothing when the statement of reasons cannot be mailed", async () => {
     const id = await published();
     const { id: noticeId } = await noticed(id);
