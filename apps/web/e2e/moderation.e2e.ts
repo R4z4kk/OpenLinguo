@@ -84,7 +84,7 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
       automated: false,
       decidedAt: new Date().toISOString(),
     };
-    await json(route, 201, decided);
+    await json(route, 201, measure === "removed" ? { unsent: [], statement: decided } : decided);
   });
   return api;
 };
