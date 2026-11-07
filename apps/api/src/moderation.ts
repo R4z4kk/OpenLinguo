@@ -177,6 +177,44 @@ export const moderationRoutes = (
     return unsent;
   };
 
+  /** 16(5): removing a text decides its open notices and tells each notifier, whoever started it. */
+  const removeText = async (
+    c: Context<Routes>,
+    submissionId: string,
+    title: string,
+    source: (typeof DECISION_SOURCES)[number],
+  ): Promise<Response | NoticeDecided> => {
+    const db = database(c.env.DB);
+    const open = and(eq(notice.submissionId, submissionId), isNull(notice.outcome));
+    const notified = await db
+      .select({ id: notice.id, email: notice.email, reason: notice.reason })
+      .from(notice)
+      .where(open);
+    const decided = await restrict(
+      c,
+      submissionId,
+      "approved",
+      "removed",
+      source,
+      (decidedAt, reply) => [
+        db.update(notice).set({ outcome: "removed", reply, decidedAt }).where(open),
+      ],
+    );
+    if (decided instanceof Response) return decided;
+    const unsent: string[] = [];
+    for (const one of notified) {
+      unsent.push(
+        ...(await tellNotifiers(
+          c,
+          [one],
+          { title, reason: one.reason },
+          { outcome: "removed", reply: decided.explanation },
+        )),
+      );
+    }
+    return { unsent, statement: decided };
+  };
+
   const findNotice = async (c: Context<Routes>) => {
     const [found] = await database(c.env.DB)
       .select(noticeColumns)
@@ -260,7 +298,15 @@ export const moderationRoutes = (
         return c.body(null, 204);
       })
       .post("/submissions/:id/reject", (c) => own(c, "pending", "rejected"))
-      .post("/submissions/:id/remove", (c) => own(c, "approved", "removed"))
+      .post("/submissions/:id/remove", async (c) => {
+        const id = c.req.param("id");
+        const [text] = await database(c.env.DB)
+          .select({ title: submission.title })
+          .from(submission)
+          .where(eq(submission.id, id));
+        const removed = await removeText(c, id, text?.title ?? "", "own-initiative");
+        return removed instanceof Response ? removed : c.json(removed, 201);
+      })
       .get("/notices", async (c) => {
         const rows = await database(c.env.DB)
           .select(noticeColumns)
@@ -301,30 +347,8 @@ export const moderationRoutes = (
         const found = await findNotice(c);
         if (!found) return c.json(refusal("NOT_FOUND", "No such notice"), 404);
         if (found.outcome !== null) return c.json(DECIDED, 409);
-        const db = database(c.env.DB);
-        const open = and(eq(notice.submissionId, found.submissionId), isNull(notice.outcome));
-        const notified = await db
-          .select({ id: notice.id, email: notice.email })
-          .from(notice)
-          .where(open);
-        const decided = await restrict(
-          c,
-          found.submissionId,
-          "approved",
-          "removed",
-          "notice",
-          (decidedAt, reply) => [
-            db.update(notice).set({ outcome: "removed", reply, decidedAt }).where(open),
-          ],
-        );
-        if (decided instanceof Response) return decided;
-        const unsent = await tellNotifiers(
-          c,
-          notified,
-          { title: found.title, reason: found.reason },
-          { outcome: "removed", reply: decided.explanation },
-        );
-        return c.json({ unsent, statement: decided } satisfies NoticeDecided, 201);
+        const removed = await removeText(c, found.submissionId, found.title, "notice");
+        return removed instanceof Response ? removed : c.json(removed, 201);
       })
   );
 };

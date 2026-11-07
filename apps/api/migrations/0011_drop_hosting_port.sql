@@ -1,0 +1,1 @@
+ALTER TABLE `hosting_record` DROP COLUMN `port`;

@@ -46,7 +46,17 @@ Access, rectification, erasure, restriction, objection, portability (GDPR arts 1
    For a deleted account, the identity kept under décret 2021-1362:
 
    ```bash
-   wrangler d1 execute openlinguo --remote --json --command "SELECT email, pseudonyms, datetime(email_until / 1000, 'unixepoch') AS until FROM sealed_identity WHERE email = 'person@example.org'"
+   wrangler d1 execute openlinguo --remote --json --command "SELECT user_id, email, pseudonyms, datetime(email_until / 1000, 'unixepoch') AS until FROM sealed_identity WHERE email = 'person@example.org'"
+   ```
+
+   The `user_id` it returns is the `<id>` of the `hosting_record` query above. To start from a text or a pseudonym instead of an email:
+
+   ```bash
+   wrangler d1 execute openlinguo --remote --json --command "SELECT user_id, operation, ip_address, protocol, datetime(created_at / 1000, 'unixepoch') AS at FROM hosting_record WHERE submission_id = '<text id>'"
+   ```
+
+   ```bash
+   wrangler d1 execute openlinguo --remote --json --command "SELECT id AS account_id, email FROM user WHERE name = '<pseudonym>' UNION ALL SELECT user_id, email FROM sealed_identity WHERE pseudonyms LIKE '%\"<pseudonym>\"%'"
    ```
 
    The hosting records and the sealed identity rest on a legal obligation: they are given on an access request, but not erased or opposed before their end date (GDPR art. 17(3)(b), art. 21 does not apply).
@@ -106,7 +116,7 @@ For the data of `hosting_record` and `sealed_identity` (LCEN art. 6 V.A, décret
 
 1. **Only a written requisition** from a judicial authority (a magistrate, or an officer of the judicial police acting on a requisition), or from another authority that cites the law giving it access. Nothing on a phone call or an email without a requisition, however urgent it sounds.
 2. **Check it**: the legal basis it cites, that it names the data and the account or the text concerned, and its origin. Call the service back on its official number, never on one given in the message.
-3. **Export only what is asked**, for the period asked, with the queries of section 2 filtered on the account or the text and the dates. Synced data is given only if the requisition names it. Save the output to an encrypted file and send it by the channel the authority gives. Delete the local copy once it is received.
+3. **Export only what is asked**, for the period asked, with the queries of section 2 (item 3) filtered on the account or the text and the dates. Synced data is given only if the requisition names it. Save the output to an encrypted file and send it by the channel the authority gives. Delete the local copy once it is received.
 4. Keep the requisition and the answer in the mailbox. If either went through another channel, mail yourself a note: date, authority, reference of the requisition, legal basis, data given, date sent.
 5. Removal orders (24 hours, 1 hour for terrorist content) follow the [moderation runbook](moderation.md), section 4.
 

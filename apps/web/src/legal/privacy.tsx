@@ -1,6 +1,16 @@
 import { DPF_STATUS, PROCESSOR_FACTS } from "@openlinguo/core/compliance-facts";
 import type { Language } from "@/i18n/language";
-import { Contact, External, List, Paragraph, Table, type LegalDocument } from "./legal-page";
+import {
+  Contact,
+  External,
+  List,
+  Paragraph,
+  REPOSITORY,
+  Table,
+  type LegalDocument,
+} from "./legal-page";
+
+const HISTORY = `${REPOSITORY}/commits/main/apps/web/src/legal/privacy.tsx`;
 
 const CNIL_COMPLAINT = "https://www.cnil.fr/fr/plaintes";
 const DECREE = "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000044228912";
@@ -70,7 +80,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               Ce stockage est strictement nécessaire au service que vous demandez, il n’a donc pas
               besoin de votre consentement (loi Informatique et Libertés, art. 82). Quand vous êtes
-              connecté, un cookie de session sert seulement à vous garder connecté.
+              connecté, un cookie de session sert seulement à vous garder connecté. Pendant une
+              connexion avec Google ou GitHub, un cookie de dix minutes au plus protège l’échange.
+              Il n’y a aucun autre cookie.
             </Paragraph>
             <Paragraph>
               Pour afficher l’application, Cloudflare, notre hébergeur, voit votre adresse IP comme
@@ -279,8 +291,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             </Paragraph>
             <List
               items={[
-                "pour chaque envoi, modification ou retrait d’un texte : l’adresse IP et l’heure, un an ;",
-                "pour chaque envoi à la synchronisation et chaque suppression de vos données synchronisées : l’adresse IP et l’heure, un an. Recevoir vos données sur un appareil ne laisse pas de trace ;",
+                "pour chaque envoi, modification ou retrait d’un texte : l’adresse IP, les versions HTTP et TLS de la connexion et l’heure, un an ;",
+                "pour chaque envoi à la synchronisation et chaque suppression de vos données synchronisées : l’adresse IP, les versions HTTP et TLS de la connexion et l’heure, un an. Recevoir vos données sur un appareil ne laisse pas de trace ;",
                 "si vous supprimez un compte qui a encore des textes, des données synchronisées ou l’une de ces traces : votre adresse e-mail, cinq ans, et votre pseudonyme, un an.",
               ]}
             />
@@ -304,12 +316,15 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         heading: "Journaux de sécurité",
         body: (
           <Paragraph>
-            Chaque connexion, échec, code envoyé et action d’administration est noté avec l’adresse
-            IP, le navigateur et l’heure, pour repérer les abus et les intrusions, pendant six mois.
-            Des compteurs limitent aussi le nombre de demandes, par adresse IP ou, pour la
-            synchronisation, par compte : ils sont effacés chaque jour une fois vieux d’une heure.
-            Base légale : notre intérêt légitime à protéger le service et vos comptes (RGPD, art.
-            6(1)(f)).
+            Chaque connexion, échec, code envoyé, code de l’authentificateur et action
+            d’administration est noté avec l’adresse IP, le navigateur et l’heure, pour repérer les
+            abus et les intrusions, pendant six mois, même si le compte est supprimé entre-temps (la
+            ligne n’est alors plus liée à un compte). Des compteurs limitent aussi le nombre de
+            demandes, par adresse IP ou, pour la synchronisation, par compte : ils sont effacés
+            chaque jour une fois vieux d’une heure. Un autre compteur limite à 10 par jour les codes
+            demandés pour une même adresse e-mail : il garde une empreinte de l’adresse, jamais
+            l’adresse, pendant 24 heures. Base légale : notre intérêt légitime à protéger le service
+            et vos comptes (RGPD, art. 6(1)(f)).
           </Paragraph>
         ),
       },
@@ -337,21 +352,27 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 "Compte",
                 "Jusqu’à sa suppression ; après 2 ans sans action, un e-mail, puis suppression 30 jours plus tard",
               ],
-              ["Compte sans réponse sur l’âge", "24 heures"],
-              ["Sessions, codes de connexion", "Jusqu’à leur expiration (codes : 10 minutes)"],
+              [
+                "Compte sans réponse sur l’âge",
+                "24 heures, effacé au passage quotidien suivant (2 jours au plus)",
+              ],
+              [
+                "Sessions, codes de connexion",
+                "Jusqu’à leur expiration (codes : 10 minutes), puis effacés au passage quotidien suivant",
+              ],
               ["Textes en attente ou refusés", "Supprimés avec le compte"],
               [
                 "Textes publiés",
-                "Tant qu’ils sont publiés ; à la suppression du compte, vous choisissez : garder avec votre nom, garder anonyme (par défaut) ou retirer",
+                "Tant qu’ils sont publiés ; à la suppression du compte, vous choisissez : garder avec votre nom, garder anonyme (par défaut) ou retirer ; si le compte est supprimé pour inactivité ou sur une demande envoyée par e-mail (parent, droits), les textes publiés restent anonymes",
               ],
               ["Décisions de modération, signalements", "1 an après la décision"],
               [
                 "Données synchronisées",
                 "Jusqu’à ce que vous les supprimiez ou que le compte soit supprimé",
               ],
-              ["Adresse IP et heure de chaque envoi de texte", "1 an"],
+              ["Adresse IP, versions HTTP et TLS et heure de chaque envoi de texte", "1 an"],
               [
-                "Adresse IP et heure de chaque envoi à la synchronisation et de chaque suppression de ces données",
+                "Adresse IP, versions HTTP et TLS et heure de chaque envoi à la synchronisation et de chaque suppression de ces données",
                 "1 an",
               ],
               [
@@ -359,6 +380,11 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 "E-mail 5 ans, pseudonyme 1 an",
               ],
               ["Journaux de sécurité", "6 mois"],
+              ["Empreinte de l’adresse e-mail des codes demandés", "24 heures"],
+              [
+                "Trace d’une suppression de compte (identifiant, choix pour les textes publiés, adresse IP, heure), pour la refaire après une restauration de sauvegarde",
+                "8 jours",
+              ],
               ["Sauvegardes de la base", `${String(backupDays)} jours`],
               ["Demandes par e-mail (droits, aide)", "Jusqu’à la réponse, puis 5 ans comme preuve"],
             ]}
@@ -431,8 +457,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         heading: "Changements",
         body: (
           <Paragraph>
-            Si cette page change sur un point important, l’application le dit avant que le
-            changement s’applique. La date en haut de la page est celle du dernier changement.
+            La date en haut de la page est celle du dernier changement, et l’historique de la page
+            est public : <External href={HISTORY}>chaque version avec sa date</External>. Si un
+            changement ne vous convient pas, vous pouvez supprimer votre compte à tout moment.
           </Paragraph>
         ),
       },
@@ -483,7 +510,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             <Paragraph>
               This storage is strictly necessary for the service you ask for, so it needs no consent
               (French Data Protection Act, art. 82). When you are signed in, a session cookie only
-              keeps you signed in.
+              keeps you signed in. During a sign-in with Google or GitHub, a cookie of ten minutes
+              at most protects the exchange. There is no other cookie.
             </Paragraph>
             <Paragraph>
               To show the app, Cloudflare, our host, sees your IP address like any website. We turn
@@ -677,8 +705,8 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
             </Paragraph>
             <List
               items={[
-                "for each submission, edit or withdrawal of a text: the IP address and the time, for one year;",
-                "for each sync upload and each deletion of your synced data: the IP address and the time, for one year. Receiving your data on a device leaves no record;",
+                "for each submission, edit or withdrawal of a text: the IP address, the HTTP and TLS versions of the connection and the time, for one year;",
+                "for each sync upload and each deletion of your synced data: the IP address, the HTTP and TLS versions of the connection and the time, for one year. Receiving your data on a device leaves no record;",
                 "if you delete an account that still has texts, synced data or one of these records: your email address for five years, and your pseudonym for one year.",
               ]}
             />
@@ -701,11 +729,14 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         heading: "Security logs",
         body: (
           <Paragraph>
-            Every sign-in, failure, code sent and admin action is logged with the IP address, the
-            browser and the time, to spot abuse and intrusions, for six months. Counters also limit
-            the number of requests, per IP address or, for sync, per account: they are erased every
-            day once an hour old. Legal basis: our legitimate interest in protecting the service and
-            your account (GDPR art. 6(1)(f)).
+            Every sign-in, failure, code sent, authenticator code and admin action is logged with
+            the IP address, the browser and the time, to spot abuse and intrusions, for six months,
+            even if the account is deleted meanwhile (the line is then no longer tied to an
+            account). Counters also limit the number of requests, per IP address or, for sync, per
+            account: they are erased every day once an hour old. Another counter limits the codes
+            asked for one email address to 10 a day: it keeps a fingerprint of the address, never
+            the address, for 24 hours. Legal basis: our legitimate interest in protecting the
+            service and your account (GDPR art. 6(1)(f)).
           </Paragraph>
         ),
       },
@@ -733,22 +764,36 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
                 "Account",
                 "Until deleted; after 2 years without action, an email, then deletion 30 days later",
               ],
-              ["Account with no answer about age", "24 hours"],
-              ["Sessions, sign-in codes", "Until they expire (codes: 10 minutes)"],
+              [
+                "Account with no answer about age",
+                "24 hours, erased by the next daily run (2 days at most)",
+              ],
+              [
+                "Sessions, sign-in codes",
+                "Until they expire (codes: 10 minutes), then erased by the next daily run",
+              ],
               ["Pending or rejected texts", "Deleted with the account"],
               [
                 "Published texts",
-                "While published; when you delete the account, you choose: keep with your name, keep as anonymous (default) or remove",
+                "While published; when you delete the account, you choose: keep with your name, keep as anonymous (default) or remove; if the account is deleted for inactivity or on a request sent by email (parent, rights), published texts stay anonymous",
               ],
               ["Moderation decisions, reports", "1 year after the decision"],
               ["Synced data", "Until you delete it or the account is deleted"],
-              ["IP address and time of each text submission", "1 year"],
-              ["IP address and time of each sync upload and each deletion of that data", "1 year"],
+              ["IP address, HTTP and TLS versions and time of each text submission", "1 year"],
+              [
+                "IP address, HTTP and TLS versions and time of each sync upload and each deletion of that data",
+                "1 year",
+              ],
               [
                 "Email and pseudonym of a deleted account that still has texts, synced data or a record",
                 "Email 5 years, pseudonym 1 year",
               ],
               ["Security logs", "6 months"],
+              ["Fingerprint of the email address of codes asked", "24 hours"],
+              [
+                "Record of an account deletion (identifier, choice for published texts, IP address, time), to delete again after a backup restore",
+                "8 days",
+              ],
               ["Database backups", `${String(backupDays)} days`],
               ["Requests by email (rights, help)", "Until answered, then 5 years as proof"],
             ]}
@@ -818,8 +863,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
         heading: "Changes",
         body: (
           <Paragraph>
-            If this page changes on an important point, the app says so before the change applies.
-            The date at the top of the page is that of the last change.
+            The date at the top of the page is that of the last change, and the history of the page
+            is public: <External href={HISTORY}>every version with its date</External>. If a change
+            does not suit you, you can delete your account at any time.
           </Paragraph>
         ),
       },

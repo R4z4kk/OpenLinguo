@@ -1,3 +1,4 @@
+import { ACCESSIBILITY } from "@/legal/accessibility";
 import { LEGAL_NOTICE } from "@/legal/legal-notice";
 import { LegalPage } from "@/legal/legal-page";
 import { PRIVACY } from "@/legal/privacy";
@@ -10,3 +11,7 @@ export const LegalNoticePage = () => (
 export const PrivacyPage = () => <LegalPage path="/privacy" versions={PRIVACY} contents />;
 
 export const TermsPage = () => <LegalPage path="/terms" versions={TERMS} contents />;
+
+export const AccessibilityPage = () => (
+  <LegalPage path="/accessibility" versions={ACCESSIBILITY} contents={false} />
+);

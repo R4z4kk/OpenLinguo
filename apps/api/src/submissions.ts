@@ -44,7 +44,7 @@ export const hostingRow = (
   submissionId: string,
   operation: (typeof HOSTING_OPERATIONS)[number],
   { ipAddress, protocol }: Connection,
-) => ({ userId, submissionId, operation, ipAddress, port: null, protocol });
+) => ({ userId, submissionId, operation, ipAddress, protocol });
 
 /** `/api/submissions`: the signed-in learner's texts sent to the shared library (ADR 0015). */
 export const submissionRoutes = (authOf: (env: Env) => Auth) =>

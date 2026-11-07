@@ -948,9 +948,9 @@ export const fr: Messages = {
       groq: {
         name: "Groq",
         summary:
-          "Offre gratuite limitée. Ne s’entraîne pas sur vos textes. Données conservées aux États-Unis.",
+          "Offre gratuite limitée. N’a pas le droit de s’entraîner sur vos textes sauf si vous l’autorisez. Données conservées aux États-Unis.",
         about: "À propos de Groq",
-        data: "Groq ne s’entraîne pas sur vos textes et les conserve aux États-Unis.",
+        data: "Groq n’a pas le droit de s’entraîner sur vos textes sauf si vous l’autorisez, et les conserve aux États-Unis.",
         privacy: "Politique de confidentialité de Groq",
         console: "console de Groq",
         models: "La liste vient de Groq. Le choix est gardé sur cet appareil.",
@@ -961,7 +961,7 @@ export const fr: Messages = {
         summary:
           "Nombreux modèles, dont quelques-uns gratuits. Les fournisseurs des modèles ont chacun leur politique.",
         about: "À propos d’OpenRouter",
-        data: "OpenRouter ne s’entraîne pas sur vos textes et les traite aux États-Unis. Les fournisseurs de ses modèles ont chacun leur politique.",
+        data: "OpenRouter ne garde aucune demande sauf si vous l’acceptez, et les traite aux États-Unis. Les fournisseurs de ses modèles ont chacun leur politique et peuvent les garder ou s’entraîner dessus.",
         privacy: "Politique de confidentialité d’OpenRouter",
         training: "Refuser l’entraînement par les fournisseurs des modèles",
         console: "console d’OpenRouter",

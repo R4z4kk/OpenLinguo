@@ -83,49 +83,55 @@ const Initials = ({ recordings }: { readonly recordings: Recordings | null }) =>
         {t("pinyinChart.initials")}
       </h2>
       <p className="mt-2 text-muted">{t("pinyinChart.initialsIntro")}</p>
-      <table className="mt-4 w-full text-left">
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th key={column} scope="col" className="border-b border-hairline py-2 pe-3">
-                {t(`pinyinChart.${column}`)}
-              </th>
-            ))}
-            {recordings !== null && (
-              <th scope="col" className="border-b border-hairline py-2">
-                {t("pinyinChart.hear")}
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {INITIALS.map(({ letters, reading, ipa, chaoIpa, place, manner }) => (
-            <tr key={letters} className="border-b border-hairline align-top">
-              <th scope="row" className="py-2 pe-3 text-pinyin">
-                <PinyinText text={letters} />
-              </th>
-              <td className="py-2 pe-3">
-                <PinyinText text={reading} />
-              </td>
-              <td className="py-2 pe-3">
-                <Ipa ipa={ipa} />
-                {chaoIpa !== null && (
-                  <span className="block text-small text-muted">
-                    {t("pinyinChart.chao")} <Ipa ipa={chaoIpa} />
-                  </span>
-                )}
-              </td>
-              <td className="py-2 pe-3">{t(`pinyinChart.places.${place}`)}</td>
-              <td className="py-2 pe-3">{t(`pinyinChart.manners.${manner}`)}</td>
+      <div
+        // eslint-disable-next-line jsx-a11y-x/no-noninteractive-tabindex -- Keyboard users scroll the table once it has focus (axe scrollable-region-focusable).
+        tabIndex={0}
+        className="mt-4 overflow-x-auto"
+      >
+        <table className="w-full text-left">
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th key={column} scope="col" className="border-b border-hairline py-2 pe-3">
+                  {t(`pinyinChart.${column}`)}
+                </th>
+              ))}
               {recordings !== null && (
-                <td className="py-2">
-                  <SaidAlone written={reading} recordings={recordings} play={play} />
-                </td>
+                <th scope="col" className="border-b border-hairline py-2">
+                  {t("pinyinChart.hear")}
+                </th>
               )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {INITIALS.map(({ letters, reading, ipa, chaoIpa, place, manner }) => (
+              <tr key={letters} className="border-b border-hairline align-top">
+                <th scope="row" className="py-2 pe-3 text-pinyin">
+                  <PinyinText text={letters} />
+                </th>
+                <td className="py-2 pe-3">
+                  <PinyinText text={reading} />
+                </td>
+                <td className="py-2 pe-3">
+                  <Ipa ipa={ipa} />
+                  {chaoIpa !== null && (
+                    <span className="block text-small text-muted">
+                      {t("pinyinChart.chao")} <Ipa ipa={chaoIpa} />
+                    </span>
+                  )}
+                </td>
+                <td className="py-2 pe-3">{t(`pinyinChart.places.${place}`)}</td>
+                <td className="py-2 pe-3">{t(`pinyinChart.manners.${manner}`)}</td>
+                {recordings !== null && (
+                  <td className="py-2">
+                    <SaidAlone written={reading} recordings={recordings} play={play} />
+                  </td>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       {recordings !== null && (
         <p role="status" className={notice?.failed === true ? "mt-3 text-danger" : "mt-3"}>
           {notice?.text}

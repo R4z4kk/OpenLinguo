@@ -15,7 +15,7 @@ It is local-first: you can learn offline, without an account, and your learning 
 
 ## Status
 
-In production. Milestones M0 to M7 are done; next are sync between devices (M8), then the v1.0 hardening (M10). See the [roadmap](docs/ROADMAP.md), the [architecture decisions](docs/adr/) and the [milestones](https://github.com/R4z4kk/OpenLinguo/milestones).
+In production. Versions are the `v*` [releases](https://github.com/R4z4kk/OpenLinguo/releases); what is done and what comes next is in the [milestones](https://github.com/R4z4kk/OpenLinguo/milestones) and the [roadmap](docs/ROADMAP.md). The [architecture decisions](docs/adr/) say why it is built this way.
 
 ## Other languages
 
@@ -33,7 +33,7 @@ pnpm --filter @openlinguo/web dev
 pnpm test
 ```
 
-More in the [web app](apps/web/README.md) and [API](apps/api/README.md) READMEs.
+More in the [web app](apps/web/README.md) and [API](apps/api/README.md) READMEs. To contribute, read [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

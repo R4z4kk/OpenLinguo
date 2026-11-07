@@ -9,6 +9,7 @@ export const legalEn = {
   notice: "Legal notice",
   privacy: "Privacy",
   terms: "Terms of use",
+  accessibility: "Accessibility",
   signInLinks: "By signing in, you accept the terms of use. Read how we handle your data.",
 } as const;
 

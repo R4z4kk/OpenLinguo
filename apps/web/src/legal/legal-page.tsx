@@ -18,7 +18,7 @@ export type LegalDocument = {
   readonly sections: readonly LegalSection[];
 };
 
-export type LegalPath = "/legal" | "/privacy" | "/terms";
+export type LegalPath = "/legal" | "/privacy" | "/terms" | "/accessibility";
 
 export type LegalSearch = { readonly lang: Language | null };
 
@@ -38,6 +38,8 @@ export const List = ({ items }: { readonly items: readonly ReactNode[] }) => (
     ))}
   </ul>
 );
+
+export const REPOSITORY = "https://github.com/R4z4kk/OpenLinguo";
 
 export const External = ({
   href,
@@ -174,9 +176,10 @@ const LINKS = [
   ["/legal", "notice"],
   ["/privacy", "privacy"],
   ["/terms", "terms"],
+  ["/accessibility", "accessibility"],
 ] as const satisfies readonly (readonly [LegalPath, string])[];
 
-/** The three legal pages, linked from « À propos » and the sign-in screen. */
+/** The legal pages and the accessibility statement, linked from « À propos » and the sign-in screen. */
 export const LegalLinks = () => {
   const { t } = useTranslation("legal");
   return (

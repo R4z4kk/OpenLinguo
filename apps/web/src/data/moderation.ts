@@ -45,11 +45,15 @@ export const restrictSubmission = (
   id: string,
   measure: Restriction,
   statement: NewStatementOfReasons,
-): Promise<Result<StatementOfReasons, ApiFailure>> =>
+): Promise<Result<NoticeDecided, ApiFailure>> =>
   call(
     `${path(id)}/${measure === "rejected" ? "reject" : "remove"}`,
     { method: "POST", body: JSON.stringify(statement) },
-    (body) => parseWith(StatementOfReasons, body),
+    (body) => {
+      if (measure === "removed") return parseWith(NoticeDecided, body);
+      const parsed = parseWith(StatementOfReasons, body);
+      return parsed.ok ? ok({ unsent: [], statement: parsed.value }) : parsed;
+    },
   );
 
 /**

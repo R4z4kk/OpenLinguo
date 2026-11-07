@@ -17,10 +17,11 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
 
 | Job | PR to `develop` or another branch | PR to `main` | Nightly and manual |
 | --- | --- | --- | --- |
-| `quick`: typecheck, lint, format, unit tests with coverage, build, data checks | runs, required | runs, required | runs |
+| `quick`: typecheck, lint, format, unit tests with coverage, build, size budgets, data checks | runs, required | runs, required | runs |
 | `e2e-shard`: Chromium in 2 shards, WebKit in 4 | skipped | runs | runs |
 | `e2e`: fails unless every shard passed | skipped | runs, required | runs |
 
+- Performance budgets (#349) live in `apps/web/src/build/budgets.ts`, dated. `quick` checks the sizes of the build (`pnpm budgets`: JavaScript and CSS gzip, service worker precache, first-visit data). The times (first and next visit at 4x CPU) need a browser, so `e2e/performance.e2e.ts` checks them in the Chromium shards.
 - Nothing but the deploy runs on push: the pull request already tested the merge result. A nightly run (02:37 UTC) and a manual run (`workflow_dispatch`) test `develop` in full. Only pull request runs cancel the run they replace on the same branch.
 - Playwright runs with `fullyParallel`, so shards split by test rather than by file.
 - Rulesets:
@@ -38,6 +39,7 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
   - Its job runs in the GitHub environment `production`, which waits for the maintainer's approval and accepts `main` only. The environment holds `CLOUDFLARE_API_TOKEN`, scoped to Pages, D1 and Workers Scripts on the one account, and `CLOUDFLARE_ACCOUNT_ID`.
   - It builds, applies the D1 migrations (`wrangler d1 migrations apply --remote`), deploys the PWA and the Functions (`wrangler pages deploy --branch=main`), then the cron Worker (`wrangler deploy`). A failed step stops the next ones.
   - The Pages project has no Git integration and every deploy names the production branch, so there is no preview deployment: it would share the production database.
+- A release of the app is a `v<major>.<minor>.<patch>` tag on the promotion merge commit, with a GitHub release and hand-written notes. The maintainer makes it after the deploy of that commit ran and was checked. A tag deploys nothing: `deploy.yml` runs on pushes to `main` only, and `production` accepts `main` only. The other tags and releases (`audio-zh-N`, `whisper-N`, `paraformer-N`) hold datasets that the app downloads by tag (ADR 0007), so the one GitHub marks Latest is only the last created, and no code reads `releases/latest`. The `package.json` versions stay `0.0.0`: the packages are private and the tag is the version.
 
 ## Consequences
 
@@ -46,4 +48,10 @@ CI ran as one `ci` job on every pull request and again on every push to `main`. 
 - The shard counts are set in `ci.yml`. Change them when the WebKit to Chromium time ratio moves away from about 2.
 - `main`'s first-parent history is the list of promotions.
 - Migrations run before the code is deployed, so the code in production must keep working with the new schema until the deploy ends.
-- The repository setting that lets Actions create pull requests also lets workflows approve them. Revisit it before reviews become required (M10).
+- The repository setting that lets Actions create pull requests also lets workflows approve them, and the two cannot be split. It stays on: `promote.yml` needs it, no workflow approves anything, and no ruleset requires an approval, so an approval by a workflow would unlock nothing. Revisit it the day a ruleset requires one.
+- Contributor gates (#351, decided with the maintainer on 2026-11-04):
+  - Both rulesets keep 0 required approvals and do not require code-owner review. The maintainer is the only collaborator with write access, so nobody else can merge: a pull request from a fork waits for them whatever the rules say. A required approval would be satisfied only by the bypass, which also skips `quick` and `e2e`: weaker than today. Turn both on, with the promotion pull request as the only one the maintainer does not author, the day a second collaborator can merge.
+  - `.github/CODEOWNERS` already names the maintainer for the workflows, `tools/`, `data/`, the lockfile, the workspace file and every `package.json`. It now also covers what the deploy applies to production: the D1 migrations, both `wrangler.jsonc`, the Pages Functions and `_headers`.
+  - A workflow run on a pull request from a fork waits for the maintainer's approval for every outside contributor and on every push, not only for a first contribution. A contributor whose first pull request was merged cannot get a changed workflow run unreviewed.
+  - Actions must be pinned to a full commit SHA, which every workflow already does: an unpinned `uses` fails the run.
+  - `.github/workflows/scorecard.yml` runs OpenSSF Scorecard weekly and by hand, with no write permission but `id-token`, which publishing the results needs. The results go to the public OpenSSF API and badge, and to a 5-day artifact, not to code scanning: for one maintainer, checks such as Code-Review, Contributors or Fuzzing would stay open as alerts nobody can close. It has no token beyond `GITHUB_TOKEN`, so the Branch-Protection check is partial.

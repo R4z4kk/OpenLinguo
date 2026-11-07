@@ -1,7 +1,6 @@
 import type { Language } from "@/i18n/language";
-import { Contact, External, List, Paragraph, type LegalDocument } from "./legal-page";
+import { Contact, External, List, Paragraph, REPOSITORY, type LegalDocument } from "./legal-page";
 
-const REPOSITORY = "https://github.com/R4z4kk/OpenLinguo";
 /** LCEN art. 1-1, read on Légifrance on 2026-10-31 (version in force since 2024-05-23). */
 const LCEN_1_1 = "https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614";
 const PHAROS = "https://www.internet-signalement.gouv.fr";

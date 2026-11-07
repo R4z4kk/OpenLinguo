@@ -534,7 +534,9 @@ const StatementForm = <T,>({
   );
 };
 
-type Done = { readonly kind: "approved"; readonly band: number } | { readonly kind: "restricted" };
+type Done =
+  | { readonly kind: "approved"; readonly band: number }
+  | { readonly kind: "restricted"; readonly unsent: readonly string[] };
 
 const Decision = ({
   submission,
@@ -631,8 +633,8 @@ const Decision = ({
           measure={measure}
           source="own-initiative"
           submit={(statement) => restrictSubmission(submission.id, measure, statement)}
-          onDecided={() => {
-            onDone({ kind: "restricted" });
+          onDecided={({ unsent }) => {
+            onDone({ kind: "restricted", unsent });
           }}
         />
       )}
@@ -661,6 +663,11 @@ const Review = ({ submission }: { readonly submission: Submission }) => {
             ? t("approvedBody", { band: bandName(done.band) })
             : t("statement.sentBody")}
         </p>
+        {done.kind === "restricted" && done.unsent.length > 0 && (
+          <p role="alert" className="mt-4 text-danger">
+            {t("notice.unsent", { emails: done.unsent.join(", ") })}
+          </p>
+        )}
         <p className="mt-4">
           <Link to="/admin" className="inline-flex min-h-11 items-center underline">
             {t("queue")}

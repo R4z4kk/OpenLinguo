@@ -1,6 +1,7 @@
 import { AI_BASE_URLS, WIKIDATA_ENDPOINT } from "@openlinguo/core";
 import { describe, expect, it } from "vitest";
 import headersFile from "../../public/_headers?raw";
+import subProcessors from "../../../../docs/compliance/sub-processors.md?raw";
 import { headersFor, parseHeaderRules, parseHeaders } from "./security-headers.ts";
 
 const parsed = parseHeaders(headersFile);
@@ -35,6 +36,18 @@ describe("public/_headers", () => {
       expect(connect.split(" ")).toContain(new URL(AI_BASE_URLS[provider]).origin);
     }
     expect(connect.split(" ")).toContain(new URL(WIKIDATA_ENDPOINT.value).origin);
+  });
+
+  it("lists in the sub-processors page every origin the app may connect to", () => {
+    const origins = (directives.get("connect-src") ?? "")
+      .split(" ")
+      .filter((source) => source.startsWith("https://"));
+    expect(origins.length).toBeGreaterThan(0);
+    expect(origins.filter((origin) => !subProcessors.includes(origin))).toEqual([]);
+    for (const provider of ["groq", "openrouter", "mistral"] as const) {
+      expect(subProcessors).toContain(AI_BASE_URLS[provider]);
+    }
+    expect(subProcessors).toContain(WIKIDATA_ENDPOINT.value);
   });
 
   it("plays stored audio from Blob URLs, nothing else from outside", () => {
