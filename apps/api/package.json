@@ -21,6 +21,6 @@
   },
   "devDependencies": {
     "drizzle-kit": "^0.31.11",
-    "wrangler": "^4.152.0"
+    "wrangler": "^4.156.0"
   }
 }
