@@ -28,7 +28,7 @@ Sources:
 
 ### 1.2 GDPR: most likely not a controller of the AI calls
 
-**Data that stays on the device.** The journal, the challenges, the corrections, the interests and the settings never leave the device unless the learner sends them. The CNIL sets two cumulative criteria, and both are met:
+**Data that stays on the device.** The journal, the challenges, the corrections, the interests and the settings never leave the device unless the learner sends them. The one exception is the cards and notes made from a corrected sentence: with sync on, they go to the OpenLinguo server in the sync chunks with their provenance ([data map](data-map.md), [ADR 0016](../adr/0016-sync.md)); the correction itself, the journal and the challenges do not. The CNIL sets two cumulative criteria, and both are met:
 
 - the processing is "initié à la discrétion de la personne";
 - the supplier of the software "ne peut plus agir en aval sur les données".
@@ -169,7 +169,7 @@ This section is how anyone can tell whether an OpenLinguo item came from an AI m
 | `promptVersion` | string | The PromptPack task and version that built the request, such as `zh-correct-v1` |
 | `createdAt` | string, ISO 8601 in UTC | When the answer was received |
 
-- **Where it appears.** Every stored AI item carries a `provenance` member, both in IndexedDB and in the backup file. These items are corrections, cards made from a corrected sentence, and AI glosses. The learner's own sentences carry none. Suggested words carry none either, because they are dictionary entries and contain no AI text.
+- **Where it appears.** Every stored AI item carries a `provenance` member, in IndexedDB, in the backup file and, for cards and notes with sync on, in the sync chunks. These items are corrections, cards made from a corrected sentence, and AI glosses. The learner's own sentences carry none. Suggested words carry none either, because they are dictionary entries and contain no AI text.
   - A note (`notes` in the backup file) has `provenance` set when it was made from a corrected sentence, and `null` when the learner wrote it or imported it from Anki. A backup made before M5 has no such member: it reads as `null`.
 - **Who sets it.** The code that validated the answer sets the field when it stores the item. The model's output never sets it.
 - **What it never holds.** No learner identity, key, endpoint address or prompt text. The guidelines say "the information related to the creator of the content should not be processed" (para 94).

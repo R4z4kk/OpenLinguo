@@ -138,7 +138,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
   - No mandatory time limits: timed typing challenges adjustable or disableable (SC 2.2.1).
   - Targets ≥ 24×24 px (SC 2.5.8), visible unobscured focus (SC 2.4.7 / 2.4.11), reflow at 320 px and 200% text.
   - All audio has a text equivalent; animations respect reduced motion.
-- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), manual keyboard + NVDA + VoiceOver checklist per milestone.
+- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` in E2E (CI fails on violations), E2E checks of the language of Chinese text, reflow at 320 px, reduced motion and keyboard focus; no manual assistive-technology testing.
 - Accessibility statement page published at v1 (conformance level, known gaps, contact).
 
 ## Privacy & compliance (GDPR, AI Act)
@@ -162,7 +162,7 @@ Today, review card (recognition / recall / listening / tone / writing variants),
 | AI-generated public-interest text disclosure (deployers) | AI Act art. 50(4) | Unlikely (learning content), human-reviewed library anyway | Badge kept on library items |
 | Accessibility of services (EAA) | Directive 2019/882 → Code de la consommation L.412-13, D.412-49 et seq., décret 2023-931; microenterprises providing services (<10 staff, ≤€2M) exempt | No (non-commercial individual, below thresholds) | WCAG 2.2 AA as a voluntary target + accessibility statement |
 
-Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301 549 v4.1.1 Official Journal citation (expected Nov–Dec 2026); review both at M10. Not legal advice.
+Watch items: décret 2026-883 (2026-09-23, accessibility enforcement) and EN 301 549 v4.1.1 Official Journal citation (expected Nov–Dec 2026), both dated in `LEGAL_WATCH` (`packages/core/src/compliance-facts.ts`): a unit test fails from their `reviewBy`. Not legal advice.
 
 ### Measures
 
@@ -203,7 +203,7 @@ Freshness rule: each manifest entry carries `retrievedAt` + `maxAgeDays`; a CI j
 
 ## Milestones
 
-Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verification.
+Each milestone ships a usable increment, promoted to `main` and deployed. Only M10 ends in a version: the `v1.0.0` tag ([ADR 0010](adr/0010-branches-and-ci.md)). Exit criteria = verification.
 
 **M0 — Foundations.** Monorepo, strict TS + lint, Vitest, CI (typecheck/lint/test/build), supply-chain baseline (pinned actions, minimal permissions, dependency-review with license allowlist, CodeQL, OSV-Scanner, Dependabot, pnpm lifecycle-script allowlist), rulesets on `main`, CODEOWNERS, `Result` type, source/license verification → `data/SOURCES.md`, design tokens + mockups of the key screens (validated by the maintainer before any UI code), compliance baseline (data map, privacy-by-design checklist, accessibility statement template). *Exit: green CI on a trivial package, all "to verify" sources resolved or replaced, mockups approved.*
 
@@ -225,9 +225,9 @@ Each milestone ships a usable increment (tagged `0.x`). Exit criteria = verifica
 
 **M9 — dropped.** The English pack will not be built: the project focuses on Mandarin (2026-11-03, [ADR 0003](adr/0003-languagepack-capabilities.md)).
 
-**M10 — v1.0 hardening.** Manual accessibility audit (keyboard, NVDA, VoiceOver) + published accessibility statement, GDPR review of docs vs implementation, performance (dataset load time, bundle), FSRS parameter optimization (optional), CONTRIBUTING, contributor PR gates (fork-run approval, OpenSSF Scorecard, CODEOWNERS on workflows/pipeline/lockfile), docs, release v1.0.0.
+**M10 — v1.0 hardening.** Automated accessibility checks beyond axe + a short published accessibility statement (automated testing only), GDPR review of docs vs implementation, performance (dataset load time, bundle), CONTRIBUTING, contributor PR gates (fork-run approval, OpenSSF Scorecard, CODEOWNERS on workflows/pipeline/lockfile), docs, release v1.0.0.
 
-**Post-v1.** Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle. Other languages only as contributed packages.
+**Post-v1.** FSRS parameter optimization (needs real review data), Capacitor iOS/Android (+ Sign in with Apple if required), OCR (PaddleOCR ONNX / Tesseract.js), traditional script toggle. Other languages only as contributed packages.
 
 ## Risks
 

@@ -80,6 +80,25 @@ export const DATA_RETENTION_INJUNCTION = {
   reviewBy: "2027-09-21",
 } as const satisfies DatedFact;
 
+/** Accessibility texts the roadmap watches (docs/ROADMAP.md, Privacy & compliance); the project is bound by neither. */
+export const LEGAL_WATCH = {
+  accessibilityDecree: {
+    value:
+      "Décret 2026-883 of 2026-09-23, in force since 2026-09-25: enforcement of the accessibility of products and services in the code de la consommation (D412-50-1, D412-51, D412-53, D412-54)",
+    source: "https://www.legifrance.gouv.fr/loda/id/JORFTEXT000054888401",
+    checkedOn: "2026-11-04",
+    reviewBy: "2027-04-30",
+  },
+  en301549Citation: {
+    value:
+      "EN 301 549 v4.1.1 not found cited in the Official Journal under Directive 2019/882 (the Commission's pages list v3.2.1 only, updated 2025)",
+    source:
+      "https://digital-strategy.ec.europa.eu/en/policies/web-accessibility-directive-standards-and-harmonisation",
+    checkedOn: "2026-11-04",
+    reviewBy: "2027-01-31",
+  },
+} as const satisfies Readonly<Record<string, DatedFact>>;
+
 /** The D1 database size the sync store stays under (ADR 0016); `SYNC_LIMITS.databaseBytes` keeps a margin. */
 export const D1_FREE_DATABASE_SIZE = {
   value: "500 MB",

@@ -23,9 +23,9 @@ export const LEGAL_GROUNDS = {
 
 /** The rules of `/terms` a statement cites by number (#267 mockups, #279). */
 export const TERMS_CLAUSES = {
-  "not-chinese": "3.2",
-  "duplicate-or-spam": "3.3",
-  "unsuitable-for-teenagers": "3.4",
+  "not-chinese": "4.2",
+  "duplicate-or-spam": "4.3",
+  "unsuitable-for-teenagers": "4.4",
 } as const;
 
 export const GROUNDS = [

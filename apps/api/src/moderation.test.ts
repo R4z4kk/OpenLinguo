@@ -254,7 +254,7 @@ describe("POST /api/admin/submissions/:id/reject", () => {
       admin,
     );
     expect(mailer.sent.at(-1)?.text).toContain(
-      "Motif : règles de la bibliothèque, article 3.2 des conditions d'utilisation : le texte n'est pas en chinois.",
+      "Motif : règles de la bibliothèque, article 4.2 des conditions d'utilisation : le texte n'est pas en chinois.",
     );
   });
 
@@ -302,7 +302,10 @@ describe("POST /api/admin/submissions/:id/remove", () => {
       admin,
     );
     expect(removed.status).toBe(201);
-    expect(await removed.json()).toMatchObject({ measure: "removed", ground: "hate" });
+    expect(await removed.json()).toMatchObject({
+      unsent: [],
+      statement: { measure: "removed", ground: "hate" },
+    });
     expect(await statusOf(id)).toBe("removed");
     expect(mailer.sent.at(-1)?.text).toContain("Mesure : retrait.");
     expect(mailer.sent.at(-1)?.text).toContain("Measure: removal.");

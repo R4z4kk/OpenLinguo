@@ -11,7 +11,7 @@ import { ChallengePage, ChallengesPage } from "@/pages/challenges";
 import { DictionaryPage, validateDictionarySearch } from "@/pages/dictionary";
 import { JournalEntryPage, JournalPage } from "@/pages/journal";
 import { LearnPage } from "@/pages/learn";
-import { LegalNoticePage, PrivacyPage, TermsPage } from "@/pages/legal";
+import { AccessibilityPage, LegalNoticePage, PrivacyPage, TermsPage } from "@/pages/legal";
 import { NotFoundPage } from "@/pages/not-found";
 import { PinyinChartPage } from "@/pages/pinyin-chart";
 import { ProfilePage } from "@/pages/profile";
@@ -225,6 +225,12 @@ const routeTree = rootRoute.addChildren([
     getParentRoute,
     path: "/terms",
     component: TermsPage,
+    errorComponent: ModuleError,
+  }),
+  createRoute({
+    getParentRoute,
+    path: "/accessibility",
+    component: AccessibilityPage,
     errorComponent: ModuleError,
   }),
   createRoute({

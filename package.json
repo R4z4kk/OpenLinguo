@@ -17,6 +17,7 @@
     "e2e": "pnpm --filter @openlinguo/web e2e",
     "data:freshness": "pnpm --filter @openlinguo/data-pipeline freshness",
     "data:gaps": "pnpm --filter @openlinguo/web gaps",
+    "budgets": "pnpm --filter @openlinguo/web budgets",
     "build": "pnpm -r --if-present build"
   },
   "devDependencies": {

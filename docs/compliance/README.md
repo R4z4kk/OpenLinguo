@@ -2,7 +2,7 @@
 
 Baseline written in M0 (issue #10) so privacy and accessibility are designed in, not retrofitted. These are working documents, not legal advice. The legal basis behind them is in the roadmap's compliance table and [ADR 0009](../adr/0009-privacy-and-compliance.md).
 
-Values that can expire (Data Privacy Framework statuses, processor agreements, the DPIA review, the D1 size limit, the code of practice facts) are dated in `packages/core/src/compliance-facts.ts` and `ai-marking.ts`, with `checkedOn`, `reviewBy` and their source; a unit test fails from each `reviewBy`.
+Values that can expire (Data Privacy Framework statuses, processor agreements, the DPIA review, the D1 size limit, the accessibility texts watched, the code of practice facts) are dated in `packages/core/src/compliance-facts.ts` and `ai-marking.ts`, with `checkedOn`, `reviewBy` and their source; a unit test fails from each `reviewBy`.
 
 | Document | Purpose |
 |---|---|
@@ -19,7 +19,7 @@ Values that can expire (Data Privacy Framework statuses, processor agreements, t
 | [Requests runbook](requests.md) | Rights requests, parents' requests to delete a child's account, authorities' requisitions, and where their proof is kept |
 | [Wikidata lookup](wikidata.md) | What the lookup sends to the Wikimedia Foundation, roles, the U.S. transfer, the dated endpoint |
 | [Privacy notice](privacy-notice.md) | Where the public legal pages live: `/legal`, `/privacy`, `/terms` |
-| [Accessibility statement template](accessibility-statement-template.md) | Published at v1 |
+| [Accessibility statement](../../apps/web/src/legal/accessibility.tsx) | Published at `/accessibility`; says only what the E2E tests and the app do |
 
 Every pull request goes through the privacy and accessibility checklist in [`.github/pull_request_template.md`](../../.github/pull_request_template.md).
 

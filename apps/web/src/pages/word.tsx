@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useAiTranslation } from "@/components/ai-translation";
 import { CREDITS, Credits } from "@/components/credits";
 import { DecompositionTree } from "@/components/decomposition-tree";
+import { GlossText } from "@/components/gloss-text";
 import { PlayAudio } from "@/components/play-audio";
 import { RubyWord } from "@/components/ruby-word";
 import { SayIt } from "@/components/say-it";
@@ -103,7 +104,9 @@ const Glosses = ({
           </Heading>
           <ol lang={group.lang} className="mt-1 list-decimal pl-8">
             {group.texts.map((text) => (
-              <li key={text}>{text}</li>
+              <li key={text}>
+                <GlossText text={text} />
+              </li>
             ))}
           </ol>
         </div>

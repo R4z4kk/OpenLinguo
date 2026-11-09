@@ -15,7 +15,7 @@ The app must be intuitive, clean and modern, keep gamification motivating withou
 - Tone colors are computed for contrast (≥ 5.2:1 light) and colorblind separation (smallest ΔE ≥ 30 under protanopia, deuteranopia and tritanopia), stay the same hue in both themes, and are always paired with diacritics.
 - Fonts self-hosted and subset: Atkinson Hyperlegible Next (Latin UI), Noto Sans SC (Chinese UI, pinyin), LXGW WenKai GB (display characters, mainland standard forms), all OFL-1.1; CJK slices follow the HSK bands.
 - Accessibility rules: `lang` on every foreign-language span, `<ruby>` pinyin, single-pointer alternative to stroke drawing, non-speech alternative to every mic exercise, no mandatory time limits, 24px minimum targets, visible focus, reduced-motion support, text alternatives for visual widgets.
-- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` blocking in CI, manual keyboard/NVDA/VoiceOver checks per milestone, accessibility statement at v1.
+- Tooling: `eslint-plugin-jsx-a11y-x` (fork of `eslint-plugin-jsx-a11y`, which does not support ESLint 10), `@axe-core/playwright` blocking in CI, E2E checks of the language of Chinese text, reflow at 320 px, reduced motion and keyboard focus (#344); no manual test with assistive technology (decided on 2026-11-04: what CI cannot check is not checked), and a short accessibility statement at v1 saying so.
 - Key screens are mocked up and approved before UI implementation (M0).
 
 ## Consequences

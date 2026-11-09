@@ -23,7 +23,7 @@ The queue in `/admin` (#274) shows each pending text with its estimated level an
 | Hate | Provocation to discrimination, hatred or violence against a group, denial of crimes against humanity | Loi du 29 juillet 1881, art. 24, 32 and 33 |
 | Other people's personal data | A full name, school, town, address, phone or photo description of a real person, the submitter's own included; teenagers often identify themselves | Code civil art. 9; GDPR art. 6 |
 | Serious offences of LCEN art. 6 IV.A | For example apology of or provocation to terrorism (CP 421-2-5), child sexual abuse images (CP 227-23), sale of drugs (CP 222-39), incitement to suicide (CP 223-13), pimping (CP 225-5), sexual harassment (CP 222-33); the full list is in the article | [LCEN art. 6 IV.A](https://www.legifrance.gouv.fr/loda/id/JORFTEXT000000801164) (version of 2026-08-26); also report it (section 3) |
-| Library rules | Not in Chinese (3.2), a duplicate or spam (3.3), unsuitable for teenagers (3.4) | `/terms` rule 3.2, 3.3 or 3.4 |
+| Library rules | Not in Chinese (4.2), a duplicate or spam (4.3), unsuitable for teenagers (4.4) | `/terms` rule 4.2, 4.3 or 4.4 |
 
 A rejection or a removal records a statement of reasons (DSA art. 17(3)): the measure, the facts, own initiative or a notice, the legal ground or the terms clause with an explanation, "no automated means", and the redress. The statement is emailed to the submitter at once (17(1)). On the personal-data ground, the explanation says what to remove, so the text can be sent again without it (#292). Redress offered: a review by email to the contact address, then the courts. The internal complaint-handling system of art. 20 and the rest of arts 20 to 28 do not apply to a micro platform (art. 19(1)); art. 24(3) does: if the Digital Services Coordinator or the Commission asks, send the average monthly active recipients.
 
@@ -33,7 +33,7 @@ A rejection or a removal records a statement of reasons (DSA art. 17(3)): the me
 - A receipt goes out at once when the notice holds an email (16(4)).
 - Decide "in a timely, diligent, non-arbitrary and objective manner" (16(6)). The host keeps its exemption only if, once it knows, it "acts expeditiously to remove or to disable access to the illegal content" (art. 6(1)(b)); no delay is set, so the project's own targets are 24 hours for a notice that names a serious offence and 7 days otherwise.
 - Remove the text with the statement of reasons, or keep it. The notifier gets the decision with its redress (16(5)); the submitter gets the statement of reasons, never the notifier's identity.
-- In `/admin` › « Signalements », removing a text through a notice decides every open notice on that text: each notifier with an email gets the decision. A decision mail that fails does not undo the removal; `/admin` lists the addresses to write to by hand. `POST /api/notices` takes at most 5 notices per address in 10 minutes.
+- Removing a text decides every open notice on it, from « Signalements » or from the text's own page (`/admin/<id>`): each notifier with an email gets the decision. A decision mail that fails does not undo the removal; `/admin` lists the addresses to write to by hand. `POST /api/notices` takes at most 5 notices per IP address in 10 minutes.
 - Copies already imported on devices stay there, as `/terms` says: the app cannot reach them.
 
 ## 3. Reporting offences
@@ -51,13 +51,15 @@ Keep the text, the notice and the report reference until the authority answers, 
 
 **Removal order for terrorist content, Regulation 2021/784** (LCEN art. 6-1-1). Remove the text or disable access to it "as soon as possible and in any event within one hour of receipt of the removal order" (art. 3(3)). Before the first order, the authority gives at least 12 hours' notice of its procedures and deadlines, except in an emergency (3(2)). Then:
 
-1. In `/admin`, remove the text with the ground « Infractions graves (LCEN art. 6, IV, A) ». If `/admin` is down, remove it directly and write the statement of reasons afterwards:
+1. In `/admin`, remove the text with the ground « Infraction grave » (group « Contenu illégal »). The statement of reasons is emailed before the removal is stored, so if the mail fails (502 `MAIL_FAILED`) or `/admin` is down, nothing is removed: remove it directly:
 
    ```bash
    wrangler d1 execute openlinguo --remote --command "UPDATE submission SET status = 'removed' WHERE id = '<submission id>'"
    ```
 
-2. Preserve the text and the related data for six months from the removal (art. 6(2)), longer only at the authority's or a court's request: export the submission and its hosting records to an encrypted file outside the app before the daily jobs could purge them.
+   This writes no statement of reasons, and the app cannot add one afterwards (its remove route needs an approved text, so it answers 409). Write the statement to the submitter by hand with the fields of section 1, and keep it in the mailbox (section 5).
+
+2. Preserve the text and the related data for six months from the removal (art. 6(2)), longer only at the authority's or a court's request: export the submission, its decision, its notices and its hosting records to an encrypted file outside the app now: the text, its decision and its notices are deleted with the submitter's account, whether the person or the inactivity job deletes it.
 3. Reply to the authority with the time of removal.
 4. An order from another Member State may be contested by "a reasoned request" to the French authority "within 48 hours" (art. 4(4)), while still removing within the hour (4(2)).
 
@@ -65,4 +67,4 @@ Keep the text, the notice and the report reference until the authority answers, 
 
 ## 5. Proof
 
-No separate register. The app keeps each notice and decision with its times and statement of reasons, and deletes them 1 year after the decision ([retention](retention-schedule.md)). An order received or a report made stays in the mailbox with the answer, as in the [requests runbook](requests.md) (section 5): its origin and reference, the text concerned, the time of action, and the preservation end date if there is one.
+No separate register. The app keeps each notice and decision with its times and statement of reasons, and deletes them 1 year after the decision, or sooner with the text when the account is deleted ([retention](retention-schedule.md)). An order received or a report made stays in the mailbox with the answer, as in the [requests runbook](requests.md) (section 5): its origin and reference, the text concerned, the time of action, and the preservation end date if there is one.

@@ -922,9 +922,10 @@ export const en = {
     providers: {
       groq: {
         name: "Groq",
-        summary: "Limited free use. Does not train on your texts. Data kept in the United States.",
+        summary:
+          "Limited free use. May not train on your texts unless you allow it. Data kept in the United States.",
         about: "About Groq",
-        data: "Groq does not train on your texts and keeps them in the United States.",
+        data: "Groq may not train on your texts unless you allow it, and keeps them in the United States.",
         privacy: "Groq's privacy policy",
         console: "Groq's console",
         models: "The list comes from Groq. The choice is kept on this device.",
@@ -935,7 +936,7 @@ export const en = {
         summary:
           "Many models, a few of them free. The providers of the models each have their own policy.",
         about: "About OpenRouter",
-        data: "OpenRouter does not train on your texts and handles them in the United States. The providers of its models each have their own policy.",
+        data: "OpenRouter stores none of your requests unless you opt in, and handles them in the United States. The providers of its models each have their own policy and may keep or train on them.",
         privacy: "OpenRouter's privacy policy",
         training: "Refuse training by the model providers",
         console: "OpenRouter's console",
