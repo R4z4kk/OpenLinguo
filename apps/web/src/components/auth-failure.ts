@@ -18,6 +18,7 @@ export const useAuthFailure = () => {
       case "refused":
         if (failure.code === "MAIL_FAILED") return t("failure.mail");
         if (failure.code === "CODE_LIMIT_REACHED") return t("failure.codeLimit");
+        if (failure.code === "BANNED_USER") return t("failure.banned");
         if (failure.code === "TOO_MANY_ATTEMPTS")
           return t("twoFactor.locked", { minutes: SECOND_FACTOR_LOCK.minutes });
         return t("failure.unexpected", { status: failure.code });

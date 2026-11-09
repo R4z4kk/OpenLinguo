@@ -54,6 +54,7 @@ export const AuthErrorCode = z.enum([
   "TOO_MANY_ATTEMPTS",
   "INVALID_CODE",
   "INVALID_BACKUP_CODE",
+  "BANNED_USER",
 ]);
 export type AuthErrorCode = z.output<typeof AuthErrorCode>;
 

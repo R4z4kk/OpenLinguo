@@ -6,11 +6,14 @@ import {
   estimateBand,
   Ground,
   isLegalGround,
+  LegalGround,
   NewNotice,
   NewStatementOfReasons,
+  NewSuspension,
   NoticeDecision,
   STATEMENT_MAX,
   StatementOfReasons,
+  suspensionEnd,
   TERMS_CLAUSES,
 } from "./moderation.ts";
 import { parseWith } from "./validation.ts";
@@ -111,6 +114,34 @@ describe("NewStatementOfReasons", () => {
     expect(Ground.options.filter((ground) => !isLegalGround(ground))).toEqual(
       Object.keys(TERMS_CLAUSES),
     );
+  });
+});
+
+describe("NewSuspension", () => {
+  const suspension = {
+    email: "learner@example.test",
+    duration: "30-days",
+    ground: "copyright",
+    facts: "Trois textes copiés d'un roman publié en un mois.",
+    explanation: "Ils sont reproduits sans l'accord de l'auteur.",
+  };
+
+  it("accepts the legal grounds only, the rule 4.1 of the terms", () => {
+    expect(LegalGround.options).toEqual(Ground.options.filter(isLegalGround));
+    expect(parseWith(NewSuspension, suspension).ok).toBe(true);
+    expect(parseWith(NewSuspension, { ...suspension, ground: "not-chinese" }).ok).toBe(false);
+  });
+
+  it("refuses an unknown duration and a missing address", () => {
+    expect(parseWith(NewSuspension, { ...suspension, duration: "7-days" }).ok).toBe(false);
+    expect(parseWith(NewSuspension, { ...suspension, email: "" }).ok).toBe(false);
+  });
+
+  it("ends after 30 or 90 days, or never", () => {
+    const decidedAt = new Date("2026-11-10T08:00:00.000Z");
+    expect(suspensionEnd("30-days", decidedAt)?.toISOString()).toBe("2026-12-10T08:00:00.000Z");
+    expect(suspensionEnd("90-days", decidedAt)?.toISOString()).toBe("2027-02-08T08:00:00.000Z");
+    expect(suspensionEnd("unlimited", decidedAt)).toBeNull();
   });
 });
 

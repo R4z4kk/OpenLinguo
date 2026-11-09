@@ -5,6 +5,7 @@ import {
   type NoticeDecision,
   type NoticeReason,
   type StatementOfReasons,
+  type Suspension,
   TERMS_CLAUSES,
 } from "@openlinguo/core/moderation";
 import type { Mail } from "./mail.ts";
@@ -117,6 +118,51 @@ export const statementOfReasonsMail = (
       ? "OpenLinguo : votre texte n'a pas été publié / your text was not published"
       : "OpenLinguo : votre texte a été retiré / your text was removed",
   text: `${statementText("fr", title, statement, contact)}\n\n---\n\n${statementText("en", title, statement, contact)}`,
+});
+
+const suspensionText = (
+  locale: Locale,
+  { ground, facts, explanation, endsAt }: Suspension,
+  contact: string,
+) => {
+  const label = `${GROUNDS[ground][locale]} (${LEGAL_GROUNDS[ground]})`;
+  const end = endsAt?.slice(0, 10) ?? null;
+  return locale === "fr"
+    ? [
+        "Votre compte OpenLinguo est suspendu.",
+        "",
+        end === null
+          ? "Mesure : suspension du compte, sans limite de durée."
+          : `Mesure : suspension du compte jusqu'au ${end}.`,
+        "Vous ne pouvez plus vous connecter ni synchroniser. Les données déjà sur vos appareils y restent.",
+        "Origine : décision prise à l'initiative de l'administrateur, sans signalement sur le compte.",
+        `Motif : contenu illégal envoyé plusieurs fois, ${label}, règle 4.1 des conditions d'utilisation.`,
+        `Faits : ${facts}`,
+        `Explication : ${explanation}`,
+        "Moyens automatisés : aucun. Une personne a pris la décision.",
+        `Recours : vous pouvez demander un réexamen en écrivant à ${contact}. Vous pouvez aussi saisir le tribunal compétent.`,
+      ].join("\n")
+    : [
+        "Your OpenLinguo account is suspended.",
+        "",
+        end === null
+          ? "Measure: account suspended, with no time limit."
+          : `Measure: account suspended until ${end}.`,
+        "You can no longer sign in or sync. The data already on your devices stays there.",
+        "Origin: the admin's own initiative, without a notice about the account.",
+        `Ground: illegal content sent several times, ${label}, rule 4.1 of the terms.`,
+        `Facts: ${facts}`,
+        `Explanation: ${explanation}`,
+        "Automated means: none. A person took the decision.",
+        `Redress: you may ask for a review by writing to ${contact}. You may also go to the competent court.`,
+      ].join("\n");
+};
+
+/** DSA art. 17(1)(d), French then English. */
+export const suspensionMail = (to: string, suspension: Suspension, contact: string): Mail => ({
+  to,
+  subject: "OpenLinguo : votre compte est suspendu / your account is suspended",
+  text: `${suspensionText("fr", suspension, contact)}\n\n---\n\n${suspensionText("en", suspension, contact)}`,
 });
 
 const REASONS: Readonly<Record<NoticeReason, Readonly<Record<Locale, string>>>> = {

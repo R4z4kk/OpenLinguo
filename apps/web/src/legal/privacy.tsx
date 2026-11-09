@@ -36,7 +36,7 @@ const checked = (language: Language): string =>
 export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
   fr: {
     title: "Confidentialité",
-    updated: "2026-11-04",
+    updated: "2026-11-09",
     sections: [
       {
         id: "summary",
@@ -215,7 +215,10 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               Quand vous envoyez un texte, nous gardons le texte, son origine, sa licence, votre
               signature (pseudonyme ou anonyme), vos déclarations et leur date. Une personne le lit
               avant toute publication. Un texte publié est public, avec la signature choisie. Si un
-              texte est refusé ou retiré, vous recevez par e-mail les raisons de la décision.
+              texte est refusé ou retiré, vous recevez par e-mail les raisons de la décision. Si
+              votre compte est suspendu (règle 4.1 des conditions), vous recevez d’abord par e-mail
+              les raisons, la durée et les recours ; nous les gardons 1 an après la fin de la
+              suspension.
             </Paragraph>
             <Paragraph>
               N’y mettez rien qui permette de reconnaître quelqu’un, vous compris : nom complet,
@@ -467,7 +470,7 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
   },
   en: {
     title: "Privacy",
-    updated: "2026-11-04",
+    updated: "2026-11-09",
     sections: [
       {
         id: "summary",
@@ -636,7 +639,9 @@ export const PRIVACY: Readonly<Record<Language, LegalDocument>> = {
               When you send a text, we keep the text, its origin, its licence, your signature
               (pseudonym or anonymous), your statements and their date. A person reads it before
               anything is published. A published text is public, with the signature you chose. If a
-              text is rejected or removed, you get the reasons for the decision by email.
+              text is rejected or removed, you get the reasons for the decision by email. If your
+              account is suspended (rule 4.1 of the terms), you first get the reasons, the duration
+              and the redress by email; we keep them for 1 year after the suspension ends.
             </Paragraph>
             <Paragraph>
               Leave out anything that identifies someone, yourself included: full name, school,

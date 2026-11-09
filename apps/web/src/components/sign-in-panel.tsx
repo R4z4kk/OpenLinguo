@@ -46,7 +46,9 @@ export const SignInPanel = ({
   const [problem, setProblem] = useState<string | null>(
     providerError === null || providerError === "SIGNUPS_CLOSED"
       ? null
-      : t("failure.provider", { code: providerError }),
+      : providerError === "BANNED_USER"
+        ? t("failure.banned")
+        : t("failure.provider", { code: providerError }),
   );
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);

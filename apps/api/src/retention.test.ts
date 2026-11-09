@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { JOBS, type JobContext, runJobs } from "./jobs.ts";
 import { cutoffs, inactivityStep } from "./retention.ts";
 import {
+  accountDecision,
   codeRequest,
   DELETED_ACCOUNT,
   database,
@@ -84,6 +85,7 @@ beforeEach(async () => {
     jobRun,
     codeRequest,
     securityEvent,
+    accountDecision,
     notice,
     decision,
     hostingRecord,
@@ -221,6 +223,20 @@ describe("the daily jobs", () => {
       { id: "n-recent", ...report, ...kept, createdAt: ago(400 * DAY_MS), decidedAt: ago(DAY_MS) },
       { id: "n-open", ...report, createdAt: ago(400 * DAY_MS) },
     ]);
+    const reasons = {
+      userId: "learner",
+      ground: "copyright",
+      facts: "facts",
+      explanation: "explanation",
+      decidedAt: ago(800 * DAY_MS),
+    } as const;
+    await db.insert(accountDecision).values([
+      { id: "a-ended", ...reasons, endsAt: ago(366 * DAY_MS), liftedAt: null },
+      { id: "a-lifted", ...reasons, endsAt: null, liftedAt: ago(366 * DAY_MS) },
+      { id: "a-ended-recently", ...reasons, endsAt: ago(364 * DAY_MS), liftedAt: null },
+      { id: "a-lifted-recently", ...reasons, endsAt: null, liftedAt: ago(364 * DAY_MS) },
+      { id: "a-unlimited", ...reasons, endsAt: null, liftedAt: null },
+    ]);
 
     await runJobs(context(), JOBS);
 
@@ -262,6 +278,11 @@ describe("the daily jobs", () => {
     ]);
     expect(await ids(db.select({ id: decision.id }).from(decision))).toEqual(["d-recent"]);
     expect(await ids(db.select({ id: notice.id }).from(notice))).toEqual(["n-open", "n-recent"]);
+    expect(await ids(db.select({ id: accountDecision.id }).from(accountDecision))).toEqual([
+      "a-ended-recently",
+      "a-lifted-recently",
+      "a-unlimited",
+    ]);
   });
 
   it("keep an account whose notice failed, notify the others, then fail the job", async () => {

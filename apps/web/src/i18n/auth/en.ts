@@ -48,6 +48,8 @@ export const authEn = {
       "Too many codes asked for this address today. Try again tomorrow, or sign in with Google or GitHub.",
     provider: "Signing in with the provider failed ({{code}}). Try again or use an email code.",
     unexpected: "The server did not answer as expected (error {{status}}). Try again later.",
+    banned:
+      "This account is suspended. The reasons, the duration and the redress were sent to you by email.",
   },
   age: {
     title: "How old are you?",

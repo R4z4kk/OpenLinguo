@@ -3,8 +3,11 @@ import {
   KeepNotice,
   NewNotice,
   NewStatementOfReasons,
+  NewSuspension,
   type Notice,
   type NoticeDecided,
+  type Suspension,
+  SuspensionLift,
 } from "@openlinguo/core/moderation";
 import { LICENCES, type LibraryItem, type Submission } from "@openlinguo/core/submission";
 import { expect, type Page, type Route } from "@playwright/test";
@@ -58,10 +61,20 @@ type FakeApi = {
   readonly removed: NewStatementOfReasons[];
   unsent: string[];
   readonly deletedAccounts: string[];
+  readonly suspended: NewSuspension[];
+  readonly lifted: string[];
 };
 
 const fakeApi = async (page: Page): Promise<FakeApi> => {
-  const api: FakeApi = { notices: [], kept: [], removed: [], unsent: [], deletedAccounts: [] };
+  const api: FakeApi = {
+    notices: [],
+    kept: [],
+    removed: [],
+    unsent: [],
+    deletedAccounts: [],
+    suspended: [],
+    lifted: [],
+  };
   const json = (route: Route, status: number, body: unknown) =>
     route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) });
   await page.route("**/api/**", async (route) => {
@@ -86,6 +99,27 @@ const fakeApi = async (page: Page): Promise<FakeApi> => {
         await json(route, 404, { code: "NOT_FOUND", message: "No account with this address" });
       } else {
         api.deletedAccounts.push(email);
+        await route.fulfill({ status: 204 });
+      }
+    } else if (pathname === "/api/admin/accounts/suspend") {
+      const suspension = NewSuspension.parse(request.postDataJSON());
+      api.suspended.push(suspension);
+      const decided: Suspension = {
+        ground: suspension.ground,
+        facts: suspension.facts,
+        explanation: suspension.explanation,
+        id: "a1",
+        endsAt: "2027-02-08T08:00:00.000Z",
+        automated: false,
+        decidedAt: "2026-11-10T08:00:00.000Z",
+      };
+      await json(route, 201, decided);
+    } else if (pathname === "/api/admin/accounts/lift") {
+      const { email } = SuspensionLift.parse(request.postDataJSON());
+      if (email === "free@example.test") {
+        await json(route, 409, { code: "ACCOUNT_NOT_SUSPENDED", message: "Not suspended" });
+      } else {
+        api.lifted.push(email);
         await route.fulfill({ status: 204 });
       }
     } else if (pathname === "/api/admin/notices") {
@@ -255,17 +289,18 @@ test("deletes an account from the admin, after a confirmation", async ({ page })
   await dataReady(page);
   const main = page.getByRole("main");
   await page.goto("/admin/accounts");
+  const deletion = main.getByRole("region", { name: m.accounts.title });
   await press(page, m.accounts.delete);
   await expect(main.getByRole("alert")).toHaveText(m.accounts.empty);
 
-  await main.getByRole("textbox", { name: m.accounts.email }).fill("nobody@example.test");
+  await deletion.getByRole("textbox", { name: m.accounts.email }).fill("nobody@example.test");
   await press(page, m.accounts.delete);
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByRole("button", { name: m.accounts.cancel })).toBeFocused();
   await dialog.getByRole("button", { name: m.accounts.confirm }).click();
   await expect(main.getByRole("alert")).toHaveText(m.accounts.notFound);
 
-  await main.getByRole("textbox", { name: m.accounts.email }).fill("child@example.test");
+  await deletion.getByRole("textbox", { name: m.accounts.email }).fill("child@example.test");
   await press(page, m.accounts.delete);
   await expect(dialog).toHaveAccessibleName(
     m.accounts.confirmTitle.replace("{{email}}", "child@example.test"),
@@ -276,5 +311,53 @@ test("deletes an account from the admin, after a confirmation", async ({ page })
     main.getByRole("status").getByText("Account deleted: child@example.test"),
   ).toBeVisible();
   expect(api.deletedAccounts).toEqual(["child@example.test"]);
+  expect(await accessibilityViolations(page)).toEqual([]);
+});
+
+test("suspends an account with a statement of reasons, then lifts it", async ({ page }) => {
+  const api = await fakeApi(page);
+  await dataReady(page);
+  const main = page.getByRole("main");
+  await page.goto("/admin/accounts");
+  const suspension = main.getByRole("region", { name: m.accounts.suspendTitle });
+  const ground = suspension.getByRole("combobox", { name: m.statement.ground });
+  await expect(ground.locator("option")).toHaveCount(6);
+  await ground.selectOption("copyright");
+  await suspension
+    .getByRole("textbox", { name: m.statement.facts })
+    .fill("Trois textes copiés, retirés en octobre.");
+  await suspension
+    .getByRole("textbox", { name: m.statement.explanation })
+    .fill("Reproduits sans l'accord de l'auteur.");
+  await press(page, m.statement.sendSuspended);
+  await expect(suspension.getByRole("alert")).toHaveText(m.accounts.empty);
+
+  await suspension.getByRole("textbox", { name: m.accounts.email }).fill("learner@example.test");
+  await suspension.getByRole("combobox", { name: m.accounts.duration }).selectOption("90-days");
+  expect(await accessibilityViolations(page)).toEqual([]);
+  await press(page, m.statement.sendSuspended);
+  await expect(suspension.getByRole("status").last()).toHaveText(
+    m.accounts.suspendedUntil.replace("{{date}}", "2027-02-08"),
+  );
+  expect(api.suspended).toEqual([
+    {
+      email: "learner@example.test",
+      duration: "90-days",
+      ground: "copyright",
+      facts: "Trois textes copiés, retirés en octobre.",
+      explanation: "Reproduits sans l'accord de l'auteur.",
+    },
+  ]);
+
+  const lift = main.getByRole("region", { name: m.accounts.liftTitle });
+  await lift.getByRole("textbox", { name: m.accounts.email }).fill("free@example.test");
+  await press(page, m.accounts.lift);
+  await expect(lift.getByRole("alert")).toHaveText(m.accounts.notSuspended);
+  await lift.getByRole("textbox", { name: m.accounts.email }).fill("learner@example.test");
+  await press(page, m.accounts.lift);
+  await expect(lift.getByRole("status")).toHaveText(
+    m.accounts.lifted.replace("{{email}}", "learner@example.test"),
+  );
+  expect(api.lifted).toEqual(["learner@example.test"]);
   expect(await accessibilityViolations(page)).toEqual([]);
 });

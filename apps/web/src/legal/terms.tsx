@@ -32,7 +32,7 @@ const Rule = ({
 export const TERMS: Readonly<Record<Language, LegalDocument>> = {
   fr: {
     title: "Conditions d’utilisation",
-    updated: "2026-11-04",
+    updated: "2026-11-09",
     sections: [
       {
         id: "service",
@@ -55,7 +55,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "Vous vous connectez avec un code reçu par e-mail, ou avec Google ou GitHub. Il n’y a pas de mot de passe.",
               "Un compte est personnel. Protégez l’accès à votre boîte e-mail : elle donne accès au compte.",
               "Vous pouvez supprimer votre compte à tout moment dans Profil › Compte.",
-              "Si un compte envoie plusieurs fois des contenus illégaux (règle 4.1), nous pouvons le suspendre et nous écrivons à l’adresse du compte pour dire pourquoi.",
+              "Si un compte envoie plusieurs fois des contenus illégaux (règle 4.1), nous pouvons le suspendre pour 30 jours, 90 jours ou sans limite de durée. Avant, nous envoyons par e-mail à l’adresse du compte les raisons, la durée et les recours.",
             ]}
           />
         ),
@@ -234,7 +234,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
   },
   en: {
     title: "Terms of use",
-    updated: "2026-11-04",
+    updated: "2026-11-09",
     sections: [
       {
         id: "service",
@@ -257,7 +257,7 @@ export const TERMS: Readonly<Record<Language, LegalDocument>> = {
               "You sign in with a code sent by email, or with Google or GitHub. There is no password.",
               "An account is personal. Protect access to your mailbox: it gives access to the account.",
               "You can delete your account at any time in Profile › Account.",
-              "If an account sends illegal content several times (rule 4.1), we may suspend it and we write to the account’s address to say why.",
+              "If an account sends illegal content several times (rule 4.1), we may suspend it for 30 days, 90 days or with no time limit. Before that, we email the account’s address the reasons, the duration and the redress.",
             ]}
           />
         ),
