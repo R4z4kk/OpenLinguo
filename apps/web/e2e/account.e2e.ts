@@ -356,6 +356,14 @@ test("says sign-ups are closed, from the address or from the provider", async ({
   await expect(closed).toBeFocused();
 });
 
+test("says why a suspended account comes back from the provider unsigned", async ({ page }) => {
+  await fakeApi(page);
+  const main = page.getByRole("main");
+  await page.goto("/account/sign-in?error=BANNED_USER");
+  await expect(main.getByRole("alert")).toHaveText(authEn.failure.banned, { timeout: 90_000 });
+  await expect(main.getByRole("alert")).toBeFocused();
+});
+
 test("offers a new code once a code has expired, and says when it is offline", async ({ page }) => {
   const api = await fakeApi(page);
   api.users.set("lin@example.test", user("lin@example.test", {}));

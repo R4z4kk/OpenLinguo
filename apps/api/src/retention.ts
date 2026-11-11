@@ -4,6 +4,7 @@ import { accountDeletion } from "./account.ts";
 import type { Job, Outbox } from "./jobs.ts";
 import { inactivityNoticeMail } from "./mail-templates.ts";
 import {
+  accountDecision,
   codeRequest,
   DELETED_ACCOUNT,
   decision,
@@ -157,7 +158,10 @@ export const purgeHostingRetention: Job = {
   },
 };
 
-/** Statements of reasons and decided notices, 1 year after the decision; open notices stay. */
+/**
+ * Statements of reasons and decided notices, 1 year after the decision; open notices stay. A
+ * suspension's statement goes 1 year after its end or lift; one with neither stays.
+ */
 export const purgeModerationRecords: Job = {
   name: "purge-moderation-records",
   run: async ({ db, now }) => {
@@ -165,6 +169,14 @@ export const purgeModerationRecords: Job = {
     await db.batch([
       db.delete(decision).where(lt(decision.decidedAt, moderation)),
       db.delete(notice).where(lt(notice.decidedAt, moderation)),
+      db
+        .delete(accountDecision)
+        .where(
+          lt(
+            sql`coalesce(${accountDecision.liftedAt}, ${accountDecision.endsAt})`,
+            moderation.getTime(),
+          ),
+        ),
     ]);
   },
 };

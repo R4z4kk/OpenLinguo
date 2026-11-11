@@ -85,6 +85,13 @@
       "when": 1793808096103,
       "tag": "0011_drop_hosting_port",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794263082657,
+      "tag": "0012_account_suspension",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import {
   noticeReceiptMail,
   signInCodeMail,
   statementOfReasonsMail,
+  suspensionMail,
 } from "./mail-templates.ts";
 
 describe("localeOf", () => {
@@ -80,5 +81,45 @@ describe("statementOfReasonsMail", () => {
     expect(mail.text).toContain("à la suite d'un signalement");
     expect(mail.text).toContain("after a notice");
     expect(mail.text).not.toContain("lin@example.test");
+  });
+});
+
+describe("suspensionMail", () => {
+  const suspension = {
+    id: "a1",
+    ground: "hate",
+    facts: "Trois textes retirés en octobre.",
+    explanation: "Chacun appelle à la haine contre un groupe.",
+    endsAt: "2026-12-10T08:00:00.000Z",
+    automated: false,
+    decidedAt: "2026-11-10T08:00:00.000Z",
+  } as const;
+
+  it("gives the measure, its end, the ground, the facts and the redress in French and English", () => {
+    const mail = suspensionMail("a@example.test", suspension, "contact@example.test");
+    expect(mail.to).toBe("a@example.test");
+    expect(mail.subject).toBe("OpenLinguo : votre compte est suspendu / your account is suspended");
+    for (const part of [
+      "Mesure : suspension du compte jusqu'au 2026-12-10.",
+      "Origine : décision prise à l'initiative de l'administrateur, sans signalement sur le compte.",
+      "Motif : contenu illégal envoyé plusieurs fois, provocation à la haine, diffamation ou injure discriminatoire (Loi du 29 juillet 1881, art. 24, 32 et 33), règle 4.1 des conditions d'utilisation.",
+      "Faits : Trois textes retirés en octobre.",
+      "Explication : Chacun appelle à la haine contre un groupe.",
+      "Moyens automatisés : aucun.",
+      "en écrivant à contact@example.test",
+      "Measure: account suspended until 2026-12-10.",
+      "Ground: illegal content sent several times, incitement to hatred",
+      "rule 4.1 of the terms",
+      "Automated means: none.",
+      "by writing to contact@example.test",
+    ]) {
+      expect(mail.text).toContain(part);
+    }
+  });
+
+  it("says when a suspension has no time limit", () => {
+    const mail = suspensionMail("a@example.test", { ...suspension, endsAt: null }, "c");
+    expect(mail.text).toContain("Mesure : suspension du compte, sans limite de durée.");
+    expect(mail.text).toContain("Measure: account suspended, with no time limit.");
   });
 });

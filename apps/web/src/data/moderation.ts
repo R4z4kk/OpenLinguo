@@ -11,11 +11,13 @@ import {
   estimateBand,
   type KeepNotice,
   type NewStatementOfReasons,
+  type NewSuspension,
   Notice,
   NoticeDecided,
   Notices,
   type Restriction,
   StatementOfReasons,
+  Suspension,
 } from "@openlinguo/core/moderation";
 import { Submission, Submissions } from "@openlinguo/core/submission";
 import type { Database } from "./database.ts";
@@ -26,6 +28,20 @@ const path = (id: string) => `/api/admin/submissions/${encodeURIComponent(id)}`;
 
 export const deleteAccountAsAdmin = (email: string): Promise<Result<null, ApiFailure>> =>
   call("/api/admin/accounts/delete", { method: "POST", body: JSON.stringify({ email }) }, () =>
+    ok(null),
+  );
+
+export const suspendAccount = (
+  suspension: NewSuspension,
+): Promise<Result<Suspension, ApiFailure>> =>
+  call(
+    "/api/admin/accounts/suspend",
+    { method: "POST", body: JSON.stringify(suspension) },
+    (body) => parseWith(Suspension, body),
+  );
+
+export const liftSuspension = (email: string): Promise<Result<null, ApiFailure>> =>
+  call("/api/admin/accounts/lift", { method: "POST", body: JSON.stringify({ email }) }, () =>
     ok(null),
   );
 

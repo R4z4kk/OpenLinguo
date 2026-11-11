@@ -51,6 +51,8 @@ export const authFr: AuthMessages = {
     provider:
       "La connexion avec le fournisseur a échoué ({{code}}). Réessayez ou utilisez un code par e-mail.",
     unexpected: "Le serveur n’a pas répondu comme prévu (erreur {{status}}). Réessayez plus tard.",
+    banned:
+      "Ce compte est suspendu. Les raisons, la durée et les recours vous ont été envoyés par e-mail.",
   },
   age: {
     title: "Quel âge avez-vous\u00a0?",

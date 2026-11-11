@@ -86,6 +86,57 @@ export const StatementOfReasons = NewStatementOfReasons.extend({
 });
 export type StatementOfReasons = z.output<typeof StatementOfReasons>;
 
+/** Rule 4.1 of `/terms`: an account is suspended for illegal content only. */
+export const LegalGround = Ground.extract([
+  "copyright",
+  "defamation",
+  "hate",
+  "personal-data",
+  "serious-offences",
+]);
+export type LegalGround = z.output<typeof LegalGround>;
+
+export const SUSPENSION_DURATIONS = ["30-days", "90-days", "unlimited"] as const;
+export const SuspensionDuration = z.enum(SUSPENSION_DURATIONS);
+export type SuspensionDuration = z.output<typeof SuspensionDuration>;
+
+const SUSPENSION_DAYS: Readonly<Record<SuspensionDuration, number | null>> = {
+  "30-days": 30,
+  "90-days": 90,
+  unlimited: null,
+};
+
+const DAY_MS = 86_400_000;
+
+/** DSA art. 17(3)(a): the end of a suspension, `null` when it has none. */
+export const suspensionEnd = (duration: SuspensionDuration, decidedAt: Date): Date | null => {
+  const days = SUSPENSION_DAYS[duration];
+  return days === null ? null : new Date(decidedAt.getTime() + days * DAY_MS);
+};
+
+/** `POST /api/admin/accounts/suspend` (DSA art. 17(1)(d)). */
+export const NewSuspension = z.object({
+  email: z.email(),
+  duration: SuspensionDuration,
+  ground: LegalGround,
+  facts: prose,
+  explanation: prose,
+});
+export type NewSuspension = z.output<typeof NewSuspension>;
+
+/** DSA art. 17(3), stored in `account_decision` and mailed to the account. */
+export const Suspension = NewSuspension.omit({ email: true, duration: true }).extend({
+  id: z.string().min(1),
+  endsAt: z.iso.datetime().nullable(),
+  automated: z.literal(false),
+  decidedAt: z.iso.datetime(),
+});
+export type Suspension = z.output<typeof Suspension>;
+
+/** `POST /api/admin/accounts/lift`. */
+export const SuspensionLift = z.object({ email: z.email() });
+export type SuspensionLift = z.output<typeof SuspensionLift>;
+
 /**
  * What a notice claims (DSA art. 16(2)(a)): the checklist's illegal categories, child sexual abuse
  * material on its own since it needs no name or email (16(2)(c)), and the library rules.

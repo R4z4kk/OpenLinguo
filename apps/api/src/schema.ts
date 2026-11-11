@@ -222,6 +222,25 @@ export const decision = sqliteTable(
   ],
 );
 
+/** A statement of reasons (DSA art. 17(1)(d)) for an account suspension, mailed to the account. */
+export const accountDecision = sqliteTable(
+  "account_decision",
+  {
+    id: text().primaryKey(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    ground: text({ enum: GROUNDS }).notNull(),
+    facts: text().notNull(),
+    explanation: text().notNull(),
+    /** `null`: no time limit. */
+    endsAt: integer({ mode: "timestamp_ms" }),
+    liftedAt: integer({ mode: "timestamp_ms" }),
+    decidedAt: integer({ mode: "timestamp_ms" }).notNull(),
+  },
+  (table) => [index("account_decision_user").on(table.userId)],
+);
+
 /** A notice of DSA art. 16 and the decision told to its notifier (16(5)). */
 export const notice = sqliteTable(
   "notice",

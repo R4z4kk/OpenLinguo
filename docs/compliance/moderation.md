@@ -68,3 +68,10 @@ Keep the text, the notice and the report reference until the authority answers, 
 ## 5. Proof
 
 No separate register. The app keeps each notice and decision with its times and statement of reasons, and deletes them 1 year after the decision, or sooner with the text when the account is deleted ([retention](retention-schedule.md)). An order received or a report made stays in the mailbox with the answer, as in the [requests runbook](requests.md) (section 5): its origin and reference, the text concerned, the time of action, and the preservation end date if there is one.
+
+## 6. Suspending an account (DSA art. 17(1)(d))
+
+- Only for an account that sends illegal content several times (rule 4.1 of `/terms`), and only on a legal ground. Art. 23 (prior warning) binds online platforms but not micro or small enterprises (art. 19), so no warning is required; weigh the number and gravity of the texts removed anyway.
+- In `/admin/accounts`, « Suspendre un compte »: the address, the duration (30 days, 90 days or no time limit), the ground, the facts (the texts and their dates) and the explanation. The statement of reasons is emailed first; if the mail fails (502 `MAIL_FAILED`), nothing changes. Then the account's sessions end and it cannot sign in until the end; its published texts stay, and need their own decisions.
+- Better Auth lifts an expired suspension at the next sign-in. « Lever une suspension » lifts one early, after a review asked by email; no email is sent.
+- The app keeps each suspension with its statement in `account_decision`, 1 year after it ends or is lifted ([retention](retention-schedule.md)); an admin action is logged in `security_event`.

@@ -13,10 +13,10 @@ Processing that happens only on the user's device (learning data, voice, journal
 | (b) Purposes | Create and manage accounts, authenticate users without passwords (6-digit code by email, Google, GitHub), send service emails (sign-in codes, inactivity notice) |
 | Legal basis | Contract (art. 6(1)(b)) |
 | (c) Data subjects | Registered users aged 15 and over, by self-declaration right after the first sign-in |
-| (c) Data | Email, pseudonym, Google or GitHub account id, sessions (IP address, user agent), sign-in codes (hashed), date of the age declaration, role and ban status, optional TOTP secret and backup codes (encrypted), created and updated dates |
-| (d) Recipients | Maintainer; Cloudflare (processor, D1 in the `eu` jurisdiction); Lettermint (processor, sign-in emails); Google Ireland or GitHub when chosen for sign-in, as independent controllers |
+| (c) Data | Email, pseudonym, Google or GitHub account id, sessions (IP address, user agent), sign-in codes (hashed), date of the age declaration, role and ban status, statements of reasons for suspensions (DSA art. 17(1)(d): legal ground, facts, explanation, end, lift time; #359), optional TOTP secret and backup codes (encrypted), created and updated dates |
+| (d) Recipients | Maintainer; Cloudflare (processor, D1 in the `eu` jurisdiction); Lettermint (processor, sign-in emails and suspension statements); Google Ireland or GitHub when chosen for sign-in, as independent controllers |
 | (e) Transfers | Cloudflare, Inc. (U.S. company, DPF and SCCs) for requests its network handles outside the EU; none for Lettermint, which processes email data in the EU; the exchange with Google Ireland is not a transfer; GitHub, Inc. or GitHub B.V., DPF — see [sub-processors](sub-processors.md) |
-| (f) Erasure | At account deletion; after 2 years of inactivity with prior notice — see [retention](retention-schedule.md) |
+| (f) Erasure | At account deletion; after 2 years of inactivity with prior notice; a suspension statement 1 year after the suspension ends or is lifted — see [retention](retention-schedule.md) |
 | (g) Security | TLS; no passwords; codes hashed, valid 10 minutes, 3 attempts; cookies `Secure; HttpOnly; SameSite=Lax`; origin check on every state-changing request that carries the session cookie (Better Auth checks its own routes); rate limits per IP address, and at most 10 sign-in codes a day per email address (#289); secrets as encrypted Pages secrets; no provider token kept; TOTP mandatory for the admin (CNIL recommendation 2025-019), optional for others, asked on every new session once on; the admin role is granted outside the app |
 
 ## P2 — Shared library submissions and moderation

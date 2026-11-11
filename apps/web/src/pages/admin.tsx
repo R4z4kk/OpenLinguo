@@ -1,4 +1,4 @@
-import type { Result } from "@openlinguo/core";
+import { err, type Result } from "@openlinguo/core";
 import {
   type BandEstimate,
   bandName,
@@ -13,6 +13,10 @@ import {
   type Notice,
   type NoticeDecided,
   type Restriction,
+  SUSPENSION_DURATIONS,
+  type Suspension,
+  type SuspensionDuration,
+  SuspensionLift,
   TERMS_CLAUSES,
 } from "@openlinguo/core/moderation";
 import { characterCount, type Submission } from "@openlinguo/core/submission";
@@ -31,12 +35,14 @@ import {
   deleteAccountAsAdmin,
   estimateText,
   keepNotice,
+  liftSuspension,
   loadForReview,
   loadNotice,
   loadNotices,
   loadQueue,
   removeByNotice,
   restrictSubmission,
+  suspendAccount,
 } from "@/data/moderation";
 import type { ApiFailure } from "@/data/api";
 import { describeCoverageFailure } from "@/data/text-coverage";
@@ -381,14 +387,23 @@ const useAlert = () => {
   return { raise, node };
 };
 
+/** Fields a measure adds to the statement, what to say while one is missing, and its refusals. */
+type StatementExtra = {
+  readonly fields: ReactNode;
+  readonly missing: string | null;
+  readonly refusal: (failure: ApiFailure) => string | null;
+};
+
 const StatementForm = <T,>({
   measure,
   source,
+  extra,
   submit,
   onDecided,
 }: {
-  readonly measure: Restriction;
+  readonly measure: Restriction | "suspended";
   readonly source: "own-initiative" | "notice";
+  readonly extra: StatementExtra | null;
   readonly submit: (statement: NewStatementOfReasons) => Promise<Result<T, ApiFailure>>;
   readonly onDecided: (decided: T) => void;
 }) => {
@@ -417,12 +432,17 @@ const StatementForm = <T,>({
       alert.raise(t("failure.explanation"));
       return;
     }
+    if (extra?.missing) {
+      alert.raise(extra.missing);
+      return;
+    }
     setSending(true);
     const result = await submit({ ground, facts, explanation });
     setSending(false);
     if (result.ok) onDecided(result.value);
-    else alert.raise(describe(result.error));
+    else alert.raise(extra?.refusal(result.error) ?? describe(result.error));
   };
+  const suspended = measure === "suspended";
 
   const fixed = (label: string, value: string) => (
     <div className="mt-3">
@@ -443,13 +463,17 @@ const StatementForm = <T,>({
       <h2 id={`${id}-title`} className="text-subtitle">
         {t("statement.title")}
       </h2>
-      <p className="mt-1 text-small text-muted">{t("statement.intro")}</p>
+      <p className="mt-1 text-small text-muted">
+        {suspended ? t("statement.introSuspended") : t("statement.intro")}
+      </p>
       {alert.node}
+      {extra?.fields}
       <dl>
-        {fixed(
-          t("statement.measure"),
-          measure === "rejected" ? t("statement.measureRejected") : t("statement.measureRemoved"),
-        )}
+        {!suspended &&
+          fixed(
+            t("statement.measure"),
+            measure === "rejected" ? t("statement.measureRejected") : t("statement.measureRemoved"),
+          )}
         {fixed(
           t("statement.source"),
           source === "notice" ? t("statement.sourceNotice") : t("statement.sourceValue"),
@@ -477,16 +501,18 @@ const StatementForm = <T,>({
               </option>
             ))}
           </optgroup>
-          <optgroup label={t("statement.terms")}>
-            {GROUNDS.filter(isTermsGround).map((option) => (
-              <option key={option} value={option}>
-                {t("statement.clause", {
-                  clause: TERMS_CLAUSES[option],
-                  label: t(`statement.grounds.${option}`),
-                })}
-              </option>
-            ))}
-          </optgroup>
+          {!suspended && (
+            <optgroup label={t("statement.terms")}>
+              {GROUNDS.filter(isTermsGround).map((option) => (
+                <option key={option} value={option}>
+                  {t("statement.clause", {
+                    clause: TERMS_CLAUSES[option],
+                    label: t(`statement.grounds.${option}`),
+                  })}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </div>
       {(
@@ -511,7 +537,9 @@ const StatementForm = <T,>({
             className={`${fieldClass} py-2`}
           />
           <p id={`${id}-${field}-help`} className="text-small text-muted">
-            {t(`statement.${field}Help`)}
+            {suspended && field === "facts"
+              ? t("statement.factsSuspendedHelp")
+              : t(`statement.${field}Help`)}
             {field === "explanation" && ground === "personal-data" && (
               <> {t("statement.personalDataHelp")}</>
             )}
@@ -519,12 +547,19 @@ const StatementForm = <T,>({
         </div>
       ))}
       <dl>
-        {fixed(t("statement.automated"), t("statement.automatedValue"))}
+        {fixed(
+          t("statement.automated"),
+          suspended ? t("statement.automatedSuspended") : t("statement.automatedValue"),
+        )}
         {fixed(t("statement.redress"), t("statement.redressValue"))}
       </dl>
       <div className="mt-6">
         <Button type="submit" aria-disabled={sending}>
-          {measure === "rejected" ? t("statement.sendRejected") : t("statement.sendRemoved")}
+          {measure === "rejected"
+            ? t("statement.sendRejected")
+            : suspended
+              ? t("statement.sendSuspended")
+              : t("statement.sendRemoved")}
         </Button>
       </div>
       <p role="status" className="mt-3 text-small">
@@ -632,6 +667,7 @@ const Decision = ({
         <StatementForm
           measure={measure}
           source="own-initiative"
+          extra={null}
           submit={(statement) => restrictSubmission(submission.id, measure, statement)}
           onDecided={({ unsent }) => {
             onDone({ kind: "restricted", unsent });
@@ -968,6 +1004,7 @@ const NoticeReview = ({ notice }: { readonly notice: Notice }) => {
               <StatementForm
                 measure="removed"
                 source="notice"
+                extra={null}
                 submit={(statement) => removeByNotice(notice.id, statement)}
                 onDecided={({ unsent }) => {
                   setDone({ outcome: "removed", unsent });
@@ -1048,18 +1085,230 @@ export const AdminAccountsPage = () => {
       <BackLink to="/profile/account">{t("account")}</BackLink>
       <h1 className="text-title">{t("title")}</h1>
       <Sections current="/admin/accounts" />
-      <h2 className="mt-6 text-subtitle">{t("accounts.title")}</h2>
-      <p className="mt-2 text-muted">{t("accounts.intro")}</p>
+      <section aria-labelledby={`${id}-title`}>
+        <h2 id={`${id}-title`} className="mt-6 text-subtitle">
+          {t("accounts.title")}
+        </h2>
+        <p className="mt-2 text-muted">{t("accounts.intro")}</p>
+        <form
+          noValidate
+          className="mt-4 flex flex-col gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (address === "") {
+              setDeletion({ status: "failed", message: t("accounts.empty") });
+              return;
+            }
+            setDeletion({ status: "confirming" });
+          }}
+        >
+          <label htmlFor={`${id}-email`} className="font-semibold">
+            {t("accounts.email")}
+          </label>
+          <input
+            id={`${id}-email`}
+            type="email"
+            autoComplete="off"
+            value={email}
+            onChange={(event) => {
+              setEmail(event.currentTarget.value);
+            }}
+            className={fieldClass}
+          />
+          <div className="mt-2">
+            <Button type="submit" variant="danger">
+              {t("accounts.delete")}
+            </Button>
+          </div>
+        </form>
+        {deletion.status === "failed" && (
+          <p role="alert" className="mt-4 text-danger">
+            {deletion.message}
+          </p>
+        )}
+        <p role="status" className="mt-3 text-small">
+          {deletion.status === "deleting" && t("accounts.deleting")}
+          {deletion.status === "deleted" && t("accounts.deleted", { email: deletion.email })}
+        </p>
+        {(deletion.status === "confirming" || deletion.status === "deleting") && (
+          <Dialog
+            title={t("accounts.confirmTitle", { email: address })}
+            description={t("accounts.confirmBody")}
+            sheet={null}
+            onClose={() => {
+              setDeletion((current) =>
+                current.status === "confirming" ? { status: "idle" } : current,
+              );
+            }}
+          >
+            {(close) => (
+              <div className="mt-6 flex flex-wrap justify-end gap-3">
+                <Button variant="outline" data-autofocus onClick={close}>
+                  {t("accounts.cancel")}
+                </Button>
+                <Button
+                  variant="danger"
+                  aria-disabled={deletion.status === "deleting"}
+                  onClick={() => void remove(close)}
+                >
+                  {t("accounts.confirm")}
+                </Button>
+              </div>
+            )}
+          </Dialog>
+        )}
+      </section>
+      <SuspendSection />
+      <LiftSection />
+    </section>
+  );
+};
+
+const isAddress = (value: string) => SuspensionLift.shape.email.safeParse(value).success;
+
+/** The account refusals of the suspension forms, in words; `null` leaves the general ones. */
+const useAccountRefusal = () => {
+  const { t } = useTranslation("moderation");
+  return (failure: ApiFailure): string | null => {
+    if (failure.kind !== "refused") return null;
+    switch (failure.code) {
+      case "NOT_FOUND":
+        return t("accounts.notFound");
+      case "INVALID_REQUEST":
+        return t("accounts.suspendRefused");
+      case "ACCOUNT_SUSPENDED":
+        return t("accounts.alreadySuspended");
+      case "ACCOUNT_NOT_SUSPENDED":
+        return t("accounts.notSuspended");
+      default:
+        return null;
+    }
+  };
+};
+
+/** DSA art. 17(1)(d): the statement of reasons is mailed, then the account is suspended. */
+const SuspendSection = () => {
+  const { t } = useTranslation("moderation");
+  const id = useId();
+  const refusal = useAccountRefusal();
+  const [email, setEmail] = useState("");
+  const [duration, setDuration] = useState<SuspensionDuration>("30-days");
+  const [suspended, setSuspended] = useState<Suspension | null>(null);
+  const [round, setRound] = useState(0);
+  const address = email.trim();
+  const fields = (
+    <div className="mt-4 flex flex-col gap-2">
+      <label htmlFor={`${id}-email`} className="font-semibold">
+        {t("accounts.email")}
+      </label>
+      <input
+        id={`${id}-email`}
+        type="email"
+        autoComplete="off"
+        value={email}
+        onChange={(event) => {
+          setEmail(event.currentTarget.value);
+        }}
+        className={fieldClass}
+      />
+      <label htmlFor={`${id}-duration`} className="mt-2 font-semibold">
+        {t("accounts.duration")}
+      </label>
+      <select
+        id={`${id}-duration`}
+        value={duration}
+        onChange={(event) => {
+          const value = SUSPENSION_DURATIONS.find((option) => option === event.currentTarget.value);
+          if (value) setDuration(value);
+        }}
+        className={fieldClass}
+      >
+        {SUSPENSION_DURATIONS.map((option) => (
+          <option key={option} value={option}>
+            {t(`accounts.durations.${option}`)}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+  return (
+    <section aria-labelledby={`${id}-title`}>
+      <h2 id={`${id}-title`} className="mt-10 text-subtitle">
+        {t("accounts.suspendTitle")}
+      </h2>
+      <p className="mt-2 text-muted">{t("accounts.suspendIntro")}</p>
+      <StatementForm
+        key={round}
+        measure="suspended"
+        source="own-initiative"
+        extra={{
+          fields,
+          missing: isAddress(address) ? null : t("accounts.empty"),
+          refusal,
+        }}
+        submit={({ ground, facts, explanation }) =>
+          isLegalGround(ground)
+            ? suspendAccount({ email: address, duration, ground, facts, explanation })
+            : Promise.resolve(err({ kind: "refused", code: "INVALID_REQUEST" }))
+        }
+        onDecided={(decided) => {
+          setSuspended(decided);
+          setEmail("");
+          setRound((count) => count + 1);
+        }}
+      />
+      <p role="status" className="mt-3 text-small">
+        {suspended &&
+          (suspended.endsAt === null
+            ? t("accounts.suspendedNoEnd")
+            : t("accounts.suspendedUntil", { date: suspended.endsAt.slice(0, 10) }))}
+      </p>
+    </section>
+  );
+};
+
+type Lift =
+  | { readonly status: "idle" | "lifting" }
+  | { readonly status: "lifted"; readonly email: string }
+  | { readonly status: "failed"; readonly message: string };
+
+const LiftSection = () => {
+  const { t } = useTranslation("moderation");
+  const describe = useFailure();
+  const refusal = useAccountRefusal();
+  const id = useId();
+  const [email, setEmail] = useState("");
+  const [lift, setLift] = useState<Lift>({ status: "idle" });
+  const address = email.trim();
+
+  const send = async () => {
+    if (lift.status === "lifting") return;
+    if (!isAddress(address)) {
+      setLift({ status: "failed", message: t("accounts.empty") });
+      return;
+    }
+    setLift({ status: "lifting" });
+    const result = await liftSuspension(address);
+    if (result.ok) {
+      setLift({ status: "lifted", email: address });
+      setEmail("");
+      return;
+    }
+    setLift({ status: "failed", message: refusal(result.error) ?? describe(result.error) });
+  };
+
+  return (
+    <section aria-labelledby={`${id}-title`}>
+      <h2 id={`${id}-title`} className="mt-10 text-subtitle">
+        {t("accounts.liftTitle")}
+      </h2>
+      <p className="mt-2 text-muted">{t("accounts.liftIntro")}</p>
       <form
         noValidate
         className="mt-4 flex flex-col gap-2"
         onSubmit={(event) => {
           event.preventDefault();
-          if (address === "") {
-            setDeletion({ status: "failed", message: t("accounts.empty") });
-            return;
-          }
-          setDeletion({ status: "confirming" });
+          void send();
         }}
       >
         <label htmlFor={`${id}-email`} className="font-semibold">
@@ -1076,47 +1325,20 @@ export const AdminAccountsPage = () => {
           className={fieldClass}
         />
         <div className="mt-2">
-          <Button type="submit" variant="danger">
-            {t("accounts.delete")}
+          <Button type="submit" variant="outline" aria-disabled={lift.status === "lifting"}>
+            {t("accounts.lift")}
           </Button>
         </div>
       </form>
-      {deletion.status === "failed" && (
+      {lift.status === "failed" && (
         <p role="alert" className="mt-4 text-danger">
-          {deletion.message}
+          {lift.message}
         </p>
       )}
       <p role="status" className="mt-3 text-small">
-        {deletion.status === "deleting" && t("accounts.deleting")}
-        {deletion.status === "deleted" && t("accounts.deleted", { email: deletion.email })}
+        {lift.status === "lifting" && t("accounts.lifting")}
+        {lift.status === "lifted" && t("accounts.lifted", { email: lift.email })}
       </p>
-      {(deletion.status === "confirming" || deletion.status === "deleting") && (
-        <Dialog
-          title={t("accounts.confirmTitle", { email: address })}
-          description={t("accounts.confirmBody")}
-          sheet={null}
-          onClose={() => {
-            setDeletion((current) =>
-              current.status === "confirming" ? { status: "idle" } : current,
-            );
-          }}
-        >
-          {(close) => (
-            <div className="mt-6 flex flex-wrap justify-end gap-3">
-              <Button variant="outline" data-autofocus onClick={close}>
-                {t("accounts.cancel")}
-              </Button>
-              <Button
-                variant="danger"
-                aria-disabled={deletion.status === "deleting"}
-                onClick={() => void remove(close)}
-              >
-                {t("accounts.confirm")}
-              </Button>
-            </div>
-          )}
-        </Dialog>
-      )}
     </section>
   );
 };

@@ -1,4 +1,4 @@
-import { StatementOfReasons } from "@openlinguo/core/moderation";
+import { StatementOfReasons, Suspension } from "@openlinguo/core/moderation";
 import { err } from "@openlinguo/core/result";
 import { Submission, Submissions } from "@openlinguo/core/submission";
 import { eq } from "drizzle-orm";
@@ -6,6 +6,7 @@ import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { createApp } from "./app.ts";
 import type { SendMail } from "./mail.ts";
 import {
+  accountDecision,
   codeRequest,
   DELETED_ACCOUNT,
   database,
@@ -49,6 +50,7 @@ beforeEach(async () => {
   for (const table of [
     codeRequest,
     securityEvent,
+    accountDecision,
     decision,
     hostingRecord,
     sealedIdentity,
@@ -143,6 +145,8 @@ describe("moderation access", () => {
       [`/api/admin/submissions/${id}/approve`, { band: 1 }],
       [`/api/admin/submissions/${id}/reject`, statement],
       ["/api/admin/accounts/delete", { email: "admin@example.test" }],
+      ["/api/admin/accounts/suspend", { email: "admin@example.test" }],
+      ["/api/admin/accounts/lift", { email: "admin@example.test" }],
     ] as const) {
       const refused = await call(path, body, learner);
       expect(refused.status).toBe(403);
@@ -405,5 +409,161 @@ describe("POST /api/admin/accounts/delete", () => {
     expect(await db.select({ id: user.id }).from(user).where(eq(user.role, "admin"))).toHaveLength(
       1,
     );
+  });
+});
+
+const suspension = {
+  email: "Learner@Example.test",
+  duration: "30-days",
+  ground: "copyright",
+  facts: "Trois textes copiés d'un roman publié, retirés en octobre.",
+  explanation: "Ils sont reproduits sans l'accord de l'auteur.",
+};
+
+const learnerRow = async () =>
+  (
+    await db
+      .select({
+        id: user.id,
+        banned: user.banned,
+        banReason: user.banReason,
+        banExpires: user.banExpires,
+      })
+      .from(user)
+      .where(eq(user.email, "learner@example.test"))
+  )[0];
+
+const sessionsOf = async (userId: string) =>
+  db.select({ id: session.id }).from(session).where(eq(session.userId, userId));
+
+/** The code-sign-in answer for `email`, without the age step. */
+const signInAnswer = async (email: string) => {
+  await call("/api/auth/email-otp/send-verification-otp", { email, type: "sign-in" });
+  const otp = /\b(\d{6})\b/.exec(mailer.sent.at(-1)?.text ?? "")?.[1] ?? "";
+  return call("/api/auth/sign-in/email-otp", { email, otp });
+};
+
+describe("POST /api/admin/accounts/suspend", () => {
+  it("mails the statement of reasons, then ends the sessions and refuses sign-in until the end", async () => {
+    const learner = await signedIn("learner@example.test");
+    const admin = await signedInAdmin();
+    const response = await call("/api/admin/accounts/suspend", suspension, admin);
+    expect(response.status).toBe(201);
+    const decided = Suspension.parse(await response.json());
+    expect(decided).toMatchObject({ ground: "copyright", automated: false });
+    const end = new Date(decided.decidedAt).getTime() + 30 * 86_400_000;
+    expect(decided.endsAt).toBe(new Date(end).toISOString());
+
+    const row = await learnerRow();
+    expect(row).toMatchObject({ banned: true, banReason: "copyright" });
+    expect(row?.banExpires?.getTime()).toBe(end);
+    expect(await sessionsOf(row?.id ?? "")).toEqual([]);
+    expect(await (await call("/api/auth/get-session", null, learner)).json()).toBeNull();
+    const [stored] = await db.select().from(accountDecision);
+    expect(stored).toMatchObject({ id: decided.id, userId: row?.id, liftedAt: null });
+    expect(stored?.endsAt?.getTime()).toBe(end);
+
+    const mail = mailer.sent.at(-1);
+    expect(mail?.to).toBe("learner@example.test");
+    expect(mail?.subject).toBe(
+      "OpenLinguo : votre compte est suspendu / your account is suspended",
+    );
+    expect(mail?.text).toContain(`Faits : ${suspension.facts}`);
+    expect(await adminActions()).toContainEqual({
+      method: "moderation/suspend-account",
+      target: row?.id ?? "",
+    });
+
+    const refused = await signInAnswer("learner@example.test");
+    expect(refused.status).toBe(403);
+    expect(await refused.json()).toMatchObject({ code: "BANNED_USER" });
+  });
+
+  it("stores no end for a suspension with no time limit", async () => {
+    await signedIn("learner@example.test");
+    const admin = await signedInAdmin();
+    const response = await call(
+      "/api/admin/accounts/suspend",
+      { ...suspension, duration: "unlimited" },
+      admin,
+    );
+    expect(Suspension.parse(await response.json()).endsAt).toBeNull();
+    expect(await learnerRow()).toMatchObject({ banned: true, banExpires: null });
+    expect(mailer.sent.at(-1)?.text).toContain("sans limite de durée");
+  });
+
+  it("changes nothing when the mail cannot be sent", async () => {
+    await signedIn("learner@example.test");
+    const admin = await signedInAdmin();
+    sendMail = () => Promise.resolve(err({ kind: "unreachable", message: "down" }));
+    const response = await call("/api/admin/accounts/suspend", suspension, admin);
+    expect(response.status).toBe(502);
+    expect(await response.json()).toMatchObject({ code: "MAIL_FAILED" });
+    const row = await learnerRow();
+    expect(row?.banned).toBe(false);
+    expect(await sessionsOf(row?.id ?? "")).toHaveLength(1);
+    expect(await db.select().from(accountDecision)).toEqual([]);
+    expect(await adminActions()).toEqual([]);
+  });
+
+  it("refuses an unknown address, an admin, the placeholder, a library rule and a second suspension", async () => {
+    await signedIn("learner@example.test");
+    const admin = await signedInAdmin();
+    await db
+      .insert(user)
+      .values({ ...DELETED_ACCOUNT, emailVerified: false })
+      .onConflictDoNothing();
+    const unknown = await call(
+      "/api/admin/accounts/suspend",
+      { ...suspension, email: "nobody@example.test" },
+      admin,
+    );
+    expect(unknown.status).toBe(404);
+    for (const body of [
+      { ...suspension, email: "admin@example.test" },
+      { ...suspension, email: DELETED_ACCOUNT.email },
+      { ...suspension, ground: "not-chinese" },
+    ]) {
+      const refused = await call("/api/admin/accounts/suspend", body, admin);
+      expect(refused.status).toBe(400);
+      expect(await refused.json()).toMatchObject({ code: "INVALID_REQUEST" });
+    }
+    expect(mailer.sent.filter(({ subject }) => subject.includes("suspendu"))).toEqual([]);
+    expect((await call("/api/admin/accounts/suspend", suspension, admin)).status).toBe(201);
+    const again = await call("/api/admin/accounts/suspend", suspension, admin);
+    expect(again.status).toBe(409);
+    expect(await again.json()).toMatchObject({ code: "ACCOUNT_SUSPENDED" });
+    expect(await db.select().from(accountDecision)).toHaveLength(1);
+  });
+});
+
+describe("POST /api/admin/accounts/lift", () => {
+  it("lets the account sign in again and keeps the statement with its lift time", async () => {
+    await signedIn("learner@example.test");
+    const admin = await signedInAdmin();
+    await call("/api/admin/accounts/suspend", suspension, admin);
+    const sent = mailer.sent.length;
+    const response = await call("/api/admin/accounts/lift", { email: suspension.email }, admin);
+    expect(response.status).toBe(204);
+    const row = await learnerRow();
+    expect(row).toMatchObject({ banned: false, banReason: null, banExpires: null });
+    const [stored] = await db.select().from(accountDecision);
+    expect(stored?.liftedAt).toBeInstanceOf(Date);
+    expect(mailer.sent).toHaveLength(sent);
+    expect(await adminActions()).toContainEqual({
+      method: "moderation/lift-suspension",
+      target: row?.id ?? "",
+    });
+    expect((await signInAnswer("learner@example.test")).status).toBe(200);
+  });
+
+  it("refuses an unknown address and an account that is not suspended", async () => {
+    await signedIn("learner@example.test");
+    const admin = await signedInAdmin();
+    const unknown = await call("/api/admin/accounts/lift", { email: "nobody@example.test" }, admin);
+    expect(unknown.status).toBe(404);
+    const free = await call("/api/admin/accounts/lift", { email: suspension.email }, admin);
+    expect(free.status).toBe(409);
+    expect(await free.json()).toMatchObject({ code: "ACCOUNT_NOT_SUSPENDED" });
   });
 });

@@ -5,21 +5,34 @@ import {
   type DECISION_SOURCES,
   KeepNotice,
   NewStatementOfReasons,
+  NewSuspension,
   Notice,
   type NoticeDecided,
   type Restriction,
   type StatementOfReasons,
+  type Suspension,
+  SuspensionLift,
+  suspensionEnd,
 } from "@openlinguo/core/moderation";
 import { ok } from "@openlinguo/core/result";
 import { Submission } from "@openlinguo/core/submission";
-import { and, asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, isNull, or, sql } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { type Context, Hono } from "hono";
 import { accountDeletion, isDeletedAccount } from "./account.ts";
 import type { Auth } from "./auth.ts";
 import type { SendMail } from "./mail.ts";
-import { noticeDecisionMail, statementOfReasonsMail } from "./mail-templates.ts";
-import { database, decision, notice, securityEvent, submission, user } from "./schema.ts";
+import { noticeDecisionMail, statementOfReasonsMail, suspensionMail } from "./mail-templates.ts";
+import {
+  accountDecision,
+  database,
+  decision,
+  notice,
+  securityEvent,
+  session,
+  submission,
+  user,
+} from "./schema.ts";
 import { connectionOf } from "./submissions.ts";
 
 type Routes = { Bindings: Env; Variables: { readonly adminId: string } };
@@ -151,6 +164,30 @@ export const moderationRoutes = (
     ]);
     return statement;
   };
+
+  /** The account at `email`, unless it is an admin or the deleted-account placeholder. */
+  const suspendable = async (c: Context<Routes>, email: string) => {
+    const [found] = await database(c.env.DB)
+      .select({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        banned: user.banned,
+        banExpires: user.banExpires,
+      })
+      .from(user)
+      .where(eq(user.email, email.toLowerCase()));
+    if (!found) return c.json(refusal("NOT_FOUND", "No account with this address"), 404);
+    if (found.role === "admin" || isDeletedAccount(found.id)) {
+      return c.json(refusal("INVALID_REQUEST", "This account is not suspended here"), 400);
+    }
+    return found;
+  };
+
+  const isSuspended = (
+    { banned, banExpires }: { readonly banned: boolean | null; readonly banExpires: Date | null },
+    now: Date,
+  ) => banned === true && (banExpires === null || banExpires > now);
 
   const own = async (c: Context<Routes>, from: keyof typeof NOT_IN_STATE, measure: Restriction) => {
     const decided = await restrict(c, c.req.param("id") ?? "", from, measure, "own-initiative");
@@ -294,6 +331,76 @@ export const moderationRoutes = (
         await db.batch([
           db.insert(securityEvent).values(adminAction(c, "delete-account", found.id)),
           ...writes,
+        ]);
+        return c.body(null, 204);
+      })
+      // DSA art. 17(1)(d): the statement of reasons is mailed before the suspension is stored.
+      .post("/accounts/suspend", async (c) => {
+        const parsed = NewSuspension.safeParse(await c.req.json().catch(() => null));
+        if (!parsed.success) return invalid(c, parsed.error.issues);
+        const { email, duration, ...reasons } = parsed.data;
+        const found = await suspendable(c, email);
+        if (found instanceof Response) return found;
+        const decidedAt = new Date();
+        if (isSuspended(found, decidedAt)) {
+          return c.json(refusal("ACCOUNT_SUSPENDED", "This account is already suspended"), 409);
+        }
+        const endsAt = suspensionEnd(duration, decidedAt);
+        const id = crypto.randomUUID();
+        const statement: Suspension = {
+          ...reasons,
+          id,
+          endsAt: endsAt?.toISOString() ?? null,
+          automated: false,
+          decidedAt: decidedAt.toISOString(),
+        };
+        const { sendMail, contact } = moderationOf(c.env);
+        const sent = await sendMail(suspensionMail(found.email, statement, contact));
+        if (!sent.ok) {
+          console.error("suspension statement not sent", sent.error);
+          return c.json(refusal("MAIL_FAILED", "The statement of reasons could not be sent"), 502);
+        }
+        const db = database(c.env.DB);
+        await db.batch([
+          db
+            .update(user)
+            .set({ banned: true, banReason: reasons.ground, banExpires: endsAt })
+            .where(eq(user.id, found.id)),
+          // Better Auth checks a ban only when a session is created.
+          db.delete(session).where(eq(session.userId, found.id)),
+          db
+            .insert(accountDecision)
+            .values({ ...reasons, id, userId: found.id, endsAt, liftedAt: null, decidedAt }),
+          db.insert(securityEvent).values(adminAction(c, "suspend-account", found.id)),
+        ]);
+        return c.json(statement, 201);
+      })
+      .post("/accounts/lift", async (c) => {
+        const parsed = SuspensionLift.safeParse(await c.req.json().catch(() => null));
+        if (!parsed.success) return invalid(c, parsed.error.issues);
+        const found = await suspendable(c, parsed.data.email);
+        if (found instanceof Response) return found;
+        const liftedAt = new Date();
+        if (!isSuspended(found, liftedAt)) {
+          return c.json(refusal("ACCOUNT_NOT_SUSPENDED", "This account is not suspended"), 409);
+        }
+        const db = database(c.env.DB);
+        await db.batch([
+          db
+            .update(user)
+            .set({ banned: false, banReason: null, banExpires: null })
+            .where(eq(user.id, found.id)),
+          db
+            .update(accountDecision)
+            .set({ liftedAt })
+            .where(
+              and(
+                eq(accountDecision.userId, found.id),
+                isNull(accountDecision.liftedAt),
+                or(isNull(accountDecision.endsAt), gt(accountDecision.endsAt, liftedAt)),
+              ),
+            ),
+          db.insert(securityEvent).values(adminAction(c, "lift-suspension", found.id)),
         ]);
         return c.body(null, 204);
       })
