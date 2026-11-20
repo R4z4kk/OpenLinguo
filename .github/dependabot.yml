@@ -19,6 +19,9 @@ updates:
       # Runtime is Node 24 LTS.
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
+      # ts-fsrs 6 changes fsrs6-v1 due times (Hard learning step 6m -> 5.5m): a new scheduler version, not a bump.
+      - dependency-name: ts-fsrs
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: /
     schedule:
