@@ -92,6 +92,7 @@ test("plays an untimed round with the keyboard only, then another, writing no re
 
   await page.keyboard.press("Enter");
   await expect(main).toContainText("Word 1 of 2");
+  await expect(main).toContainText("0 of 2 words");
   await expect(page.getByRole("timer")).toHaveCount(0);
   const first = await shownWord(page);
   const second = first === PHONE ? BOOKS : PHONE;

@@ -245,7 +245,7 @@ const Running = ({
       <div className="mt-6 flex items-center gap-3">
         <Progress aria-label={t("drill.progress")} value={done} max={total} />
         <span className="shrink-0 text-small text-muted tabular-nums">
-          {t("review.progressCount", { done, total })}
+          {t("review.progressCount", { done, count: total })}
         </span>
       </div>
       <p role="status" className="mt-3 flex min-h-5 items-center gap-2 text-small">
